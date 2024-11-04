@@ -10,6 +10,9 @@ class Company extends Model
 {
     use HasFactory, SoftDeletes;
 
+    protected $table = 'ms_company';
+    protected $primaryKey = 'id';
+
     protected $fillable = ['company_code', 'name', 'description', 'created_by', 'updated_by'];
 
     // A company has many compartments (kompartemen)

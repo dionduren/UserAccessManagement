@@ -22,14 +22,14 @@
         </li>
 
         <li>
-            <a href="{{ route('kompartemen.index') }}"
+            <a href="{{ route('kompartemens.index') }}"
                 class="nav-link {{ request()->routeIs('kompartemen.index') ? 'active' : 'text-white' }}">
                 <i class="bi bi-diagram-3 me-2"></i> Kompartemen
             </a>
         </li>
 
         <li>
-            <a href="{{ route('departemen.index') }}"
+            <a href="{{ route('departemens.index') }}"
                 class="nav-link {{ request()->routeIs('departemen.index') ? 'active' : 'text-white' }}">
                 <i class="bi bi-layers me-2"></i> Departemen
             </a>
@@ -45,6 +45,30 @@
             <a href="{{ route('job-roles.index') }}"
                 class="nav-link {{ request()->routeIs('job-roles.index') ? 'active' : 'text-white' }}">
                 <i class="bi bi-person-badge me-2"></i> Job Roles
+            </a>
+        </li>
+
+        <!-- Composite Roles Menu Item -->
+        <li>
+            <a href="{{ route('composite-roles.index') }}"
+                class="nav-link {{ request()->routeIs('composite-roles.index') ? 'active' : 'text-white' }}">
+                <i class="bi bi-people-fill me-2"></i> Composite Roles
+            </a>
+        </li>
+
+        <!-- Single Roles Menu Item -->
+        <li>
+            <a href="{{ route('single-roles.index') }}"
+                class="nav-link {{ request()->routeIs('single-roles.index') ? 'active' : 'text-white' }}">
+                <i class="bi bi-person-fill me-2"></i> Single Roles
+            </a>
+        </li>
+
+        <!-- Tcodes Menu Item -->
+        <li>
+            <a href="{{ route('tcodes.index') }}"
+                class="nav-link {{ request()->routeIs('tcodes.index') ? 'active' : 'text-white' }}">
+                <i class="bi bi-code-slash me-2"></i> Tcodes
             </a>
         </li>
     @endcan

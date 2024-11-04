@@ -8,21 +8,21 @@ class CreateSingleRolesTable extends Migration
 {
     public function up()
     {
-        Schema::create('single_roles', function (Blueprint $table) {
+        Schema::create('tr_single_roles', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('company_id')->nullable()->constrained()->onDelete('set null');
+            $table->foreignId('company_id')->nullable()->constrained('ms_company')->onDelete('set null');
             $table->string('nama'); // Single Role Name
             $table->text('deskripsi')->nullable();
-            $table->foreignId('composite_role_id')->nullable()->constrained('composite_roles')->onDelete('set null');
+            $table->foreignId('composite_role_id')->nullable()->constrained('tr_composite_roles')->onDelete('set null');
             $table->timestamps();
             $table->softDeletes();
-            $table->foreignId('created_by')->nullable()->constrained('users')->onDelete('set null');
-            $table->foreignId('updated_by')->nullable()->constrained('users')->onDelete('set null');
+            $table->text('created_by')->nullable();
+            $table->text('updated_by')->nullable();
         });
     }
 
     public function down()
     {
-        Schema::dropIfExists('single_roles');
+        Schema::dropIfExists('tr_single_roles');
     }
 }

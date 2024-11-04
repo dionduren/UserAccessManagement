@@ -10,6 +10,9 @@ class Tcode extends Model
 {
     use HasFactory, SoftDeletes;
 
+    protected $table = 'tr_tcodes';
+    protected $primaryKey = 'id';
+
     protected $fillable = ['company_id', 'code', 'deskripsi', 'created_by', 'updated_by'];
 
     // A tcode can belong to many single roles (many-to-many relationship)

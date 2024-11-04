@@ -8,20 +8,20 @@ class CreateTcodesTable extends Migration
 {
     public function up()
     {
-        Schema::create('tcodes', function (Blueprint $table) {
+        Schema::create('tr_tcodes', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('company_id')->nullable()->constrained()->onDelete('set null');
+            $table->foreignId('company_id')->nullable()->constrained('ms_company')->onDelete('set null');
             $table->string('code'); // Tcode Identifier
             $table->text('deskripsi')->nullable(); // Description
             $table->timestamps();
             $table->softDeletes();
-            $table->foreignId('created_by')->nullable()->constrained('users')->onDelete('set null');
-            $table->foreignId('updated_by')->nullable()->constrained('users')->onDelete('set null');
+            $table->text('created_by')->nullable();
+            $table->text('updated_by')->nullable();
         });
     }
 
     public function down()
     {
-        Schema::dropIfExists('tcodes');
+        Schema::dropIfExists('tr_tcodes');
     }
 }

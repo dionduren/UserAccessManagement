@@ -15,9 +15,9 @@ class CompanyController extends Controller
     public function index()
     {
         // Check if the user has permission
-        if (!Gate::allows('view company')) {
-            abort(403, 'Unauthorized access');
-        }
+        // if (!Gate::allows('manage company info')) {
+        //     abort(403, 'Unauthorized access');
+        // }
 
         $companies = Company::all();
         return view('companies.index', compact('companies'));
@@ -28,7 +28,7 @@ class CompanyController extends Controller
      */
     public function create()
     {
-        //
+        return view('companies.create');
     }
 
     /**
@@ -36,44 +36,53 @@ class CompanyController extends Controller
      */
     public function store(Request $request)
     {
-        //
-    }
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'company_code' => 'required|string|max:10|unique:ms_companies',
+            'description' => 'nullable|string'
+        ]);
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(string $id)
-    {
-        //
+        Company::create($request->all());
+        return redirect()->route('companies.index')->with('success', 'Company created successfully.');
     }
 
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(string $id)
+    public function edit(Company $company)
     {
-        //
+        return view('companies.edit', compact('company'));
     }
 
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, string $id)
+    public function update(Request $request, Company $company)
     {
-        //
+        $request->validate([
+            'company_code' => 'required|string|max:10|unique:ms_companies,company_code,' . $company->id,
+            'name' => 'required|string|max:255',
+            'description' => 'nullable|string'
+        ]);
+
+        $company->update($request->all());
+        return redirect()->route('companies.index')->with('success', 'Company updated successfully.');
     }
 
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy($id)
+    // public function destroy($id)
+    public function destroy(Company $company)
     {
-        // Only users with 'delete company' permission can delete
-        if (!Gate::allows('delete company')) {
-            abort(403, 'Unauthorized access');
-        }
+        // // Only users with 'manage company info' permission can delete
+        // if (!Gate::allows('manage company info')) {
+        //     abort(403, 'Unauthorized access');
+        // }
 
-        Company::destroy($id);
-        return redirect()->route('companies.index')->with('success', 'Company deleted successfully');
+        // Company::destroy($id);
+        // return redirect()->route('companies.index')->with('success', 'Company deleted successfully');
+        $company->delete();
+        return redirect()->route('companies.index')->with('success', 'Company deleted successfully.');
     }
 }

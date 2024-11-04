@@ -149,7 +149,8 @@
                 })
                 .then(data => {
                     // console.log("Parsed JSON response:", data); // Log the parsed JSON response
-                    showNotification(data.message, data.status == 'success' ? 'success' : 'danger');
+                    showNotification(data.message, data.status == 'success' ? 'success' : data.status == 'warning' ?
+                        'warning' : 'danger');
                 })
                 .catch(error => {
                     console.error("Error:", error); // Log any errors that occur
@@ -185,7 +186,8 @@
                     showNotification(data.message, data.status === 'success' ? 'success' : 'danger');
                 })
                 .catch(error => {
-                    showNotification('An error occurred while updating the permission.', 'danger');
+                    showNotification(data.message, data.status == 'success' ? 'success' : data.status == 'warning' ?
+                        'warning' : 'danger');
                 })
                 .finally(() => {
                     toggleLoadingIndicator(checkbox, false); // Remove loading indicator

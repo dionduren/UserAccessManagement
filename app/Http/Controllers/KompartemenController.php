@@ -2,63 +2,66 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Company;
+use App\Models\Kompartemen;
 use Illuminate\Http\Request;
 
 class KompartemenController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
     public function index()
     {
-        //
+        $kompartemens = Kompartemen::all();
+        return view('kompartemen.index', compact('kompartemens'));
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
     public function create()
     {
-        //
+        $companies = Company::all();
+        return view('kompartemen.create', compact('companies'));
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
     public function store(Request $request)
     {
-        //
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'company_id' => 'required|exists:ms_company,id',
+            'description' => 'nullable|string',
+        ]);
+
+        Kompartemen::create($request->all());
+        return redirect()->route('kompartemens.index')->with('success', 'Kompartemen created successfully.');
     }
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(string $id)
+    public function edit(Kompartemen $kompartemen)
     {
-        //
+        $companies = Company::all();
+        return view('kompartemen.edit', compact('kompartemen', 'companies'));
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(string $id)
+    public function update(Request $request, Kompartemen $kompartemen)
     {
-        //
+        // Validate the request data
+        $request->validate([
+            'company_id' => 'required|exists:ms_company,id',
+            'name' => 'required|string|max:255',
+            'description' => 'nullable|string',
+        ]);
+
+        // Update the kompartemen with the validated data
+        $kompartemen->update([
+            'company_id' => $request->input('company_id'),
+            'name' => $request->input('name'),
+            'description' => $request->input('description'),
+            'updated_by' => auth()->id() // Assuming you're tracking the user who updated the record
+        ]);
+
+        // Redirect back with a success message
+        return redirect()->route('kompartemens.index')->with('status', 'Kompartemen updated successfully!');
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, string $id)
+    public function destroy(Kompartemen $kompartemen)
     {
-        //
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(string $id)
-    {
-        //
+        $kompartemen->delete();
+        return redirect()->route('kompartemens.index')->with('success', 'Kompartemen deleted successfully.');
     }
 }

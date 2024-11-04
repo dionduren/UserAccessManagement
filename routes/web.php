@@ -22,10 +22,11 @@ Auth::routes();
 
 Route::get('/home', [App\Http\Controllers\HomeController::class, 'index'])->name('home');
 
-Route::resource('companies', CompanyController::class)->middleware('permission:view company|edit company|delete company');
+Route::resource('companies', CompanyController::class);
+// Route::resource('companies', CompanyController::class)->middleware('permission:view company|edit company|delete company');
 
-Route::resource('kompartemen', KompartemenController::class);
-Route::resource('departemen', DepartemenController::class);
+Route::resource('kompartemens', KompartemenController::class);
+Route::resource('departemens', DepartemenController::class);
 Route::resource('job-roles', JobRoleController::class);
 Route::resource('composite-roles', CompositeRoleController::class);
 Route::resource('single-roles', SingleRoleController::class);

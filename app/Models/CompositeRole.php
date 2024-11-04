@@ -10,6 +10,9 @@ class CompositeRole extends Model
 {
     use HasFactory, SoftDeletes;
 
+    protected $table = 'tr_composite_roles';
+    protected $primaryKey = 'id';
+
     protected $fillable = ['company_id', 'jabatan_id', 'nama', 'deskripsi', 'created_by', 'updated_by'];
 
     // A composite role can have many single roles

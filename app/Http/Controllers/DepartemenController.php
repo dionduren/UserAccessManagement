@@ -2,63 +2,66 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Departemen;
+use App\Models\Kompartemen;
 use Illuminate\Http\Request;
 
 class DepartemenController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
     public function index()
     {
-        //
+        $departemens = Departemen::all();
+        return view('departemen.index', compact('departemens'));
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
     public function create()
     {
-        //
+        $kompartemens = Kompartemen::all();
+        return view('departemen.create', compact('kompartemens'));
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
     public function store(Request $request)
     {
-        //
+        $request->validate([
+            'kompartemen_id' => 'required|exists:ms_kompartemen,id',
+            'name' => 'required|string|max:255',
+            'description' => 'nullable|string',
+        ]);
+
+        Departemen::create($request->all());
+        return redirect()->route('departemens.index')->with('success', 'Departemen created successfully.');
     }
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(string $id)
+    public function edit(Departemen $departemen)
     {
-        //
+        $kompartemens = Kompartemen::all();
+        return view('departemen.edit', compact('departemen', 'kompartemens'));
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(string $id)
+    public function update(Request $request, Departemen $departemen)
     {
-        //
+        // Validate the request data
+        $request->validate([
+            'kompartemen_id' => 'required|exists:ms_kompartemen,id',
+            'name' => 'required|string|max:255',
+            'description' => 'nullable|string',
+        ]);
+
+        // Update the departemen with the validated data
+        $departemen->update([
+            'kompartemen_id' => $request->input('kompartemen_id'),
+            'name' => $request->input('name'),
+            'description' => $request->input('description'),
+            'updated_by' => auth()->id() // Assuming you're tracking the user who updated the record
+        ]);
+
+        // Redirect back with a success message
+        return redirect()->route('departemen.index')->with('status', 'Departemen updated successfully!');
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, string $id)
+    public function destroy(Departemen $departemen)
     {
-        //
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(string $id)
-    {
-        //
+        $departemen->delete();
+        return redirect()->route('departemens.index')->with('success', 'Departemen deleted successfully.');
     }
 }

@@ -10,6 +10,9 @@ class SingleRole extends Model
 {
     use HasFactory, SoftDeletes;
 
+    protected $table = 'tr_single_roles';
+    protected $primaryKey = 'id';
+
     protected $fillable = ['company_id', 'composite_role_id', 'nama', 'deskripsi', 'created_by', 'updated_by'];
 
     // A single role belongs to a composite role

@@ -8,20 +8,20 @@ class CreateCompaniesTable extends Migration
 {
     public function up()
     {
-        Schema::create('companies', function (Blueprint $table) {
+        Schema::create('ms_company', function (Blueprint $table) {
             $table->id(); // Primary key
             $table->string('company_code')->unique(); // Company code, unique (e.g., A000, B000)
             $table->string('name')->unique(); // Company name, unique
             $table->text('description')->nullable(); // Company description
             $table->timestamps(); // Created at and updated at timestamps
             $table->softDeletes(); // Soft delete for safe record deletion
-            $table->foreignId('created_by')->nullable()->constrained('users')->onDelete('set null'); // User who created
-            $table->foreignId('updated_by')->nullable()->constrained('users')->onDelete('set null'); // User who updated
+            $table->text('created_by')->nullable();
+            $table->text('updated_by')->nullable();
         });
     }
 
     public function down()
     {
-        Schema::dropIfExists('companies');
+        Schema::dropIfExists('ms_company');
     }
 }

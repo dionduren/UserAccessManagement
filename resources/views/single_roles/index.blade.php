@@ -1,18 +1,41 @@
 @extends('layouts.app')
 
 @section('content')
-    <h1>{ ucfirst('single_roles') } List</h1>
-    <ul>
-        @foreach ($single_roles as $item)
-            <li>{ $item->name } - <a href="{ route('single_roles.show', $item->id) }">View</a> | 
-            <a href="{ route('single_roles.edit', $item->id) }">Edit</a> | 
-            <form action="{ route('single_roles.destroy', $item->id) }" method="POST" style="display:inline-block;">
-                @csrf
-                @method('DELETE')
-                <button type="submit">Delete</button>
-            </form>
-            </li>
-        @endforeach
-    </ul>
-    <a href="{ route('single_roles.create') }">Add New Single_roles</a>
+    <div class="container">
+        <h1>Single Roles</h1>
+
+        <a href="{{ route('single-roles.create') }}" class="btn btn-primary mb-3">Create New Single Role</a>
+
+        @if (session('status'))
+            <div class="alert alert-success">{{ session('status') }}</div>
+        @endif
+
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Description</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach ($single_roles as $singleRole)
+                    <tr>
+                        <td>{{ $singleRole->name }}</td>
+                        <td>{{ $singleRole->description }}</td>
+                        <td>
+                            <a href="{{ route('single-roles.edit', $singleRole) }}" class="btn btn-warning btn-sm">Edit</a>
+                            <form action="{{ route('single-roles.destroy', $singleRole) }}" method="POST"
+                                style="display:inline;">
+                                @csrf
+                                @method('DELETE')
+                                <button type="submit" class="btn btn-danger btn-sm"
+                                    onclick="return confirm('Are you sure?')">Delete</button>
+                            </form>
+                        </td>
+                    </tr>
+                @endforeach
+            </tbody>
+        </table>
+    </div>
 @endsection

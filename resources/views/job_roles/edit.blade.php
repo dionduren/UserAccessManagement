@@ -1,14 +1,35 @@
 @extends('layouts.app')
 
 @section('content')
-    <h1>Edit Job_roles</h1>
-    <form action="{ route('job_roles.update', $job_roles->id) }" method="POST">
-        @csrf
-        @method('PUT')
-        <label for="name">Name:</label>
-        <input type="text" name="name" id="name" value="{ $job_roles->name }" required>
-        <label for="description">Description:</label>
-        <textarea name="description" id="description">{ $job_roles->description }</textarea>
-        <button type="submit">Update</button>
-    </form>
+    <div class="container">
+        <h1>Edit Job Role</h1>
+
+        <form action="{{ route('job-roles.update', $jobRole) }}" method="POST">
+            @csrf
+            @method('PUT')
+
+            <div class="mb-3">
+                <label for="company_id" class="form-label">Company</label>
+                <select name="company_id" id="company_id" class="form-control" required>
+                    @foreach ($companies as $company)
+                        <option value="{{ $company->id }}" {{ $jobRole->company_id == $company->id ? 'selected' : '' }}>
+                            {{ $company->name }}</option>
+                    @endforeach
+                </select>
+            </div>
+
+            <div class="mb-3">
+                <label for="nama_jabatan" class="form-label">Job Role Name</label>
+                <input type="text" class="form-control" name="nama_jabatan" value="{{ $jobRole->nama_jabatan }}"
+                    required>
+            </div>
+
+            <div class="mb-3">
+                <label for="deskripsi" class="form-label">Description</label>
+                <textarea class="form-control" name="deskripsi">{{ $jobRole->deskripsi }}</textarea>
+            </div>
+
+            <button type="submit" class="btn btn-primary">Update Job Role</button>
+        </form>
+    </div>
 @endsection

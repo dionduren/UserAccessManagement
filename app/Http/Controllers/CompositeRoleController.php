@@ -2,63 +2,59 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\CompositeRole;
 use Illuminate\Http\Request;
 
 class CompositeRoleController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
     public function index()
     {
-        //
+        $composite_roles = CompositeRole::all();
+        return view('composite_roles.index', compact('composite_roles'));
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
     public function create()
     {
-        //
+        return view('composite_roles.create');
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
     public function store(Request $request)
     {
-        //
+        $request->validate([
+            'company_id' => 'required|exists:companies,id',
+            'nama' => 'required|string|unique:composite_roles,nama',
+            'deskripsi' => 'nullable|string',
+            'jabatan_id' => 'required|exists:job_roles,id',
+        ]);
+
+        CompositeRole::create($request->all());
+
+        return redirect()->route('composite-roles.index')->with('status', 'Composite role created successfully.');
     }
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(string $id)
+    public function edit(CompositeRole $compositeRole)
     {
-        //
+        return view('composite_roles.edit', compact('compositeRole'));
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(string $id)
+    public function update(Request $request, CompositeRole $compositeRole)
     {
-        //
+        $request->validate([
+            'company_id' => 'required|exists:companies,id',
+            'nama' => 'required|string|unique:composite_roles,nama,' . $compositeRole->id,
+            'deskripsi' => 'nullable|string',
+            'jabatan_id' => 'required|exists:job_roles,id',
+        ]);
+
+        $compositeRole->update($request->all());
+
+        return redirect()->route('composite-roles.index')->with('status', 'Composite role updated successfully.');
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, string $id)
+    public function destroy(CompositeRole $compositeRole)
     {
-        //
-    }
+        $compositeRole->delete();
 
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(string $id)
-    {
-        //
+        return redirect()->route('composite-roles.index')->with('status', 'Composite role deleted successfully.');
     }
 }

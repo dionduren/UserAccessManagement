@@ -1,14 +1,24 @@
 @extends('layouts.app')
 
 @section('content')
-    <h1>Edit Single_roles</h1>
-    <form action="{ route('single_roles.update', $single_roles->id) }" method="POST">
-        @csrf
-        @method('PUT')
-        <label for="name">Name:</label>
-        <input type="text" name="name" id="name" value="{ $single_roles->name }" required>
-        <label for="description">Description:</label>
-        <textarea name="description" id="description">{ $single_roles->description }</textarea>
-        <button type="submit">Update</button>
-    </form>
+    <div class="container">
+        <h1>Edit Single Role</h1>
+
+        <form action="{{ route('single-roles.update', $singleRole) }}" method="POST">
+            @csrf
+            @method('PUT')
+
+            <div class="mb-3">
+                <label for="name" class="form-label">Single Role Name</label>
+                <input type="text" class="form-control" name="name" value="{{ $singleRole->name }}" required>
+            </div>
+
+            <div class="mb-3">
+                <label for="description" class="form-label">Description</label>
+                <textarea class="form-control" name="description">{{ $singleRole->description }}</textarea>
+            </div>
+
+            <button type="submit" class="btn btn-primary">Update Single Role</button>
+        </form>
+    </div>
 @endsection

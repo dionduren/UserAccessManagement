@@ -1,13 +1,27 @@
 @extends('layouts.app')
 
 @section('content')
-    <h1>Create New Companies</h1>
-    <form action="{ route('companies.store') }" method="POST">
-        @csrf
-        <label for="name">Name:</label>
-        <input type="text" name="name" id="name" required>
-        <label for="description">Description:</label>
-        <textarea name="description" id="description"></textarea>
-        <button type="submit">Save</button>
-    </form>
+    <div class="container">
+        <h1>Create Company</h1>
+
+        <form action="{{ route('companies.store') }}" method="POST">
+            @csrf
+            <div class="mb-3">
+                <label for="company_code" class="form-label">Company Code</label>
+                <input type="text" class="form-control" name="company_code" required>
+            </div>
+
+            <div class="mb-3">
+                <label for="name" class="form-label">Company Name</label>
+                <input type="text" class="form-control" name="name" required>
+            </div>
+
+            <div class="mb-3">
+                <label for="description" class="form-label">Description</label>
+                <textarea class="form-control" name="description"></textarea>
+            </div>
+
+            <button type="submit" class="btn btn-primary">Create Company</button>
+        </form>
+    </div>
 @endsection

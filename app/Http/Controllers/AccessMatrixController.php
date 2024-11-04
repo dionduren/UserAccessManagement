@@ -35,7 +35,7 @@ class AccessMatrixController extends Controller
         } else {
             // Attempt to remove role
             $user->removeRole($roleName);
-            return response()->json(['status' => 'success', 'message' => "Role '{$roleName}' removed from {$user->name} successfully."]);
+            return response()->json(['status' => 'warning', 'message' => "Role '{$roleName}' removed from {$user->name} successfully."]);
         }
     }
 
@@ -55,7 +55,7 @@ class AccessMatrixController extends Controller
         } else {
             // Attempt to revoke permission
             $role->revokePermissionTo($permissionName);
-            return response()->json(['status' => 'success', 'message' => "Permission '{$permissionName}' revoked from role '{$role->name}' successfully."]);
+            return response()->json(['status' => 'warning', 'message' => "Permission '{$permissionName}' revoked from role '{$role->name}' successfully."]);
         }
     }
 }

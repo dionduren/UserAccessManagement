@@ -10,6 +10,9 @@ class Kompartemen extends Model
 {
     use HasFactory, SoftDeletes;
 
+    protected $table = 'ms_kompartemen';
+    protected $primaryKey = 'id';
+
     protected $fillable = ['company_id', 'name', 'description', 'created_by', 'updated_by'];
 
     // A compartment belongs to a company

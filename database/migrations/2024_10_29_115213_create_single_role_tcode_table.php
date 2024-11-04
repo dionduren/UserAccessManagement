@@ -8,19 +8,19 @@ class CreateSingleRoleTcodeTable extends Migration
 {
     public function up()
     {
-        Schema::create('single_role_tcode', function (Blueprint $table) {
+        Schema::create('vw_single_role_tcode', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('single_role_id')->nullable()->constrained('single_roles')->onDelete('set null');
-            $table->foreignId('tcode_id')->nullable()->constrained('tcodes')->onDelete('set null');
+            $table->foreignId('single_role_id')->nullable()->constrained('tr_single_roles')->onDelete('set null');
+            $table->foreignId('tcode_id')->nullable()->constrained('tr_tcodes')->onDelete('set null');
             $table->timestamps();
             $table->softDeletes();
-            $table->foreignId('created_by')->nullable()->constrained('users')->onDelete('set null');
-            $table->foreignId('updated_by')->nullable()->constrained('users')->onDelete('set null');
+            $table->text('created_by')->nullable();
+            $table->text('updated_by')->nullable();
         });
     }
 
     public function down()
     {
-        Schema::dropIfExists('single_role_tcode');
+        Schema::dropIfExists('vw_single_role_tcode');
     }
 }

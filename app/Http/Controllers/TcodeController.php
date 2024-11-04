@@ -2,63 +2,61 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Tcode;
+use App\Models\Company;
+use App\Models\SingleRole;
 use Illuminate\Http\Request;
 
 class TcodeController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
     public function index()
     {
-        //
+        $tcodes = Tcode::all();
+        return view('tcodes.index', compact('tcodes'));
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
     public function create()
     {
-        //
+        $companies = Company::all();
+        $single_roles = SingleRole::all();
+        return view('tcodes.create', compact('companies', 'single_roles'));
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
     public function store(Request $request)
     {
-        //
+        $request->validate([
+            'company_id' => 'nullable|exists:ms_company,id',
+            'code' => 'required|string|unique:tr_tcodes,code',
+            'deskripsi' => 'nullable|string',
+        ]);
+
+        Tcode::create($request->all());
+
+        return redirect()->route('tcodes.index')->with('status', 'Tcode created successfully.');
     }
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(string $id)
+    public function edit(Tcode $tcode)
     {
-        //
+        return view('tcodes.edit', compact('tcode'));
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(string $id)
+    public function update(Request $request, Tcode $tcode)
     {
-        //
+        $request->validate([
+            'company_id' => 'nullable|exists:ms_company,id',
+            'code' => 'required|string|unique:tr_tcodes,code,' . $tcode->id,
+            'deskripsi' => 'nullable|string',
+        ]);
+
+        $tcode->update($request->all());
+
+        return redirect()->route('tcodes.index')->with('status', 'Tcode updated successfully.');
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, string $id)
+    public function destroy(Tcode $tcode)
     {
-        //
-    }
+        $tcode->delete();
 
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(string $id)
-    {
-        //
+        return redirect()->route('tcodes.index')->with('status', 'Tcode deleted successfully.');
     }
 }
