@@ -11,44 +11,69 @@ class TcodeController extends Controller
 {
     public function index()
     {
-        $tcodes = Tcode::all();
+        $tcodes = Tcode::with('company')->get();
         return view('tcodes.index', compact('tcodes'));
+    }
+
+    public function show($id)
+    {
+        $tcode = Tcode::with('company')->findOrFail($id);
+        return view('tcodes.show', compact('tcode'));
     }
 
     public function create()
     {
+        // Retrieve necessary data for the create form
         $companies = Company::all();
         $single_roles = SingleRole::all();
+
         return view('tcodes.create', compact('companies', 'single_roles'));
     }
 
     public function store(Request $request)
     {
         $request->validate([
-            'company_id' => 'nullable|exists:ms_company,id',
+            'company_id' => 'required|exists:ms_company,id',
             'code' => 'required|string|unique:tr_tcodes,code',
             'deskripsi' => 'nullable|string',
+            'single_roles' => 'nullable|array', // Allow multiple single role IDs
+            'single_roles.*' => 'exists:tr_single_roles,id',
         ]);
 
-        Tcode::create($request->all());
+        $tcode = Tcode::create($request->only(['company_id', 'code', 'deskripsi']));
+
+        // Attach multiple SingleRoles
+        if ($request->has('single_roles')) {
+            $tcode->singleRoles()->attach($request->input('single_roles'));
+        }
 
         return redirect()->route('tcodes.index')->with('status', 'Tcode created successfully.');
     }
 
     public function edit(Tcode $tcode)
     {
-        return view('tcodes.edit', compact('tcode'));
+        // Retrieve necessary data for the edit form
+        $companies = Company::all();
+        $single_roles = SingleRole::all();
+
+        // Pass the existing Tcode data and the lists for dropdowns to the view
+        return view('tcodes.edit', compact('tcode', 'companies', 'single_roles'));
     }
 
     public function update(Request $request, Tcode $tcode)
     {
         $request->validate([
-            'company_id' => 'nullable|exists:ms_company,id',
+            'company_id' => 'required|exists:ms_company,id',
             'code' => 'required|string|unique:tr_tcodes,code,' . $tcode->id,
             'deskripsi' => 'nullable|string',
+            'single_roles' => 'nullable|array', // Allow multiple single role IDs
+            'single_roles.*' => 'exists:tr_single_roles,id',
         ]);
 
-        $tcode->update($request->all());
+        $tcode->update($request->only(['company_id', 'code', 'deskripsi']));
+
+        // Sync multiple SingleRoles
+        $tcode->singleRoles()->sync($request->input('single_roles', []));
 
         return redirect()->route('tcodes.index')->with('status', 'Tcode updated successfully.');
     }

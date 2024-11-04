@@ -79,8 +79,8 @@ class CompositeRoleController extends Controller
             'jabatan_id' => $request->jabatan_id,
             'nama' => $request->nama,
             'deskripsi' => $request->deskripsi,
-            'created_by' => auth()->id(), // Assumes user authentication
-            'updated_by' => auth()->id(),
+            // 'created_by' => auth()->id(), // Assumes user authentication
+            // 'updated_by' => auth()->id(),
         ]);
 
         return redirect()->route('composite-roles.index')->with('success', 'Composite Role created successfully.');

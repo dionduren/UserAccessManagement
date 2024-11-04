@@ -10,7 +10,7 @@
             <!-- Company Dropdown -->
             <div class="mb-3">
                 <label for="company_id" class="form-label">Nama Perusahaan</label>
-                <select name="company_id" id="company_id" class="form-control">
+                <select name="company_id" id="company_id" class="form-control select2">
                     <option value="">Pilih Perusahaan</option>
                     @foreach ($companies as $company)
                         <option value="{{ $company->id }}">{{ $company->name }}</option>
@@ -18,10 +18,10 @@
                 </select>
             </div>
 
-            <!-- Single Role Dropdown with Search -->
+            <!-- Single Role Multi-Select Dropdown -->
             <div class="mb-3">
-                <label for="single_role_id" class="form-label">Assign Single Role</label>
-                <select name="single_role_id" id="single_role_id" class="form-control select2">
+                <label for="single_roles" class="form-label">Assign Single Roles</label>
+                <select name="single_roles[]" id="single_roles" class="form-control select2" multiple="multiple">
                     <option value="">Pilih role</option>
                     @foreach ($single_roles as $singleRole)
                         <option value="{{ $singleRole->id }}">{{ $singleRole->name }}</option>
@@ -29,11 +29,13 @@
                 </select>
             </div>
 
+            <!-- Tcode Code Field -->
             <div class="mb-3">
                 <label for="code" class="form-label">Nama Tcode</label>
                 <input type="text" class="form-control" name="code" required>
             </div>
 
+            <!-- Tcode Description Field -->
             <div class="mb-3">
                 <label for="deskripsi" class="form-label">Deskripsi</label>
                 <textarea class="form-control" name="deskripsi"></textarea>

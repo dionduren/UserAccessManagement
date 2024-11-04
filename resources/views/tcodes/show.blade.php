@@ -1,0 +1,16 @@
+<div>
+    <h3>{{ $tcode->code }}</h3>
+    <p><strong>Company:</strong> {{ $tcode->company->name ?? 'N/A' }}</p>
+    <p><strong>Description:</strong> {{ $tcode->deskripsi ?? 'None' }}</p>
+
+    @if ($tcode->singleRoles->isNotEmpty())
+        <p><strong>Assigned Single Roles:</strong></p>
+        <ul>
+            @foreach ($tcode->singleRoles as $singleRole)
+                <li>{{ $singleRole->name }} - {{ $singleRole->description }}</li>
+            @endforeach
+        </ul>
+    @else
+        <p><strong>Assigned Single Roles:</strong> None assigned</p>
+    @endif
+</div>
