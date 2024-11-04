@@ -18,6 +18,8 @@ class CreateDepartemenTable extends Migration
             $table->softDeletes(); // Soft delete for safe record deletion
             $table->text('created_by')->nullable();
             $table->text('updated_by')->nullable();
+            $table->boolean('is_deleted')->default(0);
+            $table->text('deleted_by')->nullable();
         });
     }
 

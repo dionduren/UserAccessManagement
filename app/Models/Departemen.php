@@ -21,10 +21,10 @@ class Departemen extends Model
         return $this->belongsTo(Company::class);
     }
 
-    // A department belongs to a compartment
+    // Define relationship to Kompartemen
     public function kompartemen()
     {
-        return $this->belongsTo(Kompartemen::class);
+        return $this->belongsTo(Kompartemen::class, 'kompartemen_id', 'id');
     }
 
     // A department has many job roles

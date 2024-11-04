@@ -2,9 +2,14 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
+use App\Models\Company;
+use App\Models\Departemen;
+use App\Models\Kompartemen;
+use App\Models\CompositeRole;
+
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class JobRole extends Model
 {
@@ -31,5 +36,11 @@ class JobRole extends Model
     public function kompartemen()
     {
         return $this->belongsTo(Kompartemen::class);
+    }
+
+    // Define the relationship with CompositeRole
+    public function compositeRole()
+    {
+        return $this->hasOne(CompositeRole::class, 'jabatan_id'); // Adjust foreign key if needed
     }
 }

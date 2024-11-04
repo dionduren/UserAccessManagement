@@ -2,9 +2,12 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
+use App\Models\Tcode;
+use App\Models\Company;
+use App\Models\CompositeRole;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class SingleRole extends Model
 {
@@ -24,7 +27,7 @@ class SingleRole extends Model
     // A single role can have many tcodes (many-to-many relationship)
     public function tcodes()
     {
-        return $this->belongsToMany(Tcode::class, 'single_role_tcode', 'single_role_id', 'tcode_id');
+        return $this->belongsToMany(Tcode::class, 'vw_single_role_tcode', 'single_role_id', 'tcode_id');
     }
 
     // A single role belongs to a company

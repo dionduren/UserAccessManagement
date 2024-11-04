@@ -19,6 +19,8 @@ class CreateJobRolesTable extends Migration
             $table->softDeletes();
             $table->text('created_by')->nullable();
             $table->text('updated_by')->nullable();
+            $table->boolean('is_deleted')->default(0);
+            $table->text('deleted_by')->nullable();
         });
     }
 
