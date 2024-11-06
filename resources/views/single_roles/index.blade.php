@@ -1,7 +1,7 @@
 @extends('layouts.app')
 
 @section('content')
-    <div class="container">
+    <div class="container-fluid">
         <h1>Single Roles</h1>
 
         <!-- Trigger button for Create Modal -->
@@ -18,8 +18,8 @@
         <table id="single_roles_table" class="table table-striped">
             <thead>
                 <tr>
-                    <th>Company</th>
-                    <th>Name</th>
+                    <th>Perusahaan</th>
+                    <th>Single Role</th>
                     <th>Deskripsi</th>
                     <th>Actions</th>
                 </tr>

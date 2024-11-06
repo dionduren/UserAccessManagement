@@ -11,13 +11,14 @@ class CreateKompartemenTable extends Migration
         Schema::create('ms_kompartemen', function (Blueprint $table) {
             $table->id(); // Primary key
             $table->foreignId('company_id')->nullable()->constrained('ms_company')->onDelete('set null');
+            // $table->string('company_code')->nullable();
+            // $table->foreign('company_code')->references('company_code')->on('ms_company')->onDelete('set null');
             $table->string('name'); // Name of the compartment
             $table->text('description')->nullable(); // Optional description
             $table->timestamps(); // Created at and updated at timestamps
             $table->softDeletes(); // Soft delete for safe record deletion
             $table->text('created_by')->nullable();
             $table->text('updated_by')->nullable();
-            $table->boolean('is_deleted')->default(0);
             $table->text('deleted_by')->nullable();
         });
     }

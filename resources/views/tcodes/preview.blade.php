@@ -1,83 +1,66 @@
 @extends('layouts.app')
 
 @section('content')
-    <div class="container">
-        <h1>Tcode Preview</h1>
+    <div class="container-fluid">
+        <h1>Preview Import Data</h1>
 
-        <!-- Missing Roles Section -->
-        @if (!empty($missingRolesSummary))
+        <!-- Display warnings if any -->
+        @if (!empty($warnings))
             <div class="alert alert-warning">
-                <h5>Missing Single Roles</h5>
                 <ul>
-                    @foreach ($missingRolesSummary as $roleName => $count)
-                        <li>{{ $roleName }} - Missing in {{ $count }} row(s)</li>
+                    @foreach ($warnings as $warning)
+                        <li>{{ $warning }}</li>
                     @endforeach
                 </ul>
             </div>
         @endif
 
-        <!-- Form for Preview and Confirm Upload -->
+        <!-- Display prepared data table -->
+        @if (!empty($preparedData))
+            <table id="previewTable" class="table table-bordered">
+                <thead>
+                    <tr>
+                        <th>Company Code</th>
+                        <th>Single Role Name</th>
+                        <th>Single Role Description</th>
+                        <th>Tcode</th>
+                        <th>Tcode Description</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach ($preparedData as $row)
+                        <tr>
+                            <td>{{ $row['company_code'] }}</td>
+                            <td>{{ $row['single_role_name'] }}</td>
+                            <td>{{ $row['single_role_desc'] }}</td>
+                            <td>{{ $row['code'] }}</td>
+                            <td>{{ $row['deskripsi'] }}</td>
+                        </tr>
+                    @endforeach
+                </tbody>
+            </table>
+        @else
+            <p>No data to display.</p>
+        @endif
+
+        <!-- Confirm Button -->
         <form action="{{ route('tcodes.confirm') }}" method="POST">
             @csrf
-            <!-- Table for Preview Data -->
-            <div id="previewContainer">
-                <table class="table table-bordered">
-                    <thead>
-                        <tr>
-                            <th>Company</th>
-                            <th>Code</th>
-                            <th>Description</th>
-                            <th>Single Roles</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach ($tcodes as $index => $row)
-                            <tr>
-                                <td>
-                                    <input type="hidden" name="data[{{ $index }}][company_id]"
-                                        value="{{ $row['company_id'] }}">
-                                    {{ $row['company_id'] }}
-                                </td>
-                                <td>
-                                    <input type="hidden" name="data[{{ $index }}][code]" value="{{ $row['code'] }}">
-                                    {{ $row['code'] }}
-                                </td>
-                                <td>
-                                    <input type="hidden" name="data[{{ $index }}][deskripsi]"
-                                        value="{{ $row['deskripsi'] }}">
-                                    {{ $row['deskripsi'] }}
-                                </td>
-                                <td>
-                                    <input type="hidden" name="data[{{ $index }}][single_roles]"
-                                        value="{{ isset($row['single_roles']) && is_array($row['single_roles']) ? implode(',', $row['single_roles']) : '' }}">
-
-                                    {{-- Display Single Roles, checking if each role exists --}}
-                                    @if (isset($row['single_roles']) && is_array($row['single_roles']))
-                                        {{ implode(
-                                            ', ',
-                                            array_map(function ($roleId) {
-                                                // Check if role exists
-                                                $role = \App\Models\SingleRole::find($roleId);
-                                                return $role ? $role->nama : 'Missing Role';
-                                            }, $row['single_roles']),
-                                        ) }}
-                                    @else
-                                        No Roles Assigned
-                                    @endif
-                                </td>
-                            </tr>
-                        @endforeach
-                    </tbody>
-                </table>
-            </div>
-
-
-            <!-- Confirm Upload Button -->
-            <button type="submit" class="btn btn-success mt-3">Confirm Upload</button>
-
-            <!-- Go Back to Upload Page Button -->
-            <a href="{{ route('tcodes.upload') }}" class="btn btn-secondary mt-3">Go Back to Upload Page</a>
+            <input type="hidden" name="data" value="{{ base64_encode(json_encode($preparedData)) }}">
+            <button type="submit" class="btn btn-primary">Confirm Import</button>
         </form>
 
     </div>
+@endsection
+<!-- DataTables Integration -->
+@section('scripts')
+    <script>
+        $(document).ready(function() {
+            $('#previewTable').DataTable({
+                paging: true,
+                searching: true,
+                ordering: true
+            });
+        });
+    </script>
 @endsection

@@ -44,6 +44,7 @@ Route::post('/tcodes/preview', [TcodeImportController::class, 'preview'])->name(
 Route::get('/tcodes/preview-refresh', [TcodeImportController::class, 'previewTcodes'])->name('tcodes.preview-refresh');
 Route::post('/tcodes/confirm', [TcodeImportController::class, 'confirm'])->name('tcodes.confirm');
 Route::get('/tcodes/download-template', [TcodeImportController::class, 'downloadTemplate'])->name('tcodes.download-template');
+Route::get('/tcodes/{id}', [TcodeController::class, 'show'])->name('tcodes.show');
 Route::resource('tcodes', TcodeController::class);
 
 // Route::get('/admin', [AdminController::class, 'index'])->name('admin.dashboard');

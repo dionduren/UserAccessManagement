@@ -13,21 +13,49 @@ class MasterDataSeeder extends Seeder
     public function run()
     {
         // Seed Companies
-        Company::create([
-            'company_code' => 'A000',
-            'name' => 'Pupuk Indonesia',
-            'description' => 'Pupuk Indonesia Holding Company',
-            'created_by' => 'seeder',
-            'updated_by' => 'seeder'
+        // Company::create([
+        //     'company_code' => 'A000',
+        //     'name' => 'Pupuk Indonesia',
+        //     'description' => 'Pupuk Indonesia Holding Company',
+        //     'created_by' => 'seeder',
+        //     'updated_by' => 'seeder'
+        // ]);
 
-        ]);
-        Company::create([
-            'company_code' => 'B000',
-            'name' => 'Anak Perusahaan',
-            'description' => 'Pupuk Indonesia Holding Company',
-            'created_by' => 'seeder',
-            'updated_by' => 'seeder'
-        ]);
+        // Company::create([
+        //     'company_code' => 'B000',
+        //     'name' => 'Anak Perusahaan',
+        //     'description' => 'Pupuk Indonesia Holding Company',
+        //     'created_by' => 'seeder',
+        //     'updated_by' => 'seeder'
+        // ]);
+
+        // Array of companies data
+        $companies = [
+            ["kode_perusahaan" => "A000", "nama_perusahaan" => "PT Pupuk Indonesia (Persero)", "singkatan" => "PI"],
+            ["kode_perusahaan" => "B000", "nama_perusahaan" => "PT Petrokimia Gresik", "singkatan" => "PKG"],
+            ["kode_perusahaan" => "C000", "nama_perusahaan" => "PT Pupuk Kujang Cikampek", "singkatan" => "PKC"],
+            ["kode_perusahaan" => "D000", "nama_perusahaan" => "PT Pupuk Kalimantan Timur", "singkatan" => "PKT"],
+            ["kode_perusahaan" => "E000", "nama_perusahaan" => "PT Pupuk Iskandar Muda", "singkatan" => "PIM"],
+            ["kode_perusahaan" => "F000", "nama_perusahaan" => "PT Pupuk Sriwidjaja Palembang", "singkatan" => "PSP"],
+            ["kode_perusahaan" => "G000", "nama_perusahaan" => "PT Rekayasa Industri", "singkatan" => "REKIND"],
+            ["kode_perusahaan" => "H000", "nama_perusahaan" => "PT Pupuk Indonesia Niaga", "singkatan" => "PI NIAGA"],
+            ["kode_perusahaan" => "I000", "nama_perusahaan" => "PT Pupuk Indonesia Logistik", "singkatan" => "PILOG"],
+            ["kode_perusahaan" => "J000", "nama_perusahaan" => "PT Pupuk Indonesia Utilitas", "singkatan" => "PIU"],
+            ["kode_perusahaan" => "K000", "nama_perusahaan" => "PT Pupuk Indonesia Pangan", "singkatan" => "PIP"],
+            ["kode_perusahaan" => "Z000", "nama_perusahaan" => "Forum Human Capital Indonesia", "singkatan" => "FHCI"]
+        ];
+
+        // Insert each company into the database
+        foreach ($companies as $company) {
+            Company::create([
+                'company_code' => $company['kode_perusahaan'],
+                'name' => $company['nama_perusahaan'],
+                'shortname' => $company['singkatan'],
+                'description' => null, // Optional description field, set to null or a default value if needed
+                'created_by' => 'seeder',
+                'updated_by' => 'seeder'
+            ]);
+        }
 
         // Seed Kompartemens
         Kompartemen::create([

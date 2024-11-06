@@ -23,6 +23,17 @@
                     @else
                         <p>No Composite Roles Assigned</p>
                     @endif
+
+                    <p><strong>Connected Tcodes:</strong></p>
+                    @if ($singleRole->tcodes->isNotEmpty())
+                        <ul>
+                            @foreach ($singleRole->tcodes as $tcode)
+                                <li>{{ $tcode->code }} - {{ $tcode->deskripsi ?? 'No Description' }}</li>
+                            @endforeach
+                        </ul>
+                    @else
+                        <p>No Tcodes Connected</p>
+                    @endif
                 </div>
 
             </div>

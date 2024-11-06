@@ -8,7 +8,7 @@
 
         <!-- Button to Access Upload Tcode Page -->
         <a href="{{ route('tcodes.upload') }}" class="btn btn-success mb-3">
-            <i class="bi bi-upload"></i> Upload Tcode Data
+            <i class="bi bi-upload"></i> Upload Tcode - Single Role Relation
         </a>
 
         @if (session('status'))

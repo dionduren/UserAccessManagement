@@ -18,10 +18,11 @@ class TcodeTemplateExport implements FromCollection, WithHeadings, WithStyles, W
     public function headings(): array
     {
         return [
-            'Company ID',
-            'Code',
-            'Description',
-            'Single Role Names',
+            'Company',
+            'Single Role',
+            'Single Role Desc',
+            'Tcode',
+            'Tcode Desc',
         ];
     }
 
@@ -32,10 +33,11 @@ class TcodeTemplateExport implements FromCollection, WithHeadings, WithStyles, W
     {
         return new Collection([
             [
-                '1',
-                'TcodeSample',
-                'Sample Tcode',
-                'SingleRole1, SingleRole2',
+                'A000',
+                'Nama Single Role',
+                'Deskripsi Single Role',
+                'Nama Tcode',
+                'Deskripsi Tcode',
             ],
         ]);
     }
@@ -50,6 +52,7 @@ class TcodeTemplateExport implements FromCollection, WithHeadings, WithStyles, W
             'B' => 25,
             'C' => 35,
             'D' => 30,
+            'E' => 30,
         ];
     }
 
@@ -58,7 +61,7 @@ class TcodeTemplateExport implements FromCollection, WithHeadings, WithStyles, W
      */
     public function styles(Worksheet $sheet)
     {
-        $sheet->getStyle('A1:D1')->applyFromArray([
+        $sheet->getStyle('A1:E1')->applyFromArray([
             'font' => [
                 'bold' => true,
                 'color' => ['argb' => 'FFFFFF'],
@@ -69,9 +72,9 @@ class TcodeTemplateExport implements FromCollection, WithHeadings, WithStyles, W
             ],
         ]);
 
-        $sheet->getStyle('A1:D1')->getBorders()->getBottom()->setBorderStyle(\PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN);
+        $sheet->getStyle('A1:E1')->getBorders()->getBottom()->setBorderStyle(\PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN);
 
-        foreach (range('A', 'D') as $col) {
+        foreach (range('A', 'E') as $col) {
             $sheet->getColumnDimension($col)->setAutoSize(true);
         }
     }

@@ -25,7 +25,6 @@ class CompositeRole extends Model
             ->withTimestamps();
     }
 
-
     // A composite role belongs to a job role
     public function jobRole()
     {

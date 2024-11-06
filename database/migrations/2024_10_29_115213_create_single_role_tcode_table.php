@@ -10,13 +10,12 @@ class CreateSingleRoleTcodeTable extends Migration
     {
         Schema::create('pt_single_role_tcode', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('single_role_id')->constrained('tr_single_roles')->onDelete('cascade');
-            $table->foreignId('tcode_id')->constrained('tr_tcodes')->onDelete('cascade');
+            $table->unsignedBigInteger('single_role_id')->nullable();
+            $table->unsignedBigInteger('tcode_id')->nullable();
             $table->timestamps();
             $table->softDeletes();
             $table->text('created_by')->nullable();
             $table->text('updated_by')->nullable();
-            $table->boolean('is_deleted')->default(0);
             $table->text('deleted_by')->nullable();
         });
     }
