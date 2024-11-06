@@ -11,6 +11,7 @@ use App\Http\Controllers\JobRoleController;
 use App\Http\Controllers\DepartemenController;
 use App\Http\Controllers\SingleRoleController;
 use App\Http\Controllers\KompartemenController;
+use App\Http\Controllers\TcodeImportController;
 use App\Http\Controllers\AccessMatrixController;
 use App\Http\Controllers\CompositeRoleController;
 
@@ -33,14 +34,16 @@ Route::get('/job-roles/{id}', [JobRoleController::class, 'show'])->where('id', '
 Route::resource('job-roles', JobRoleController::class);
 
 Route::get('/composite-roles/ajax', [CompositeRoleController::class, 'getCompositeRolesAjax'])->name('composite-roles.ajax');
-Route::get('/composite-roles/filtered-data', [CompositeRoleController::class, 'getFilteredData'])->name('composite-roles.filtered-data');
 Route::resource('composite-roles', CompositeRoleController::class);
 
-Route::get('/single-roles/create', [SingleRoleController::class, 'create'])->name('single-roles.create');
-Route::post('/single-roles', [SingleRoleController::class, 'store'])->name('single-roles.store');
-Route::get('/single-roles/filtered-data', [SingleRoleController::class, 'getFilteredData'])->name('single-roles.filtered-data');
+// Route::post('/single-roles', [SingleRoleController::class, 'store'])->name('single-roles.store');
 Route::resource('single-roles', SingleRoleController::class);
 
+Route::get('/tcodes/upload', [TcodeImportController::class, 'showUploadForm'])->name('tcodes.upload');
+Route::post('/tcodes/preview', [TcodeImportController::class, 'preview'])->name('tcodes.preview');
+Route::get('/tcodes/preview-refresh', [TcodeImportController::class, 'previewTcodes'])->name('tcodes.preview-refresh');
+Route::post('/tcodes/confirm', [TcodeImportController::class, 'confirm'])->name('tcodes.confirm');
+Route::get('/tcodes/download-template', [TcodeImportController::class, 'downloadTemplate'])->name('tcodes.download-template');
 Route::resource('tcodes', TcodeController::class);
 
 // Route::get('/admin', [AdminController::class, 'index'])->name('admin.dashboard');

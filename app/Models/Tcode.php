@@ -18,7 +18,7 @@ class Tcode extends Model
     // A tcode can belong to many single roles (many-to-many relationship)
     public function singleRoles()
     {
-        return $this->belongsToMany(SingleRole::class, 'vw_single_role_tcode', 'tcode_id', 'single_role_id');
+        return $this->belongsToMany(SingleRole::class, 'pt_single_role_tcode', 'tcode_id', 'single_role_id');
     }
 
     // A tcode belongs to a company

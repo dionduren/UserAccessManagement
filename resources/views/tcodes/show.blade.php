@@ -7,7 +7,7 @@
         <p><strong>Assigned Single Roles:</strong></p>
         <ul>
             @foreach ($tcode->singleRoles as $singleRole)
-                <li>{{ $singleRole->name }} - {{ $singleRole->description }}</li>
+                <li>{{ $singleRole->nama }} - {{ $singleRole->deskripsi }}</li>
             @endforeach
         </ul>
     @else

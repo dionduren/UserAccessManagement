@@ -11,7 +11,6 @@ class CreateSingleRolesTable extends Migration
         Schema::create('tr_single_roles', function (Blueprint $table) {
             $table->id();
             $table->foreignId('company_id')->nullable()->constrained('ms_company')->onDelete('set null');
-            $table->foreignId('composite_role_id')->nullable()->constrained('tr_composite_roles')->onDelete('set null');
             $table->string('nama'); // Single Role Name
             $table->text('deskripsi')->nullable();
             $table->timestamps();

@@ -14,6 +14,8 @@
     @can('manage company info')
         <hr>
 
+        MASTER DATA COMPANY
+
         <li>
             <a href="{{ route('companies.index') }}"
                 class="nav-link {{ request()->routeIs('companies.index') ? 'active' : 'text-white' }}">
@@ -34,19 +36,21 @@
                 <i class="bi bi-layers me-2"></i> Departemen
             </a>
         </li>
-    @endcan
 
-    <hr>
-
-    <!-- Additional Items... -->
-
-    @can('manage roles')
         <li>
             <a href="{{ route('job-roles.index') }}"
                 class="nav-link {{ request()->routeIs('job-roles.index') ? 'active' : 'text-white' }}">
                 <i class="bi bi-person-badge me-2"></i> Job Roles
             </a>
         </li>
+    @endcan
+
+
+    <!-- Additional Items... -->
+
+    @can('manage roles')
+        <hr>
+        MASTER DATA USER ACCESS
 
         <!-- Composite Roles Menu Item -->
         <li>

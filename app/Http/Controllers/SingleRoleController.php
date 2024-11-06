@@ -13,54 +13,58 @@ use Illuminate\Http\Request;
 
 class SingleRoleController extends Controller
 {
+    // Display the index page with data
     public function index()
     {
-        $single_roles = SingleRole::with(['company', 'compositeRole'])->get();
-        return view('single_roles.index', compact('single_roles'));
+        $companies = Company::all();
+        $single_roles = SingleRole::with('compositeRoles', 'tcodes')->get();
+        return view('single_roles.index', compact('companies', 'single_roles'));
     }
 
+    // Show the details of a Single Role
     public function show($id)
     {
-        $singleRole = SingleRole::with(['company', 'compositeRole', 'tcodes'])->findOrFail($id);
+        $singleRole = SingleRole::findOrFail($id);
         return view('single_roles.show', compact('singleRole'));
     }
-
 
     public function create()
     {
         $companies = Company::all();
-        $tcodes = Tcode::all();
-        $compositeRoles = CompositeRole::all(); // Load all composite roles
-
-        return view('single_roles.create', compact('companies', 'tcodes', 'compositeRoles'));
+        return view('single_roles.create', compact('companies'));
     }
 
+
+    // Store a new Single Role
     public function store(Request $request)
     {
         $request->validate([
             'company_id' => 'required|exists:ms_company,id',
-            'composite_role_id' => 'nullable|exists:tr_composite_roles,id',
             'nama' => 'required|string|unique:tr_single_roles,nama',
             'deskripsi' => 'nullable|string',
-            'tcodes' => 'array'
         ]);
 
-        // Create SingleRole and sync associated Tcodes
-        $singleRole = SingleRole::create($request->except('tcodes'));
-        $singleRole->tcodes()->sync($request->tcodes);
+        $singleRole = SingleRole::create($request->all());
+
+        // Check if the request is an AJAX request
+        if ($request->ajax()) {
+            // Return HTML for the table row or a success message
+            $view = view('single_roles.partials.single_role_row', compact('singleRole'))->render();
+            return response()->json(['status' => 'success', 'html' => $view]);
+        }
 
         return redirect()->route('single-roles.index')->with('status', 'Single Role created successfully.');
     }
 
     public function edit($id)
     {
-        $singleRole = SingleRole::with(['company', 'compositeRole', 'tcodes'])->findOrFail($id);
+        $singleRole = SingleRole::findOrFail($id);
         $companies = Company::all();
-        $compositeRoles = CompositeRole::where('company_id', $singleRole->company_id)->get(); // Filtered for selected company
-        $tcodes = Tcode::all();
 
-        return view('single_roles.edit', compact('singleRole', 'companies', 'compositeRoles', 'tcodes'));
+        // Render the view and pass the data to it
+        return view('single_roles.edit', compact('singleRole', 'companies'))->render();
     }
+
 
     public function update(Request $request, $id)
     {
@@ -70,18 +74,18 @@ class SingleRoleController extends Controller
             'company_id' => 'required|exists:ms_company,id',
             'nama' => 'required|string|unique:tr_single_roles,nama,' . $singleRole->id,
             'deskripsi' => 'nullable|string',
-            'composite_role_id' => 'nullable|exists:tr_composite_roles,id',
         ]);
 
         $singleRole->update($request->all());
 
-        // Sync Tcodes if provided
-        if ($request->has('tcodes')) {
-            $singleRole->tcodes()->sync($request->input('tcodes'));
+        if ($request->ajax()) {
+            $view = view('single_roles.partials.single_role_row', compact('singleRole'))->render();
+            return response()->json(['status' => 'success', 'html' => $view]);
         }
 
-        return redirect()->route('single-roles.index')->with('status', 'Single role updated successfully.');
+        return redirect()->route('single-roles.index')->with('status', 'Single Role updated successfully.');
     }
+
 
 
     public function destroy(SingleRole $singleRole)
@@ -89,21 +93,5 @@ class SingleRoleController extends Controller
         $singleRole->delete();
 
         return redirect()->route('single-roles.index')->with('status', 'Single role deleted successfully.');
-    }
-
-    public function getFilteredData(Request $request)
-    {
-        $data = [];
-
-        if ($request->has('company_id')) {
-            $data['compositeRoles'] = CompositeRole::where('company_id', $request->company_id)->get();
-            $data['kompartemens'] = Kompartemen::where('company_id', $request->company_id)->get();
-        }
-
-        if ($request->has('kompartemen_id')) {
-            $data['departemens'] = Departemen::where('kompartemen_id', $request->kompartemen_id)->get();
-        }
-
-        return response()->json($data);
     }
 }

@@ -19,15 +19,17 @@ class SingleRole extends Model
     protected $fillable = ['company_id', 'composite_role_id', 'nama', 'deskripsi', 'created_by', 'updated_by'];
 
     // A single role belongs to a composite role
-    public function compositeRole()
+    public function compositeRoles()
     {
-        return $this->belongsTo(CompositeRole::class);
+        return $this->belongsToMany(CompositeRole::class, 'pt_composite_role_single_role', 'single_role_id', 'composite_role_id')
+            ->withTimestamps();
     }
+
 
     // A single role can have many tcodes (many-to-many relationship)
     public function tcodes()
     {
-        return $this->belongsToMany(Tcode::class, 'vw_single_role_tcode', 'single_role_id', 'tcode_id');
+        return $this->belongsToMany(Tcode::class, 'pt_single_role_tcode', 'single_role_id', 'tcode_id');
     }
 
     // A single role belongs to a company

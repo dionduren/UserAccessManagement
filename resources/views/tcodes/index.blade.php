@@ -6,6 +6,11 @@
 
         <a href="{{ route('tcodes.create') }}" class="btn btn-primary mb-3">Create New Tcode</a>
 
+        <!-- Button to Access Upload Tcode Page -->
+        <a href="{{ route('tcodes.upload') }}" class="btn btn-success mb-3">
+            <i class="bi bi-upload"></i> Upload Tcode Data
+        </a>
+
         @if (session('status'))
             <div class="alert alert-success">{{ session('status') }}</div>
         @endif

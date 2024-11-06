@@ -11,11 +11,11 @@
             <!-- Company Dropdown -->
             <div class="mb-3">
                 <label for="company_id" class="form-label">Company</label>
-                <select name="company_id" id="company_id" class="form-control" required>
+                <select name="company_id" id="company_id" class="form-control select2" required>
                     <option value="">Select a company</option>
                     @foreach ($companies as $company)
                         <option value="{{ $company->id }}"
-                            {{ $company->id == $compositeRole->jobRole->company_id ? 'selected' : '' }}>
+                            {{ $company->id == $compositeRole->company_id ? 'selected' : '' }}>
                             {{ $company->name }}
                         </option>
                     @endforeach
@@ -48,60 +48,51 @@
 @section('scripts')
     <script>
         $(document).ready(function() {
-            // Initialize select2 on the Job Role dropdown
+            // Initialize select2 for the Job Role dropdown
             $('.select2').select2({
-                placeholder: 'Select a job role',
+                width: '100%',
+                placeholder: 'Select an option',
                 allowClear: true,
-                width: '100%'
             });
 
-            // Job roles data (passed from the controller)
             const jobRolesData = @json($job_roles_data);
+            const selectedJobRoleId = {{ $compositeRole->jabatan_id ?? 'null' }};
 
-            // Pre-selected job role ID for edit mode
-            const selectedJobRoleId = {{ $compositeRole->jobRole->id ?? 'null' }};
+            console.log(selectedJobRoleId);
 
-            // Function to populate Job Roles based on selected company
             function populateJobRoles(companyId) {
                 $('#jabatan_id').empty().append('<option value="">Select a job role</option>');
 
                 if (jobRolesData[companyId]) {
-                    // Iterate over kompartemen groups
                     $.each(jobRolesData[companyId], function(kompartemen, departemens) {
-                        // For each departemen in the kompartemen
                         $.each(departemens, function(departemen, roles) {
-                            // Create an optgroup label based on Kompartemen and Departemen
                             let optgroupLabel = `${kompartemen} - ${departemen}`;
                             let optgroup = $('<optgroup>').attr('label', optgroupLabel);
 
-                            // Add job roles to the optgroup
                             $.each(roles, function(index, role) {
+                                // Correctly set selected attribute
                                 let selected = role.id == selectedJobRoleId ? 'selected' :
                                     '';
                                 optgroup.append(
                                     $('<option>').val(role.id).text(role.nama_jabatan)
                                     .attr('selected', selected)
                                 );
-                            });
 
-                            // Append the optgroup to the select
+                            });
                             $('#jabatan_id').append(optgroup);
                         });
                     });
                 }
 
-                // Reinitialize select2 to update options
+                // Reinitialize select2 with updated options
                 $('#jabatan_id').select2({
+                    width: '100%',
                     placeholder: 'Select a job role',
                     allowClear: true,
-                    width: '100%'
                 });
-            }
 
-            // Populate Job Roles on initial load if company is pre-selected
-            let initialCompanyId = $('#company_id').val();
-            if (initialCompanyId) {
-                populateJobRoles(initialCompanyId);
+                $("#jabatan_id").val(selectedJobRoleId).trigger('change');
+
             }
 
             // Populate Job Roles based on selected Company
@@ -109,6 +100,9 @@
                 let companyId = $(this).val();
                 populateJobRoles(companyId);
             });
+
+            // Trigger the change event on page load to set initial Job Roles
+            $('#company_id').trigger('change');
         });
     </script>
 @endsection

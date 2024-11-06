@@ -46,7 +46,7 @@
         $(document).ready(function() {
             // Initialize select2 on the Job Role dropdown
             $('.select2').select2({
-                placeholder: 'Select a job role',
+                placeholder: 'Pilih Jabatan yang memiliki Composite Role ini',
                 allowClear: true,
                 width: '100%'
             });
@@ -56,7 +56,8 @@
 
             // Function to populate Job Roles based on selected company
             function populateJobRoles(companyId) {
-                $('#jabatan_id').empty().append('<option value="">Select a job role</option>');
+                $('#jabatan_id').empty().append(
+                    '<option value="">Pilih Jabatan yang memiliki Composite Role ini</option>');
 
                 if (jobRolesData[companyId]) {
                     // Iterate over kompartemen groups
@@ -82,7 +83,7 @@
 
                 // Reinitialize select2 to update options
                 $('#jabatan_id').select2({
-                    placeholder: 'Select a job role',
+                    placeholder: 'Pilih Jabatan yang memiliki Composite Role ini',
                     allowClear: true,
                     width: '100%'
                 });

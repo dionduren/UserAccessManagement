@@ -1,17 +1,31 @@
-<div>
-    <h3>{{ $singleRole->name }}</h3>
-    <p><strong>Company:</strong> {{ $singleRole->company->name ?? 'N/A' }}</p>
-    <p><strong>Composite Role:</strong> {{ $singleRole->compositeRole->nama ?? 'Not Assigned' }}</p>
-    <p><strong>Description:</strong> {{ $singleRole->description ?? 'None' }}</p>
+<div class="modal fade" id="showSingleRoleModal" tabindex="-1" aria-labelledby="showSingleRoleModalLabel"
+    aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="showSingleRoleModalLabel">Single Role Details</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body" id="modal-single-role-details">
+                <div>
+                    <h3>{{ $singleRole->nama }}</h3>
+                    <p><strong>Company:</strong> {{ $singleRole->company->name ?? 'N/A' }}</p>
+                    <p><strong>Description:</strong> {{ $singleRole->deskripsi ?? 'None' }}</p>
+                    <p><strong>Composite Roles:</strong></p>
+                    @if ($singleRole->compositeRoles->isNotEmpty())
+                        <ul>
+                            @foreach ($singleRole->compositeRoles as $compositeRole)
+                                <li>{{ $compositeRole->nama }}</li>
+                            @endforeach
+                        </ul>
+                    @else
+                        <p>No Composite Roles Assigned</p>
+                    @endif
+                </div>
 
-    @if ($singleRole->tcodes->isNotEmpty())
-        <p><strong>Tcodes:</strong></p>
-        <ul>
-            @foreach ($singleRole->tcodes as $tcode)
-                <li>{{ $tcode->code }} - {{ $tcode->description }}</li>
-            @endforeach
-        </ul>
-    @else
-        <p><strong>Tcodes:</strong> None assigned</p>
-    @endif
+            </div>
+        </div>
+    </div>
 </div>

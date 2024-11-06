@@ -21,8 +21,10 @@ class CompositeRole extends Model
     // A composite role can have many single roles
     public function singleRoles()
     {
-        return $this->hasMany(SingleRole::class);
+        return $this->belongsToMany(SingleRole::class, 'pt_composite_role_single_role', 'composite_role_id', 'single_role_id')
+            ->withTimestamps();
     }
+
 
     // A composite role belongs to a job role
     public function jobRole()

@@ -14,34 +14,17 @@ class CompositeRoleController extends Controller
 {
     public function index()
     {
-        return view('composite_roles.index');
-    }
-
-    // Method to fetch composite role data for AJAX DataTable
-    public function getCompositeRolesAjax()
-    {
-        $compositeRoles = CompositeRole::with(['jobRole', 'company'])->get();
-
-        // Format the data for DataTable
-        $formattedData = $compositeRoles->map(function ($role) {
-            return [
-                'company' => $role->company->name ?? 'N/A',
-                'name' => $role->nama,
-                'job_role' => $role->jobRole->nama_jabatan ?? 'Not Assigned',
-                'description' => $role->deskripsi,
-                'actions' => view('composite_roles.partials.actions', ['role' => $role])->render(),
-            ];
-        });
-
-        return response()->json(['data' => $formattedData]);
+        $composite_roles = CompositeRole::with(['company', 'jobRole'])->get();
+        return view('composite_roles.index', compact('composite_roles'));
     }
 
     public function show($id)
     {
-        $compositeRole = CompositeRole::with(['jobRole', 'company'])->findOrFail($id);
+        $compositeRole = CompositeRole::with(['jobRole', 'company', 'singleRoles'])->findOrFail($id);
+
+        // Load a partial view and pass the data to it for rendering in the modal
         return view('composite_roles.show', compact('compositeRole'));
     }
-
 
     public function create()
     {
@@ -69,23 +52,21 @@ class CompositeRoleController extends Controller
     {
         $request->validate([
             'company_id' => 'required|exists:ms_company,id',
-            'jabatan_id' => 'required|exists:tr_composite_roles,id',
+            'jabatan_id' => 'nullable|exists:tr_job_roles,id',
             'nama' => 'required|string|max:255',
             'deskripsi' => 'nullable|string',
         ]);
 
+        // Create the Composite Role
         CompositeRole::create([
             'company_id' => $request->company_id,
             'jabatan_id' => $request->jabatan_id,
             'nama' => $request->nama,
             'deskripsi' => $request->deskripsi,
-            // 'created_by' => auth()->id(), // Assumes user authentication
-            // 'updated_by' => auth()->id(),
         ]);
 
         return redirect()->route('composite-roles.index')->with('success', 'Composite Role created successfully.');
     }
-
 
     public function edit(CompositeRole $compositeRole)
     {
@@ -109,54 +90,31 @@ class CompositeRoleController extends Controller
         return view('composite_roles.edit', compact('compositeRole', 'companies', 'job_roles_data'));
     }
 
-
     public function update(Request $request, CompositeRole $compositeRole)
     {
         $request->validate([
             'company_id' => 'required|exists:ms_company,id',
+            'jabatan_id' => 'nullable|exists:tr_job_roles,id',
             'nama' => 'required|string|unique:tr_composite_roles,nama,' . $compositeRole->id,
             'deskripsi' => 'nullable|string',
-            'jabatan_id' => 'required|exists:tr_job_roles,id',
         ]);
 
-        $compositeRole->update($request->all());
+        // Update Composite Role details
+        $compositeRole->update([
+            'company_id' => $request->company_id,
+            'jabatan_id' => $request->jabatan_id,
+            'nama' => $request->nama,
+            'deskripsi' => $request->deskripsi,
+        ]);
 
         return redirect()->route('composite-roles.index')->with('status', 'Composite role updated successfully.');
     }
+
 
     public function destroy(CompositeRole $compositeRole)
     {
         $compositeRole->delete();
 
         return redirect()->route('composite-roles.index')->with('status', 'Composite role deleted successfully.');
-    }
-
-    public function getFilteredData(Request $request)
-    {
-        $companyId = $request->input('company_id');
-        $kompartemenId = $request->input('kompartemen_id');
-
-        // Fetch Kompartemen by Company
-        $kompartemens = Kompartemen::where('company_id', $companyId)->get();
-
-        // Fetch Departemen by Kompartemen
-        $departemens = $kompartemenId
-            ? Departemen::where('kompartemen_id', $kompartemenId)->get()
-            : collect(); // empty collection if no kompartemen selected
-
-        // Fetch Job Roles by Kompartemen and Departemen
-        $jobRoles = [];
-        if ($kompartemenId) {
-            $jobRoles = JobRole::where('kompartemen_id', $kompartemenId)
-                ->whereIn('departemen_id', $departemens->pluck('id'))
-                ->get()
-                ->groupBy('departemen_id');
-        }
-
-        return response()->json([
-            'kompartemens' => $kompartemens,
-            'departemens' => $departemens,
-            'jobRoles' => $jobRoles,
-        ]);
     }
 }

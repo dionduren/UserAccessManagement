@@ -21,19 +21,6 @@
                 </select>
             </div>
 
-            <!-- Single Role Multi-Select Dropdown -->
-            <div class="mb-3">
-                <label for="single_roles" class="form-label">Assign Single Roles</label>
-                <select name="single_roles[]" id="single_roles" class="form-control select2" multiple="multiple">
-                    @foreach ($single_roles as $singleRole)
-                        <option value="{{ $singleRole->id }}"
-                            {{ $tcode->singleRoles->contains($singleRole->id) ? 'selected' : '' }}>
-                            {{ $singleRole->name }}
-                        </option>
-                    @endforeach
-                </select>
-            </div>
-
             <!-- Tcode Code Field -->
             <div class="mb-3">
                 <label for="code" class="form-label">Nama Tcode</label>
@@ -49,10 +36,4 @@
             <button type="submit" class="btn btn-primary">Update Tcode</button>
         </form>
     </div>
-
-    <script>
-        $(document).ready(function() {
-            $('.select2').select2(); // Initialize Select2 for searchable and multi-select dropdown
-        });
-    </script>
 @endsection
