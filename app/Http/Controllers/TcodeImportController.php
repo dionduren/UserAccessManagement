@@ -180,8 +180,8 @@ class TcodeImportController extends Controller
                 );
 
                 // Optionally update description if it differs
-                if ($tcode->wasRecentlyCreated === false && $tcode->description !== $tcodeDesc) {
-                    $tcode->description = $tcodeDesc;
+                if ($tcode->wasRecentlyCreated === false && $tcode->deskripsi !== $tcodeDesc) {
+                    $tcode->deskripsi = $tcodeDesc;
                     $tcode->company_id = $companyId; // Ensure company_id is consistent
                     $tcode->save();
                 }
