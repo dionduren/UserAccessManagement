@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Company;
 use App\Models\Departemen;
 use App\Models\Kompartemen;
 use Illuminate\Http\Request;
@@ -10,10 +11,12 @@ class DepartemenController extends Controller
 {
     public function index()
     {
-        $departemens = Departemen::all();
-        return view('departemen.index', compact('departemens'));
-    }
+        // Retrieve all companies and departemens to pass to the view
+        $companies = Company::all();
+        $departemens = Departemen::with(['company', 'kompartemen'])->get();
 
+        return view('departemen.index', compact('companies', 'departemens'));
+    }
     public function create()
     {
         $kompartemens = Kompartemen::all();
@@ -63,5 +66,12 @@ class DepartemenController extends Controller
     {
         $departemen->delete();
         return redirect()->route('departemens.index')->with('success', 'Departemen deleted successfully.');
+    }
+
+    public function getDepartemenByKompartemen(Request $request)
+    {
+        $kompartemenId = $request->get('kompartemen_id');
+        $departemen = Departemen::where('kompartemen_id', $kompartemenId)->get();
+        return response()->json($departemen);
     }
 }

@@ -15,14 +15,16 @@ use App\Http\Controllers\TcodeImportController;
 use App\Http\Controllers\AccessMatrixController;
 use App\Http\Controllers\CompositeRoleController;
 
-Route::get('/', function () {
-    return view('welcome');
-});
+// Route::get('/', function () {
+//     return view('welcome');
+// });
 
 Auth::routes();
 
+Route::get('/', [App\Http\Controllers\HomeController::class, 'index'])->name('home');
 Route::get('/home', [App\Http\Controllers\HomeController::class, 'index'])->name('home');
 
+// ======= MASTER DATA COMPANY ======= 
 Route::resource('companies', CompanyController::class);
 // Route::resource('companies', CompanyController::class)->middleware('permission:view company|edit company|delete company');
 
@@ -32,6 +34,12 @@ Route::resource('departemens', DepartemenController::class);
 Route::get('/job-roles/filtered-data', [JobRoleController::class, 'getFilteredData'])->name('job-roles.filtered-data');
 Route::get('/job-roles/{id}', [JobRoleController::class, 'show'])->where('id', '[0-9]+');
 Route::resource('job-roles', JobRoleController::class);
+
+Route::get('/get-kompartemen', [KompartemenController::class, 'getKompartemenByCompany']);
+Route::get('/get-departemen', [DepartemenController::class, 'getDepartemenByKompartemen']);
+Route::get('/get-job-roles', [JobRoleController::class, 'getJobRolesByDepartemen']);
+
+// ======= MASTER DATA ROLES ======= 
 
 Route::get('/composite-roles/ajax', [CompositeRoleController::class, 'getCompositeRolesAjax'])->name('composite-roles.ajax');
 Route::resource('composite-roles', CompositeRoleController::class);

@@ -10,8 +10,9 @@ class KompartemenController extends Controller
 {
     public function index()
     {
+        $companies = Company::all();
         $kompartemens = Kompartemen::all();
-        return view('kompartemen.index', compact('kompartemens'));
+        return view('kompartemen.index', compact('kompartemens', 'companies'));
     }
 
     public function create()
@@ -63,5 +64,12 @@ class KompartemenController extends Controller
     {
         $kompartemen->delete();
         return redirect()->route('kompartemens.index')->with('success', 'Kompartemen deleted successfully.');
+    }
+
+    public function getKompartemenByCompany(Request $request)
+    {
+        $companyId = $request->get('company_id');
+        $kompartemen = Kompartemen::where('company_id', $companyId)->get();
+        return response()->json($kompartemen);
     }
 }

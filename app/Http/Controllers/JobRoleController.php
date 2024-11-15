@@ -103,4 +103,11 @@ class JobRoleController extends Controller
 
         return response()->json([], 400); // Bad request if parameters are missing
     }
+
+    public function getJobRolesByDepartemen(Request $request)
+    {
+        $departemenId = $request->get('departemen_id');
+        $jobRoles = JobRole::where('departemen_id', $departemenId)->get();
+        return response()->json($jobRoles);
+    }
 }

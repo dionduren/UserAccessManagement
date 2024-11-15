@@ -9,12 +9,13 @@
             <div class="alert alert-success">{{ session('success') }}</div>
         @endif
 
-        <table class="table table-striped">
+        <table id="companiesTable" class="table table-bordered table-hover cell-border hover">
             <thead>
                 <tr>
                     <th>Company Code</th>
-                    <th>Name</th>
-                    <th>Description</th>
+                    <th>Nama</th>
+                    <th>Singkatan</th>
+                    <th>Deskripsi</th>
                     <th>Actions</th>
                 </tr>
             </thead>
@@ -23,6 +24,7 @@
                     <tr>
                         <td>{{ $company->company_code }}</td>
                         <td>{{ $company->name }}</td>
+                        <td>{{ $company->shortname }}</td>
                         <td>{{ $company->description }}</td>
                         <td>
                             <a href="{{ route('companies.edit', $company) }}" class="btn btn-warning btn-sm">Edit</a>
@@ -38,4 +40,35 @@
             </tbody>
         </table>
     </div>
+@endsection
+
+@section('scripts')
+    <script>
+        $(document).ready(function() {
+            if ($.fn.DataTable) { // Check if DataTable is defined
+                $('#companiesTable').DataTable({
+                    responsive: true,
+                    paging: true,
+                    searching: true,
+                    ordering: true,
+                    columnDefs: [{
+                        width: '10%',
+                        targets: 0
+                    }, {
+                        width: '20%',
+                        targets: 1
+                    }, {
+                        width: '10%',
+                        targets: 2
+                    }, {
+                        width: '12.5%',
+                        orderable: false,
+                        targets: [4] // Disable ordering for the 'Actions' column
+                    }]
+                });
+            } else {
+                console.error('DataTable library not loaded.');
+            }
+        });
+    </script>
 @endsection

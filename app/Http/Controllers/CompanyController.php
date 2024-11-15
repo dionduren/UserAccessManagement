@@ -38,7 +38,7 @@ class CompanyController extends Controller
     {
         $request->validate([
             'name' => 'required|string|max:255',
-            'company_code' => 'required|string|max:10|unique:ms_companies',
+            'company_code' => 'required|string|max:10|unique:ms_company',
             'description' => 'nullable|string'
         ]);
 
@@ -60,7 +60,7 @@ class CompanyController extends Controller
     public function update(Request $request, Company $company)
     {
         $request->validate([
-            'company_code' => 'required|string|max:10|unique:ms_companies,company_code,' . $company->id,
+            'company_code' => 'required|string|max:10|unique:ms_company,company_code,' . $company->id,
             'name' => 'required|string|max:255',
             'description' => 'nullable|string'
         ]);
