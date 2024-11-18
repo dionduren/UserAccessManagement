@@ -15,6 +15,8 @@ class Departemen extends Model
 
     protected $fillable = ['company_id', 'kompartemen_id', 'name', 'description', 'created_by', 'updated_by'];
 
+    protected $dates = ['deleted_at'];
+
     // A department belongs to a company
     public function company()
     {

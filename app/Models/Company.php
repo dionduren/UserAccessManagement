@@ -15,6 +15,8 @@ class Company extends Model
 
     protected $fillable = ['company_code', 'name', 'description', 'created_by', 'updated_by'];
 
+    protected $dates = ['deleted_at'];
+
     // A company has many compartments (kompartemen)
     public function kompartemen()
     {

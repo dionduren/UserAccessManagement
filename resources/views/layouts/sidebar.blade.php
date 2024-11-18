@@ -78,8 +78,17 @@
     @endcan
 
     <hr>
+    IMPORT DATA
+    <li class="nav-item">
+        <a href="{{ route('excel.upload') }}"
+            class="nav-link {{ request()->routeIs('excel.upload') ? 'active' : 'text-white' }}">
+            <i class="bi bi-file-earmark-spreadsheet"></i> Import Data
+        </a>
+    </li>
+
 
     @can('manage access-matrix')
+        <hr>
         <li>
             <a href="{{ route('access-matrix') }}"
                 class="nav-link {{ request()->routeIs('access-matrix') ? 'active' : 'text-white' }}">

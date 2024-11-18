@@ -20,6 +20,8 @@ class JobRole extends Model
 
     protected $fillable = ['company_id', 'kompartemen_id', 'departemen_id', 'nama_jabatan', 'deskripsi', 'created_by', 'updated_by'];
 
+    protected $dates = ['deleted_at'];
+
     // A job role belongs to a company
     public function company()
     {

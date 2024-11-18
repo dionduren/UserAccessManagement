@@ -7,7 +7,6 @@ use App\Models\SingleRole;
 use App\Imports\TcodeImport;
 use Illuminate\Http\Request;
 use App\Exports\TcodeTemplateExport;
-use App\Models\Company;
 use Maatwebsite\Excel\Facades\Excel;
 
 class TcodeImportController extends Controller
@@ -23,38 +22,6 @@ class TcodeImportController extends Controller
     /**
      * Handle the uploaded Excel file and display a preview of the data.
      */
-    // public function preview(Request $request)
-    // {
-    //     $request->validate([
-    //         'excel_file' => 'required|file|mimes:xlsx,xls',
-    //     ]);
-
-    //     $import = new TcodeImport();
-    //     Excel::import($import, $request->file('excel_file'));
-
-    //     // Get imported data with missing roles
-    //     $data = $import->getData();
-
-    //     // Collect warnings from the imported data
-    //     $missingRolesSummary = [];
-    //     foreach ($data as $tcode) {
-    //         if (!empty($tcode['missing_roles'])) {
-    //             foreach ($tcode['missing_roles'] as $missingRole) {
-    //                 // Count occurrences of each missing role
-    //                 if (!isset($missingRolesSummary[$missingRole])) {
-    //                     $missingRolesSummary[$missingRole] = 0;
-    //                 }
-    //                 $missingRolesSummary[$missingRole]++;
-    //             }
-    //         }
-    //     }
-
-    //     return view('tcodes.preview', [
-    //         'tcodes' => $data,
-    //         'missingRolesSummary' => $missingRolesSummary, // Pass the summary to the view
-    //     ]);
-    // }
-
     public function preview(Request $request)
     {
         $request->validate([
@@ -71,25 +38,14 @@ class TcodeImportController extends Controller
 
         foreach ($data as $row) {
             // Extract values from the mapped row
-            $companyCode = $row['company_id'];
             $tcodeName = $row['code'];
             $tcodeDesc = $row['deskripsi'];
             $singleRoleName = $row['single_role_name'];
             $singleRoleDesc = $row['single_role_desc'];
 
-            // Validate and transform data
-            $company = Company::where('company_code', $companyCode)->first();
-            if (!$company) {
-                $warnings[] = "Company with code {$companyCode} not found.";
-                $companyId = null;
-            } else {
-                $companyId = $company->id;
-            }
 
             // Prepare data for the confirm step without creating or modifying any database entries
             $preparedData[] = [
-                'company_id' => $companyId,
-                'company_code' => $companyCode,
                 'code' => $tcodeName,
                 'deskripsi' => $tcodeDesc,
                 'single_role_name' => $singleRoleName,
@@ -120,23 +76,6 @@ class TcodeImportController extends Controller
     /**
      * Confirm and save data to the database.
      */
-    // public function confirm(Request $request)
-    // {
-    //     $data = $request->input('data');
-
-    //     foreach ($data as $row) {
-    //         // Assuming you have a model for Tcode, save each row
-    //         Tcode::create([
-    //             'company_id' => $row['company_id'],
-    //             'code' => $row['code'],
-    //             'deskripsi' => $row['deskripsi'],
-    //             'single_roles' => $row['single_roles'] // Adjust as necessary if single_roles needs separate handling
-    //         ]);
-    //     }
-
-    //     return redirect()->route('tcodes.index')->with('status', 'Data uploaded successfully.');
-    // }
-
     public function confirm(Request $request)
     {
         $validatedData = $request->validate([

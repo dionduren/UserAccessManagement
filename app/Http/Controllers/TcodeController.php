@@ -3,37 +3,32 @@
 namespace App\Http\Controllers;
 
 use App\Models\Tcode;
-use App\Models\Company;
-use App\Models\SingleRole;
 use Illuminate\Http\Request;
 
 class TcodeController extends Controller
 {
     public function index()
     {
-        $tcodes = Tcode::with('company')->get();
+        $tcodes = Tcode::all();
         return view('tcodes.index', compact('tcodes'));
     }
 
     public function show($id)
     {
-        $tcode = Tcode::with('company')->findOrFail($id);
+        $tcode = Tcode::findOrFail($id);
         return view('tcodes.show', compact('tcode'));
     }
 
     public function create()
     {
-        // Retrieve necessary data for the create form
-        $companies = Company::all();
-
-        return view('tcodes.create', compact('companies'));
+        return view('tcodes.create');
     }
 
     public function store(Request $request)
     {
         $request->validate([
-            'company_id' => 'required|exists:ms_company,id',
             'code' => 'required|string|unique:tr_tcodes,code',
+            'sap_module' => 'nullable|string|unique:tr_tcodes,sap_module',
             'deskripsi' => 'nullable|string',
         ]);
 
@@ -44,9 +39,6 @@ class TcodeController extends Controller
 
     public function edit(Tcode $tcode)
     {
-        // Retrieve necessary data for the edit form
-        $companies = Company::all();
-
         // Pass the existing Tcode data and the lists for dropdowns to the view
         return view('tcodes.edit', compact('tcode', 'companies'));
     }
@@ -54,8 +46,8 @@ class TcodeController extends Controller
     public function update(Request $request, Tcode $tcode)
     {
         $request->validate([
-            'company_id' => 'required|exists:ms_company,id',
             'code' => 'required|string|unique:tr_tcodes,code,' . $tcode->id,
+            'sap_module' => 'nullable|string|unique:tr_tcodes,sap_module',
             'deskripsi' => 'nullable|string'
         ]);
 

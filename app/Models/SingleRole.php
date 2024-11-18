@@ -18,6 +18,8 @@ class SingleRole extends Model
 
     protected $fillable = ['company_id', 'composite_role_id', 'nama', 'deskripsi', 'created_by', 'updated_by'];
 
+    protected $dates = ['deleted_at'];
+
     // A single role belongs to a composite role
     public function compositeRoles()
     {

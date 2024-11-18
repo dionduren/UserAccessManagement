@@ -8,23 +8,16 @@
             @csrf
             @method('PUT')
 
-            <!-- Company Dropdown -->
-            <div class="mb-3">
-                <label for="company_id" class="form-label">Nama Perusahaan</label>
-                <select name="company_id" id="company_id" class="form-control select2">
-                    <option value="">Pilih Perusahaan</option>
-                    @foreach ($companies as $company)
-                        <option value="{{ $company->id }}" {{ $company->id == $tcode->company_id ? 'selected' : '' }}>
-                            {{ $company->name }}
-                        </option>
-                    @endforeach
-                </select>
-            </div>
-
             <!-- Tcode Code Field -->
             <div class="mb-3">
                 <label for="code" class="form-label">Nama Tcode</label>
                 <input type="text" class="form-control" name="code" value="{{ $tcode->code }}" required>
+            </div>
+
+            <!-- Tcode SAP Module Field -->
+            <div class="mb-3">
+                <label for="sap_module" class="form-label">Modul SAP</label>
+                <input type="text" class="form-control" name="sap_module" value="{{ $tcode->code }}" required>
             </div>
 
             <!-- Tcode Description Field -->

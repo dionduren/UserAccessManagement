@@ -15,15 +15,11 @@ class Tcode extends Model
 
     protected $fillable = ['company_id', 'code', 'deskripsi', 'created_by', 'updated_by'];
 
+    protected $dates = ['deleted_at'];
+
     // A tcode can belong to many single roles (many-to-many relationship)
     public function singleRoles()
     {
-        return $this->belongsToMany(SingleRole::class, 'pt_single_role_tcode', 'tcode_id', 'single_role_id');
-    }
-
-    // A tcode belongs to a company
-    public function company()
-    {
-        return $this->belongsTo(Company::class);
+        return $this->belongsToMany(SingleRole::class, 'pt_single_role_tcode', 'tcode_id', 'single_role_id')->withTimestamps();
     }
 }

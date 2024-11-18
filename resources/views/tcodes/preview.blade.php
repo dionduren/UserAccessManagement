@@ -20,20 +20,20 @@
             <table id="previewTable" class="table table-bordered">
                 <thead>
                     <tr>
-                        <th>Company Code</th>
                         <th>Single Role Name</th>
                         <th>Single Role Description</th>
                         <th>Tcode</th>
+                        <th>Modul SAP</th>
                         <th>Tcode Description</th>
                     </tr>
                 </thead>
                 <tbody>
                     @foreach ($preparedData as $row)
                         <tr>
-                            <td>{{ $row['company_code'] }}</td>
                             <td>{{ $row['single_role_name'] }}</td>
                             <td>{{ $row['single_role_desc'] }}</td>
                             <td>{{ $row['code'] }}</td>
+                            <td>{{ $row['sap_module'] }}</td>
                             <td>{{ $row['deskripsi'] }}</td>
                         </tr>
                     @endforeach

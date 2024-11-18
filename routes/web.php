@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 
+
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\TcodeController;
@@ -13,7 +14,10 @@ use App\Http\Controllers\SingleRoleController;
 use App\Http\Controllers\KompartemenController;
 use App\Http\Controllers\TcodeImportController;
 use App\Http\Controllers\AccessMatrixController;
+
 use App\Http\Controllers\CompositeRoleController;
+use App\Http\Controllers\ExcelImportController;
+
 
 // Route::get('/', function () {
 //     return view('welcome');
@@ -57,6 +61,11 @@ Route::resource('tcodes', TcodeController::class);
 
 // Route::get('/admin', [AdminController::class, 'index'])->name('admin.dashboard');
 // Route::get('/admin/manage-users', [AdminController::class, 'manageUsers'])->name('admin.manage-users');
+
+// === import export excel
+Route::get('/import', [ExcelImportController::class, 'showUploadForm'])->name('excel.upload');
+Route::post('/import', [ExcelImportController::class, 'import'])->name('excel.import');
+Route::post('/import/confirm', [ExcelImportController::class, 'confirmImport'])->name('excel.confirm');
 
 Route::get('/access-matrix', [AccessMatrixController::class, 'index'])->name('access-matrix');
 Route::post('/access-matrix/assign-role', [AccessMatrixController::class, 'assignRole'])->name('access-matrix.assign-role');

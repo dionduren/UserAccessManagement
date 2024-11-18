@@ -2,12 +2,12 @@
 
 namespace App\Exports;
 
-use Maatwebsite\Excel\Concerns\WithHeadings;
+use Illuminate\Support\Collection;
 use Maatwebsite\Excel\Concerns\FromCollection;
+use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithColumnWidths;
 use Maatwebsite\Excel\Concerns\WithStyles;
 use Maatwebsite\Excel\Sheet;
-use Illuminate\Support\Collection;
 use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 
 class TcodeTemplateExport implements FromCollection, WithHeadings, WithStyles, WithColumnWidths
@@ -18,7 +18,6 @@ class TcodeTemplateExport implements FromCollection, WithHeadings, WithStyles, W
     public function headings(): array
     {
         return [
-            'Company',
             'Single Role',
             'Single Role Desc',
             'Tcode',
@@ -33,7 +32,6 @@ class TcodeTemplateExport implements FromCollection, WithHeadings, WithStyles, W
     {
         return new Collection([
             [
-                'A000',
                 'Nama Single Role',
                 'Deskripsi Single Role',
                 'Nama Tcode',
@@ -48,11 +46,10 @@ class TcodeTemplateExport implements FromCollection, WithHeadings, WithStyles, W
     public function columnWidths(): array
     {
         return [
-            'A' => 15,
-            'B' => 25,
-            'C' => 35,
+            'A' => 25,
+            'B' => 35,
+            'C' => 30,
             'D' => 30,
-            'E' => 30,
         ];
     }
 
@@ -72,9 +69,9 @@ class TcodeTemplateExport implements FromCollection, WithHeadings, WithStyles, W
             ],
         ]);
 
-        $sheet->getStyle('A1:E1')->getBorders()->getBottom()->setBorderStyle(\PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN);
+        $sheet->getStyle('A1:D1')->getBorders()->getBottom()->setBorderStyle(\PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN);
 
-        foreach (range('A', 'E') as $col) {
+        foreach (range('A', 'D') as $col) {
             $sheet->getColumnDimension($col)->setAutoSize(true);
         }
     }

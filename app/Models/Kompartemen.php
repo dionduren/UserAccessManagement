@@ -15,6 +15,8 @@ class Kompartemen extends Model
 
     protected $fillable = ['company_id', 'name', 'description', 'created_by', 'updated_by'];
 
+    protected $dates = ['deleted_at'];
+
     // A compartment belongs to a company
     public function company()
     {

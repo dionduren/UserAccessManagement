@@ -18,6 +18,8 @@ class CompositeRole extends Model
 
     protected $fillable = ['company_id', 'jabatan_id', 'nama', 'deskripsi', 'created_by', 'updated_by'];
 
+    protected $dates = ['deleted_at'];
+
     // A composite role can have many single roles
     public function singleRoles()
     {

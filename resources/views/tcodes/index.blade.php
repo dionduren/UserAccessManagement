@@ -18,8 +18,8 @@
         <table id="tcodes_table" class="table table-striped">
             <thead>
                 <tr>
-                    <th>Company</th>
                     <th>Code</th>
+                    <th>Modul SAP</th>
                     <th>Description</th>
                     <th>Actions</th>
                 </tr>
@@ -27,7 +27,7 @@
             <tbody>
                 @foreach ($tcodes as $tcode)
                     <tr>
-                        <td>{{ $tcode->company->name ?? 'N/A' }}</td>
+                        <td>{{ $tcode->sap_module }}</td>
                         <td>{{ $tcode->code }}</td>
                         <td>{{ $tcode->deskripsi }}</td>
                         <td>
