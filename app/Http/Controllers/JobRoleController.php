@@ -130,8 +130,11 @@ class JobRoleController extends Controller
 
         $jobRoles = $query->get()->map(function ($jobRole) {
             return [
+                'perusahaan' => $jobRole->company->name,
+                'kompartemen' => $jobRole->kompartemen->name ?? ' - ',
+                'departemen' => $jobRole->departemen->name ?? ' - ',
                 'nama_jabatan' => $jobRole->nama_jabatan,
-                'description' => $jobRole->deskripsi ?? 'None',
+                'description' => $jobRole->deskripsi ?? ' - ',
                 'actions' => view('job_roles.partials.actions', compact('jobRole'))->render()
             ];
         });

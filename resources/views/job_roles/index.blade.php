@@ -43,6 +43,7 @@
         <table id="jobRolesTable" class="table table-bordered table-striped table-hover mt-3">
             <thead>
                 <tr>
+                    <th>Perusahaan</th>
                     <th>Nama Jabatan</th>
                     <th>Deskripsi</th>
                     <th>Actions</th>
@@ -80,6 +81,15 @@
                 ordering: true,
                 data: [], // Start with empty data
                 columns: [{
+                        data: 'perusahaan',
+                        title: 'Perusahaan'
+                    }, {
+                        data: 'kompartemen',
+                        title: 'Kompartemen'
+                    }, {
+                        data: 'departemen',
+                        title: 'Departemen'
+                    }, {
                         data: 'nama_jabatan',
                         title: 'Nama Jabatan'
                     },

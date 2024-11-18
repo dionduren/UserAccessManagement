@@ -20,11 +20,11 @@ class CompositeRole extends Model
 
     protected $dates = ['deleted_at'];
 
-    // A composite role can have many single roles
-    public function singleRoles()
+
+    // A composite role belongs to a company
+    public function company()
     {
-        return $this->belongsToMany(SingleRole::class, 'pt_composite_role_single_role', 'composite_role_id', 'single_role_id')
-            ->withTimestamps();
+        return $this->belongsTo(Company::class);
     }
 
     // A composite role belongs to a job role
@@ -33,9 +33,10 @@ class CompositeRole extends Model
         return $this->belongsTo(JobRole::class, 'jabatan_id');
     }
 
-    // A composite role belongs to a company
-    public function company()
+    // A composite role can have many single roles
+    public function singleRoles()
     {
-        return $this->belongsTo(Company::class);
+        return $this->belongsToMany(SingleRole::class, 'pt_composite_role_single_role', 'composite_role_id', 'single_role_id')
+            ->withTimestamps();
     }
 }

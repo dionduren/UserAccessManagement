@@ -16,7 +16,10 @@ use App\Http\Controllers\TcodeImportController;
 use App\Http\Controllers\AccessMatrixController;
 
 use App\Http\Controllers\CompositeRoleController;
-use App\Http\Controllers\ExcelImportController;
+// use App\Http\Controllers\IOExcel\ExcelImportController;
+use App\Http\Controllers\IOExcel\TcodeSingleRoleController;
+use App\Http\Controllers\IOExcel\CompanyKompartemenController;
+use App\Http\Controllers\IOExcel\CompositeRoleSingleRoleController;
 
 
 // Route::get('/', function () {
@@ -63,9 +66,20 @@ Route::resource('tcodes', TcodeController::class);
 // Route::get('/admin/manage-users', [AdminController::class, 'manageUsers'])->name('admin.manage-users');
 
 // === import export excel
-Route::get('/import', [ExcelImportController::class, 'showUploadForm'])->name('excel.upload');
-Route::post('/import', [ExcelImportController::class, 'import'])->name('excel.import');
-Route::post('/import/confirm', [ExcelImportController::class, 'confirmImport'])->name('excel.confirm');
+// Route::get('/import', [ExcelImportController::class, 'showUploadForm'])->name('excel.upload');
+// Route::post('/import', [ExcelImportController::class, 'import'])->name('excel.import');
+// Route::post('/import/confirm', [ExcelImportController::class, 'confirmImport'])->name('excel.confirm');
+
+Route::get('/company-kompartemen/upload', [CompanyKompartemenController::class, 'uploadForm'])->name('company_kompartemen.upload');
+Route::post('/company-kompartemen/preview', [CompanyKompartemenController::class, 'preview'])->name('company_kompartemen.preview');
+Route::post('/company-kompartemen/confirm', [CompanyKompartemenController::class, 'confirmImport'])->name('company_kompartemen.confirm');
+
+Route::get('/composite-role-single-role/upload', [CompositeRoleSingleRoleController::class, 'uploadForm'])->name('composite_role_single_role.upload');
+Route::post('/composite-role-single-role/preview', [CompositeRoleSingleRoleController::class, 'preview'])->name('composite_role_single_role.preview');
+
+Route::get('/tcode-single-role/upload', [TcodeSingleRoleController::class, 'uploadForm'])->name('tcode_single_role.upload');
+Route::post('/tcode-single-role/preview', [TcodeSingleRoleController::class, 'preview'])->name('tcode_single_role.preview');
+
 
 Route::get('/access-matrix', [AccessMatrixController::class, 'index'])->name('access-matrix');
 Route::post('/access-matrix/assign-role', [AccessMatrixController::class, 'assignRole'])->name('access-matrix.assign-role');

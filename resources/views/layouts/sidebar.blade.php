@@ -79,12 +79,32 @@
 
     <hr>
     IMPORT DATA
-    <li class="nav-item">
+    {{-- <li class="nav-item">
         <a href="{{ route('excel.upload') }}"
             class="nav-link {{ request()->routeIs('excel.upload') ? 'active' : 'text-white' }}">
             <i class="bi bi-file-earmark-spreadsheet"></i> Import Data
         </a>
+    </li> --}}
+
+    <li class="nav-item">
+        <a href="{{ route('company_kompartemen.upload') }}"
+            class="nav-link {{ request()->routeIs('company_kompartemen.upload') ? 'active' : 'text-white' }}">
+            <i class="bi bi-file-earmark-spreadsheet"></i> Jabatan - Composite Role
+        </a>
     </li>
+    <li class="nav-item">
+        <a href="{{ route('composite_role_single_role.upload') }}"
+            class="nav-link {{ request()->routeIs('composite_role_single_role.upload') ? 'active' : 'text-white' }}">
+            <i class="bi bi-file-earmark-spreadsheet"></i> Composite - Single Role
+        </a>
+    </li>
+    <li class="nav-item">
+        <a href="{{ route('tcode_single_role.upload') }}"
+            class="nav-link {{ request()->routeIs('tcode_single_role.upload') ? 'active' : 'text-white' }}">
+            <i class="bi bi-file-earmark-spreadsheet"></i> Single Role - Tcode
+        </a>
+    </li>
+
 
 
     @can('manage access-matrix')

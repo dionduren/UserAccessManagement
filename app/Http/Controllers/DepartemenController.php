@@ -13,10 +13,12 @@ class DepartemenController extends Controller
     {
         // Retrieve all companies and departemens to pass to the view
         $companies = Company::all();
-        $departemens = Departemen::with(['company', 'kompartemen'])->get();
+        $kompartemens = Kompartemen::all();
+        $departemens = Departemen::with(['company'])->get();
 
-        return view('departemen.index', compact('companies', 'departemens'));
+        return view('departemen.index', compact('companies', 'departemens', 'kompartemens'));
     }
+
     public function create()
     {
         $kompartemens = Kompartemen::all();

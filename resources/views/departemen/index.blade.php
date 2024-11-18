@@ -35,10 +35,9 @@
         <table id="departemenTable" class="table table-bordered table-hover cell-border mt-3">
             <thead>
                 <tr>
-                    {{-- <th>ID</th>
-                    <th>Company Name</th>
-                    <th>Kompartemen Name</th> --}}
-                    <th>Nama Departemen</th>
+                    <th>Perusahaan</th>
+                    <th>Kompartemen</th>
+                    <th>Departemen</th>
                     <th>Deskripsi</th>
                     <th>Actions</th>
                 </tr>
@@ -46,15 +45,14 @@
             <tbody>
                 @foreach ($departemens as $departemen)
                     <tr data-company-id="{{ $departemen->company_id }}"
-                        data-kompartemen-id="{{ $departemen->kompartemen_id }}">
-                        {{-- <td>{{ $departemen->id }}</td>
+                        data-kompartemen-id="{{ $departemen->kompartemen_id ?? '' }}">
                         <td>{{ $departemen->company->name ?? 'N/A' }}</td>
-                        <td>{{ $departemen->kompartemen->name ?? 'N/A' }}</td> --}}
+                        <td>{{ $departemen->kompartemen->name ?? 'N/A' }}</td>
                         <td>{{ $departemen->name }}</td>
                         <td>{{ $departemen->description }}</td>
                         <td>
-                            <a href="{{ route('departemens.edit', $company) }}" class="btn btn-warning btn-sm">Edit</a>
-                            <form action="{{ route('departemens.destroy', $company) }}" method="POST"
+                            <a href="{{ route('departemens.edit', $departemen) }}" class="btn btn-warning btn-sm">Edit</a>
+                            <form action="{{ route('departemens.destroy', $departemen) }}" method="POST"
                                 style="display:inline;">
                                 @csrf
                                 @method('DELETE')
@@ -71,75 +69,70 @@
 
 @section('scripts')
     <script>
+        const kompartemensData = @json($kompartemens);
+
         $(document).ready(function() {
-            // Initialize DataTable with client-side searching, sorting, and pagination
-            if ($.fn.DataTable) { // Check if DataTable is defined
-                let table = $('#departemenTable').DataTable({
-                    responsive: true,
-                    paging: true,
-                    searching: true,
-                    ordering: true,
-                    columnDefs: [{
-                        width: '12.5%',
-                        orderable: false,
-                        targets: [2] // Disable ordering for the 'Actions' column
-                    }]
-                });
-            } else {
-                console.error('DataTable library not loaded.');
-            }
-
-
-            // Fetch Kompartemen based on selected company
-            $('#companyDropdown').change(function() {
-                let companyId = $(this).val();
-                if (companyId != '') {
-                    $.ajax({
-                        url: '/get-kompartemen', // Adjust the route as per your configuration
-                        method: 'GET',
-                        data: {
-                            company_id: companyId
-                        },
-                        success: function(data) {
-                            $('#kompartemenDropdown').empty().append(
-                                '<option value="">-- Semua Kompartemen --</option>');
-                            $.each(data, function(key, value) {
-                                $('#kompartemenDropdown').append('<option value="' +
-                                    value.id + '">' + value.name + '</option>');
-                            });
-                            $('#kompartemenDropdown').prop('disabled', false);
-                        },
-                        error: function() {
-                            alert('Failed to fetch Kompartemen.');
-                        }
-                    });
-                } else {
-                    $('#kompartemenDropdown').empty().append(
-                        '<option value="">-- Semua Kompartemen --</option>');
-                    $('#kompartemenDropdown').prop('disabled', true);
-                    table.rows().every(function(rowIdx, tableLoop, rowLoop) {
-                        let row = this.node();
-                        $(row).show();
-                    });
-                    table.draw();
-                }
+            let table = $('#departemenTable').DataTable({
+                responsive: true,
+                paging: true,
+                searching: true,
+                ordering: true,
+                columnDefs: [{
+                    width: '12.5%',
+                    orderable: false,
+                    targets: [4] // Disable ordering for the 'Actions' column
+                }]
             });
 
-            // Filter table based on selected company and kompartemen
-            $('#kompartemenDropdown').change(function() {
-                let companyId = $('#companyDropdown').val();
-                let kompartemenId = $(this).val();
+            // Load all kompartemen data from the embedded JavaScript variable
+            let allKompartemens = kompartemensData;
 
-                table.rows().every(function(rowIdx, tableLoop, rowLoop) {
-                    let row = this.node();
-                    if ((!companyId || $(row).data('company-id') == companyId) &&
-                        (!kompartemenId || $(row).data('kompartemen-id') == kompartemenId)) {
-                        $(row).show();
-                    } else {
-                        $(row).hide();
+            // Handle company selection change
+            $('#companyDropdown').change(function() {
+                let selectedCompanyId = $(this).val();
+
+                // Filter and update kompartemen dropdown based on selected company
+                $('#kompartemenDropdown').empty().append(
+                    '<option value="">-- Semua Kompartemen --</option>');
+                if (selectedCompanyId) {
+                    let filteredKompartemens = allKompartemens.filter(k => k.company_id ==
+                        selectedCompanyId);
+                    filteredKompartemens.forEach(k => {
+                        $('#kompartemenDropdown').append('<option value="' + k.id + '">' + k.name +
+                            '</option>');
+                    });
+                    $('#kompartemenDropdown').prop('disabled', false);
+                } else {
+                    $('#kompartemenDropdown').prop('disabled', true);
+                }
+
+                // Apply DataTable filtering for departemen based on selected company
+                $.fn.dataTable.ext.search.push(function(settings, data, dataIndex) {
+                    let rowCompanyId = $(table.row(dataIndex).node()).data('company-id');
+                    if (!selectedCompanyId || rowCompanyId == selectedCompanyId) {
+                        return true;
                     }
+                    return false;
                 });
-                table.draw(); // Redraw the table
+                table.draw(); // Redraw table with applied filter
+                $.fn.dataTable.ext.search.pop(); // Remove the filter to avoid stacking
+            });
+
+            // Handle kompartemen selection change
+            $('#kompartemenDropdown').change(function() {
+                let selectedKompartemenId = $(this).val();
+
+                // Apply DataTable filtering for departemen based on selected kompartemen
+                $.fn.dataTable.ext.search.push(function(settings, data, dataIndex) {
+                    let rowKompartemenId = $(table.row(dataIndex).node()).data('kompartemen-id') ||
+                        '';
+                    if (!selectedKompartemenId || rowKompartemenId == selectedKompartemenId) {
+                        return true;
+                    }
+                    return false;
+                });
+                table.draw(); // Redraw table with applied filter
+                $.fn.dataTable.ext.search.pop(); // Remove the filter to avoid stacking
             });
         });
     </script>
