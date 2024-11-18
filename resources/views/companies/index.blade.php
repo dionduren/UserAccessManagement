@@ -2,18 +2,18 @@
 
 @section('content')
     <div class="container">
-        <h1>Companies</h1>
-        <a href="{{ route('companies.create') }}" class="btn btn-primary mb-3">Create New Company</a>
+        <h1>Master Data Company</h1>
+        <a href="{{ route('companies.create') }}" class="btn btn-primary mb-3">Buat Info Perusahaan Baru</a>
 
         @if (session('success'))
             <div class="alert alert-success">{{ session('success') }}</div>
         @endif
 
-        <table id="companiesTable" class="table table-bordered table-hover cell-border hover">
+        <table id="companiesTable" class="table table-bordered table-striped table-hover table- cell-border hover">
             <thead>
                 <tr>
                     <th>Company Code</th>
-                    <th>Nama</th>
+                    <th>Nama Perusahaan</th>
                     <th>Singkatan</th>
                     <th>Deskripsi</th>
                     <th>Actions</th>

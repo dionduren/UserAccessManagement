@@ -1,55 +1,54 @@
 @extends('layouts.app')
 
 @section('content')
-    <div class="container-fluid">
-        <h1>Job Roles</h1>
+    <div class="container">
+        <h2>Master Data Job Roles</h2>
 
-        <a href="{{ route('job-roles.create') }}" class="btn btn-primary mb-3">Create New Job Role</a>
+        <a href="{{ route('job-roles.create') }}" class="btn btn-primary mb-3">Buat Info Jabatan Baru</a>
 
-        @if (session('status'))
-            <div class="alert alert-success">{{ session('status') }}</div>
+        @if (session('success'))
+            <div class="alert alert-success">{{ session('success') }}</div>
         @endif
 
-        <table id="job_roles_table" class="table table-striped">
+        <!-- Dropdown for Company Selection -->
+        <div class="form-group mb-3">
+            <label for="companyDropdown">Pilih Perusahaan</label>
+            <select id="companyDropdown" class="form-control">
+                <option value="">-- Semua Perusahaan --</option>
+                @foreach ($companies as $company)
+                    <option value="{{ $company->id }}">{{ $company->name }}</option>
+                @endforeach
+            </select>
+        </div>
+
+        <!-- Dropdown for Kompartemen Selection -->
+        <div class="form-group mb-3">
+            <label for="kompartemenDropdown">Pilih Kompartemen</label>
+            <select id="kompartemenDropdown" class="form-control" disabled>
+                <option value="">-- Semua Kompartemen --</option>
+            </select>
+        </div>
+
+        <!-- Dropdown for Departemen Selection -->
+        <div class="form-group mb-3">
+            <label for="departemenDropdown">Pilih Departemen</label>
+            <select id="departemenDropdown" class="form-control" disabled>
+                <option value="">-- Semua Departemen --</option>
+            </select>
+        </div>
+
+        <hr class="mt-3 mb-3" style="width: 80%; margin:auto">
+
+        <!-- Table to display Job Roles -->
+        <table id="jobRolesTable" class="table table-bordered table-striped table-hover mt-3">
             <thead>
                 <tr>
-                    <th>Company</th>
-                    <th>Kompartemen</th>
-                    <th>Departemen</th>
-                    <th>Name</th>
-                    <th>Composite Role</th>
+                    <th>Nama Jabatan</th>
+                    <th>Deskripsi</th>
                     <th>Actions</th>
                 </tr>
             </thead>
-            <tbody>
-                @foreach ($job_roles as $jobRole)
-                    <tr>
-                        <td>{{ $jobRole->company->name ?? 'N/A' }}</td>
-                        <td>{{ $jobRole->kompartemen->name ?? 'N/A' }}</td>
-                        <td>{{ $jobRole->departemen->name ?? 'N/A' }}</td>
-                        <td>{{ $jobRole->nama_jabatan }}</td>
-                        <td>{{ $jobRole->compositeRole->nama ?? 'Not Assigned' }}</td>
-                        <td>
-                            <a href="#" data-id="{{ $jobRole->id }}" class="btn btn-info btn-sm show-job-role"
-                                data-toggle="modal" data-target="#showJobRoleModal">
-                                <i class="bi bi-eye"></i>
-                            </a>
-                            <a href="{{ route('job-roles.edit', $jobRole) }}" class="btn btn-warning btn-sm">
-                                <i class="bi bi-pencil"></i>
-                            </a>
-                            <form action="{{ route('job-roles.destroy', $jobRole) }}" method="POST"
-                                style="display:inline;">
-                                @csrf
-                                @method('DELETE')
-                                <button type="submit" class="btn btn-danger btn-sm"
-                                    onclick="return confirm('Are you sure?')">
-                                    <i class="bi bi-trash"></i>
-                                </button>
-                            </form>
-                        </td>
-                    </tr>
-                @endforeach
-            </tbody>
+            <tbody></tbody>
         </table>
     </div>
 
@@ -71,16 +70,120 @@
     </div>
 @endsection
 
-
 @section('scripts')
     <script>
         $(document).ready(function() {
-            // Initialize DataTable
-            $('#job_roles_table').DataTable({
+            let jobRolesTable = $('#jobRolesTable').DataTable({
+                responsive: true,
+                paging: true,
                 searching: true,
-                processing: false,
-                serverSide: false
+                ordering: true,
+                data: [], // Start with empty data
+                columns: [{
+                        data: 'nama_jabatan',
+                        title: 'Nama Jabatan'
+                    },
+                    {
+                        data: 'description',
+                        title: 'Deskripsi'
+                    },
+                    {
+                        data: 'actions',
+                        title: 'Actions',
+                        width: '12.5%',
+                        orderable: false,
+                        searchable: false
+                    }
+                ]
             });
+
+            // Load Kompartemen based on selected company
+            $('#companyDropdown').change(function() {
+                let companyId = $(this).val();
+                if (companyId) {
+                    $.ajax({
+                        url: '/get-kompartemen',
+                        method: 'GET',
+                        data: {
+                            company_id: companyId
+                        },
+                        success: function(data) {
+                            $('#kompartemenDropdown').empty().append(
+                                '<option value="">-- Semua Kompartemen --</option>');
+                            $.each(data, function(key, value) {
+                                $('#kompartemenDropdown').append('<option value="' +
+                                    value.id + '">' + value.name + '</option>');
+                            });
+                            $('#kompartemenDropdown').prop('disabled', false);
+                        },
+                        error: function() {
+                            alert('Failed to fetch Kompartemen.');
+                        }
+                    });
+                } else {
+                    $('#kompartemenDropdown').prop('disabled', true).empty().append(
+                        '<option value="">-- Semua Kompartemen --</option>');
+                    $('#departemenDropdown').prop('disabled', true).empty().append(
+                        '<option value="">-- Semua Departemen --</option>');
+                    jobRolesTable.clear().draw();
+                }
+            });
+
+            // Load Departemen based on selected Kompartemen
+            $('#kompartemenDropdown').change(function() {
+                let kompartemenId = $(this).val();
+                if (kompartemenId) {
+                    $.ajax({
+                        url: '/get-departemen',
+                        method: 'GET',
+                        data: {
+                            kompartemen_id: kompartemenId
+                        },
+                        success: function(data) {
+                            $('#departemenDropdown').empty().append(
+                                '<option value="">-- Semua Departemen --</option>');
+                            $.each(data, function(key, value) {
+                                $('#departemenDropdown').append('<option value="' +
+                                    value.id + '">' + value.name + '</option>');
+                            });
+                            $('#departemenDropdown').prop('disabled', false);
+                        },
+                        error: function() {
+                            alert('Failed to fetch Departemen.');
+                        }
+                    });
+                } else {
+                    $('#departemenDropdown').prop('disabled', true).empty().append(
+                        '<option value="">-- Semua Departemen --</option>');
+                    jobRolesTable.clear().draw();
+                }
+            });
+
+            // Load Job Roles when a dropdown changes
+            $('#companyDropdown, #kompartemenDropdown, #departemenDropdown').change(loadJobRoles);
+
+            // Load Job Roles based on selected filters
+            function loadJobRoles() {
+                let companyId = $('#companyDropdown').val();
+                let kompartemenId = $('#kompartemenDropdown').val();
+                let departemenId = $('#departemenDropdown').val();
+
+                $.ajax({
+                    url: '/get-job-roles',
+                    method: 'GET',
+                    data: {
+                        company_id: companyId,
+                        kompartemen_id: kompartemenId,
+                        departemen_id: departemenId
+                    },
+                    success: function(data) {
+                        jobRolesTable.clear().rows.add(data).draw();
+                    },
+                    error: function() {
+                        alert('Failed to fetch Job Roles.');
+                    }
+                });
+            }
 
             // Show Job Role Details in Modal
             $(document).on('click', '.show-job-role', function(e) {
@@ -101,10 +204,6 @@
                             '<p class="text-danger">Unable to load job role details.</p>');
                     }
                 });
-            });
-
-            $(document).on('click', '.close', function() {
-                $('#showJobRoleModal').modal('hide');
             });
         });
     </script>

@@ -37,7 +37,7 @@ Route::resource('job-roles', JobRoleController::class);
 
 Route::get('/get-kompartemen', [KompartemenController::class, 'getKompartemenByCompany']);
 Route::get('/get-departemen', [DepartemenController::class, 'getDepartemenByKompartemen']);
-Route::get('/get-job-roles', [JobRoleController::class, 'getJobRolesByDepartemen']);
+Route::get('/get-job-roles', [JobRoleController::class, 'getJobRoles']);
 
 // ======= MASTER DATA ROLES ======= 
 

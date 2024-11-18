@@ -25,14 +25,14 @@
 
         <li>
             <a href="{{ route('kompartemens.index') }}"
-                class="nav-link {{ request()->routeIs('kompartemen.index') ? 'active' : 'text-white' }}">
+                class="nav-link {{ request()->routeIs('kompartemens.index') ? 'active' : 'text-white' }}">
                 <i class="bi bi-diagram-3 me-2"></i> Kompartemen
             </a>
         </li>
 
         <li>
             <a href="{{ route('departemens.index') }}"
-                class="nav-link {{ request()->routeIs('departemen.index') ? 'active' : 'text-white' }}">
+                class="nav-link {{ request()->routeIs('departemens.index') ? 'active' : 'text-white' }}">
                 <i class="bi bi-layers me-2"></i> Departemen
             </a>
         </li>

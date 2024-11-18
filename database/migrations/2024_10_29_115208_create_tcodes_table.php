@@ -10,8 +10,9 @@ class CreateTcodesTable extends Migration
     {
         Schema::create('tr_tcodes', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('company_id')->nullable()->constrained('ms_company')->onDelete('set null');
+            // $table->foreignId('company_id')->nullable()->constrained('ms_company')->onDelete('set null');
             $table->string('code'); // Tcode Identifier
+            $table->string('sap_module'); // Tcode Identifier
             $table->text('deskripsi')->nullable(); // Description
             $table->timestamps();
             $table->softDeletes();

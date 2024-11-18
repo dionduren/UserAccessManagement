@@ -4,6 +4,12 @@
     <div class="container">
         <h2>Master Data Departemen</h2>
 
+        <a href="{{ route('departemens.create') }}" class="btn btn-primary mb-3">Buat Info Departemen Baru</a>
+
+        @if (session('success'))
+            <div class="alert alert-success">{{ session('success') }}</div>
+        @endif
+
         <!-- Dropdown for Company Selection -->
         <div class="form-group mb-3">
             <label for="companyDropdown">Pilih Perusahaan</label>
@@ -32,8 +38,9 @@
                     {{-- <th>ID</th>
                     <th>Company Name</th>
                     <th>Kompartemen Name</th> --}}
-                    <th>Departemen Name</th>
-                    <th>Description</th>
+                    <th>Nama Departemen</th>
+                    <th>Deskripsi</th>
+                    <th>Actions</th>
                 </tr>
             </thead>
             <tbody>
@@ -45,6 +52,16 @@
                         <td>{{ $departemen->kompartemen->name ?? 'N/A' }}</td> --}}
                         <td>{{ $departemen->name }}</td>
                         <td>{{ $departemen->description }}</td>
+                        <td>
+                            <a href="{{ route('departemens.edit', $company) }}" class="btn btn-warning btn-sm">Edit</a>
+                            <form action="{{ route('departemens.destroy', $company) }}" method="POST"
+                                style="display:inline;">
+                                @csrf
+                                @method('DELETE')
+                                <button type="submit" class="btn btn-danger btn-sm"
+                                    onclick="return confirm('Are you sure?')">Delete</button>
+                            </form>
+                        </td>
                     </tr>
                 @endforeach
             </tbody>
@@ -56,7 +73,22 @@
     <script>
         $(document).ready(function() {
             // Initialize DataTable with client-side searching, sorting, and pagination
-            let table = $('#departemenTable').DataTable();
+            if ($.fn.DataTable) { // Check if DataTable is defined
+                let table = $('#departemenTable').DataTable({
+                    responsive: true,
+                    paging: true,
+                    searching: true,
+                    ordering: true,
+                    columnDefs: [{
+                        width: '12.5%',
+                        orderable: false,
+                        targets: [2] // Disable ordering for the 'Actions' column
+                    }]
+                });
+            } else {
+                console.error('DataTable library not loaded.');
+            }
+
 
             // Fetch Kompartemen based on selected company
             $('#companyDropdown').change(function() {

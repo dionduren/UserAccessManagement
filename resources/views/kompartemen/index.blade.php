@@ -3,6 +3,11 @@
 @section('content')
     <div class="container">
         <h2>Master Data Kompartemen</h2>
+        <a href="{{ route('kompartemens.create') }}" class="btn btn-primary mb-3">Buat Info Kompartemen Baru</a>
+
+        @if (session('success'))
+            <div class="alert alert-success">{{ session('success') }}</div>
+        @endif
 
         <!-- Dropdown for Company Selection -->
         <div class="form-group mb-3">
@@ -18,13 +23,14 @@
         <hr class="mt-3 mb-3" style="width: 80%; margin:auto">
 
         <!-- Table to display all Kompartemen -->
-        <table id="kompartemenTable" class="table table-bordered table-hover cell-border mt-3">
+        <table id="kompartemenTable" class="table table-bordered table-striped table-hover cell-border mt-3">
             <thead>
                 <tr>
                     {{-- <th>ID</th>
                     <th>Company Name</th> --}}
-                    <th>Kompartemen Name</th>
-                    <th>Description</th>
+                    <th>Nama Kompartemen</th>
+                    <th>Deskripsi</th>
+                    <th>Actions</th>
                 </tr>
             </thead>
             <tbody>
@@ -34,6 +40,16 @@
                         <td>{{ $kompartemen->company->name ?? 'N/A' }}</td> --}}
                         <td>{{ $kompartemen->name }}</td>
                         <td>{{ $kompartemen->description }}</td>
+                        <td>
+                            <a href="{{ route('kompartemens.edit', $company) }}" class="btn btn-warning btn-sm">Edit</a>
+                            <form action="{{ route('kompartemens.destroy', $company) }}" method="POST"
+                                style="display:inline;">
+                                @csrf
+                                @method('DELETE')
+                                <button type="submit" class="btn btn-danger btn-sm"
+                                    onclick="return confirm('Are you sure?')">Delete</button>
+                            </form>
+                        </td>
                     </tr>
                 @endforeach
             </tbody>
@@ -45,7 +61,21 @@
     <script>
         $(document).ready(function() {
             // Initialize DataTable with client-side searching, sorting, and pagination
-            let table = $('#kompartemenTable').DataTable();
+            if ($.fn.DataTable) { // Check if DataTable is defined
+                let table = $('#kompartemenTable').DataTable({
+                    responsive: true,
+                    paging: true,
+                    searching: true,
+                    ordering: true,
+                    columnDefs: [{
+                        width: '12.5%',
+                        orderable: false,
+                        targets: [2] // Disable ordering for the 'Actions' column
+                    }]
+                });
+            } else {
+                console.error('DataTable library not loaded.');
+            }
 
             // Filter table based on selected company
             $('#companyDropdown').change(function() {

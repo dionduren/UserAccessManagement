@@ -13,8 +13,13 @@ class JobRoleController extends Controller
 {
     public function index()
     {
-        $job_roles = JobRole::with(['compositeRole', 'company', 'kompartemen', 'departemen'])->get();
-        return view('job_roles.index', compact('job_roles'));
+        // $job_roles = JobRole::with(['compositeRole', 'company', 'kompartemen', 'departemen'])->get();
+        // return view('job_roles.index', compact('job_roles'));
+
+        // Fetch all companies to populate the initial dropdown
+        $companies = Company::all();
+
+        return view('job_roles.index', compact('companies'));
     }
 
     public function create()
@@ -104,10 +109,33 @@ class JobRoleController extends Controller
         return response()->json([], 400); // Bad request if parameters are missing
     }
 
-    public function getJobRolesByDepartemen(Request $request)
+    public function getJobRoles(Request $request)
     {
+        $companyId = $request->get('company_id');
+        $kompartemenId = $request->get('kompartemen_id');
         $departemenId = $request->get('departemen_id');
-        $jobRoles = JobRole::where('departemen_id', $departemenId)->get();
+
+        // Build the query based on provided filters
+        $query = JobRole::query();
+
+        if ($companyId) {
+            $query->where('company_id', $companyId);
+        }
+        if ($kompartemenId) {
+            $query->where('kompartemen_id', $kompartemenId);
+        }
+        if ($departemenId) {
+            $query->where('departemen_id', $departemenId);
+        }
+
+        $jobRoles = $query->get()->map(function ($jobRole) {
+            return [
+                'nama_jabatan' => $jobRole->nama_jabatan,
+                'description' => $jobRole->deskripsi ?? 'None',
+                'actions' => view('job_roles.partials.actions', compact('jobRole'))->render()
+            ];
+        });
+
         return response()->json($jobRoles);
     }
 }
