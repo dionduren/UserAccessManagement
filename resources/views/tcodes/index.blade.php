@@ -15,7 +15,7 @@
             <div class="alert alert-success">{{ session('status') }}</div>
         @endif
 
-        <table id="tcodes_table" class="table table-striped">
+        <table id="tcodes_table" class="table table-bordered table-striped table-hover cell-border mt-3">
             <thead>
                 <tr>
                     <th>Code</th>

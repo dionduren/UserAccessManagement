@@ -13,7 +13,7 @@ class Company extends Model
     protected $table = 'ms_company';
     protected $primaryKey = 'id';
 
-    protected $fillable = ['company_code', 'name', 'description', 'created_by', 'updated_by'];
+    protected $fillable = ['company_code', 'name', 'shortname', 'description', 'created_by', 'updated_by'];
 
     protected $dates = ['deleted_at'];
 

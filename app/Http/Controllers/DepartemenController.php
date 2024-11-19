@@ -72,8 +72,31 @@ class DepartemenController extends Controller
 
     public function getDepartemenByKompartemen(Request $request)
     {
+        $companyId = $request->get('company_id');
         $kompartemenId = $request->get('kompartemen_id');
-        $departemen = Departemen::where('kompartemen_id', $kompartemenId)->get();
+
+        $departemenQuery = Departemen::query();
+
+        if ($kompartemenId) {
+            // Get departemen based on the specified kompartemen
+            $departemenQuery->where('kompartemen_id', $kompartemenId);
+        } elseif ($companyId) {
+            // Get departemen without kompartemen within the specified company
+            $departemenQuery->where('company_id', $companyId)->whereNull('kompartemen_id');
+        }
+
+        $departemen = $departemenQuery->get();
+
+        return response()->json($departemen);
+    }
+
+    public function getDepartemenByCompany(Request $request)
+    {
+        $companyId = $request->get('company_id');
+
+        // Fetch departemens with no kompartemen within the specified company
+        $departemen = Departemen::where('company_id', $companyId)->whereNull('kompartemen_id')->get();
+
         return response()->json($departemen);
     }
 }

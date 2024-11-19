@@ -12,7 +12,7 @@ class CreateCompaniesTable extends Migration
             $table->id(); // Primary key
             $table->string('company_code'); // Company code, unique (e.g., A000, B000)
             $table->string('name'); // Company name, unique
-            $table->string('shortname'); // Company name, unique
+            $table->string('shortname')->nullable(); // Company name, unique
             $table->text('description')->nullable(); // Company description
             $table->timestamps(); // Created at and updated at timestamps
             $table->softDeletes(); // Soft delete for safe record deletion

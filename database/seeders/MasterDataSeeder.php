@@ -41,6 +41,7 @@ class MasterDataSeeder extends Seeder
             ["kode_perusahaan" => "H000", "nama_perusahaan" => "PT Pupuk Indonesia Niaga", "singkatan" => "PI NIAGA"],
             ["kode_perusahaan" => "I000", "nama_perusahaan" => "PT Pupuk Indonesia Logistik", "singkatan" => "PILOG"],
             ["kode_perusahaan" => "J000", "nama_perusahaan" => "PT Pupuk Indonesia Utilitas", "singkatan" => "PIU"],
+            ["kode_perusahaan" => "JA00", "nama_perusahaan" => "PT Kaltim Daya Mandiri", "singkatan" => "KDM"],
             ["kode_perusahaan" => "K000", "nama_perusahaan" => "PT Pupuk Indonesia Pangan", "singkatan" => "PIP"],
             ["kode_perusahaan" => "Z000", "nama_perusahaan" => "Forum Human Capital Indonesia", "singkatan" => "FHCI"]
         ];

@@ -17,6 +17,11 @@
             </div>
 
             <div class="mb-3">
+                <label for="shortname" class="form-label">Singkatan</label>
+                <input type="text" class="form-control" name="shortname" required>
+            </div>
+
+            <div class="mb-3">
                 <label for="description" class="form-label">Description</label>
                 <textarea class="form-control" name="description"></textarea>
             </div>

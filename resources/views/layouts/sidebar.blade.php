@@ -60,6 +60,14 @@
             </a>
         </li>
 
+        <!-- Composite Roles Menu Item -->
+        <li>
+            <a href="{{ route('composite-roles.no-job-role') }}"
+                class="nav-link {{ request()->routeIs('composite-roles.no-job-role') ? 'active' : 'text-white' }}">
+                <i class="bi bi-people-fill me-2"></i> Composite No Job
+            </a>
+        </li>
+
         <!-- Single Roles Menu Item -->
         <li>
             <a href="{{ route('single-roles.index') }}"
@@ -75,37 +83,30 @@
                 <i class="bi bi-code-slash me-2"></i> Tcodes
             </a>
         </li>
+
+
+        <hr>
+        IMPORT DATA
+
+        <li class="nav-item">
+            <a href="{{ route('company_kompartemen.upload') }}"
+                class="nav-link {{ request()->routeIs('company_kompartemen.upload') ? 'active' : 'text-white' }}">
+                <i class="bi bi-file-earmark-spreadsheet"></i> Jabatan - Composite Role
+            </a>
+        </li>
+        <li class="nav-item">
+            <a href="{{ route('composite_single.upload') }}"
+                class="nav-link {{ request()->routeIs('composite_role_single_role.upload') ? 'active' : 'text-white' }}">
+                <i class="bi bi-file-earmark-spreadsheet"></i> Composite - Single Role
+            </a>
+        </li>
+        <li class="nav-item">
+            <a href="{{ route('tcode_single_role.upload') }}"
+                class="nav-link {{ request()->routeIs('tcode_single_role.upload') ? 'active' : 'text-white' }}">
+                <i class="bi bi-file-earmark-spreadsheet"></i> Single Role - Tcode
+            </a>
+        </li>
     @endcan
-
-    <hr>
-    IMPORT DATA
-    {{-- <li class="nav-item">
-        <a href="{{ route('excel.upload') }}"
-            class="nav-link {{ request()->routeIs('excel.upload') ? 'active' : 'text-white' }}">
-            <i class="bi bi-file-earmark-spreadsheet"></i> Import Data
-        </a>
-    </li> --}}
-
-    <li class="nav-item">
-        <a href="{{ route('company_kompartemen.upload') }}"
-            class="nav-link {{ request()->routeIs('company_kompartemen.upload') ? 'active' : 'text-white' }}">
-            <i class="bi bi-file-earmark-spreadsheet"></i> Jabatan - Composite Role
-        </a>
-    </li>
-    <li class="nav-item">
-        <a href="{{ route('composite_role_single_role.upload') }}"
-            class="nav-link {{ request()->routeIs('composite_role_single_role.upload') ? 'active' : 'text-white' }}">
-            <i class="bi bi-file-earmark-spreadsheet"></i> Composite - Single Role
-        </a>
-    </li>
-    <li class="nav-item">
-        <a href="{{ route('tcode_single_role.upload') }}"
-            class="nav-link {{ request()->routeIs('tcode_single_role.upload') ? 'active' : 'text-white' }}">
-            <i class="bi bi-file-earmark-spreadsheet"></i> Single Role - Tcode
-        </a>
-    </li>
-
-
 
     @can('manage access-matrix')
         <hr>

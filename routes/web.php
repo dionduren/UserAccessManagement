@@ -44,11 +44,13 @@ Route::resource('job-roles', JobRoleController::class);
 
 Route::get('/get-kompartemen', [KompartemenController::class, 'getKompartemenByCompany']);
 Route::get('/get-departemen', [DepartemenController::class, 'getDepartemenByKompartemen']);
+Route::get('/get-departemen-by-company', [DepartemenController::class, 'getDepartemenByCompany']);
 Route::get('/get-job-roles', [JobRoleController::class, 'getJobRoles']);
 
 // ======= MASTER DATA ROLES ======= 
 
-Route::get('/composite-roles/ajax', [CompositeRoleController::class, 'getCompositeRolesAjax'])->name('composite-roles.ajax');
+Route::get('/composite-roles/data', [CompositeRoleController::class, 'getCompositeRoles'])->name('composite-roles.data');
+Route::get('/composite-roles/no-job-role', [CompositeRoleController::class, 'noJobRole'])->name('composite-roles.no-job-role');
 Route::resource('composite-roles', CompositeRoleController::class);
 
 // Route::post('/single-roles', [SingleRoleController::class, 'store'])->name('single-roles.store');
@@ -74,8 +76,9 @@ Route::get('/company-kompartemen/upload', [CompanyKompartemenController::class, 
 Route::post('/company-kompartemen/preview', [CompanyKompartemenController::class, 'preview'])->name('company_kompartemen.preview');
 Route::post('/company-kompartemen/confirm', [CompanyKompartemenController::class, 'confirmImport'])->name('company_kompartemen.confirm');
 
-Route::get('/composite-role-single-role/upload', [CompositeRoleSingleRoleController::class, 'uploadForm'])->name('composite_role_single_role.upload');
-Route::post('/composite-role-single-role/preview', [CompositeRoleSingleRoleController::class, 'preview'])->name('composite_role_single_role.preview');
+Route::get('/composite-role-single-role/upload', [CompositeRoleSingleRoleController::class, 'uploadForm'])->name('composite_single.upload');
+Route::post('/composite-role-single-role/preview', [CompositeRoleSingleRoleController::class, 'preview'])->name('composite_single.preview');
+Route::post('/composite-role-single-role/confirm', [CompositeRoleSingleRoleController::class, 'confirmImport'])->name('composite_single.confirm');
 
 Route::get('/tcode-single-role/upload', [TcodeSingleRoleController::class, 'uploadForm'])->name('tcode_single_role.upload');
 Route::post('/tcode-single-role/preview', [TcodeSingleRoleController::class, 'preview'])->name('tcode_single_role.preview');

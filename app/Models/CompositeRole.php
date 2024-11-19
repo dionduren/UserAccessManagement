@@ -37,6 +37,7 @@ class CompositeRole extends Model
     public function singleRoles()
     {
         return $this->belongsToMany(SingleRole::class, 'pt_composite_role_single_role', 'composite_role_id', 'single_role_id')
+            ->withPivot('created_by', 'updated_by')
             ->withTimestamps();
     }
 }

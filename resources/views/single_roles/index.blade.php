@@ -15,7 +15,7 @@
         @endif
 
         <!-- Table for displaying Single Roles -->
-        <table id="single_roles_table" class="table table-striped">
+        <table id="single_roles_table" class="table table-bordered table-striped table-hover cell-border mt-3">
             <thead>
                 <tr>
                     <th>Perusahaan</th>

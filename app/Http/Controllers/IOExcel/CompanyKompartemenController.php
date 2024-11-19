@@ -3,13 +3,14 @@
 namespace App\Http\Controllers\IOExcel;
 
 use App\Http\Controllers\Controller;
+
 use Illuminate\Http\Request;
-use Maatwebsite\Excel\Facades\Excel;
-use App\Imports\CompanyKompartemenImport;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\DB;
 
+use Maatwebsite\Excel\Facades\Excel;
+use App\Imports\CompanyKompartemenImport;
 
 class CompanyKompartemenController extends Controller
 {
@@ -34,6 +35,7 @@ class CompanyKompartemenController extends Controller
             $errors = [];
             $validatedData = [];
             foreach ($data as $index => $row) {
+                // Custom validation for each row (adjust rules as needed)
                 $validator = Validator::make($row->toArray(), [
                     'company' => 'required|string',
                     'kompartemen' => 'nullable|string',
@@ -50,7 +52,7 @@ class CompanyKompartemenController extends Controller
                     $errors[$index + 1] = $validator->errors()->all();
 
                     // Log the validation errors with details
-                    Log::error('Validation failed for Company-Kompartemen data', $errorDetails);
+                    Log::error('Validation failed for JobRole-Composite data', $errorDetails);
                 } else {
                     // Collect validated data for further use (confirmation)
                     $validatedData[] = $row->toArray();
@@ -71,7 +73,7 @@ class CompanyKompartemenController extends Controller
             return view('imports.preview.company_kompartemen', compact('validatedData'));
         } catch (\Exception $e) {
             // Log the exception with detailed information
-            Log::error('Error during import preview', [
+            Log::error('JobRole & Composite Role - Error during import preview', [
                 'file' => $request->file('excel_file')->getClientOriginalName(),
                 'message' => $e->getMessage(),
                 'trace' => $e->getTraceAsString(),
@@ -81,22 +83,20 @@ class CompanyKompartemenController extends Controller
         }
     }
 
-
     public function confirmImport()
     {
         $data = session('parsedData');
-
 
         // dd(session()->all());
 
         if (!$data) {
             // Add debug line
-            Log::debug('Session data not found or empty in confirmImport.');
+            Log::debug('JobRole & Composite Role - Session data not found or empty in confirmImport.');
             return redirect()->route('company_kompartemen.upload')->with('error', 'No data available for import. Please upload a file first.');
         }
 
         // Optionally display the data for debugging (temporary)
-        Log::debug('Parsed Data:', ['data' => $data]);
+        // Log::debug('Parsed Data:', ['data' => $data]);
 
         try {
             foreach ($data as $row) {
@@ -104,6 +104,9 @@ class CompanyKompartemenController extends Controller
                 $company = \App\Models\Company::where('company_code', $row['company'])->first();
 
                 if (!$company) {
+                    Log::error('JobRole & Composite Role - Company Not Found', [
+                        'row' => $row,
+                    ]);
                     return redirect()->back()->with('error', 'Company not found for the provided code: ' . $row['company']);
                 }
 
@@ -111,8 +114,13 @@ class CompanyKompartemenController extends Controller
                 $kompartemen = null;
                 if (!empty($row['kompartemen'])) {
                     $kompartemen = \App\Models\Kompartemen::updateOrCreate(
-                        ['name' => $row['kompartemen']],
-                        ['company_id' => $company->id]
+                        [
+                            'name' => $row['kompartemen'],
+                            'company_id' => $company->id
+                        ],
+                        [
+                            'company_id' => $company->id
+                        ]
                     );
                 }
 
@@ -120,10 +128,14 @@ class CompanyKompartemenController extends Controller
                 $departemen = null;
                 if (!empty($row['departemen'])) {
                     $departemen = \App\Models\Departemen::updateOrCreate(
-                        ['name' => $row['departemen']],
+                        [
+                            'name' => $row['departemen'],
+                            'company_id' => $company->id,
+                            'kompartemen_id' => $kompartemen->id ?? null
+                        ],
                         [
                             'company_id' => $company->id,
-                            'kompartemen_id' => $kompartemen->id ?? null,
+                            'kompartemen_id' => $kompartemen->id ?? null
                         ]
                     );
                 }

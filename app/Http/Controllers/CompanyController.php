@@ -39,6 +39,7 @@ class CompanyController extends Controller
         $request->validate([
             'name' => 'required|string|max:255',
             'company_code' => 'required|string|max:10|unique:ms_company',
+            'shortname' => 'required|string|max:255',
             'description' => 'nullable|string'
         ]);
 
@@ -62,6 +63,7 @@ class CompanyController extends Controller
         $request->validate([
             'company_code' => 'required|string|max:10|unique:ms_company,company_code,' . $company->id,
             'name' => 'required|string|max:255',
+            'shortname' => 'required|string|max:255',
             'description' => 'nullable|string'
         ]);
 
@@ -75,13 +77,6 @@ class CompanyController extends Controller
     // public function destroy($id)
     public function destroy(Company $company)
     {
-        // // Only users with 'manage company info' permission can delete
-        // if (!Gate::allows('manage company info')) {
-        //     abort(403, 'Unauthorized access');
-        // }
-
-        // Company::destroy($id);
-        // return redirect()->route('companies.index')->with('success', 'Company deleted successfully');
         $company->delete();
         return redirect()->route('companies.index')->with('success', 'Company deleted successfully.');
     }
