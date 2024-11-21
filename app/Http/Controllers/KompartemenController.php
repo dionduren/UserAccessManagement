@@ -12,7 +12,7 @@ class KompartemenController extends Controller
     {
         $companies = Company::all();
         $kompartemens = Kompartemen::all();
-        return view('kompartemen.index', compact('kompartemens', 'companies'));
+        return view('kompartemen.index', compact('companies', 'kompartemens'));
     }
 
     public function create()

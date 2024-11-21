@@ -83,62 +83,163 @@ class JobRoleController extends Controller
         return redirect()->route('job-roles.index')->with('status', 'Job role deleted successfully.');
     }
 
-    /**
-     * AJAX Method to fetch kompartemen and departemen based on selected company.
-     */
-    public function getFilteredData(Request $request)
-    {
-        if ($request->has('company_id')) {
-            // Fetch kompartemens based on selected company
-            $kompartemens = Kompartemen::where('company_id', $request->input('company_id'))->get();
-
-            return response()->json([
-                'kompartemens' => $kompartemens,
-            ]);
-        }
-
-        if ($request->has('kompartemen_id')) {
-            // Fetch departemens based on selected kompartemen
-            $departemens = Departemen::where('kompartemen_id', $request->input('kompartemen_id'))->get();
-
-            return response()->json([
-                'departemens' => $departemens,
-            ]);
-        }
-
-        return response()->json([], 400); // Bad request if parameters are missing
-    }
-
     public function getJobRoles(Request $request)
     {
-        $companyId = $request->get('company_id');
-        $kompartemenId = $request->get('kompartemen_id');
-        $departemenId = $request->get('departemen_id');
-
-        // Build the query based on provided filters
-        $query = JobRole::query();
-
-        if ($companyId) {
-            $query->where('company_id', $companyId);
-        }
-        if ($kompartemenId) {
-            $query->where('kompartemen_id', $kompartemenId);
-        }
-        if ($departemenId) {
-            $query->where('departemen_id', $departemenId);
+        $jsonPath = storage_path('app/public/master_data.json');
+        if (!file_exists($jsonPath)) {
+            return response()->json(['error' => 'Master data JSON not found'], 404);
         }
 
-        $jobRoles = $query->get()->map(function ($jobRole) {
-            return [
-                'perusahaan' => $jobRole->company->name,
-                'kompartemen' => $jobRole->kompartemen->name ?? ' - ',
-                'departemen' => $jobRole->departemen->name ?? ' - ',
-                'nama_jabatan' => $jobRole->nama_jabatan,
-                'description' => $jobRole->deskripsi ?? ' - ',
-                'actions' => view('job_roles.partials.actions', compact('jobRole'))->render()
-            ];
-        });
+        $companyData = json_decode(file_get_contents($jsonPath), true);
+        $filteredJobRoles = [];
 
-        return response()->json($jobRoles);
+        foreach ($companyData as $company) {
+            if ($request->has('company_id') && $request->get('company_id') != $company['company_id']) {
+                continue;
+            }
+
+            // Filter by departemen if set
+            if ($request->get('departemen_id')) {
+                $this->filterByDepartemen($company, $request->get('departemen_id'), $filteredJobRoles);
+            }
+            // Filter by kompartemen if set
+            elseif ($request->get('kompartemen_id')) {
+                $this->filterByKompartemen($company, $request->get('kompartemen_id'), $filteredJobRoles);
+            }
+            // Show all data for the company if no other filters are set
+            else {
+                $this->filterByCompany($company, $filteredJobRoles);
+            }
+        }
+
+        return response()->json($filteredJobRoles);
+    }
+
+    /**
+     * Helper function to map a job role
+     */
+    private function mapJobRole($companyName, $kompartemenName, $departemenName, $jobRole)
+    {
+        return [
+            'id' => $jobRole['id'],
+            'company' => $companyName,
+            'kompartemen' => $kompartemenName ?? '-',
+            'departemen' => $departemenName ?? '-',
+            'job_role' => $jobRole['name'],
+            'deskripsi' => $jobRole['description'] ?? 'N/A',
+            'actions' => view('job_roles.partials.actions', ['jobRole' => (object) $jobRole])->render(),
+        ];
+    }
+
+    private function filterByCompany($company, &$filteredJobRoles)
+    {
+        // Add job roles without relations
+        foreach ($company['job_roles_without_relations'] ?? [] as $jobRole) {
+            $filteredJobRoles[] = $this->mapJobRole(
+                $company['company_name'],
+                '-',
+                '-',
+                $jobRole
+            );
+        }
+
+        // Add job roles under kompartemen
+        foreach ($company['kompartemen'] ?? [] as $kompartemen) {
+            foreach ($kompartemen['job_roles'] ?? [] as $jobRole) {
+                $filteredJobRoles[] = $this->mapJobRole(
+                    $company['company_name'],
+                    $kompartemen['name'],
+                    '-',
+                    $jobRole
+                );
+            }
+
+            foreach ($kompartemen['departemen'] ?? [] as $departemen) {
+                foreach ($departemen['job_roles'] ?? [] as $jobRole) {
+                    $filteredJobRoles[] = $this->mapJobRole(
+                        $company['company_name'],
+                        $kompartemen['name'],
+                        $departemen['name'],
+                        $jobRole
+                    );
+                }
+            }
+        }
+
+        // Add job roles under departemen_without_kompartemen
+        foreach ($company['departemen_without_kompartemen'] ?? [] as $departemen) {
+            foreach ($departemen['job_roles'] ?? [] as $jobRole) {
+                $filteredJobRoles[] = $this->mapJobRole(
+                    $company['company_name'],
+                    '-',
+                    $departemen['name'],
+                    $jobRole
+                );
+            }
+        }
+    }
+
+    private function filterByKompartemen($company, $kompartemenId, &$filteredJobRoles)
+    {
+        foreach ($company['kompartemen'] ?? [] as $kompartemen) {
+            if ($kompartemenId != $kompartemen['id']) {
+                continue;
+            }
+
+            foreach ($kompartemen['job_roles'] ?? [] as $jobRole) {
+                $filteredJobRoles[] = $this->mapJobRole(
+                    $company['company_name'],
+                    $kompartemen['name'],
+                    '-',
+                    $jobRole
+                );
+            }
+
+            foreach ($kompartemen['departemen'] ?? [] as $departemen) {
+                foreach ($departemen['job_roles'] ?? [] as $jobRole) {
+                    $filteredJobRoles[] = $this->mapJobRole(
+                        $company['company_name'],
+                        $kompartemen['name'],
+                        $departemen['name'],
+                        $jobRole
+                    );
+                }
+            }
+        }
+    }
+
+    private function filterByDepartemen($company, $departemenId, &$filteredJobRoles)
+    {
+        foreach ($company['kompartemen'] ?? [] as $kompartemen) {
+            foreach ($kompartemen['departemen'] ?? [] as $departemen) {
+                if ($departemenId != $departemen['id']) {
+                    continue;
+                }
+
+                foreach ($departemen['job_roles'] ?? [] as $jobRole) {
+                    $filteredJobRoles[] = $this->mapJobRole(
+                        $company['company_name'],
+                        $kompartemen['name'],
+                        $departemen['name'],
+                        $jobRole
+                    );
+                }
+            }
+        }
+
+        foreach ($company['departemen_without_kompartemen'] ?? [] as $departemen) {
+            if ($departemenId != $departemen['id']) {
+                continue;
+            }
+
+            foreach ($departemen['job_roles'] ?? [] as $jobRole) {
+                $filteredJobRoles[] = $this->mapJobRole(
+                    $company['company_name'],
+                    '-',
+                    $departemen['name'],
+                    $jobRole
+                );
+            }
+        }
     }
 }

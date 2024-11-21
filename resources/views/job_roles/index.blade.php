@@ -37,17 +37,9 @@
             </select>
         </div>
 
-        <hr class="mt-3 mb-3" style="width: 80%; margin:auto">
-
         <!-- Table to display Job Roles -->
         <table id="jobRolesTable" class="table table-bordered table-striped table-hover mt-3">
             <thead>
-                <tr>
-                    <th>Perusahaan</th>
-                    <th>Nama Jabatan</th>
-                    <th>Deskripsi</th>
-                    <th>Actions</th>
-                </tr>
             </thead>
             <tbody></tbody>
         </table>
@@ -64,7 +56,7 @@
                     </button>
                 </div>
                 <div class="modal-body" id="modal-job-role-details">
-                    <!-- Job Role Details will be loaded here dynamically -->
+                    <!-- Job Role details will be dynamically loaded here -->
                 </div>
             </div>
         </div>
@@ -74,6 +66,11 @@
 @section('scripts')
     <script>
         $(document).ready(function() {
+            // Initialize select2
+            $('.select2').select2();
+
+            let masterData = {}; // To store JSON data for efficient lookups
+
             let jobRolesTable = $('#jobRolesTable').DataTable({
                 responsive: true,
                 paging: true,
@@ -81,7 +78,7 @@
                 ordering: true,
                 data: [], // Start with empty data
                 columns: [{
-                        data: 'perusahaan',
+                        data: 'company',
                         title: 'Perusahaan'
                     }, {
                         data: 'kompartemen',
@@ -90,11 +87,11 @@
                         data: 'departemen',
                         title: 'Departemen'
                     }, {
-                        data: 'nama_jabatan',
+                        data: 'job_role',
                         title: 'Nama Jabatan'
                     },
                     {
-                        data: 'description',
+                        data: 'deskripsi',
                         title: 'Deskripsi'
                     },
                     {
@@ -107,76 +104,67 @@
                 ]
             });
 
-            // Load Kompartemen based on selected company
-            $('#companyDropdown').change(function() {
-                let companyId = $(this).val();
-                if (companyId) {
-                    $.ajax({
-                        url: '/get-kompartemen',
-                        method: 'GET',
-                        data: {
-                            company_id: companyId
-                        },
-                        success: function(data) {
-                            $('#kompartemenDropdown').empty().append(
-                                '<option value="">-- Semua Kompartemen --</option>');
-                            $.each(data, function(key, value) {
-                                $('#kompartemenDropdown').append('<option value="' +
-                                    value.id + '">' + value.name + '</option>');
-                            });
-                            $('#kompartemenDropdown').prop('disabled', false);
-                        },
-                        error: function() {
-                            alert('Failed to fetch Kompartemen.');
-                        }
-                    });
-                } else {
-                    $('#kompartemenDropdown').prop('disabled', true).empty().append(
-                        '<option value="">-- Semua Kompartemen --</option>');
-                    $('#departemenDropdown').prop('disabled', true).empty().append(
-                        '<option value="">-- Semua Departemen --</option>');
-                    jobRolesTable.clear().draw();
+            // Fetch master data and initialize the page
+            $.ajax({
+                url: '/storage/master_data.json',
+                dataType: 'json',
+                success: function(data) {
+                    masterData = data;
+
+                    // Populate company dropdown
+                    populateDropdown('#companyDropdown', data, 'company_id', 'company_name');
+                },
+                error: function() {
+                    alert('Failed to load master data.');
                 }
             });
 
-            // Load Departemen based on selected Kompartemen
-            $('#kompartemenDropdown').change(function() {
-                let kompartemenId = $(this).val();
-                if (kompartemenId) {
-                    $.ajax({
-                        url: '/get-departemen',
-                        method: 'GET',
-                        data: {
-                            kompartemen_id: kompartemenId
-                        },
-                        success: function(data) {
-                            $('#departemenDropdown').empty().append(
-                                '<option value="">-- Semua Departemen --</option>');
-                            $.each(data, function(key, value) {
-                                $('#departemenDropdown').append('<option value="' +
-                                    value.id + '">' + value.name + '</option>');
-                            });
-                            $('#departemenDropdown').prop('disabled', false);
-                        },
-                        error: function() {
-                            alert('Failed to fetch Departemen.');
-                        }
-                    });
-                } else {
-                    $('#departemenDropdown').prop('disabled', true).empty().append(
-                        '<option value="">-- Semua Departemen --</option>');
-                    jobRolesTable.clear().draw();
+            // Handle company dropdown change
+            $('#companyDropdown').on('change', function() {
+                const companyId = $(this).val();
+
+                resetDropdowns(['#kompartemenDropdown', '#departemenDropdown']);
+                let companyData = masterData.find(c => c.company_id == companyId);
+
+                if (companyData) {
+                    // Populate kompartemen dropdown
+                    populateDropdown('#kompartemenDropdown', companyData.kompartemen, 'id', 'name');
+
+                    // Populate departemen_without_kompartemen
+                    populateDropdown('#departemenDropdown', companyData.departemen_without_kompartemen,
+                        'id', 'name');
                 }
+
+                loadJobRoles();
             });
 
-            // Load Job Roles when a dropdown changes
-            $('#companyDropdown, #kompartemenDropdown, #departemenDropdown').change(loadJobRoles);
+            // Handle kompartemen dropdown change
+            $('#kompartemenDropdown').on('change', function() {
+                const companyId = $('#companyDropdown').val();
+                const kompartemenId = $(this).val();
 
-            // Load Job Roles based on selected filters
+                resetDropdowns(['#departemenDropdown']);
+                let companyData = masterData.find(c => c.company_id == companyId);
+                let kompartemenData = companyData?.kompartemen.find(k => k.id == kompartemenId);
+
+                if (kompartemenData?.departemen.length) {
+                    // Populate departemen dropdown based on selected kompartemen
+                    populateDropdown('#departemenDropdown', kompartemenData.departemen, 'id', 'name');
+                }
+
+                loadJobRoles();
+            });
+
+            // Handle departemen dropdown change
+            $('#departemenDropdown').on('change', function() {
+                loadJobRoles();
+            });
+
+            // Load job roles based on selected filters
             function loadJobRoles() {
-                let companyId = $('#companyDropdown').val();
-                let kompartemenId = $('#kompartemenDropdown').val();
-                let departemenId = $('#departemenDropdown').val();
+                const companyId = $('#companyDropdown').val();
+                const kompartemenId = $('#kompartemenDropdown').val();
+                const departemenId = $('#departemenDropdown').val();
 
                 $.ajax({
                     url: '/get-job-roles',
@@ -195,25 +183,55 @@
                 });
             }
 
-            // Show Job Role Details in Modal
+            // Helper function to populate dropdowns
+            function populateDropdown(selector, items, valueField, textField) {
+                let dropdown = $(selector);
+                dropdown.empty().append('<option value="">-- Select --</option>');
+                if (items?.length) {
+                    dropdown.prop('disabled', false);
+                    items.forEach(item => {
+                        dropdown.append(`<option value="${item[valueField]}">${item[textField]}</option>`);
+                    });
+                } else {
+                    dropdown.prop('disabled', true);
+                }
+            }
+
+            // Helper function to reset dropdowns
+            function resetDropdowns(selectors) {
+                selectors.forEach(selector => {
+                    $(selector).empty().append('<option value="">-- Select --</option>').prop('disabled',
+                        true);
+                });
+            }
+
+            /// Show Job Role Details in Modal
             $(document).on('click', '.show-job-role', function(e) {
                 e.preventDefault();
-                let jobRoleId = $(this).data('id');
+                const jobRoleId = $(this).data('id');
 
-                // Fetch the job role details using AJAX
+                if (!jobRoleId) {
+                    alert('Job Role ID is missing.');
+                    return;
+                }
+
                 $.ajax({
-                    url: `/job-roles/${jobRoleId}`, // Ensure this is the correct URL to fetch data
+                    url: `/job-roles/${jobRoleId}`,
                     method: 'GET',
                     success: function(response) {
-                        $('#modal-job-role-details').html(
-                            response); // Populate modal with response
-                        $('#showJobRoleModal').modal('show'); // Open the modal
+                        $('#modal-job-role-details').html(response);
+                        $('#showJobRoleModal').modal('show');
                     },
                     error: function() {
                         $('#modal-job-role-details').html(
                             '<p class="text-danger">Unable to load job role details.</p>');
-                    }
+                    },
                 });
+            });
+
+            // Close modal event
+            $(document).on('click', '.close', function() {
+                $('#showJobRoleModal').modal('hide');
             });
         });
     </script>

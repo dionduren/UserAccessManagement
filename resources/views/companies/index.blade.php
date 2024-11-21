@@ -5,6 +5,10 @@
         <h1>Master Data Company</h1>
         <a href="{{ route('companies.create') }}" class="btn btn-primary mb-3">Buat Info Perusahaan Baru</a>
 
+        <!-- In a Blade view, e.g., admin.blade.php -->
+        <a href="{{ route('json.regenerate') }}" class="btn btn-primary">Regenerate JSON File</a>
+
+
         @if (session('success'))
             <div class="alert alert-success">{{ session('success') }}</div>
         @endif
@@ -28,7 +32,8 @@
                         <td>{{ $company->description }}</td>
                         <td>
                             <a href="{{ route('companies.edit', $company) }}" class="btn btn-warning btn-sm">Edit</a>
-                            <form action="{{ route('companies.destroy', $company) }}" method="POST" style="display:inline;">
+                            <form action="{{ route('companies.destroy', $company) }}" method="POST"
+                                style="display:inline;">
                                 @csrf
                                 @method('DELETE')
                                 <button type="submit" class="btn btn-danger btn-sm"

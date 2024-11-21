@@ -13,7 +13,7 @@ class Tcode extends Model
     protected $table = 'tr_tcodes';
     protected $primaryKey = 'id';
 
-    protected $fillable = ['company_id', 'code', 'deskripsi', 'created_by', 'updated_by'];
+    protected $fillable = ['company_id', 'code', 'sap_module', 'deskripsi', 'created_by', 'updated_by'];
 
     protected $dates = ['deleted_at'];
 

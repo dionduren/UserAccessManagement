@@ -60,14 +60,6 @@
             </a>
         </li>
 
-        <!-- Composite Roles Menu Item -->
-        <li>
-            <a href="{{ route('composite-roles.no-job-role') }}"
-                class="nav-link {{ request()->routeIs('composite-roles.no-job-role') ? 'active' : 'text-white' }}">
-                <i class="bi bi-people-fill me-2"></i> Composite No Job
-            </a>
-        </li>
-
         <!-- Single Roles Menu Item -->
         <li>
             <a href="{{ route('single-roles.index') }}"

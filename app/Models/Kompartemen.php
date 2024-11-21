@@ -28,4 +28,9 @@ class Kompartemen extends Model
     {
         return $this->hasMany(Departemen::class);
     }
+
+    public function jobRoles()
+    {
+        return $this->hasMany(JobRole::class);
+    }
 }

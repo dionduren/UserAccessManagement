@@ -18,7 +18,13 @@
                         <li><strong>Row {{ $row }}:</strong>
                             <ul>
                                 @foreach ($messages as $message)
-                                    <li>{{ $message }}</li>
+                                    @if (is_array($message))
+                                        @foreach ($message as $subMessage)
+                                            <li>{{ $subMessage }}</li>
+                                        @endforeach
+                                    @else
+                                        <li>{{ $message }}</li>
+                                    @endif
                                 @endforeach
                             </ul>
                         </li>
@@ -26,6 +32,7 @@
                 </ul>
             </div>
         @endif
+
 
 
         <!-- Display success message, if any -->
