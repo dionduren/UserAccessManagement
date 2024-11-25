@@ -99,21 +99,76 @@
             let masterData = {}; // Store parsed JSON for efficient lookups
 
             // Initialize DataTable
+            // let compositeRolesTable = $('#composite_roles_table').DataTable({
+            //     responsive: true,
+            //     paging: true,
+            //     searching: true,
+            //     ordering: true,
+            //     data: [], // Start with empty data
+            //     // ajax: {
+            //     //     url: "{{ route('composite-roles.data') }}",
+            //     //     data: function(d) {
+            //     //         d.company_id = $('#companyDropdown').val();
+            //     //         d.kompartemen_id = $('#kompartemenDropdown').val();
+            //     //         d.departemen_id = $('#departemenDropdown').val();
+            //     //         d.job_role_id = $('#jobRoleDropdown').val();
+            //     //     },
+            //     //     error: function(xhr, status, error) {
+            //     //         alert('Failed to load composite roles data: ' + error);
+            //     //     }
+            //     // },
+            //     columns: [{
+            //             data: 'company',
+            //             name: 'company'
+            //         },
+            //         {
+            //             data: 'nama',
+            //             name: 'nama'
+            //         },
+            //         {
+            //             data: 'job_role',
+            //             name: 'job_role'
+            //         },
+            //         {
+            //             data: 'single_roles',
+            //             name: 'single_roles',
+            //             orderable: false,
+            //             render: function(data) {
+            //                 return data || 'No Single Roles';
+            //             }
+            //         },
+            //         {
+            //             data: 'actions',
+            //             name: 'actions',
+            //             orderable: false,
+            //             searchable: false
+            //         }
+            //     ],
+            //     pageLength: 10,
+            //     lengthMenu: [10, 25, 50, 100],
+            //     language: {
+            //         paginate: {
+            //             next: 'Next',
+            //             previous: 'Previous'
+            //         }
+            //     }
+            // });
             let compositeRolesTable = $('#composite_roles_table').DataTable({
-                responsive: true,
                 processing: true,
                 serverSide: true,
                 ajax: {
-                    url: "{{ route('composite-roles.data') }}",
+                    url: '/composite-roles/data',
                     data: function(d) {
+                        // console.log('data d :', d);
                         d.company_id = $('#companyDropdown').val();
+                        // console.log('data company :', d.company_id);
                         d.kompartemen_id = $('#kompartemenDropdown').val();
+                        // console.log('data kompartemen :', d.kompartemen_id);
                         d.departemen_id = $('#departemenDropdown').val();
+                        // console.log('data departemen :', d.departemen_id);
                         d.job_role_id = $('#jobRoleDropdown').val();
+                        console.log('data job_role :', d.job_role_id);
                     },
-                    error: function(xhr, status, error) {
-                        alert('Failed to load composite roles data: ' + error);
-                    }
                 },
                 columns: [{
                         data: 'company',
@@ -130,27 +185,17 @@
                     {
                         data: 'single_roles',
                         name: 'single_roles',
-                        orderable: false,
-                        render: function(data) {
-                            return data || 'No Single Roles';
-                        }
+                        orderable: false
                     },
                     {
                         data: 'actions',
                         name: 'actions',
                         orderable: false,
                         searchable: false
-                    }
+                    },
                 ],
-                pageLength: 10,
-                lengthMenu: [10, 25, 50, 100],
-                language: {
-                    paginate: {
-                        next: 'Next',
-                        previous: 'Previous'
-                    }
-                }
             });
+
 
             // Fetch JSON data
             $.ajax({
@@ -173,116 +218,137 @@
 
             // Handle Company dropdown change
             $('#companyDropdown').on('change', function() {
-                let companyId = $(this).val();
-                console.log('Selected Company ID:', companyId);
+                const companyId = $(this).val();
+                const selectedCompany = masterData[companyId];
+                resetDropdowns(['#kompartemenDropdown', '#departemenDropdown', '#jobRoleDropdown']);
 
-                let selectedCompany = masterData[companyId];
-                console.log('Selected Company Data:', selectedCompany);
                 if (selectedCompany) {
-                    // Populate Kompartemen
                     populateDropdown('#kompartemenDropdown', selectedCompany.kompartemen, 'id', 'name');
-
-                    // Populate Departemen Without Kompartemen
                     populateDropdown('#departemenDropdown', selectedCompany.departemen_without_kompartemen,
                         'id', 'name');
-                } else {
-                    resetDropdowns(['#kompartemenDropdown', '#departemenDropdown']);
                 }
             });
-
 
             // Handle Kompartemen dropdown change
             $('#kompartemenDropdown').on('change', function() {
                 const companyId = $('#companyDropdown').val();
                 const kompartemenId = $(this).val();
-                resetDropdowns(['#departemenDropdown']);
-                let company = masterData[companyId];
-                let kompartemen = company.kompartemen.find(k => k.id == kompartemenId);
+                const selectedCompany = masterData[companyId];
+                const kompartemen = selectedCompany.kompartemen.find((k) => k.id == kompartemenId);
+
+                resetDropdowns(['#departemenDropdown', '#jobRoleDropdown']);
                 if (kompartemen) {
                     populateDropdown('#departemenDropdown', kompartemen.departemen, 'id', 'name');
                 }
-                reloadTable();
             });
 
             // Handle Departemen Dropdown Change
+            // $('#departemenDropdown').on('change', function() {
+            //     const companyId = $('#companyDropdown').val();
+            //     const kompartemenId = $('#kompartemenDropdown').val();
+            //     const departemenId = $(this).val();
+
+            //     let jobRoleDropdown = $('#jobRoleDropdown').prop('disabled', true).empty().append(
+            //         '<option value="">-- Select Job Role --</option>');
+
+            //     if (companyId && masterData[companyId]) {
+            //         let selectedCompany = masterData[companyId];
+
+            //         if (departemenId) {
+            //             // Find the selected department
+            //             let selectedDepartemen;
+            //             if (kompartemenId) {
+            //                 let selectedKompartemen = selectedCompany.kompartemen.find(k => k.id ==
+            //                     kompartemenId);
+            //                 selectedDepartemen = selectedKompartemen?.departemen.find(d => d.id ==
+            //                     departemenId);
+            //             } else {
+            //                 selectedDepartemen = selectedCompany.departemen_without_kompartemen.find(d => d
+            //                     .id == departemenId);
+            //             }
+
+            //             if (selectedDepartemen) {
+            //                 populateDropdown(jobRoleDropdown, selectedDepartemen.job_roles, 'id', 'name');
+            //             }
+            //         } else if (!kompartemenId) {
+            //             // Populate job roles without relations if no kompartemen or departemen selected
+            //             populateDropdown(jobRoleDropdown, selectedCompany.job_roles_without_relations, 'id',
+            //                 'name');
+            //         }
+            //     }
+            // });
+
+            // Handle Departemen dropdown change
             $('#departemenDropdown').on('change', function() {
                 const companyId = $('#companyDropdown').val();
-                const kompartemenId = $('#kompartemenDropdown').val();
                 const departemenId = $(this).val();
+                const kompartemenId = $('#kompartemenDropdown').val();
+                const selectedCompany = masterData[companyId];
+                const jobRoles = [];
 
-                let jobRoleDropdown = $('#jobRoleDropdown').prop('disabled', true).empty().append(
-                    '<option value="">-- Select Job Role --</option>');
+                if (departemenId) {
+                    let selectedDepartemen;
 
-                if (companyId && masterData[companyId]) {
-                    let selectedCompany = masterData[companyId];
-
-                    if (departemenId) {
-                        // Find the selected department
-                        let selectedDepartemen;
-                        if (kompartemenId) {
-                            let selectedKompartemen = selectedCompany.kompartemen.find(k => k.id ==
-                                kompartemenId);
-                            selectedDepartemen = selectedKompartemen?.departemen.find(d => d.id ==
-                                departemenId);
-                        } else {
-                            selectedDepartemen = selectedCompany.departemen_without_kompartemen.find(d => d
-                                .id == departemenId);
-                        }
-
-                        if (selectedDepartemen) {
-                            populateDropdown(jobRoleDropdown, selectedDepartemen.job_roles, 'id', 'name');
-                        }
-                    } else if (!kompartemenId) {
-                        // Populate job roles without relations if no kompartemen or departemen selected
-                        populateDropdown(jobRoleDropdown, selectedCompany.job_roles_without_relations, 'id',
-                            'name');
+                    // Check if departemen belongs to a kompartemen
+                    if (kompartemenId) {
+                        const selectedKompartemen = selectedCompany.kompartemen?.find((k) => k.id ==
+                            kompartemenId);
+                        selectedDepartemen = selectedKompartemen?.departemen?.find((d) => d.id ==
+                            departemenId);
+                    } else {
+                        // Fallback to departemen_without_kompartemen
+                        selectedDepartemen = selectedCompany.departemen_without_kompartemen?.find((d) => d
+                            .id == departemenId);
                     }
+
+                    if (selectedDepartemen && selectedDepartemen.job_roles) {
+                        jobRoles.push(...selectedDepartemen.job_roles);
+                    }
+                } else {
+                    // Populate job_roles_without_relations if no departemen is selected
+                    jobRoles.push(...selectedCompany.job_roles_without_relations || []);
                 }
+
+                console.log('Job Roles:', jobRoles);
+
+                // Populate Job Roles Dropdown
+                populateDropdown('#jobRoleDropdown', jobRoles, 'id', 'name');
             });
+
 
 
             function reloadTable() {
                 const companyId = $('#companyDropdown').val();
                 const kompartemenId = $('#kompartemenDropdown').val();
                 const departemenId = $('#departemenDropdown').val();
+                const jobRoleId = $('#jobRoleDropdown').val();
 
-                compositeRolesTable.ajax.url('/composite-roles/data')
-                    .data({
-                        company_id: companyId,
-                        kompartemen_id: kompartemenId,
-                        departemen_id: departemenId
-                    })
-                    .load();
+                compositeRolesTable.ajax.reload(null, false); // Reloads the data without resetting pagination
             }
+
+
 
             // Reload DataTable on dropdown changes
             $('#companyDropdown, #kompartemenDropdown, #departemenDropdown, #jobRoleDropdown').on('change',
-                function() {
-                    compositeRolesTable.ajax.reload(null, false); // Reload without resetting pagination
-                });
+                reloadTable);
+
 
             function populateDropdown(selector, items, valueField, textField) {
-                console.log('Populating dropdown:', selector, items); // Debugging
-                let dropdown = $(selector);
+                const dropdown = $(selector);
                 dropdown.empty().append('<option value="">-- Select --</option>');
 
-                if (Array.isArray(items) && items.length > 0) {
-                    items.forEach(item => {
-                        if (item[valueField] && item[textField]) {
-                            dropdown.append(
-                                `<option value="${item[valueField]}">${item[textField]}</option>`);
-                        }
+                if (Array.isArray(items) && items.length) {
+                    items.forEach((item) => {
+                        dropdown.append(`<option value="${item[valueField]}">${item[textField]}</option>`);
                     });
                     dropdown.prop('disabled', false);
                 } else {
-                    console.warn(`populateDropdown received invalid or empty items for selector: ${selector}`);
                     dropdown.prop('disabled', true);
                 }
             }
 
-
             function resetDropdowns(selectors) {
-                selectors.forEach(selector => {
+                selectors.forEach((selector) => {
                     $(selector).empty().append('<option value="">-- Select --</option>').prop('disabled',
                         true);
                 });

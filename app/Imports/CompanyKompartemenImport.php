@@ -8,8 +8,8 @@ use App\Models\Departemen;
 use App\Models\JobRole;
 use App\Models\CompositeRole;
 use Maatwebsite\Excel\Concerns\ToModel;
-use Maatwebsite\Excel\Concerns\WithChunkReading;
 use Maatwebsite\Excel\Concerns\WithHeadingRow;
+use Maatwebsite\Excel\Concerns\WithChunkReading;
 
 class CompanyKompartemenImport implements ToModel, WithHeadingRow, WithChunkReading
 {
@@ -17,13 +17,37 @@ class CompanyKompartemenImport implements ToModel, WithHeadingRow, WithChunkRead
     {
         // Validate and map data from the row
         $company = Company::firstOrCreate(['company_code' => $row['company']]);
-        $kompartemen = Kompartemen::firstOrCreate(['name' => $row['kompartemen']]);
-        $departemen = Departemen::firstOrCreate(['name' => $row['departemen']]);
-        $jobRole = JobRole::firstOrCreate(['nama_jabatan' => $row['job_function']]);
-        $compositeRole = CompositeRole::firstOrCreate(['nama' => $row['composite_role']]);
+        $kompartemen = !empty($row['kompartemen'])
+            ? Kompartemen::firstOrCreate(['name' => $row['kompartemen'], 'company_id' => $company->id])
+            : null;
+        $departemen = !empty($row['departemen'])
+            ? Departemen::firstOrCreate([
+                'name' => $row['departemen'],
+                'company_id' => $company->id,
+                'kompartemen_id' => $kompartemen->id ?? null,
+            ])
+            : null;
 
-        // Logic to relate the models can be added here if necessary
-        // For example: attaching composite roles to job roles, etc.
+        $jobRole = JobRole::firstOrCreate([
+            'nama_jabatan' => $row['job_function'],
+            'company_id' => $company->id,
+        ], [
+            'kompartemen_id' => $kompartemen->id ?? null,
+            'departemen_id' => $departemen->id ?? null,
+            'deskripsi' => $row['job_description'] ?? null,
+        ]);
+
+        // Create or Update CompositeRole
+        if (!empty($row['composite_role'])) {
+            $compositeRole = CompositeRole::firstOrCreate([
+                'nama' => $row['composite_role'],
+                'company_id' => $company->id,
+            ]);
+
+            // Associate JobRole with CompositeRole
+            $compositeRole->jobRole()->associate($jobRole);
+            $compositeRole->save();
+        }
     }
 
     public function chunkSize(): int

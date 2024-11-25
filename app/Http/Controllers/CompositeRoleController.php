@@ -9,6 +9,7 @@ use App\Models\Kompartemen;
 use Illuminate\Http\Request;
 
 use App\Models\CompositeRole;
+use Illuminate\Support\Facades\Log;
 use Yajra\DataTables\Facades\DataTables;
 
 
@@ -141,8 +142,19 @@ class CompositeRoleController extends Controller
             });
         }
 
+        if ($request->filled('job_role_id')) {
+            $query->where('jabatan_id', $request->job_role_id);
+        }
+
+        // Debug the SQL Query
+        Log::info($query->toSql());
+        Log::info($query->getBindings());
+
         $recordsTotal = $query->count();
         $compositeRoles = $query->skip($request->start)->take($request->length)->get();
+
+        // Check the fetched data
+        Log::info($compositeRoles);
 
         $data = $compositeRoles->map(function ($role) {
             return [

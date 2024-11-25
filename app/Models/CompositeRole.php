@@ -33,6 +33,7 @@ class CompositeRole extends Model
         return $this->belongsTo(JobRole::class, 'jabatan_id');
     }
 
+
     // A composite role can have many single roles
     public function singleRoles()
     {

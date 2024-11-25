@@ -27,65 +27,24 @@ class CompositeRoleSingleRoleController extends Controller
     public function preview(Request $request)
     {
         $request->validate([
-            'excel_file' => 'required|file|mimes:xlsx,xls|max:20480', // 20MB max file size
+            'excel_file' => 'required|file|mimes:xlsx,xls|max:20480', // Max size of 20MB
         ]);
 
         $filePath = $request->file('excel_file')->getRealPath();
+        $import = new CompositeRoleSingleRoleImport();
 
         try {
-            // Load the data using the Excel facade (assuming the use of maatwebsite/excel package)
-            $data = Excel::toCollection(new CompositeRoleSingleRoleImport, $filePath)->first();
+            Excel::import($import, $filePath);
 
-            // Validate and parse each row
-            $errors = [];
-            $parsedData = [];
-            foreach ($data as $index => $row) {
-                // Custom validation for each row (adjust rules as needed)
-                $validator = Validator::make($row->toArray(), [
-                    'company' => 'required|string',
-                    'composite_role' => 'required|string',
-                    'single_role' => 'nullable|string',
-                    'single_role_desc' => 'nullable|string'
-                ]);
-
-                if ($validator->fails()) {
-                    $errorDetails = [
-                        'row' => $index + 1,
-                        'errors' => $validator->errors()->all(),
-                    ];
-                    $errors[$index + 1] = $validator->errors()->all();
-
-                    // Log the validation errors with details
-                    Log::error('Validation failed for Composite-Single data', $errorDetails);
-                } else {
-                    // Find the company name based on the company code
-                    $company = Company::where('company_code', $row['company'])->first();
-                    $companyName = $company ? $company->name : 'N/A';
-
-                    // Store validated data along with derived company name for preview
-                    $parsedData[] = [
-                        'company_code' => $row['company'],
-                        'company_name' => $companyName,
-                        'composite_role' => $row['composite_role'],
-                        'single_role' => $row['single_role'],
-                        'single_role_desc' => $row['description'] ?? 'None'
-                    ];
-                }
+            if (!empty($import->errors)) {
+                return redirect()->back()->with('validationErrors', $import->errors);
             }
 
-            if (!empty($errors)) {
-                // Redirect back with validation errors if any
-                return redirect()->back()->with('validationErrors', $errors);
-            }
+            session(['parsedData' => $import->parsedData]);
 
-            // Store parsed data in session for preview and confirmation
-            session(['parsedCompositeSingleRoles' => $parsedData]);
-
-            // Redirect to preview page
-            return view('imports.preview.composite_role_single_role', compact('parsedData'));
+            return view('imports.preview.composite_role_single_role', ['data' => $import->parsedData]);
         } catch (\Exception $e) {
-            // Log the exception with detailed information
-            Log::error('Composite & Single Role - Error during import preview', [
+            Log::error('Error during preview', [
                 'file' => $request->file('excel_file')->getClientOriginalName(),
                 'message' => $e->getMessage(),
                 'trace' => $e->getTraceAsString(),
@@ -97,60 +56,32 @@ class CompositeRoleSingleRoleController extends Controller
 
     public function confirmImport()
     {
-        $data = session('parsedCompositeSingleRoles');
+        $data = session('parsedData');
 
         if (!$data) {
-            // Add debug line
-            Log::debug('Composite & Single Role - Session data not found or empty in confirmImport.');
-            return redirect()->route('composite_single.upload')->with('error', 'No data available to import.');
+            return redirect()->route('composite_single.upload')->with('error', 'No data available for import. Please upload a file first.');
         }
-
-        $user = Auth::user();
 
         try {
             foreach ($data as $row) {
-                $company = Company::where('company_code', $row['company_code'])->first();
+                $singleRole = SingleRole::where('nama', $row['single_role'])->first();
+                $compositeRole = CompositeRole::where('nama', $row['composite_role'])->first();
 
-                // Create or update CompositeRole
-                $compositeRole = CompositeRole::updateOrCreate(
-                    ['company_id' => $company->id, 'nama' => $row['composite_role']],
-                    ['created_by' => $user->name, 'updated_by' => $user->name]
-                );
-
-                // Create or update SingleRole
-                $singleRole = SingleRole::updateOrCreate(
-                    ['company_id' => $company->id, 'nama' => $row['single_role']],
-                    ['deskripsi' => $row['single_role_desc'] ?? null, 'created_by' => $user->name, 'updated_by' => $user->name]
-                );
-
-                // Update the pivot table relationship if both CompositeRole and SingleRole exist
-                if ($compositeRole && $singleRole) {
-                    // Update the relationship in the pivot table
-                    DB::table('pt_composite_role_single_role')->updateOrInsert(
-                        [
-                            'composite_role_id' => $compositeRole->id,
-                            'single_role_id' => $singleRole->id
-                        ],
-                        [
-                            'created_by' => $user->name,
-                            'updated_by' => $user->name,
-                            'updated_at' => now()
-                        ]
-                    );
+                if ($singleRole && $compositeRole) {
+                    $compositeRole->singleRoles()->syncWithoutDetaching([$singleRole->id]);
                 }
             }
 
-            // Clear session data after successful import
-            session()->forget('parsedCompositeSingleRoles');
+            session()->forget('parsedData');
 
             return redirect()->route('composite_single.upload')->with('success', 'Data imported successfully!');
         } catch (\Exception $e) {
-            // Log the exception with detailed information
-            Log::error('Composite & Single Role - Error during import preview', [
+            Log::error('Error during import', [
                 'message' => $e->getMessage(),
                 'trace' => $e->getTraceAsString(),
             ]);
-            return redirect()->route('composite_single.upload')->with('error', 'Error during data import: ' . $e->getMessage());
+
+            return redirect()->route('composite_single.upload')->with('error', 'Error during import: ' . $e->getMessage());
         }
     }
 }
