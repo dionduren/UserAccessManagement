@@ -1,4 +1,4 @@
-@extends('layouts.app')
+{{-- @extends('layouts.app')
 
 @section('content')
     <div class="container-fluid">
@@ -33,32 +33,60 @@
         @endif
 
         <!-- Table to display parsed data -->
-        @if (!empty($parsedData))
-            <table id="compositeSingleTable" class="display responsive nowrap table table-bordered" style="width:100%">
+        <form action="{{ route('composite_single.confirm') }}" method="POST">
+            @csrf
+
+            <table class="table table-bordered">
                 <thead>
                     <tr>
-                        <th>Company Code</th>
-                        <th>Perusahaan</th>
-                        <th>Composite Role</th>
                         <th>Single Role</th>
-                        <th>Deskripsi</th>
+                        <th>Description</th>
+                        <th>Composite Role</th>
                     </tr>
                 </thead>
                 <tbody>
-                    @foreach ($parsedData as $row)
+                    @foreach ($data as $row)
                         <tr>
-                            <td>{{ $row['company_code'] }}</td>
-                            <td>{{ $row['company_name'] }}</td>
-                            <td>{{ $row['composite_role'] }}</td>
                             <td>{{ $row['single_role'] }}</td>
-                            <td>{{ $row['single_role_desc'] ?? 'None' }}</td>
+                            <td>{{ $row['description'] }}</td>
+                            <td>{{ $row['composite_role'] }}</td>
                         </tr>
                     @endforeach
                 </tbody>
             </table>
-        @else
-            <p>No data available to preview.</p>
-        @endif
+
+            <button type="submit" class="btn btn-success">Confirm Import</button>
+            <a href="{{ route('composite_single.upload') }}" class="btn btn-secondary">Cancel</a>
+        </form>
+    </div>
+@endsection --}}
+
+@extends('layouts.app')
+
+@section('content')
+    <div class="container-fluid">
+        <h1>Preview Composite & Single Roles</h1>
+
+        <table id="compositeSingleTable" class="table table-bordered display responsive nowrap">
+            <thead>
+                <tr>
+                    <th>Company ID</th>
+                    <th>Composite Role</th>
+                    <th>Single Role</th>
+                    <th>Single Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach ($data as $row)
+                    <tr>
+                        <td>{{ $row['company'] }}</td>
+                        <td>{{ $row['composite_role'] }}</td>
+                        <td>{{ $row['single_role'] }}</td>
+                        <td>{{ $row['description'] }}</td>
+                    </tr>
+                @endforeach
+            </tbody>
+        </table>
 
         <!-- DataTables Initialization Script -->
         <script>
@@ -74,12 +102,10 @@
             });
         </script>
 
-
-        <!-- Confirmation form -->
         <form action="{{ route('composite_single.confirm') }}" method="POST">
             @csrf
-            <button type="submit" class="btn btn-success mt-3">Confirm Import</button>
-            <a href="{{ route('composite_single.upload') }}" class="btn btn-danger mt-3">Cancel</a>
+            <button type="submit" class="btn btn-success">Confirm Import</button>
+            <a href="{{ route('composite_single.upload') }}" class="btn btn-secondary">Cancel</a>
         </form>
     </div>
 @endsection

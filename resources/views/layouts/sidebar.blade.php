@@ -88,7 +88,7 @@
         </li>
         <li class="nav-item">
             <a href="{{ route('composite_single.upload') }}"
-                class="nav-link {{ request()->routeIs('composite_role_single_role.upload') ? 'active' : 'text-white' }}">
+                class="nav-link {{ request()->routeIs('composite_single.upload') ? 'active' : 'text-white' }}">
                 <i class="bi bi-file-earmark-spreadsheet"></i> Composite - Single Role
             </a>
         </li>
