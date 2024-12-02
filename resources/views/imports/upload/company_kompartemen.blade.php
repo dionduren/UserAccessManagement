@@ -33,8 +33,6 @@
             </div>
         @endif
 
-
-
         <!-- Display success message, if any -->
         @if (session('success'))
             <div class="alert alert-success">{{ session('success') }}</div>

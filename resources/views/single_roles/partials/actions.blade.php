@@ -1,4 +1,4 @@
-<tr data-id="{{ $singleRole->id }}">
+{{-- <tr data-id="{{ $singleRole->id }}">
     <td>{{ $singleRole->company->name ?? 'N/A' }}</td>
     <td>{{ $singleRole->nama }}</td>
     <td>{{ $singleRole->deskripsi ?? 'None' }}</td>
@@ -17,4 +17,16 @@
             </button>
         </form>
     </td>
-</tr>
+</tr> --}}
+<div class="btn-group" role="group">
+    <button type="button" class="btn btn-sm btn-primary show-single-role" data-id="{{ $row->id }}"><i
+            class="bi bi-eye"></i></button>
+    <button type="button" class="btn btn-sm btn-warning edit-single-role mx-1" data-id="{{ $row->id }}"><i
+            class="bi bi-pencil"></i></button>
+    <form action="{{ route('single-roles.destroy', $row->id) }}" method="POST" style="display:inline;">
+        @csrf
+        @method('DELETE')
+        <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Are you sure?')"><i
+                class="bi bi-trash"></i></button>
+    </form>
+</div>

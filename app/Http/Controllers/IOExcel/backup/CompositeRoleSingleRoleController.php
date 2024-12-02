@@ -3,19 +3,20 @@
 namespace App\Http\Controllers\IOExcel;
 
 use App\Http\Controllers\Controller;
+use App\Models\Company;
+use App\Models\CompositeRole;
+use App\Models\SingleRole;
+use App\Imports\CompositeRoleSingleRoleImport;
 
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Validator;
-use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 use Maatwebsite\Excel\Facades\Excel;
-
-use App\Models\Company;
-use App\Models\SingleRole;
-use App\Models\CompositeRole;
-use App\Imports\CompositeRoleSingleRoleImport;
+use Yajra\DataTables\Facades\DataTables;
 
 class CompositeRoleSingleRoleController extends Controller
 {
@@ -24,16 +25,17 @@ class CompositeRoleSingleRoleController extends Controller
         return view('imports.upload.composite_role_single_role');
     }
 
+    // Preview the data from the uploaded Excel file
     public function preview(Request $request)
     {
         $request->validate([
-            'excel_file' => 'required|file|mimes:xlsx,xls|max:20480', // 20MB max file size
+            'excel_file' => 'required|file|mimes:xlsx,xls|max:20480',
         ]);
 
         $filePath = $request->file('excel_file')->getRealPath();
 
         try {
-            // Load the data using the Excel facade (assuming the use of maatwebsite/excel package)
+            // Load the data into a collection
             $data = Excel::toCollection(new CompositeRoleSingleRoleImport, $filePath)->first();
 
             // Validate and parse each row
@@ -79,78 +81,133 @@ class CompositeRoleSingleRoleController extends Controller
             }
 
             // Store parsed data in session for preview and confirmation
-            session(['parsedCompositeSingleRoles' => $parsedData]);
+            session(['parsedData' => $data]);
 
-            // Redirect to preview page
-            return view('imports.preview.composite_role_single_role', compact('parsedData'));
+            return view('imports.preview.composite_role_single_role');
         } catch (\Exception $e) {
-            // Log the exception with detailed information
-            Log::error('Composite & Single Role - Error during import preview', [
-                'file' => $request->file('excel_file')->getClientOriginalName(),
-                'message' => $e->getMessage(),
-                'trace' => $e->getTraceAsString(),
-            ]);
-
-            return redirect()->back()->with('error', 'Error during preview: ' . $e->getMessage());
+            return redirect()->back()->withErrors(['error' => 'Error: ' . $e->getMessage()]);
         }
     }
 
-    public function confirmImport()
+    public function getPreviewData(Request $request)
     {
-        $data = session('parsedCompositeSingleRoles');
+        $data = session('parsedData'); // Retrieve preview data from the session
 
         if (!$data) {
-            // Add debug line
-            Log::debug('Composite & Single Role - Session data not found or empty in confirmImport.');
-            return redirect()->route('composite_single.upload')->with('error', 'No data available to import.');
+            return response()->json(['error' => 'No data available for preview.'], 400);
         }
 
-        $user = Auth::user();
+        // Transform the session data to be compatible with DataTables
+        $formattedData = collect($data)->map(function ($row, $key) {
+            return [
+                'id' => $key + 1, // Assign a unique ID
+                'composite_role' => $row['composite_role'] ?? null,
+                'single_role' => $row['single_role'] ?? null,
+                'single_role_desc' => $row['description'] ?? null,
+                'company' => $row['company'] ?? null,
+            ];
+        });
+
+        // Return the data to DataTables
+        return DataTables::of($formattedData)->make(true);
+    }
+
+
+    // Confirm and process the import
+    public function confirmImport(Request $request)
+    {
+        set_time_limit(0);
+
+        $data = session('parsedData');
+
+        if (!$data) {
+            return response()->json(['error' => 'No data available for import. Please upload a file first.'], 400);
+        }
 
         try {
-            foreach ($data as $row) {
-                $company = Company::where('company_code', $row['company_code'])->first();
+            // Convert the collection to an array if necessary
+            $dataArray = $data instanceof Collection ? $data->toArray() : $data;
+            $totalRows = count($dataArray);
+            $processedRows = 0;
 
-                // Create or update CompositeRole
-                $compositeRole = CompositeRole::updateOrCreate(
-                    ['company_id' => $company->id, 'nama' => $row['composite_role']],
-                    ['created_by' => $user->name, 'updated_by' => $user->name]
-                );
+            // Set headers for streaming response
+            $response = new StreamedResponse(function () use ($dataArray, $totalRows, &$processedRows) {
+                $lastUpdate = microtime(true); // Track last time progress was sent
 
-                // Create or update SingleRole
-                $singleRole = SingleRole::updateOrCreate(
-                    ['company_id' => $company->id, 'nama' => $row['single_role']],
-                    ['deskripsi' => $row['single_role_desc'] ?? null, 'created_by' => $user->name, 'updated_by' => $user->name]
-                );
+                echo json_encode(['progress' => 0]) . "\n";
+                ob_flush();
+                flush();
 
-                // Update the pivot table relationship if both CompositeRole and SingleRole exist
-                if ($compositeRole && $singleRole) {
-                    // Update the relationship in the pivot table
-                    DB::table('pt_composite_role_single_role')->updateOrInsert(
-                        [
-                            'composite_role_id' => $compositeRole->id,
-                            'single_role_id' => $singleRole->id
-                        ],
-                        [
-                            'created_by' => $user->name,
-                            'updated_by' => $user->name,
-                            'updated_at' => now()
-                        ]
+                foreach ($dataArray as $index => $row) {
+                    // Skip invalid rows
+                    if (!isset($row['company'], $row['single_role'], $row['composite_role'])) {
+                        Log::warning('Skipping invalid row.', ['row' => $row]);
+                        continue;
+                    }
+
+                    // Step 1: Find the Company by company_code
+                    $company = Company::where('company_code', $row['company'])->first();
+
+                    if (!$company) {
+                        Log::warning('Company not found for row', ['row' => $row]);
+                        continue;
+                    }
+
+                    // Step 2: Create or Update CompositeRole
+                    $compositeRole = CompositeRole::updateOrCreate(
+                        ['nama' => $row['composite_role'], 'company_id' => $company->id]
                     );
+
+                    // Skip row if single_role (nama) is null
+                    if (empty($row['single_role'])) {
+                        Log::warning('Skipping row due to missing single_role', ['row' => $row]);
+                        continue;
+                    }
+
+                    // Step 3: Create or Update SingleRole
+                    $singleRole = SingleRole::updateOrCreate(
+                        ['nama' => $row['single_role'], 'company_id' => $company->id],
+                        ['deskripsi' => $row['description']]
+                    );
+
+                    // Step 4: Link SingleRole to CompositeRole
+                    $compositeRole->singleRoles()->syncWithoutDetaching([$singleRole->id]);
+
+                    // Update progress
+                    $processedRows++;
+                    // Check if 3 seconds have passed since the last update
+                    if (microtime(true) - $lastUpdate >= 3 || $processedRows === $totalRows) {
+                        $progress = round(($processedRows / $totalRows) * 100);
+                        echo json_encode(['progress' => $progress]) . "\n";
+                        ob_flush();
+                        flush();
+
+                        $lastUpdate = microtime(true); // Reset the timer
+                    }
                 }
-            }
 
-            // Clear session data after successful import
-            session()->forget('parsedCompositeSingleRoles');
+                echo json_encode(['success' => 'Data imported successfully!']) . "\n";
+                ob_flush();
+                flush();
+            });
 
-            return redirect()->route('composite_single.upload')->with('success', 'Data imported successfully!');
+            // Clear session data after processing
+            session()->forget('parsedData');
+
+            // return response()->json(['success' => 'Data imported successfully!']);
+            // Set streaming headers explicitly
+            $response->headers->set('Content-Type', 'text/event-stream');
+            $response->headers->set('Cache-Control', 'no-cache');
+            $response->headers->set('Connection', 'keep-alive');
+
+            return $response;
         } catch (\Exception $e) {
-            // Log the exception with detailed information
-            Log::error('Composite & Single Role - Error during import preview', [
+            Log::error('Error during import', [
                 'message' => $e->getMessage(),
                 'trace' => $e->getTraceAsString(),
             ]);
-            return redirect()->route('composite_single.upload')->with('error', 'Error during data import: ' . $e->getMessage());
+
+            return response()->json(['error' => 'Error during import: ' . $e->getMessage()], 500);
         }
     }
 }

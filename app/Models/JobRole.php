@@ -41,8 +41,14 @@ class JobRole extends Model
     }
 
     // Define the relationship with CompositeRole
-    public function compositeRoles()
+    // public function compositeRoles()
+    // {
+    //     return $this->belongsTo(CompositeRole::class, 'jabatan_id');
+    // }
+
+    // One JobRole has one CompositeRole
+    public function compositeRole()
     {
-        return $this->hasMany(CompositeRole::class, 'jabatan_id');
+        return $this->hasOne(CompositeRole::class, 'jabatan_id');
     }
 }

@@ -6,8 +6,6 @@ use App\Http\Controllers\Controller;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Validator;
-use Illuminate\Support\Facades\DB;
 
 use Maatwebsite\Excel\Facades\Excel;
 use App\Imports\CompanyKompartemenImport;
@@ -149,60 +147,48 @@ class CompanyKompartemenController extends Controller
                 // Create or update Kompartemen and Departemen based on data
                 if (!empty($row['kompartemen']) && !empty($row['departemen'])) {
                     $kompartemen = \App\Models\Kompartemen::updateOrCreate(
-                        [
-                            'name' => $row['kompartemen'],
-                            'company_id' => $company->id,
-                        ],
-                        [
-                            'company_id' => $company->id,
-                        ]
+                        ['name' => $row['kompartemen'], 'company_id' => $company->id],
+                        ['company_id' => $company->id]
                     );
 
                     $departemen = \App\Models\Departemen::updateOrCreate(
-                        [
-                            'name' => $row['departemen'],
-                            'company_id' => $company->id,
-                            'kompartemen_id' => $kompartemen->id,
-                        ],
-                        [
-                            'company_id' => $company->id,
-                            'kompartemen_id' => $kompartemen->id,
-                        ]
+                        ['name' => $row['departemen'], 'company_id' => $company->id, 'kompartemen_id' => $kompartemen->id],
+                        ['company_id' => $company->id, 'kompartemen_id' => $kompartemen->id]
                     );
                 } elseif (!empty($row['departemen']) && empty($row['kompartemen'])) {
                     $departemen = \App\Models\Departemen::updateOrCreate(
-                        [
-                            'name' => $row['departemen'],
-                            'company_id' => $company->id,
-                        ],
-                        [
-                            'company_id' => $company->id,
-                            'kompartemen_id' => null,
-                        ]
+                        ['name' => $row['departemen'], 'company_id' => $company->id],
+                        ['company_id' => $company->id, 'kompartemen_id' => null]
                     );
                 } elseif (!empty($row['kompartemen']) && empty($row['departemen'])) {
                     $kompartemen = \App\Models\Kompartemen::updateOrCreate(
-                        [
-                            'name' => $row['kompartemen'],
-                            'company_id' => $company->id,
-                        ],
-                        [
-                            'company_id' => $company->id,
-                        ]
+                        ['name' => $row['kompartemen'], 'company_id' => $company->id],
+                        ['company_id' => $company->id]
                     );
                 }
 
                 // Create or update JobRole
-                \App\Models\JobRole::updateOrCreate(
+                $jobRole = \App\Models\JobRole::updateOrCreate(
                     ['nama_jabatan' => $row['job_function'], 'company_id' => $company->id],
                     [
                         'company_id' => $company->id,
                         'kompartemen_id' => $kompartemen->id ?? null,
                         'departemen_id' => $departemen->id ?? null,
                         'deskripsi' => $row['job_description'] ?? null,
-                        'created_by' => $row['created_by'] ?? null,
                     ]
                 );
+
+                // Create or update CompositeRole
+                if (!empty($row['composite_role'])) {
+                    $compositeRole = \App\Models\CompositeRole::updateOrCreate(
+                        ['nama' => $row['composite_role'], 'company_id' => $company->id],
+                        ['company_id' => $company->id]
+                    );
+
+                    // Associate CompositeRole with JobRole
+                    $compositeRole->jobRole()->associate($jobRole);
+                    $compositeRole->save();
+                }
             }
 
             session()->forget('parsedData');

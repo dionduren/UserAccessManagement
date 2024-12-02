@@ -14,10 +14,10 @@ use App\Http\Controllers\DepartemenController;
 use App\Http\Controllers\SingleRoleController;
 use App\Http\Controllers\KompartemenController;
 use App\Http\Controllers\TcodeImportController;
-
-use App\Http\Controllers\AccessMatrixController;
-// use App\Http\Controllers\IOExcel\ExcelImportController;
 use App\Http\Controllers\CompositeRoleController;
+use App\Http\Controllers\AccessMatrixController;
+
+// use App\Http\Controllers\IOExcel\ExcelImportController;
 use App\Http\Controllers\IOExcel\TcodeSingleRoleController;
 use App\Http\Controllers\IOExcel\CompanyKompartemenController;
 use App\Http\Controllers\IOExcel\CompositeRoleSingleRoleController;
@@ -67,7 +67,7 @@ Route::get('/get-job-roles', [JobRoleController::class, 'getJobRoles']);
 Route::get('/composite-roles/data', [CompositeRoleController::class, 'getCompositeRoles'])->name('composite-roles.data');
 Route::resource('composite-roles', CompositeRoleController::class);
 
-// Route::post('/single-roles', [SingleRoleController::class, 'store'])->name('single-roles.store');
+Route::get('single-roles/data', [SingleRoleController::class, 'getSingleRoles'])->name('single-roles.data');
 Route::resource('single-roles', SingleRoleController::class);
 
 Route::get('/tcodes/upload', [TcodeImportController::class, 'showUploadForm'])->name('tcodes.upload');
@@ -88,6 +88,7 @@ Route::resource('tcodes', TcodeController::class);
 
 Route::get('/company-kompartemen/upload', [CompanyKompartemenController::class, 'uploadForm'])->name('company_kompartemen.upload');
 Route::post('/company-kompartemen/preview', [CompanyKompartemenController::class, 'preview'])->name('company_kompartemen.preview');
+Route::get('/company-kompartemen/preview-data', [CompanyKompartemenController::class, 'getPreviewData'])->name('company_kompartemen.preview_data');
 Route::post('/company-kompartemen/confirm', [CompanyKompartemenController::class, 'confirmImport'])->name('company_kompartemen.confirm');
 
 Route::get('/composite-role-single-role/upload', [CompositeRoleSingleRoleController::class, 'uploadForm'])->name('composite_single.upload');
@@ -97,7 +98,6 @@ Route::post('/composite-role-single-role/confirm', [CompositeRoleSingleRoleContr
 
 Route::get('/tcode-single-role/upload', [TcodeSingleRoleController::class, 'uploadForm'])->name('tcode_single_role.upload');
 Route::post('/tcode-single-role/preview', [TcodeSingleRoleController::class, 'preview'])->name('tcode_single_role.preview');
-
 
 Route::get('/access-matrix', [AccessMatrixController::class, 'index'])->name('access-matrix');
 Route::post('/access-matrix/assign-role', [AccessMatrixController::class, 'assignRole'])->name('access-matrix.assign-role');

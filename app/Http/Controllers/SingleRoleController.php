@@ -2,23 +2,18 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Tcode;
 use App\Models\Company;
-use App\Models\Departemen;
 use App\Models\SingleRole;
-use App\Models\Kompartemen;
-use App\Models\CompositeRole;
 
 use Illuminate\Http\Request;
+use Yajra\DataTables\Facades\DataTables;
 
 class SingleRoleController extends Controller
 {
-    // Display the index page with data
     public function index()
     {
         $companies = Company::all();
-        $single_roles = SingleRole::with('compositeRoles', 'tcodes')->get();
-        return view('single_roles.index', compact('companies', 'single_roles'));
+        return view('single_roles.index', compact('companies'));
     }
 
     // Show the details of a Single Role
@@ -86,12 +81,24 @@ class SingleRoleController extends Controller
         return redirect()->route('single-roles.index')->with('status', 'Single Role updated successfully.');
     }
 
-
-
     public function destroy(SingleRole $singleRole)
     {
         $singleRole->delete();
 
         return redirect()->route('single-roles.index')->with('status', 'Single role deleted successfully.');
+    }
+
+    public function getSingleRoles(Request $request)
+    {
+        if ($request->ajax()) {
+            $singleRoles = SingleRole::with('company')->select('tr_single_roles.*');
+
+            return DataTables::of($singleRoles)
+                ->addColumn('actions', function ($row) {
+                    return view('single_roles.partials.actions', compact('row'))->render();
+                })
+                ->rawColumns(['actions']) // Allow raw HTML for the actions column
+                ->make(true);
+        }
     }
 }

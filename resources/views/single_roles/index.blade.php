@@ -24,11 +24,6 @@
                     <th>Actions</th>
                 </tr>
             </thead>
-            <tbody>
-                @foreach ($single_roles as $singleRole)
-                    @include('single_roles.partials.single_role_row', ['singleRole' => $singleRole])
-                @endforeach
-            </tbody>
         </table>
     </div>
 
@@ -40,10 +35,39 @@
     <script>
         $(document).ready(function() {
             // Initialize DataTable
-            $('#single_roles_table').DataTable({
+            const table = $('#single_roles_table').DataTable({
+                processing: true,
+                serverSide: true,
+                ajax: "{{ route('single-roles.data') }}", // AJAX route
+                columns: [{
+                        data: 'company.name',
+                        name: 'company.name',
+                        title: 'Perusahaan'
+                    },
+                    {
+                        data: 'nama',
+                        name: 'nama',
+                        title: 'Single Role'
+                    },
+                    {
+                        data: 'deskripsi',
+                        name: 'deskripsi',
+                        title: 'Deskripsi'
+                    },
+                    {
+                        data: 'actions',
+                        name: 'actions',
+                        orderable: false,
+                        searchable: false,
+                        title: 'Actions'
+                    },
+                ],
+                responsive: true,
                 searching: true,
-                processing: false,
-                serverSide: false
+                paging: true,
+                ordering: true,
+                pageLength: 10,
+                lengthMenu: [5, 10, 25, 50, 100],
             });
 
             // Load and show the Create Modal when the button is clicked
@@ -57,8 +81,6 @@
             // Load and show the Edit Modal
             $(document).on('click', '.edit-single-role', function() {
                 var roleId = $(this).data('id'); // Get the ID from the button
-
-                // Make an AJAX request to fetch data for the selected role
                 $.ajax({
                     url: '/single-roles/' + roleId + '/edit',
                     method: 'GET',
@@ -82,7 +104,7 @@
                 });
             });
 
-            // Close modal handler (if needed)
+            // Close modal handler
             $(document).on('click', '.close', function() {
                 $('.modal').modal('hide');
             });

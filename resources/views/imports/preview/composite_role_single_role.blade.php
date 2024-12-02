@@ -68,14 +68,11 @@
 @section('scripts')
     <script>
         document.addEventListener('DOMContentLoaded', function() {
+            const confirmForm = $('#confirm-form');
             const progressContainer = $('#progress-container');
             const progressBar = $('#progress-bar');
-            const confirmForm = $('#confirm-form');
-            const table = $('#compositeSingleTable');
             const errorUploadInfo = $('#error-upload-info');
             const errorMessage = $('#error-message');
-
-            // TADI BERHENTI DI SIN
 
             $('#compositeSingleTable').DataTable({
                 processing: true,
@@ -85,22 +82,21 @@
                     type: "GET",
                 },
                 columns: [{
-                        data: 'company',
-                        name: 'company',
-                        title: 'Company ID'
+                        data: 'company_code',
+                        title: 'Company Code'
+                    }, {
+                        data: 'company_name',
+                        title: 'Perusahaan'
                     }, {
                         data: 'composite_role',
-                        name: 'composite_role',
                         title: 'Composite Role'
                     },
                     {
                         data: 'single_role',
-                        name: 'single_role',
                         title: 'Single Role'
                     },
                     {
-                        data: 'description',
-                        name: 'description',
+                        data: 'single_role_desc',
                         title: 'Description'
                     },
                 ],
@@ -115,72 +111,61 @@
             // Show progress bar on form submission
             confirmForm.on('submit', function(e) {
                 e.preventDefault(); // Prevent default form submission
+
                 progressContainer.show();
                 progressBar.css('width', '0%').attr('aria-valuenow', 0).text('0%');
-
 
                 // Hide the buttons
                 confirmForm.find('button[type="submit"]').hide();
                 confirmForm.find('a').hide();
 
-                // Perform AJAX request to process the import
-                $.ajax({
-                    url: confirmForm.attr('action'),
-                    type: 'POST',
-                    data: confirmForm.serialize(),
-                    xhr: function() {
-                        const xhr = new window.XMLHttpRequest();
+                // Start polling for progress
+                // Perform AJAX request with streaming
+                const xhr = new XMLHttpRequest();
+                xhr.open('POST', confirmForm.attr('action'), true);
+                xhr.setRequestHeader('X-CSRF-TOKEN', $('meta[name="csrf-token"]').attr('content'));
 
-                        // Handle progress updates from the server
-                        xhr.onprogress = function(event) {
-                            if (event.currentTarget.responseText) {
-                                try {
-                                    // Parse the latest chunk of data
-                                    const responseChunks = event.currentTarget.responseText
-                                        .split('\n');
-                                    const lastChunk = responseChunks[responseChunks.length -
-                                        2]; // Last non-empty chunk
-                                    const progressData = JSON.parse(lastChunk);
+                // Event listener for progress updates
+                xhr.onprogress = function(event) {
+                    const responseText = event.currentTarget.responseText;
+                    const lines = responseText.trim().split('\n');
+                    const lastLine = lines[lines.length - 1];
 
-                                    // Update progress bar
-                                    if (progressData.progress) {
-                                        const progress = progressData.progress;
-                                        progressBar.css('width', progress + '%').attr(
-                                            'aria-valuenow', progress).text(progress +
-                                            '%');
-                                    }
-                                } catch (e) {
-                                    console.error('Error parsing progress:', e);
-                                }
-                            }
-                        };
-                        return xhr;
-                    },
-                    success: function(response) {
+                    try {
+                        const data = JSON.parse(lastLine);
 
-                        // Show success message
-                        $('<div class="alert alert-success mt-4"><h4>' + response.success +
-                            '</h4></div>').insertAfter(confirmForm);
+                        if (data.progress !== undefined) {
+                            const progress = data.progress;
+                            progressBar.css('width', progress + '%').attr('aria-valuenow', progress)
+                                .text(progress + '%');
+                        }
 
-                        // Show redirect buttons
-                        $('<div class="d-flex justify-content-between mt-4">' +
-                            '<a href="{{ route('composite_single.upload') }}" class="btn btn-primary">Back to Upload Page</a>' +
-                            '<a href="{{ route('home') }}" class="btn btn-secondary">Go to Home Page</a>' +
-                            '</div>').insertAfter(confirmForm);
+                        if (data.success) {
+                            progressBar.css('width', '100%').attr('aria-valuenow', 100).text('100%');
+                            $('<div class="alert alert-success mt-4"><h4>' + data.success +
+                                '</h4></div>').insertAfter(confirmForm);
 
-                        // Update progress bar to 100%
-                        progressBar.css('width', '100%').attr('aria-valuenow', 100).text(
-                            '100%');
-                    },
-                    error: function(xhr) {
-                        console.log('Error: ' + (xhr.responseJSON?.error ||
-                            'An unknown error occurred.'));
-                        progressContainer.hide();
-                        // Re-show the buttons if there's an error
-                        confirmForm.find('button[type="submit"]').show();
-                        confirmForm.find('a').show();
+                            $('<div class="d-flex justify-content-between mt-4">' +
+                                '<a href="{{ route('composite_single.upload') }}" class="btn btn-primary">Back to Upload Page</a>' +
+                                '<a href="{{ route('home') }}" class="btn btn-secondary">Go to Home Page</a>' +
+                                '</div>').insertAfter(confirmForm);
+                        }
+                    } catch (e) {
+                        console.error('Error parsing progress:', e);
                     }
-                });
+                };
+
+                // Event listener for errors
+                xhr.onerror = function() {
+                    alert('An error occurred while uploading the data.');
+                    progressContainer.hide();
+                    confirmForm.find('button[type="submit"]').show();
+                    confirmForm.find('a').show();
+                };
+
+                xhr.send(new FormData(confirmForm[0]));
+
+
             });
         });
     </script>
