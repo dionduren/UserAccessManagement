@@ -161,7 +161,12 @@ class CompositeRoleController extends Controller
                 'company' => $role->company->name ?? 'N/A',
                 'nama' => $role->nama,
                 'job_role' => $role->jobRole->nama_jabatan ?? 'Not Assigned',
-                'single_roles' => $role->singleRoles->pluck('nama')->implode(', ') ?? 'No Single Roles',
+                'single_roles' => $role->singleRoles
+                    ->pluck('nama')
+                    ->map(function ($roleName) {
+                        return "<li>{$roleName}</li>";
+                    })
+                    ->implode('') ?? '<li>No Single Roles</li>',
                 'actions' => view('composite_roles.components.action_buttons', ['role' => $role])->render(),
             ];
         });
