@@ -82,8 +82,8 @@ class CompositeRoleController extends Controller
 
         foreach ($jobRoles as $jobRole) {
             $companyId = $jobRole->company_id;
-            $kompartemenName = $jobRole->kompartemen->name;
-            $departemenName = $jobRole->departemen->name;
+            $kompartemenName = $jobRole->kompartemen->name ?? 'No Kompartemen';
+            $departemenName = $jobRole->departemen->name ?? 'No Departemen';
 
             $job_roles_data[$companyId][$kompartemenName][$departemenName][] = [
                 'id' => $jobRole->id,
@@ -147,14 +147,14 @@ class CompositeRoleController extends Controller
         }
 
         // Debug the SQL Query
-        Log::info($query->toSql());
-        Log::info($query->getBindings());
+        // Log::info($query->toSql());
+        // Log::info($query->getBindings());
 
-        $recordsTotal = $query->count();
+        $recordsFiltered = $query->count();
         $compositeRoles = $query->skip($request->start)->take($request->length)->get();
 
         // Check the fetched data
-        Log::info($compositeRoles);
+        // Log::info($compositeRoles);
 
         $data = $compositeRoles->map(function ($role) {
             return [
@@ -173,8 +173,8 @@ class CompositeRoleController extends Controller
 
         return response()->json([
             'draw' => intval($request->draw),
-            'recordsTotal' => $recordsTotal,
-            'recordsFiltered' => $recordsTotal,
+            'recordsTotal' => CompositeRole::count(), // Total number of records
+            'recordsFiltered' => $recordsFiltered, // Total number of filtered records
             'data' => $data,
         ]);
     }

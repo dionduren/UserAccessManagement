@@ -68,7 +68,7 @@ Route::get('/get-job-roles', [JobRoleController::class, 'getJobRoles']);
 Route::get('/composite-roles/data', [CompositeRoleController::class, 'getCompositeRoles'])->name('composite-roles.data');
 Route::resource('composite-roles', CompositeRoleController::class);
 
-Route::get('single-roles/data', [SingleRoleController::class, 'getSingleRoles'])->name('single-roles.data');
+Route::get('/single-roles/data', [SingleRoleController::class, 'getSingleRoles'])->name('single-roles.data');
 Route::resource('single-roles', SingleRoleController::class);
 
 Route::get('/tcodes/upload', [TcodeImportController::class, 'showUploadForm'])->name('tcodes.upload');

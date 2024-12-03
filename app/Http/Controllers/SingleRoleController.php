@@ -19,7 +19,7 @@ class SingleRoleController extends Controller
     // Show the details of a Single Role
     public function show($id)
     {
-        $singleRole = SingleRole::findOrFail($id);
+        $singleRole = SingleRole::with(['compositeRoles', 'company', 'tcodes'])->findOrFail($id);
         return view('single_roles.show', compact('singleRole'));
     }
 
@@ -44,7 +44,7 @@ class SingleRoleController extends Controller
         // Check if the request is an AJAX request
         if ($request->ajax()) {
             // Return HTML for the table row or a success message
-            $view = view('single_roles.partials.single_role_row', compact('singleRole'))->render();
+            $view = view('single_roles.partials.actions', compact('singleRole'))->render();
             return response()->json(['status' => 'success', 'html' => $view]);
         }
 
@@ -74,7 +74,8 @@ class SingleRoleController extends Controller
         $singleRole->update($request->all());
 
         if ($request->ajax()) {
-            $view = view('single_roles.partials.single_role_row', compact('singleRole'))->render();
+            // Pass the variable as `$role` to match the partial view expectation
+            $view = view('single_roles.partials.actions', ['role' => $singleRole])->render();
             return response()->json(['status' => 'success', 'html' => $view]);
         }
 
@@ -90,15 +91,60 @@ class SingleRoleController extends Controller
 
     public function getSingleRoles(Request $request)
     {
-        if ($request->ajax()) {
-            $singleRoles = SingleRole::with('company')->select('tr_single_roles.*');
+        $query = SingleRole::with(['company', 'tcodes', 'compositeRoles']);
 
-            return DataTables::of($singleRoles)
-                ->addColumn('actions', function ($row) {
-                    return view('single_roles.partials.actions', compact('row'))->render();
-                })
-                ->rawColumns(['actions']) // Allow raw HTML for the actions column
-                ->make(true);
+        // Filter by `company_id`
+        if ($request->filled('company_id')) {
+            $query->where('company_id', $request->company_id);
         }
+
+        // Global search
+        if ($request->filled('search.value')) {
+            $searchValue = $request->input('search.value');
+            $query->where(function ($q) use ($searchValue) {
+                $q->where('nama', 'like', "%{$searchValue}%")
+                    ->orWhere('deskripsi', 'like', "%{$searchValue}%")
+                    ->orWhereHas('company', function ($companyQuery) use ($searchValue) {
+                        $companyQuery->where('name', 'like', "%{$searchValue}%");
+                    });
+            });
+        }
+
+        // Join with `ms_company` for proper ordering by company name
+        if ($request->filled('order.0.column')) {
+            $orderableColumns = ['company', 'nama', 'deskripsi']; // Map columns by index
+            $columnIndex = $request->input('order.0.column');
+            $columnDirection = $request->input('order.0.dir', 'asc');
+            $columnName = $orderableColumns[$columnIndex] ?? 'nama'; // Default to 'nama'
+
+            if ($columnName === 'company') {
+                $query->leftJoin('ms_company', 'ms_company.id', '=', 'tr_single_roles.company_id')
+                    ->select('tr_single_roles.*', 'ms_company.name as company_name')
+                    ->orderBy('company_name', $columnDirection);
+            } else {
+                $query->orderBy($columnName, $columnDirection);
+            }
+        }
+
+        // Get filtered and paginated data
+        $recordsFiltered = $query->count();
+        $singleRoles = $query->skip($request->start)->take($request->length)->get();
+
+        // Format data for DataTable
+        $data = $singleRoles->map(function ($role) {
+            return [
+                'company' => $role->company->name ?? 'N/A',
+                'nama' => $role->nama,
+                'deskripsi' => $role->deskripsi,
+                'actions' => view('single_roles.partials.actions', ['role' => $role])->render(),
+            ];
+        });
+
+        return response()->json([
+            'draw' => intval($request->draw),
+            'recordsTotal' => SingleRole::count(), // Total number of records
+            'recordsFiltered' => $recordsFiltered, // Total number of filtered records
+            'data' => $data,
+        ]);
     }
 }

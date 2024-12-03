@@ -14,6 +14,17 @@
             <div class="alert alert-success">{{ session('status') }}</div>
         @endif
 
+        <!-- Dropdowns for Filtering -->
+        <div class="form-group">
+            <label for="companyDropdown">Select Company</label>
+            <select id="companyDropdown" class="form-control select2">
+                <option value="">-- Select Company --</option>
+                @foreach ($companies as $company)
+                    <option value="{{ $company->id }}">{{ $company->name }}</option>
+                @endforeach
+            </select>
+        </div>
+
         <!-- Table for displaying Single Roles -->
         <table id="single_roles_table" class="table table-bordered table-striped table-hover cell-border mt-3">
             <thead>
@@ -29,19 +40,46 @@
 
     <!-- Modals -->
     <div id="modalContainer"></div> <!-- Placeholder for loading modals dynamically -->
+
+    <!-- Placeholder for modals -->
+    <div class="modal fade" id="singleRoleModal" tabindex="-1" aria-labelledby="singleRoleModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="singleRoleModalLabel"></h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body" id="singleRoleModalBody">
+                    <!-- Content for create, edit, or show details will be loaded dynamically -->
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
 @endsection
 
 @section('scripts')
     <script>
         $(document).ready(function() {
+
             // Initialize DataTable
             const table = $('#single_roles_table').DataTable({
                 processing: true,
                 serverSide: true,
-                ajax: "{{ route('single-roles.data') }}", // AJAX route
+                ajax: {
+                    url: '/single-roles/data',
+                    data: function(d) {
+                        d.company_id = $('#companyDropdown').val();
+                        // console.log('data company :', d.company_id);
+                    },
+                },
                 columns: [{
-                        data: 'company.name',
-                        name: 'company.name',
+                        data: 'company',
+                        name: 'company',
                         title: 'Perusahaan'
                     },
                     {
@@ -70,60 +108,74 @@
                 lengthMenu: [5, 10, 25, 50, 100],
             });
 
-            // Load and show the Create Modal when the button is clicked
+            // Handle Company dropdown change
+            $('#companyDropdown').on('change', function() {
+                const companyId = $(this).val();
+
+                if (companyId) {
+                    // Reloads the data without resetting pagination
+                    table.ajax.reload(null, false);
+                }
+            });
+
+            // Function to load modal content dynamically
+            function loadModalContent(url, title) {
+                $('#singleRoleModalLabel').text(title); // Set modal title
+                $('#singleRoleModalBody').html(
+                    '<div class="text-center">Loading...</div>'); // Temporary loading state
+                $('#singleRoleModal').modal('show'); // Show the modal
+
+                $.get(url, function(data) {
+                    $('#singleRoleModalBody').html(data); // Populate modal-body with received content
+                }).fail(function() {
+                    alert('Failed to load data. Please try again.');
+                });
+            }
+
+            // Handle Create Modal
             $('#triggerCreateModal').on('click', function() {
-                $.get('{{ route('single-roles.create') }}', function(data) {
-                    $('#modalContainer').html(data);
-                    $('#createSingleRoleModal').modal('show');
-                });
+                loadModalContent('{{ route('single-roles.create') }}', 'Create Single Role');
             });
 
-            // Load and show the Edit Modal
+            // Handle Edit Modal
             $(document).on('click', '.edit-single-role', function() {
-                var roleId = $(this).data('id'); // Get the ID from the button
-                $.ajax({
-                    url: '/single-roles/' + roleId + '/edit',
-                    method: 'GET',
-                    success: function(data) {
-                        // Open the modal
-                        $('#modalContainer').html(data);
-                        $('#editSingleRoleModal').modal('show');
-                    },
-                    error: function() {
-                        alert('Failed to fetch data for editing.');
-                    }
-                });
+                const roleId = $(this).data('id');
+                const url = `/single-roles/${roleId}/edit`;
+                loadModalContent(url, 'Edit Single Role');
             });
 
-            // Load and show the Show Modal
+            // Handle Show Details Modal
             $(document).on('click', '.show-single-role', function() {
-                const singleRoleId = $(this).data('id');
-                $.get(`/single-roles/${singleRoleId}`, function(data) {
-                    $('#modalContainer').html(data);
-                    $('#showSingleRoleModal').modal('show');
-                });
+                const roleId = $(this).data('id');
+                const url = `/single-roles/${roleId}`;
+                loadModalContent(url, 'Single Role Details');
             });
 
-            // Close modal handler
+            // Close modal when the close button is clicked
             $(document).on('click', '.close', function() {
-                $('.modal').modal('hide');
+                $('#singleRoleModal').modal('hide');
             });
 
-            // Handle create form submission via AJAX
-            $('#createSingleRoleModal').on('submit', 'form', function(event) {
+            // Optionally, handle AJAX form submission inside the modal dynamically (Create/Edit)
+            $(document).on('submit', 'form.ajax-modal-form', function(event) {
                 event.preventDefault();
-                let form = $(this);
+                const form = $(this);
+                const actionUrl = form.attr('action');
+                const method = form.attr('method');
+                const formData = form.serialize();
 
                 $.ajax({
-                    url: form.attr('action'),
-                    method: form.attr('method'),
-                    data: form.serialize(),
+                    url: actionUrl,
+                    method: method,
+                    data: formData,
                     success: function(response) {
                         if (response.status === 'success') {
-                            $('#single_roles_table tbody').append(response
-                                .html); // Add the new row
-                            $('#createSingleRoleModal').modal('hide');
-                            form[0].reset(); // Reset form
+                            $('#single_roles_table').DataTable().ajax
+                                .reload(); // Reload DataTable
+                            $('#singleRoleModal').modal('hide'); // Close modal
+                            // alert(response.message); // Show success message
+                        } else {
+                            alert('Failed to save changes.');
                         }
                     },
                     error: function(xhr) {
@@ -132,60 +184,13 @@
                 });
             });
 
-            // Handle edit form submission via AJAX
-            $(document).on('submit', '#editSingleRoleForm', function(e) {
-                e.preventDefault(); // Prevent default form submission
-
-                var form = $(this);
-                var actionUrl = form.attr('action');
-                var formData = form.serialize() +
-                    '&_method=PUT'; // Add _method=PUT to the form data for spoofing
-
-                console.log('Submitting to URL:', actionUrl);
-                console.log('Form Data (with method spoofing):', formData);
-
-                $.ajax({
-                    url: actionUrl,
-                    method: 'POST', // Use POST method for spoofing
-                    data: formData,
-                    success: function(response) {
-                        if (response.status === 'success') {
-                            // Get the row ID from the form or modal input field
-                            var rowId = $('#editSingleRoleModal input[name="id"]').val();
-                            var existingRow = $('tr[data-id="' + rowId + '"]');
-
-                            if (existingRow.length > 0) {
-                                // Replace the existing row with the new HTML returned from the server
-                                console.log('Replacing row with ID:', rowId);
-                                existingRow.replaceWith(response.html);
-                                bindRowEvents(); // Rebind events for new elements if necessary
-                            } else {
-                                console.error(
-                                    'Row with specified ID not found. Adding new row.');
-                                // Optionally append the new row if it doesn't exist
-                                $('#single_roles_table tbody').append(response.html);
-                            }
-
-                            // Hide the modal after a successful update
-                            $('#editSingleRoleModal').modal('hide');
-                        } else {
-                            alert('Failed to update the role.');
-                        }
-                    },
-                    error: function(xhr) {
-                        console.error('Error Response:', xhr.responseText);
-                        alert('Failed to update the role.');
-                    }
-                });
-            });
-
             // Optional: Rebind events function (if needed)
-            function bindRowEvents() {
-                $(document).off('click', '.edit-single-role'); // Remove previous bindings to avoid duplicates
-                $(document).on('click', '.edit-single-role', function() {
-                    // Your existing logic for editing goes here
-                });
-            }
+            // function bindRowEvents() {
+            //     $(document).off('click', '.edit-single-role'); // Remove previous bindings to avoid duplicates
+            //     $(document).on('click', '.edit-single-role', function() {
+            //         // Your existing logic for editing goes here
+            //     });
+            // }
 
         });
     </script>
