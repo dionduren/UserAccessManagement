@@ -37,9 +37,9 @@
             </thead>
         </table>
     </div>
-
+    {{-- 
     <!-- Modals -->
-    <div id="modalContainer"></div> <!-- Placeholder for loading modals dynamically -->
+    <div id="modalContainer"></div> <!-- Placeholder for loading modals dynamically --> --}}
 
     <!-- Placeholder for modals -->
     <div class="modal fade" id="singleRoleModal" tabindex="-1" aria-labelledby="singleRoleModalLabel" aria-hidden="true">

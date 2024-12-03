@@ -1,6 +1,6 @@
 <div>
     <h3>{{ $tcode->code }}</h3>
-    <p><strong>Company:</strong> {{ $tcode->company->name ?? 'N/A' }}</p>
+    {{-- <p><strong>Company:</strong> {{ $tcode->company->name ?? 'N/A' }}</p> --}}
     <p><strong>Description:</strong> {{ $tcode->deskripsi ?? 'None' }}</p>
 
     @if ($tcode->singleRoles->isNotEmpty())

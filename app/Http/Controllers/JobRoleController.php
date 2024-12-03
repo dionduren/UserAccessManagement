@@ -8,6 +8,7 @@ use App\Models\Departemen;
 use App\Models\JobRole;
 use App\Models\Kompartemen;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 
 class JobRoleController extends Controller
 {
@@ -32,7 +33,13 @@ class JobRoleController extends Controller
     {
         $request->validate([
             'company_id' => 'required|exists:ms_company,id',
-            'nama_jabatan' => 'required|string|unique:tr_job_roles,nama_jabatan',
+            // 'nama_jabatan' => 'required|string|unique:tr_job_roles,nama_jabatan',
+            'nama_jabatan' => [
+                'required',
+                'string',
+                Rule::unique('tr_job_roles', 'nama_jabatan')
+                    ->where('company_id', $request->company_id)
+            ],
             'deskripsi' => 'nullable|string',
             'kompartemen_id' => 'required|exists:ms_kompartemen,id',
             'departemen_id' => 'required|exists:ms_departemen,id',
@@ -65,7 +72,14 @@ class JobRoleController extends Controller
     {
         $request->validate([
             'company_id' => 'required|exists:ms_company,id',
-            'nama_jabatan' => 'required|string|unique:tr_job_roles,nama_jabatan,' . $jobRole->id,
+            // 'nama_jabatan' => 'required|string|unique:tr_job_roles,nama_jabatan,' . $jobRole->id,
+            'nama_jabatan' => [
+                'required',
+                'string',
+                Rule::unique('tr_job_roles', 'nama_jabatan')
+                    ->where('company_id', $request->company_id)
+                    ->ignore($jobRole->id),
+            ],
             'deskripsi' => 'nullable|string',
             'kompartemen_id' => 'required|exists:ms_kompartemen,id',
             'departemen_id' => 'required|exists:ms_departemen,id',

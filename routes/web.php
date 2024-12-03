@@ -71,12 +71,8 @@ Route::resource('composite-roles', CompositeRoleController::class);
 Route::get('/single-roles/data', [SingleRoleController::class, 'getSingleRoles'])->name('single-roles.data');
 Route::resource('single-roles', SingleRoleController::class);
 
-Route::get('/tcodes/upload', [TcodeImportController::class, 'showUploadForm'])->name('tcodes.upload');
-Route::post('/tcodes/preview', [TcodeImportController::class, 'preview'])->name('tcodes.preview');
-Route::get('/tcodes/preview-refresh', [TcodeImportController::class, 'previewTcodes'])->name('tcodes.preview-refresh');
-Route::post('/tcodes/confirm', [TcodeImportController::class, 'confirm'])->name('tcodes.confirm');
-Route::get('/tcodes/download-template', [TcodeImportController::class, 'downloadTemplate'])->name('tcodes.download-template');
-Route::get('/tcodes/{id}', [TcodeController::class, 'show'])->name('tcodes.show');
+// Route::get('/tcodes/download-template', [TcodeImportController::class, 'downloadTemplate'])->name('tcodes.download-template');
+Route::get('/tcodes/data', [TcodeController::class, 'getTcodes'])->name('tcodes.data');
 Route::resource('tcodes', TcodeController::class);
 
 // Route::get('/admin', [AdminController::class, 'index'])->name('admin.dashboard');
@@ -96,7 +92,6 @@ Route::get('/composite-role-single-role/upload', [CompositeRoleSingleRoleControl
 Route::post('/composite-role-single-role/preview', [CompositeRoleSingleRoleController::class, 'preview'])->name('composite_single.preview');
 Route::get('/composite-role-single-role/preview-data', [CompositeRoleSingleRoleController::class, 'getPreviewData'])->name('composite_single.preview_data');
 Route::post('/composite-role-single-role/confirm', [CompositeRoleSingleRoleController::class, 'confirmImport'])->name('composite_single.confirm');
-
 
 Route::get('/tcode-single-role/upload', [SingleRoleTcodeController::class, 'uploadForm'])->name('tcode_single_role.upload');
 Route::post('/tcode-single-role/preview', [SingleRoleTcodeController::class, 'preview'])->name('tcode_single_role.preview');

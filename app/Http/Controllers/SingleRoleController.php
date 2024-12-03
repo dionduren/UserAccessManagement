@@ -6,6 +6,7 @@ use App\Models\Company;
 use App\Models\SingleRole;
 
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 use Yajra\DataTables\Facades\DataTables;
 
 class SingleRoleController extends Controller
@@ -35,7 +36,12 @@ class SingleRoleController extends Controller
     {
         $request->validate([
             'company_id' => 'required|exists:ms_company,id',
-            'nama' => 'required|string|unique:tr_single_roles,nama',
+            'nama' => [
+                'required',
+                'string',
+                Rule::unique('tr_single_roles', 'nama')
+                    ->where('company_id', $request->company_id)
+            ],
             'deskripsi' => 'nullable|string',
         ]);
 
@@ -67,7 +73,13 @@ class SingleRoleController extends Controller
 
         $request->validate([
             'company_id' => 'required|exists:ms_company,id',
-            'nama' => 'required|string|unique:tr_single_roles,nama,' . $singleRole->id,
+            'nama' => [
+                'required',
+                'string',
+                Rule::unique('tr_single_roles', 'nama')
+                    ->where('company_id', $request->company_id)
+                    ->ignore($singleRole->id),
+            ],
             'deskripsi' => 'nullable|string',
         ]);
 

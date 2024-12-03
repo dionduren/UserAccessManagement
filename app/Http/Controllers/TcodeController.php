@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Tcode;
 use Illuminate\Http\Request;
+use Yajra\DataTables\Facades\DataTables;
 
 class TcodeController extends Controller
 {
@@ -28,32 +29,31 @@ class TcodeController extends Controller
     {
         $request->validate([
             'code' => 'required|string|unique:tr_tcodes,code',
-            'sap_module' => 'nullable|string|unique:tr_tcodes,sap_module',
+            'sap_module' => 'nullable|string',
             'deskripsi' => 'nullable|string',
         ]);
 
-        $tcode = Tcode::create($request->only(['company_id', 'code', 'deskripsi']));
+        Tcode::create($request->all());
 
-        return redirect()->route('tcodes.index')->with('status', 'Tcode created successfully.');
+        return response()->json(['status' => 'success', 'message' => 'Tcode created successfully.']);
     }
 
     public function edit(Tcode $tcode)
     {
-        // Pass the existing Tcode data and the lists for dropdowns to the view
-        return view('tcodes.edit', compact('tcode', 'companies'));
+        return view('tcodes.edit', compact('tcode'));
     }
 
     public function update(Request $request, Tcode $tcode)
     {
         $request->validate([
             'code' => 'required|string|unique:tr_tcodes,code,' . $tcode->id,
-            'sap_module' => 'nullable|string|unique:tr_tcodes,sap_module',
+            'sap_module' => 'nullable|string',
             'deskripsi' => 'nullable|string'
         ]);
 
-        $tcode->update($request->only(['company_id', 'code', 'deskripsi']));
+        $tcode->update($request->all());
 
-        return redirect()->route('tcodes.index')->with('status', 'Tcode updated successfully.');
+        return response()->json(['status' => 'success', 'message' => 'Tcode updated successfully.']);
     }
 
     public function destroy(Tcode $tcode)
@@ -61,5 +61,36 @@ class TcodeController extends Controller
         $tcode->delete();
 
         return redirect()->route('tcodes.index')->with('status', 'Tcode deleted successfully.');
+    }
+
+    public function getTcodes(Request $request)
+    {
+        $query = Tcode::query();
+
+        // Filter by global search
+        if ($request->filled('search.value')) {
+            $search = $request->input('search.value');
+            $query->where(function ($q) use ($search) {
+                $q->where('code', 'like', "%{$search}%")
+                    ->orWhere('deskripsi', 'like', "%{$search}%")
+                    ->orWhere('sap_module', 'like', "%{$search}%");
+            });
+        }
+
+        // Handle sorting
+        if ($request->has('order.0.column')) {
+            $columns = ['code', 'deskripsi', 'sap_module'];
+            $columnIndex = $request->input('order.0.column');
+            $sortDirection = $request->input('order.0.dir', 'asc');
+            $query->orderBy($columns[$columnIndex] ?? 'code', $sortDirection);
+        }
+
+        // Return paginated data
+        return DataTables::of($query)
+            ->addColumn('actions', function ($tcode) {
+                return view('tcodes.partials.actions', ['tcode' => $tcode])->render();
+            })
+            ->rawColumns(['actions'])
+            ->make(true);
     }
 }

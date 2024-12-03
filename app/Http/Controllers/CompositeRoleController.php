@@ -9,6 +9,7 @@ use App\Models\Kompartemen;
 use Illuminate\Http\Request;
 
 use App\Models\CompositeRole;
+use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\Log;
 use Yajra\DataTables\Facades\DataTables;
 
@@ -57,7 +58,13 @@ class CompositeRoleController extends Controller
         $request->validate([
             'company_id' => 'required|exists:ms_company,id',
             'jabatan_id' => 'nullable|exists:tr_job_roles,id',
-            'nama' => 'required|string|max:255',
+            // 'nama' => 'required|string|max:255',
+            'nama' => [
+                'required',
+                'string',
+                Rule::unique('tr_composite_roles', 'nama')
+                    ->where('company_id', $request->company_id)
+            ],
             'deskripsi' => 'nullable|string',
         ]);
 
@@ -99,7 +106,14 @@ class CompositeRoleController extends Controller
         $request->validate([
             'company_id' => 'required|exists:ms_company,id',
             'jabatan_id' => 'nullable|exists:tr_job_roles,id',
-            'nama' => 'required|string|unique:tr_composite_roles,nama,' . $compositeRole->id,
+            // 'nama' => 'required|string|unique:tr_composite_roles,nama,' . $compositeRole->id,
+            'nama' => [
+                'required',
+                'string',
+                Rule::unique('tr_composite_roles', 'nama')
+                    ->where('company_id', $request->company_id)
+                    ->ignore($compositeRole->id),
+            ],
             'deskripsi' => 'nullable|string',
         ]);
 
