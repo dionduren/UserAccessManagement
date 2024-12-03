@@ -14,10 +14,11 @@ use App\Http\Controllers\DepartemenController;
 use App\Http\Controllers\SingleRoleController;
 use App\Http\Controllers\KompartemenController;
 use App\Http\Controllers\TcodeImportController;
-use App\Http\Controllers\CompositeRoleController;
 use App\Http\Controllers\AccessMatrixController;
+use App\Http\Controllers\CompositeRoleController;
 
 // use App\Http\Controllers\IOExcel\ExcelImportController;
+use App\Http\Controllers\IOExcel\SingleRoleTcodeController;
 use App\Http\Controllers\IOExcel\TcodeSingleRoleController;
 use App\Http\Controllers\IOExcel\CompanyKompartemenController;
 use App\Http\Controllers\IOExcel\CompositeRoleSingleRoleController;
@@ -96,8 +97,11 @@ Route::post('/composite-role-single-role/preview', [CompositeRoleSingleRoleContr
 Route::get('/composite-role-single-role/preview-data', [CompositeRoleSingleRoleController::class, 'getPreviewData'])->name('composite_single.preview_data');
 Route::post('/composite-role-single-role/confirm', [CompositeRoleSingleRoleController::class, 'confirmImport'])->name('composite_single.confirm');
 
-Route::get('/tcode-single-role/upload', [TcodeSingleRoleController::class, 'uploadForm'])->name('tcode_single_role.upload');
-Route::post('/tcode-single-role/preview', [TcodeSingleRoleController::class, 'preview'])->name('tcode_single_role.preview');
+
+Route::get('/tcode-single-role/upload', [SingleRoleTcodeController::class, 'uploadForm'])->name('tcode_single_role.upload');
+Route::post('/tcode-single-role/preview', [SingleRoleTcodeController::class, 'preview'])->name('tcode_single_role.preview');
+Route::get('/tcode-single-role/preview-data', [SingleRoleTcodeController::class, 'getPreviewData'])->name('tcode_single_role.preview_data');
+Route::post('/tcode-single-role/confirm', [SingleRoleTcodeController::class, 'confirmImport'])->name('tcode_single_role.confirm');
 
 Route::get('/access-matrix', [AccessMatrixController::class, 'index'])->name('access-matrix');
 Route::post('/access-matrix/assign-role', [AccessMatrixController::class, 'assignRole'])->name('access-matrix.assign-role');
