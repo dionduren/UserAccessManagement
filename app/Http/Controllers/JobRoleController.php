@@ -3,12 +3,14 @@
 namespace App\Http\Controllers;
 
 use App\Models\Company;
-use App\Models\CompositeRole;
-use App\Models\Departemen;
 use App\Models\JobRole;
+use App\Models\Departemen;
 use App\Models\Kompartemen;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Database\QueryException;
+use Illuminate\Validation\ValidationException;
 
 class JobRoleController extends Controller
 {
@@ -31,23 +33,40 @@ class JobRoleController extends Controller
 
     public function store(Request $request)
     {
-        $request->validate([
-            'company_id' => 'required|exists:ms_company,id',
-            // 'nama_jabatan' => 'required|string|unique:tr_job_roles,nama_jabatan',
-            'nama_jabatan' => [
-                'required',
-                'string',
-                Rule::unique('tr_job_roles', 'nama_jabatan')
-                    ->where('company_id', $request->company_id)
-            ],
-            'deskripsi' => 'nullable|string',
-            'kompartemen_id' => 'required|exists:ms_kompartemen,id',
-            'departemen_id' => 'required|exists:ms_departemen,id',
-        ]);
+        try {
+            $request->validate([
+                'company_id' => 'required|exists:ms_company,id',
+                'nama_jabatan' => [
+                    'required',
+                    'string',
+                    Rule::unique('tr_job_roles', 'nama_jabatan')
+                        ->where('company_id', $request->company_id)
+                ],
+                'deskripsi' => 'nullable|string',
+                'kompartemen_id' => 'nullable|exists:ms_kompartemen,id',
+                'departemen_id' => 'nullable|exists:ms_departemen,id',
+            ]);
 
-        JobRole::create($request->all());
+            JobRole::create($request->all());
 
-        return redirect()->route('job-roles.index')->with('status', 'Job role created successfully.');
+            return redirect()
+                ->route('job-roles.index')
+                ->with('status', 'Job role created successfully.');
+        } catch (ValidationException $e) {
+            // Redirect back with validation errors
+            return redirect()
+                ->back()
+                ->withErrors($e->errors())
+                ->withInput();
+        } catch (QueryException $e) {
+            // Log the query error and return a user-friendly message
+            Log::error('Error creating Job Role: ' . $e->getMessage());
+
+            return redirect()
+                ->back()
+                ->withErrors(['error' => 'An unexpected error occurred while saving the job role.'])
+                ->withInput();
+        }
     }
 
     public function show($id)
@@ -58,36 +77,52 @@ class JobRoleController extends Controller
 
     public function edit(JobRole $jobRole)
     {
-        $companies = Company::all();
+        $company = Company::where('id', $jobRole->company_id)->first();
 
         // Load kompartemens and departemens based on the current jobRole's selections
-        $kompartemens = Kompartemen::where('company_id', $jobRole->company_id)->get();
-        $departemens = Departemen::where('kompartemen_id', $jobRole->kompartemen_id)->get();
+        $kompartemen = Kompartemen::where('company_id', $jobRole->company_id)->first();
+        $departemen = Departemen::where('kompartemen_id', $jobRole->kompartemen_id)->first();
 
-        return view('job_roles.edit', compact('jobRole', 'companies', 'kompartemens', 'departemens'));
+        return view('job_roles.edit', compact('jobRole', 'company', 'kompartemen', 'departemen'));
     }
-
 
     public function update(Request $request, JobRole $jobRole)
     {
-        $request->validate([
-            'company_id' => 'required|exists:ms_company,id',
-            // 'nama_jabatan' => 'required|string|unique:tr_job_roles,nama_jabatan,' . $jobRole->id,
-            'nama_jabatan' => [
-                'required',
-                'string',
-                Rule::unique('tr_job_roles', 'nama_jabatan')
-                    ->where('company_id', $request->company_id)
-                    ->ignore($jobRole->id),
-            ],
-            'deskripsi' => 'nullable|string',
-            'kompartemen_id' => 'required|exists:ms_kompartemen,id',
-            'departemen_id' => 'required|exists:ms_departemen,id',
-        ]);
+        try {
+            $request->validate([
+                'company_id' => 'required|exists:ms_company,id',
+                'nama_jabatan' => [
+                    'required',
+                    'string',
+                    Rule::unique('tr_job_roles', 'nama_jabatan')
+                        ->where('company_id', $request->company_id)
+                        ->ignore($jobRole->id),
+                ],
+                'deskripsi' => 'nullable|string',
+                'kompartemen_id' => 'nullable|exists:ms_kompartemen,id',
+                'departemen_id' => 'nullable|exists:ms_departemen,id',
+            ]);
 
-        $jobRole->update($request->all());
+            $jobRole->update($request->all() + [
+                'updated_by' => auth()->id()
+            ]);
 
-        return redirect()->route('job-roles.index')->with('status', 'Job role updated successfully.');
+            return redirect()->route('job-roles.index')->with('status', 'Job role updated successfully.');
+        } catch (ValidationException $e) {
+            // Redirect back with validation errors
+            return redirect()
+                ->back()
+                ->withErrors($e->errors())
+                ->withInput();
+        } catch (QueryException $e) {
+            // Log the query error and return a user-friendly message
+            Log::error('Error updating Job Role: ' . $e->getMessage());
+
+            return redirect()
+                ->back()
+                ->withErrors(['error' => 'An unexpected error occurred while saving the job role.'])
+                ->withInput();
+        }
     }
 
     public function destroy(JobRole $jobRole)

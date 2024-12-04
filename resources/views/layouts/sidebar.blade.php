@@ -76,6 +76,33 @@
             </a>
         </li>
 
+        <hr>
+        MASTER DATA RELATIONSHIP
+
+        <!-- Composite Roles Menu Item -->
+        <li>
+            <a href="{{ route('job-composite.index') }}"
+                class="nav-link {{ request()->routeIs('job-composite.index') ? 'active' : 'text-white' }}">
+                <i class="bi bi-link-45deg"></i> Job Role - Composite
+            </a>
+        </li>
+
+        <!-- Single Roles Menu Item -->
+        <li>
+            <a href="" {{-- href="{{ route('rel-composite-single.index') }}" --}}
+                class="nav-link {{ request()->routeIs('rel-composite-single.index') ? 'active' : 'text-white' }}">
+                <i class="bi bi-link-45deg"></i> Composite - Single Role
+            </a>
+        </li>
+
+        <!-- Tcodes Menu Item -->
+        <li>
+            <a href="" {{-- href="{{ route('rel-single-tcodes.index') }}" --}}
+                class="nav-link {{ request()->routeIs('rel-single-tcodes.index') ? 'active' : 'text-white' }}">
+                <i class="bi bi-link-45deg"></i> Single Role - Tcodes
+            </a>
+        </li>
+
 
         <hr>
         IMPORT DATA
@@ -83,7 +110,7 @@
         <li class="nav-item">
             <a href="{{ route('company_kompartemen.upload') }}"
                 class="nav-link {{ request()->routeIs('company_kompartemen.upload') ? 'active' : 'text-white' }}">
-                <i class="bi bi-file-earmark-spreadsheet"></i> Jabatan - Composite Role
+                <i class="bi bi-file-earmark-spreadsheet"></i> Job Role - Composite Role
             </a>
         </li>
         <li class="nav-item">

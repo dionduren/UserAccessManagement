@@ -20,7 +20,7 @@ class CompositeRoleController extends Controller
     {
         $companies = Company::all();
 
-        return view('composite_roles.index', compact('companies'));
+        return view('master-data.composite_roles.index', compact('companies'));
     }
 
     public function show($id)
@@ -28,29 +28,29 @@ class CompositeRoleController extends Controller
         $compositeRole = CompositeRole::with(['jobRole', 'company', 'singleRoles'])->findOrFail($id);
 
         // Load a partial view and pass the data to it for rendering in the modal
-        return view('composite_roles.show', compact('compositeRole'));
+        return view('master-data.composite_roles.show', compact('compositeRole'));
     }
 
     public function create()
     {
-        $companies = Company::all();
+        // $companies = Company::all();
 
-        // Structure job roles data by Company > Kompartemen > Departemen
-        $job_roles_data = [];
-        $jobRoles = JobRole::with(['company', 'kompartemen', 'departemen'])->get();
+        // // Structure job roles data by Company > Kompartemen > Departemen
+        // $job_roles_data = [];
+        // $jobRoles = JobRole::with(['company', 'kompartemen', 'departemen'])->get();
 
-        foreach ($jobRoles as $jobRole) {
-            $companyId = $jobRole->company_id;
-            $kompartemenName = $jobRole->kompartemen->name;
-            $departemenName = $jobRole->departemen->name;
+        // foreach ($jobRoles as $jobRole) {
+        //     $companyId = $jobRole->company_id;
+        //     $kompartemenName = $jobRole->kompartemen->name;
+        //     $departemenName = $jobRole->departemen->name;
 
-            $job_roles_data[$companyId][$kompartemenName][$departemenName][] = [
-                'id' => $jobRole->id,
-                'nama_jabatan' => $jobRole->nama_jabatan,
-            ];
-        }
+        //     $job_roles_data[$companyId][$kompartemenName][$departemenName][] = [
+        //         'id' => $jobRole->id,
+        //         'nama_jabatan' => $jobRole->nama_jabatan,
+        //     ];
+        // }
 
-        return view('composite_roles.create', compact('companies', 'job_roles_data'));
+        // return view('master-data.composite_roles.create', compact('companies', 'job_roles_data'));
     }
 
     public function store(Request $request)
@@ -98,7 +98,7 @@ class CompositeRoleController extends Controller
             ];
         }
 
-        return view('composite_roles.edit', compact('compositeRole', 'companies', 'job_roles_data'));
+        return view('master-data.composite_roles.edit', compact('compositeRole', 'companies', 'job_roles_data'));
     }
 
     public function update(Request $request, CompositeRole $compositeRole)
@@ -174,14 +174,15 @@ class CompositeRoleController extends Controller
             return [
                 'company' => $role->company->name ?? 'N/A',
                 'nama' => $role->nama,
-                'job_role' => $role->jobRole->nama_jabatan ?? 'Not Assigned',
-                'single_roles' => $role->singleRoles
-                    ->pluck('nama')
-                    ->map(function ($roleName) {
-                        return "<li>{$roleName}</li>";
-                    })
-                    ->implode('') ?? '<li>No Single Roles</li>',
-                'actions' => view('composite_roles.components.action_buttons', ['role' => $role])->render(),
+                'deskripsi' => $role->deskripsi ?? '-',
+                // 'job_role' => $role->jobRole->nama_jabatan ?? 'Not Assigned',
+                // 'single_roles' => $role->singleRoles
+                //     ->pluck('nama')
+                //     ->map(function ($roleName) {
+                //         return "<li>{$roleName}</li>";
+                //     })
+                //     ->implode('') ?? '<li>No Single Roles</li>',
+                'actions' => view('master-data.composite_roles.components.action_buttons', ['role' => $role])->render(),
             ];
         });
 

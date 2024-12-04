@@ -17,12 +17,13 @@ use App\Http\Controllers\TcodeImportController;
 use App\Http\Controllers\AccessMatrixController;
 use App\Http\Controllers\CompositeRoleController;
 
+use App\Http\Controllers\Relationship\JobCompositeController;
+
 // use App\Http\Controllers\IOExcel\ExcelImportController;
 use App\Http\Controllers\IOExcel\SingleRoleTcodeController;
 use App\Http\Controllers\IOExcel\TcodeSingleRoleController;
 use App\Http\Controllers\IOExcel\CompanyKompartemenController;
 use App\Http\Controllers\IOExcel\CompositeRoleSingleRoleController;
-
 
 // Route::get('/', function () {
 //     return view('welcome');
@@ -46,7 +47,7 @@ Route::resource('job-roles', JobRoleController::class);
 Route::get('/get-kompartemen', [KompartemenController::class, 'getKompartemenByCompany']);
 Route::get('/get-departemen', [DepartemenController::class, 'getDepartemenByKompartemen']);
 Route::get('/get-departemen-by-company', [DepartemenController::class, 'getDepartemenByCompany']);
-Route::get('/get-job-roles', [JobRoleController::class, 'getJobRoles']);
+Route::get('/get-job-roles', [JobRoleController::class, 'getJobRoles'])->name('job-roles.getData');
 
 // In routes/web.php
 // Route::get('/master-data-json', function () {
@@ -75,13 +76,17 @@ Route::resource('single-roles', SingleRoleController::class);
 Route::get('/tcodes/data', [TcodeController::class, 'getTcodes'])->name('tcodes.data');
 Route::resource('tcodes', TcodeController::class);
 
-// Route::get('/admin', [AdminController::class, 'index'])->name('admin.dashboard');
-// Route::get('/admin/manage-users', [AdminController::class, 'manageUsers'])->name('admin.manage-users');
+// ======= MASTER DATA RELATIONSHIP ======= 
+
+Route::get('/relationship/job-composite/data', [JobCompositeController::class, 'getCompositeRoles'])->name('job-composite.data');
+Route::resource('/relationship/job-composite', JobCompositeController::class);
 
 // === import export excel
 // Route::get('/import', [ExcelImportController::class, 'showUploadForm'])->name('excel.upload');
 // Route::post('/import', [ExcelImportController::class, 'import'])->name('excel.import');
 // Route::post('/import/confirm', [ExcelImportController::class, 'confirmImport'])->name('excel.confirm');
+
+// ======= IMPORT DATA RELATIONSHIP ======= 
 
 Route::get('/company-kompartemen/upload', [CompanyKompartemenController::class, 'uploadForm'])->name('company_kompartemen.upload');
 Route::post('/company-kompartemen/preview', [CompanyKompartemenController::class, 'preview'])->name('company_kompartemen.preview');
@@ -113,4 +118,7 @@ Route::middleware(['permission:manage users'])->group(function () {
     Route::resource('users', UserController::class)->except(['show']);
     // Route::get('/users', [UserController::class, 'index'])->name('users.index');
     // Route::get('/users/{id}/edit', [UserController::class, 'edit'])->name('users.edit');
+
+    // Route::get('/admin', [AdminController::class, 'index'])->name('admin.dashboard');
+    // Route::get('/admin/manage-users', [AdminController::class, 'manageUsers'])->name('admin.manage-users');
 });

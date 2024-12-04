@@ -4,7 +4,14 @@
     <div class="container">
         <h2>Master Data Job Roles</h2>
 
-        <a href="{{ route('job-roles.create') }}" class="btn btn-primary mb-3">Buat Info Jabatan Baru</a>
+        <a href="{{ route('job-roles.create') }}" class="btn btn-primary mb-3">Buat Job Role</a>
+
+        <!-- Success Message -->
+        @if (session('status'))
+            <div class="alert alert-success">
+                {{ session('status') }}
+            </div>
+        @endif
 
         @if (session('success'))
             <div class="alert alert-success">{{ session('success') }}</div>

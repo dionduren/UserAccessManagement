@@ -6,6 +6,9 @@ use App\Models\Company;
 use App\Models\Departemen;
 use App\Models\Kompartemen;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Database\QueryException;
+use Illuminate\Validation\ValidationException;
 
 class DepartemenController extends Controller
 {
@@ -21,32 +24,50 @@ class DepartemenController extends Controller
 
     public function create()
     {
-        $kompartemens = Kompartemen::all();
-        return view('departemen.create', compact('kompartemens'));
+        return view('departemen.create');
     }
 
     public function store(Request $request)
     {
-        $request->validate([
-            'kompartemen_id' => 'required|exists:ms_kompartemen,id',
-            'name' => 'required|string|max:255',
-            'description' => 'nullable|string',
-        ]);
+        try {
+            $request->validate([
+                'company_id' => 'required|exists:ms_company,id',
+                'kompartemen_id' => 'nullable|exists:ms_kompartemen,id',
+                'name' => 'required|string|max:255',
+                'description' => 'nullable|string',
+            ]);
 
-        Departemen::create($request->all());
-        return redirect()->route('departemens.index')->with('success', 'Departemen created successfully.');
+            Departemen::create($request->all());
+            return redirect()->route('departemens.index')->with('success', 'Departemen created successfully.');
+        } catch (ValidationException $e) {
+            // Redirect back with validation errors
+            return redirect()
+                ->back()
+                ->withErrors($e->errors())
+                ->withInput();
+        } catch (QueryException $e) {
+            // Log the query error and return a user-friendly message
+            Log::error('Error creating Job Role: ' . $e->getMessage());
+
+            return redirect()
+                ->back()
+                ->withErrors(['error' => 'An unexpected error occurred while saving the job role.'])
+                ->withInput();
+        }
     }
 
     public function edit(Departemen $departemen)
     {
-        $kompartemens = Kompartemen::all();
-        return view('departemen.edit', compact('departemen', 'kompartemens'));
+        $company = Company::where('id', $departemen->company_id)->first();
+        $kompartemen = Kompartemen::where('company_id', $departemen->company_id)->first();
+        return view('departemen.edit', compact('company', 'kompartemen', 'departemen'));
     }
 
     public function update(Request $request, Departemen $departemen)
     {
         // Validate the request data
         $request->validate([
+            'company_id' => 'required|exists:ms_company,id',
             'kompartemen_id' => 'required|exists:ms_kompartemen,id',
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
@@ -54,6 +75,7 @@ class DepartemenController extends Controller
 
         // Update the departemen with the validated data
         $departemen->update([
+            'company_id' => $request->input('company_id'),
             'kompartemen_id' => $request->input('kompartemen_id'),
             'name' => $request->input('name'),
             'description' => $request->input('description'),

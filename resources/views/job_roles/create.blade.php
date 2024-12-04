@@ -1,19 +1,28 @@
 @extends('layouts.app')
 
 @section('content')
-    <div class="container">
+    <div class="container-fluid">
         <h1>Create Job Role</h1>
-        <form action="{{ route('job-roles.store') }}" method="POST">
+
+        <!-- Error Messages -->
+        @if ($errors->any())
+            <div class="alert alert-danger">
+                <h4>Error(s) occurred:</h4>
+                <ul>
+                    @foreach ($errors->all() as $error)
+                        <li>{{ $error }}</li>
+                    @endforeach
+                </ul>
+            </div>
+        @endif
+
+        <form id="jobRoleForm" action="{{ route('job-roles.store') }}" method="POST">
             @csrf
 
             <!-- Company Dropdown -->
             <div class="mb-3">
                 <label for="company_id" class="form-label">Company</label>
                 <select name="company_id" id="company_id" class="form-control select2" required>
-                    <option value="">Select a company</option>
-                    @foreach ($companies as $company)
-                        <option value="{{ $company->id }}">{{ $company->name }}</option>
-                    @endforeach
                 </select>
             </div>
 
@@ -21,7 +30,7 @@
             <div class="mb-3">
                 <label for="kompartemen_id" class="form-label">Kompartemen</label>
                 <select name="kompartemen_id" id="kompartemen_id" class="form-control select2" required>
-                    <option value="">Select a Kompartemen</option>
+                    <option value="">Pilih Kompartemen</option>
                 </select>
             </div>
 
@@ -29,23 +38,23 @@
             <div class="mb-3">
                 <label for="departemen_id" class="form-label">Departemen</label>
                 <select name="departemen_id" id="departemen_id" class="form-control select2" required>
-                    <option value="">Select a Departemen</option>
+                    <option value="">Pilih Departemen</option>
                 </select>
             </div>
 
             <!-- Job Role Name -->
             <div class="mb-3">
-                <label for="nama_jabatan" class="form-label">Job Role Name</label>
+                <label for="nama_jabatan" class="form-label">Nama Job Role</label>
                 <input type="text" class="form-control" name="nama_jabatan" required>
             </div>
 
             <!-- Description -->
             <div class="mb-3">
-                <label for="deskripsi" class="form-label">Description</label>
+                <label for="deskripsi" class="form-label">Deskripsi</label>
                 <textarea class="form-control" name="deskripsi"></textarea>
             </div>
 
-            <button type="submit" class="btn btn-primary">Create Job Role</button>
+            <button type="submit" class="btn btn-primary">Buat Job Role</button>
         </form>
     </div>
 @endsection
@@ -53,45 +62,84 @@
 @section('scripts')
     <script>
         $(document).ready(function() {
-            // Initialize Select2 for all dropdowns
             $('.select2').select2();
 
-            // Load Kompartemen based on selected Company
+            let masterData = {};
+
+            // Fetch master data and initialize the page
+            $.ajax({
+                url: '/storage/master_data.json', // Replace with your actual JSON file path
+                dataType: 'json',
+                success: function(data) {
+                    masterData = data;
+
+                    // Populate company dropdown
+                    populateDropdown('#company_id', data, 'company_id', 'company_name');
+                },
+                error: function() {
+                    alert('Failed to load master data.');
+                }
+            });
+
+            // Handle company dropdown change
             $('#company_id').on('change', function() {
                 const companyId = $(this).val();
-                $('#kompartemen_id').empty().append('<option value="">Select a Kompartemen</option>');
-                $('#departemen_id').empty().append('<option value="">Select a Departemen</option>');
+
+                resetDropdowns(['#kompartemen_id', '#departemen_id']);
 
                 if (companyId) {
-                    $.get('{{ route('job-roles.filtered-data') }}', {
-                        company_id: companyId
-                    }, function(data) {
-                        data.kompartemens.forEach(kompartemen => {
-                            $('#kompartemen_id').append(
-                                `<option value="${kompartemen.id}">${kompartemen.name}</option>`
-                            );
-                        });
-                    });
+                    let companyData = masterData.find(c => c.company_id == companyId);
+
+                    if (companyData) {
+                        // Populate kompartemen dropdown
+                        populateDropdown('#kompartemen_id', companyData.kompartemen, 'id', 'name');
+
+                        // Populate departemen_without_kompartemen
+                        populateDropdown('#departemen_id', companyData.departemen_without_kompartemen, 'id',
+                            'name');
+                    }
                 }
             });
 
-            // Load Departemen based on selected Kompartemen
+            // Handle kompartemen dropdown change
             $('#kompartemen_id').on('change', function() {
+                const companyId = $('#company_id').val();
                 const kompartemenId = $(this).val();
-                $('#departemen_id').empty().append('<option value="">Select a Departemen</option>');
 
-                if (kompartemenId) {
-                    $.get('{{ route('job-roles.filtered-data') }}', {
-                        kompartemen_id: kompartemenId
-                    }, function(data) {
-                        data.departemens.forEach(departemen => {
-                            $('#departemen_id').append(
-                                `<option value="${departemen.id}">${departemen.name}</option>`
-                            );
-                        });
-                    });
+                resetDropdowns(['#departemen_id']);
+
+                if (companyId && kompartemenId) {
+                    let companyData = masterData.find(c => c.company_id == companyId);
+                    let kompartemenData = companyData?.kompartemen.find(k => k.id == kompartemenId);
+
+                    if (kompartemenData?.departemen.length) {
+                        // Populate departemen dropdown based on selected kompartemen
+                        populateDropdown('#departemen_id', kompartemenData.departemen, 'id', 'name');
+                    }
                 }
             });
+
+            // Helper function to populate dropdowns
+            function populateDropdown(selector, items, valueField, textField) {
+                let dropdown = $(selector);
+                dropdown.empty().append('<option value="">Pilih Perusahaan</option>');
+                if (items?.length) {
+                    dropdown.prop('disabled', false);
+                    items.forEach(item => {
+                        dropdown.append(`<option value="${item[valueField]}">${item[textField]}</option>`);
+                    });
+                } else {
+                    dropdown.prop('disabled', true);
+                }
+            }
+
+            // Helper function to reset dropdowns
+            function resetDropdowns(selectors) {
+                selectors.forEach(selector => {
+                    $(selector).empty().append('<option value="">-- Select --</option>').prop('disabled',
+                        true);
+                });
+            }
         });
     </script>
 @endsection
