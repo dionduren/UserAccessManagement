@@ -1,7 +1,7 @@
 @extends('layouts.app')
 
 @section('content')
-    <div class="container">
+    <div class="container-fluid">
         <h1>Master Data Company</h1>
         <a href="{{ route('companies.create') }}" class="btn btn-primary mb-3">Buat Info Perusahaan Baru</a>
 

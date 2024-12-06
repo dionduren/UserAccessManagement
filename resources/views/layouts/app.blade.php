@@ -28,7 +28,6 @@
     <link rel="stylesheet" href="https://cdn.datatables.net/responsive/3.0.3/css/responsive.dataTables.min.css">
 
     <!-- Select2 CSS -->
-    {{-- <link href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css" rel="stylesheet" /> --}}
     <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
 
     <!-- Bootstrap JS and Popper.js -->
@@ -40,7 +39,6 @@
     <script src="https://cdn.datatables.net/responsive/3.0.3/js/dataTables.responsive.min.js"></script>
 
     <!-- Select2 JS -->
-    {{-- <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script> --}}
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 
 
@@ -84,7 +82,7 @@
 
         /* Sidebar styling */
         #sidebar {
-            width: 280px;
+            width: 300px;
             min-height: 100vh;
             background-color: #343a40;
             /* Background color for visibility */
@@ -95,6 +93,83 @@
         /* Hide sidebar toggle button by default */
         #sidebarToggle {
             display: none;
+        }
+
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            /* IE and Edge */
+            scrollbar-width: none;
+            /* Firefox */
+        }
+
+        .dropdown-toggle {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            color: white !important;
+            /* Ensures content is spaced properly */
+        }
+
+        .dropdown-toggle::after {
+            font-family: "Bootstrap Icons";
+            font-weight: bold;
+            float: right;
+            transition: transform 0.3s ease-in-out;
+        }
+
+        /* Rotate arrow when dropdown is open */
+        .dropdown-toggle.active::after {
+            transform: rotate(-90deg);
+        }
+
+        /* Dropdown content */
+        .dropdown-content {
+            list-style: none;
+            margin: 0;
+            padding: 0;
+            display: none;
+            /* Hidden by default */
+        }
+
+        /* Expanded state for dropdown content */
+        .dropdown-content.expanded {
+            display: block;
+            /* Ensure it's visible when expanded */
+        }
+
+        /* Individual dropdown items */
+        .dropdown-content li {
+            padding-left: 20px;
+            /* Indentation for child items */
+        }
+
+        .nav-link.active {
+            background-color: white !important;
+            color: black !important;
+            border-radius: 0;
+            border-top-left-radius: 80px 80px;
+            border-bottom-left-radius: 80px 80px;
+            font-weight: bold;
+        }
+
+        .nav-link {
+            transition: all 0.3s ease;
+            padding-right: 10px;
+        }
+
+        .nav-link:hover,
+        .nav-link.active:hover {
+            background-color: rgba(0, 132, 255, 0.96) !important;
+            /* Optional hover effect */
+            color: white !important;
+            border-radius: 0;
+            border-top-left-radius: 80px 80px;
+            border-bottom-left-radius: 80px 80px;
+            /* Ensure text is visible on hover */
         }
 
         /* Sidebar and Toggle Button Behavior on Mobile */
@@ -133,13 +208,12 @@
         </button>
 
         <!-- Sidebar -->
-        <div id="sidebar" class="d-flex flex-column flex-shrink-0 p-3 bg-dark text-white"
-            style="width: 280px; min-height: 100vh;">
+        <div id="sidebar" class="d-flex flex-column flex-shrink-0">
             @include('layouts.sidebar')
         </div>
 
         <!-- Main Content Area -->
-        <div class="flex-grow-1 p-4">
+        <div class="flex-grow-1 px-0 py-4">
             <main class="container-fluid">
                 @yield('content')
             </main>
@@ -167,6 +241,36 @@
         $.ajaxSetup({
             headers: {
                 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+            }
+        });
+
+        // Toggle dropdowns on click
+        $('.dropdown-toggle').on('click', function(e) {
+            e.preventDefault();
+
+            const content = $(this).next(".dropdown-content");
+
+            // Close any other open dropdowns
+            $(".dropdown-content").not(content).slideUp();
+            $(".dropdown-toggle").not(this).removeClass("active");
+
+            // Toggle the current dropdown and arrow
+            content.slideToggle();
+            $(this).toggleClass("active");
+        });
+
+        // Ensure the dropdown is open if any child route is active
+        $(".dropdown-content").each(function() {
+            if ($(this).find(".active").length > 0) {
+                $(this).slideDown();
+            }
+        });
+
+        // Automatically expand dropdowns with active routes
+        $('.dropdown-content').each(function() {
+            if ($(this).find('.active').length > 0) {
+                $(this).slideDown();
+                $(this).addClass('expanded').css('display', 'block'); // Ensure it's visible and expanded
             }
         });
     </script>
