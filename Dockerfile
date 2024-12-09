@@ -10,9 +10,9 @@ RUN apt-get update && apt-get install -y \
     git \
     unzip \
     curl \
-    && apt-get install -y \ 
     libpq-dev \
     libpng-dev \
+    libzip-dev \
     && docker-php-ext-install \ 
     fileinfo \
     gd \
