@@ -17,7 +17,7 @@ RUN apt-get update && apt-get install -y \
     pgsql \
     bcmath \
     xml \
-    mbstiring
+    mbstring
 
 # Enable Apache mod_rewrite for Laravel
 RUN a2enmod rewrite
