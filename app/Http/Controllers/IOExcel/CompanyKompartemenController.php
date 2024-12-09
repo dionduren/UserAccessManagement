@@ -35,6 +35,9 @@ class CompanyKompartemenController extends Controller
             'excel_file' => 'required|file|mimes:xlsx,xls|max:20480', // Max size of 20MB
         ]);
 
+        dd($request->file('excel_file')->getPathName());
+        dd($request->file('excel_file')->getRealPath());
+
         $filePath = $request->file('excel_file')->getRealPath();
 
         try {
