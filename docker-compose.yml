@@ -4,22 +4,17 @@ services:
     container_name: php_app
     depends_on:
       db:
-        condition: service_started  # Note: Consider adding healthchecks for better control
+        condition: service_started # Note: Consider adding healthchecks for better control
     volumes:
       - type: bind
-        source: C:\Dion\Project\UserAccessManagement
+        source: /var/www/UserAccessManagement
         target: /var/www/html
     working_dir: /var/www/html
     environment:
       - APP_ENV=local
       - APP_DEBUG=true
     command: >
-      sh -c "
-      php artisan key:generate &&
-      php artisan storage:link &&
-      php artisan migrate --seed &&
-      php artisan serve --host=0.0.0.0 --port=8000
-      "
+      sh -c "  composer install && php artisan key:generate &&  php artisan storage:link &&  php artisan migrate --seed &&  php artisan serve --host=0.0.0.0 --port=8000  "
     ports:
       - "8001:8000"
 
