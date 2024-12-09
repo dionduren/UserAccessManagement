@@ -12,12 +12,11 @@ RUN apt-get update && apt-get install -y \
     curl \
     && apt-get install -y \ 
     libpq-dev \
+    libpng-dev \
     && docker-php-ext-install \ 
     fileinfo \
     gd \
-    ext-gd \
     zip \
-    ext-zip\
     pdo_pgsql \
     pgsql
 
