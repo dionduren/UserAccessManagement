@@ -28,5 +28,9 @@ RUN curl -sS https://getcomposer.org/installer | php \
 
 # Ensure Laravel storage and cache directories have correct permissions
 RUN mkdir -p storage bootstrap/cache \
-    && chown -R www-data:www-data /var/www/html \
-    && chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache
+&& chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache \
+&& chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache
+
+# Copy custom PHP configuration
+COPY php-config/php.ini /usr/local/etc/php/conf.d/custom.ini
+
