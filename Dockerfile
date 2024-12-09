@@ -7,9 +7,7 @@ RUN apt-get update && apt-get install -y \
     unzip \
     curl \
     libpq-dev \
-    libjpeg-dev \ 
     libpng-dev \
-    libfreetype6-dev \
     libzip-dev \
     libxml2-dev \
     libonig-dev \
