@@ -3,10 +3,6 @@ FROM php:8.1-apache
 # Install extensions or tools you need
 # RUN docker-php-ext-install pdo pdo_pgsql
 
-RUN set -ex \
-    && apk --no-cache add \
-    postgresql-dev
-
 # Install dependencies for PostgreSQL
 RUN apt-get update && apt-get install -y \
     git \
@@ -24,6 +20,7 @@ RUN apt-get update && apt-get install -y \
     libldap2-dev \
     # && docker-php-ext-configure gd --with-freetype --with-jpeg \
     && docker-php-ext-install \
+    postgresql-dev \
     gd \
     mbstring \
     curl \
