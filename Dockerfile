@@ -10,7 +10,6 @@ RUN apt-get update && apt-get install -y \
     libpng-dev \
     libzip-dev \
     libxml2-dev \
-    libonig-dev \
     && docker-php-ext-install \ 
     gd \
     zip \
@@ -18,7 +17,7 @@ RUN apt-get update && apt-get install -y \
     pgsql \
     bcmath \
     xml \
-    mbstring
+    mbstiring
 
 # Enable Apache mod_rewrite for Laravel
 RUN a2enmod rewrite
@@ -33,5 +32,5 @@ RUN mkdir -p storage bootstrap/cache \
     && chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache
 
 # Copy custom PHP configuration
-COPY php-config/php.ini /usr/local/etc/php/conf.d/custom.ini
+# COPY php-config/php.ini /usr/local/etc/php/conf.d/custom.ini
 

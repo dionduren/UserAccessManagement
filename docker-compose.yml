@@ -14,7 +14,7 @@ services:
       - APP_ENV=local
       - APP_DEBUG=true
     command: >
-      sh -c "  composer install && php artisan key:generate &&  php artisan storage:link &&  php artisan migrate --seed &&  php artisan serve --host=0.0.0.0 --port=8000  "
+      sh -c "  composer install --ignore-platform-req=ext-gd && php artisan key:generate &&  php artisan storage:link &&  php artisan migrate --seed &&  php artisan serve --host=0.0.0.0 --port=8000  "
     ports:
       - "8001:8000"
 
