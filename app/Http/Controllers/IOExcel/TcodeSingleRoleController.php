@@ -20,7 +20,8 @@ class TcodeSingleRoleController extends Controller
             'excel_file' => 'required|file|mimes:xlsx,xls|max:20480',
         ]);
 
-        $filePath = $request->file('excel_file')->getRealPath();
+        $filePath = $request->file('excel_file');
+        // $filePath = $request->file('excel_file')->getRealPath();
 
         try {
             $data = Excel::toCollection(new TcodeSingleRoleImport, $filePath)->first();

@@ -35,10 +35,11 @@ class CompanyKompartemenController extends Controller
             'excel_file' => 'required|file|mimes:xlsx,xls|max:20480', // Max size of 20MB
         ]);
 
-        dd($request->file('excel_file')->getPathName());
-        dd($request->file('excel_file')->getRealPath());
+        // dd($request->file('excel_file')->getPathName());
+        // dd($request->file('excel_file')->getRealPath());
 
-        $filePath = $request->file('excel_file')->getRealPath();
+        $filePath = $request->file('excel_file');
+        // $filePath = $request->file('excel_file')->getRealPath();
 
         try {
             // Load the data using the Excel facade
