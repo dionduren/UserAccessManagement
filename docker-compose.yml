@@ -27,3 +27,7 @@ services:
       POSTGRES_DB: user_access
     ports:
       - "5432:5432"
+
+  php:
+    volumes:
+      - ./php.ini:/usr/local/etc/php/php.ini
