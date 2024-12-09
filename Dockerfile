@@ -9,7 +9,15 @@ RUN apt-get update && apt-get install -y git \
     unzip \
     curl \
     && apt-get install -y libpq-dev \
-    && docker-php-ext-install pdo_pgsql pgsql
+    libfreetype6-dev \
+    libjpeg62-turbo-dev \
+    libpng-dev \
+    libonig-dev \
+    libxml2-dev \
+    libzip-dev \
+    libldap2-dev \
+    && docker-php-ext-configure gd --with-freetype --with-jpeg \
+    && docker-php-ext-install gd mbstring curl fileinfo xml zip pdo_pgsql pgsql ldap
 
 # Copy your application code (optional if already mounted via volumes)
 # COPY . /var/www/html/
