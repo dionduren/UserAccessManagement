@@ -10,15 +10,7 @@ RUN apt-get update && apt-get install -y \
     curl \
     pkg-config \
     libcurl4-openssl-dev \
-    libfreetype6-dev \
-    libjpeg62-turbo-dev \
-    libpng-dev \
-    libonig-dev \
-    libxml2-dev \
-    libzip-dev \
     libpq-dev \
-    libldap2-dev \
-    && docker-php-ext-configure gd --with-freetype --with-jpeg \
     && docker-php-ext-install \
     gd \
     mbstring \
