@@ -5,6 +5,7 @@ FROM php:8.1-apache
 
 # Install dependencies for PostgreSQL
 RUN apt-get update && apt-get install -y \
+    nano \
     git \
     unzip \
     curl \
@@ -15,12 +16,12 @@ RUN apt-get update && apt-get install -y \
     libpng-dev \
     libonig-dev \
     libxml2-dev \
+    libz-dev \
     libzip-dev \
     libpq-dev \
     libldap2-dev \
-    # && docker-php-ext-configure gd --with-freetype --with-jpeg \
+    && docker-php-ext-configure gd --with-freetype --with-jpeg \
     && docker-php-ext-install \
-    postgresql-dev \
     gd \
     mbstring \
     curl \
@@ -47,4 +48,4 @@ RUN mkdir -p storage bootstrap/cache \
     && chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache
 
 # Debugging: Check installed PHP extensions (optional)
-RUN php -m && php --ini && curl --version
+# RUN php -m && php --ini && curl --version
