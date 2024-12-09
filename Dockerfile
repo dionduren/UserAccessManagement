@@ -21,6 +21,7 @@ RUN apt-get update && apt-get install -y git \
 
 # Copy your application code (optional if already mounted via volumes)
 # COPY . /var/www/html/
+# COPY /var/www/UserAccessManagement/php.ini /usr/local/etc/php/conf.d/
 
 # Enable Apache mod_rewrite
 RUN a2enmod rewrite

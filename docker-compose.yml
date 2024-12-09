@@ -9,7 +9,7 @@ services:
       - type: bind
         source: /var/www/UserAccessManagement
         target: /var/www/html
-      - /var/www/UserAccessManagement/php.ini:/usr/local/etc/php/php.ini
+      - /var/www/UserAccessManagement/custom.ini:/usr/local/etc/php/conf.d/custom.ini
     working_dir: /var/www/html
     environment:
       - APP_ENV=local
