@@ -9,6 +9,7 @@ services:
       - type: bind
         source: /var/www/UserAccessManagement
         target: /var/www/html
+      - ./php.ini:/usr/local/etc/php/php.ini
     working_dir: /var/www/html
     environment:
       - APP_ENV=local
@@ -27,7 +28,3 @@ services:
       POSTGRES_DB: user_access
     ports:
       - "5432:5432"
-
-  php:
-    volumes:
-      - ./php.ini:/usr/local/etc/php/php.ini
