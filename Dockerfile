@@ -1,8 +1,5 @@
 FROM php:8.1-apache
 
-# Install extensions or tools you need
-# RUN docker-php-ext-install pdo pdo_pgsql
-
 # Install dependencies for PostgreSQL
 RUN apt-get update && apt-get install -y \
     git \
@@ -12,12 +9,15 @@ RUN apt-get update && apt-get install -y \
     libpq-dev \
     libpng-dev \
     libzip-dev \
+    libxml2-dev \
     && docker-php-ext-install \ 
-    fileinfo \
     gd \
     zip \
     pdo_pgsql \
-    pgsql
+    pgsql \
+    bcmath \
+    xml \
+    mbstiring
 
 # Enable Apache mod_rewrite for Laravel
 RUN a2enmod rewrite
