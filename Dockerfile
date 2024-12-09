@@ -5,32 +5,21 @@ FROM php:8.1-apache
 
 # Install dependencies for PostgreSQL
 RUN apt-get update && apt-get install -y \
+    git \
     nano \
     git \
     unzip \
     curl \
-    pkg-config \
-    libcurl4-openssl-dev \
-    libfreetype6-dev \
-    libjpeg62-turbo-dev \
-    libpng-dev \
-    libonig-dev \
-    libxml2-dev \
-    libz-dev \
-    libzip-dev \
+    && apt-get install -y \ 
     libpq-dev \
-    libldap2-dev \
-    && docker-php-ext-configure gd --with-freetype --with-jpeg \
-    && docker-php-ext-install \
-    gd \
-    mbstring \
-    curl \
+    && docker-php-ext-install \ 
     fileinfo \
-    xml \
+    gd \
+    ext-gd \
     zip \
+    ext-zip\
     pdo_pgsql \
-    pgsql \
-    ldap
+    pgsql
 
 # Enable Apache mod_rewrite for Laravel
 RUN a2enmod rewrite
@@ -39,13 +28,7 @@ RUN a2enmod rewrite
 RUN curl -sS https://getcomposer.org/installer | php \
     && mv composer.phar /usr/local/bin/composer
 
-# Set working directory inside the container
-WORKDIR /var/www/html
-
 # Ensure Laravel storage and cache directories have correct permissions
 RUN mkdir -p storage bootstrap/cache \
     && chown -R www-data:www-data /var/www/html \
     && chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache
-
-# Debugging: Check installed PHP extensions (optional)
-# RUN php -m && php --ini && curl --version
