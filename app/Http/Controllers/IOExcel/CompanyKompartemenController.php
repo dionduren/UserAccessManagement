@@ -145,6 +145,12 @@ class CompanyKompartemenController extends Controller
                 $processed = 0;
 
                 echo json_encode(['progress' => 0]) . "\n";
+                
+                // Start output buffering
+                if (!ob_get_level()) {
+                    ob_start();
+                }
+
                 ob_flush();
                 flush();
 

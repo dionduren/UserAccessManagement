@@ -158,6 +158,11 @@ class SingleRoleTcodeController extends Controller
                 $lastUpdate = microtime(true); // Track last time progress was sent
 
                 echo json_encode(['progress' => 0]) . "\n";
+
+                // Start output buffering
+                if (!ob_get_level()) {
+                    ob_start();
+                }
                 ob_flush();
                 flush();
 
