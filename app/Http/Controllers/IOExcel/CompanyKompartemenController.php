@@ -140,12 +140,14 @@ class CompanyKompartemenController extends Controller
         }
 
         try {
+
             $response = new StreamedResponse(function () use ($data) {
+                $lastUpdate = microtime(true); // Track last time progress was sent
                 $totalRows = count($data);
                 $processed = 0;
 
                 echo json_encode(['progress' => 0]) . "\n";
-                
+
                 // Start output buffering
                 if (!ob_get_level()) {
                     ob_start();
@@ -164,11 +166,6 @@ class CompanyKompartemenController extends Controller
 
                     $kompartemen = null;
                     $departemen = null;
-
-                    // Log the row data before processing to confirm it is being checked
-                    // if ($row['kompartemen'] == null || $row['departemen'] == null) {
-                    //     Log::debug('Processing row data:', $row);
-                    // }
 
                     // Create or update Kompartemen and Departemen based on data
                     if (!$row['kompartemen'] == null && !$row['departemen'] == null) {
@@ -214,11 +211,17 @@ class CompanyKompartemenController extends Controller
                         // $compositeRole->jobRole()->associate($jobRole)->save();
                     }
 
-
                     $processed++;
-                    echo json_encode(['progress' => round(($processed / $totalRows) * 100)]) . "\n";
-                    ob_flush();
-                    flush();
+
+                    // Check if 3 seconds have passed since the last update
+                    if (microtime(true) - $lastUpdate >= 1 || $processed === $totalRows) {
+                        $progress = round(($processed / $totalRows) * 100);
+                        echo json_encode(['progress' => $progress]) . "\n";
+                        ob_flush();
+                        flush();
+
+                        $lastUpdate = microtime(true); // Reset the timer
+                    }
                 }
 
                 echo json_encode(['success' => 'Data imported successfully!']) . "\n";

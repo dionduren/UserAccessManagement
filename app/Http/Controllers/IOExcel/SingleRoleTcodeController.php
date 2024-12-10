@@ -203,7 +203,7 @@ class SingleRoleTcodeController extends Controller
                     $processedRows++;
 
                     // Check if 3 seconds have passed since the last update
-                    if (microtime(true) - $lastUpdate >= 2 || $processedRows === $totalRows) {
+                    if (microtime(true) - $lastUpdate >= 1 || $processedRows === $totalRows) {
                         $progress = round(($processedRows / $totalRows) * 100);
                         echo json_encode(['progress' => $progress]) . "\n";
                         ob_flush();
