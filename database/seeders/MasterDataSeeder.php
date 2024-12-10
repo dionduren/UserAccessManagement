@@ -31,7 +31,7 @@ class MasterDataSeeder extends Seeder
 
         // Array of companies data
         $companies = [
-            ["kode_perusahaan" => "A000", "nama_perusahaan" => "PT Pupuk Indonesia (Persero)", "singkatan" => "PI"],
+            ["kode_perusahaan" => "A000", "nama_perusahaan" => "PT Pupuk Indonesia (Persero)", "singkatan" => "PIHC"],
             ["kode_perusahaan" => "B000", "nama_perusahaan" => "PT Petrokimia Gresik", "singkatan" => "PKG"],
             ["kode_perusahaan" => "C000", "nama_perusahaan" => "PT Pupuk Kujang Cikampek", "singkatan" => "PKC"],
             ["kode_perusahaan" => "D000", "nama_perusahaan" => "PT Pupuk Kalimantan Timur", "singkatan" => "PKT"],

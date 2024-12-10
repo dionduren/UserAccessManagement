@@ -79,6 +79,8 @@ Route::resource('tcodes', TcodeController::class);
 // ======= MASTER DATA RELATIONSHIP ======= 
 
 Route::get('/relationship/job-composite/data', [JobCompositeController::class, 'getCompositeRoles'])->name('job-composite.data');
+Route::get('/relationship/job-composite/empty-composite', [JobCompositeController::class, 'getEmptyCompositeRole'])->name('job-composite.empty-composite');
+Route::get('/relationship/job-composite/company-composite', [JobCompositeController::class, 'getCompositeFilterCompany'])->name('job-composite.company-composite');
 Route::resource('/relationship/job-composite', JobCompositeController::class);
 
 // === import export excel

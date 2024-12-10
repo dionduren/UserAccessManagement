@@ -109,7 +109,8 @@
         .dropdown-toggle {
             display: flex;
             align-items: center;
-            justify-content: space-between;
+            margin-bottom: 10px;
+            /* justify-content: space-between; */
             color: white !important;
             /* Ensures content is spaced properly */
         }
@@ -118,12 +119,17 @@
             font-family: "Bootstrap Icons";
             font-weight: bold;
             float: right;
+            rotate: -90deg;
             transition: transform 0.3s ease-in-out;
         }
 
         /* Rotate arrow when dropdown is open */
         .dropdown-toggle.active::after {
-            transform: rotate(-90deg);
+            -webkit-transform: rotate(90deg);
+            -moz-transform: rotate(90deg);
+            -ms-transform: rotate(90deg);
+            -o-transform: rotate(90deg);
+            transform: rotate(90deg);
         }
 
         /* Dropdown content */
@@ -260,7 +266,7 @@
         });
 
         // Ensure the dropdown is open if any child route is active
-        $(".dropdown-content").each(function() {
+        $(".dropdown-toggle").each(function() {
             if ($(this).find(".active").length > 0) {
                 $(this).slideDown();
             }

@@ -4,10 +4,23 @@
     <div class="container-fluid">
         <h1>Master Data > Composite Roles</h1>
 
-        <button class="btn btn-primary mb-3" id="createCompositeRole">Create New Composite Role</button>
+        {{-- <button class="btn btn-primary mb-3" id="createCompositeRole">Create New Relationship</button> --}}
+        <a href="{{ route('composite-roles.create') }}" class="btn btn-primary mb-3">
+            <i class="bi bi-plus"></i> Create New Composite Role
+        </a>
+
+        {{-- <button class="btn btn-primary mb-3" id="createCompositeRole">Create New Composite Role</button> --}}
 
         @if (session('status'))
             <div class="alert alert-success">{{ session('status') }}</div>
+        @endif
+
+        <!-- Success Message -->
+        @if (session('success'))
+            <div class="alert alert-success">
+                <h4>Success:</h4>
+                {{ session('success') }}
+            </div>
         @endif
 
         <!-- Dropdowns for Filtering -->

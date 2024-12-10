@@ -13,6 +13,14 @@
             <div class="alert alert-success">{{ session('status') }}</div>
         @endif
 
+        <!-- Success Message -->
+        @if (session('success'))
+            <div class="alert alert-success">
+                <h4>Success:</h4>
+                {{ session('success') }}
+            </div>
+        @endif
+
         <!-- Dropdowns for Filtering -->
         <div class="form-group">
             <label for="companyDropdown">Select Company</label>
@@ -53,10 +61,22 @@
         <table id="composite_roles_table" class="table table-bordered table-striped table-hover cell-border mt-3">
             <thead>
                 <tr>
+                    <th>
+                        <input type="text" id="search_company" class="form-control" placeholder="Search Company">
+                    </th>
+                    <th>
+                        <input type="text" id="search_job_role" class="form-control" placeholder="Search Job Role">
+                    </th>
+                    <th>
+                        <input type="text" id="search_composite_role" class="form-control"
+                            placeholder="Search Composite Role">
+                    </th>
+                    <th rowspan="2">Actions</th>
+                </tr>
+                <tr>
                     <th>Company</th>
                     <th>Job Role</th>
                     <th>Composite Role</th>
-                    <th>Actions</th>
                 </tr>
             </thead>
             <tbody></tbody>
@@ -93,10 +113,9 @@
                 ajax: {
                     url: '/relationship/job-composite/data',
                     data: function(d) {
-                        d.company_id = $('#companyDropdown').val();
-                        d.kompartemen_id = $('#kompartemenDropdown').val();
-                        d.departemen_id = $('#departemenDropdown').val();
-                        d.job_role_id = $('#jobRoleDropdown').val();
+                        d.search_company = $('#search_company').val();
+                        d.search_job_role = $('#search_job_role').val();
+                        d.search_composite_role = $('#search_composite_role').val();
                     },
                 },
                 columns: [{
@@ -118,6 +137,17 @@
                         searchable: false
                     },
                 ],
+                responsive: true,
+                searching: false,
+                paging: true,
+                ordering: true,
+                pageLength: 10,
+                lengthMenu: [5, 10, 25, 50, 100],
+            });
+
+            // Reload table on column search input
+            $('#search_company, #search_job_role, #search_composite_role').on('keyup', function() {
+                compositeRolesTable.draw();
             });
 
 

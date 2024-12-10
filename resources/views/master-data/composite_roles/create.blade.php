@@ -21,7 +21,7 @@
             <!-- Job Role Dropdown (Grouped by Kompartemen and Departemen) -->
             <div class="mb-3">
                 <label for="jabatan_id" class="form-label">Job Role</label>
-                <select name="jabatan_id" id="jabatan_id" class="form-control select2" required>
+                <select name="jabatan_id" id="jabatan_id" class="form-control select2">
                     <!-- Options will be dynamically populated based on selected Company -->
                 </select>
             </div>

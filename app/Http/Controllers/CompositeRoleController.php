@@ -33,24 +33,24 @@ class CompositeRoleController extends Controller
 
     public function create()
     {
-        // $companies = Company::all();
+        $companies = Company::all();
 
-        // // Structure job roles data by Company > Kompartemen > Departemen
-        // $job_roles_data = [];
-        // $jobRoles = JobRole::with(['company', 'kompartemen', 'departemen'])->get();
+        // Structure job roles data by Company > Kompartemen > Departemen
+        $job_roles_data = [];
+        $jobRoles = JobRole::with(['company', 'kompartemen', 'departemen'])->get();
 
-        // foreach ($jobRoles as $jobRole) {
-        //     $companyId = $jobRole->company_id;
-        //     $kompartemenName = $jobRole->kompartemen->name;
-        //     $departemenName = $jobRole->departemen->name;
+        foreach ($jobRoles as $jobRole) {
+            $companyId = $jobRole->company_id;
+            $kompartemenName = $jobRole->kompartemen->name ?? 'No Kompartemen';
+            $departemenName = $jobRole->departemen->name ?? 'No Departemen';
 
-        //     $job_roles_data[$companyId][$kompartemenName][$departemenName][] = [
-        //         'id' => $jobRole->id,
-        //         'nama_jabatan' => $jobRole->nama_jabatan,
-        //     ];
-        // }
+            $job_roles_data[$companyId][$kompartemenName][$departemenName][] = [
+                'id' => $jobRole->id,
+                'nama_jabatan' => $jobRole->nama_jabatan,
+            ];
+        }
 
-        // return view('master-data.composite_roles.create', compact('companies', 'job_roles_data'));
+        return view('master-data.composite_roles.create', compact('companies', 'job_roles_data'));
     }
 
     public function store(Request $request)
