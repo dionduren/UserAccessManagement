@@ -1,0 +1,1354 @@
+[
+  {
+    "cost_center": "A000000000",
+    "deskripsi": "Dewan Komisaris",
+    "cost_code": "A000",
+    "group": "PI",
+    "created_by": "Seeder",
+    "updated_by": "Seeder"
+  },
+  {
+    "cost_center": "A001000000",
+    "deskripsi": "Direktorat Utama",
+    "cost_code": "A100",
+    "group": "PI",
+    "created_by": "Seeder",
+    "updated_by": "Seeder"
+  },
+  {
+    "cost_center": "A001100000",
+    "deskripsi": "Kompartemen Satuan Pengawasan Intern",
+    "cost_code": "A110",
+    "group": "PI",
+    "created_by": "Seeder",
+    "updated_by": "Seeder"
+  },
+  {
+    "cost_center": "A001120000",
+    "deskripsi": "Dept Pengawasan",
+    "cost_code": "A112",
+    "group": "PI",
+    "created_by": "Seeder",
+    "updated_by": "Seeder"
+  },
+  {
+    "cost_center": "A001130000",
+    "deskripsi": "Dept Perancanaan & Pemantauan",
+    "cost_code": "A113",
+    "group": "PI",
+    "created_by": "Seeder",
+    "updated_by": "Seeder"
+  },
+  {
+    "cost_center": "A001140000",
+    "deskripsi": "Dept Layanan Konsultasi",
+    "cost_code": "A114",
+    "group": "PI",
+    "created_by": "Seeder",
+    "updated_by": "Seeder"
+  },
+  {
+    "cost_center": "A001200000",
+    "deskripsi": "Kompartemen Sekretaris Perusahaan",
+    "cost_code": "A120",
+    "group": "PI",
+    "created_by": "Seeder",
+    "updated_by": "Seeder"
+  },
+  {
+    "cost_center": "A001220000",
+    "deskripsi": "Departemen Administrasi Korporat",
+    "cost_code": "A122",
+    "group": "PI",
+    "created_by": "Seeder",
+    "updated_by": "Seeder"
+  },
+  {
+    "cost_center": "A001240000",
+    "deskripsi": "Dept Tata Kelola",
+    "cost_code": "A124",
+    "group": "PI",
+    "created_by": "Seeder",
+    "updated_by": "Seeder"
+  },
+  {
+    "cost_center": "A001410000",
+    "deskripsi": "Departemen Hubungan Kelembagaan",
+    "cost_code": "A141",
+    "group": "PI",
+    "created_by": "Seeder",
+    "updated_by": "Seeder"
+  },
+  {
+    "cost_center": "A001420000",
+    "deskripsi": "Departemen Komunikasi Korporat",
+    "cost_code": "A142",
+    "group": "PI",
+    "created_by": "Seeder",
+    "updated_by": "Seeder"
+  },
+  {
+    "cost_center": "A001500000",
+    "deskripsi": "Kompartemen Hukum",
+    "cost_code": "A150",
+    "group": "PI",
+    "created_by": "Seeder",
+    "updated_by": "Seeder"
+  },
+  {
+    "cost_center": "A001510000",
+    "deskripsi": "Departemen Hukum Korporasi",
+    "cost_code": "A151",
+    "group": "PI",
+    "created_by": "Seeder",
+    "updated_by": "Seeder"
+  },
+  {
+    "cost_center": "A001520000",
+    "deskripsi": "Departemen Hukum Litigasi",
+    "cost_code": "A152",
+    "group": "PI",
+    "created_by": "Seeder",
+    "updated_by": "Seeder"
+  },
+  {
+    "cost_center": "A001600000",
+    "deskripsi": "Kompartemen Dukungan Manajemen Strategis",
+    "cost_code": "A160",
+    "group": "PI",
+    "created_by": "Seeder",
+    "updated_by": "Seeder"
+  },
+  {
+    "cost_center": "A001610000",
+    "deskripsi": "Dept Manajemen Rantai Pasok",
+    "cost_code": "A161",
+    "group": "PI",
+    "created_by": "Seeder",
+    "updated_by": "Seeder"
+  },
+  {
+    "cost_center": "A001620000",
+    "deskripsi": "Dept Strategic Delivery Unit",
+    "cost_code": "A162",
+    "group": "PI",
+    "created_by": "Seeder",
+    "updated_by": "Seeder"
+  },
+  {
+    "cost_center": "A001900000",
+    "deskripsi": "Fungsional Direktur Utama",
+    "cost_code": "A190",
+    "group": "PI",
+    "created_by": "Seeder",
+    "updated_by": "Seeder"
+  },
+  {
+    "cost_center": "A002000000",
+    "deskripsi": "Direktorat Produksi",
+    "cost_code": "A200",
+    "group": "PI",
+    "created_by": "Seeder",
+    "updated_by": "Seeder"
+  },
+  {
+    "cost_center": "A002100000",
+    "deskripsi": "Kompartemen Operasi & K3LH",
+    "cost_code": "A210",
+    "group": "PI",
+    "created_by": "Seeder",
+    "updated_by": "Seeder"
+  },
+  {
+    "cost_center": "A002110000",
+    "deskripsi": "Departemen Sinergi Teknologi & Operasi",
+    "cost_code": "A211",
+    "group": "PI",
+    "created_by": "Seeder",
+    "updated_by": "Seeder"
+  },
+  {
+    "cost_center": "A002120000",
+    "deskripsi": "Departemen Sinergi Pemeliharaan",
+    "cost_code": "A212",
+    "group": "PI",
+    "created_by": "Seeder",
+    "updated_by": "Seeder"
+  },
+  {
+    "cost_center": "A002130000",
+    "deskripsi": "Departemen Sinerji Kesehatan, Keselamata",
+    "cost_code": "A213",
+    "group": "PI",
+    "created_by": "Seeder",
+    "updated_by": "Seeder"
+  },
+  {
+    "cost_center": "A002140000",
+    "deskripsi": "Departemen Perencanaan dan Pengendalian",
+    "cost_code": "A214",
+    "group": "PI",
+    "created_by": "Seeder",
+    "updated_by": "Seeder"
+  },
+  {
+    "cost_center": "A002300000",
+    "deskripsi": "Kompartemen Pengadaan 1",
+    "cost_code": "A230",
+    "group": "PI",
+    "created_by": "Seeder",
+    "updated_by": "Seeder"
+  },
+  {
+    "cost_center": "A002310000",
+    "deskripsi": "Departemen Pengadaan Barang",
+    "cost_code": "A231",
+    "group": "PI",
+    "created_by": "Seeder",
+    "updated_by": "Seeder"
+  },
+  {
+    "cost_center": "A002320000",
+    "deskripsi": "Departemen Pengadaan Jasa",
+    "cost_code": "A232",
+    "group": "PI",
+    "created_by": "Seeder",
+    "updated_by": "Seeder"
+  },
+  {
+    "cost_center": "A002400000",
+    "deskripsi": "Kompartemen Pengadaan 2",
+    "cost_code": "A240",
+    "group": "PI",
+    "created_by": "Seeder",
+    "updated_by": "Seeder"
+  },
+  {
+    "cost_center": "A002410000",
+    "deskripsi": "Departemen Pengadaan Jasa Distribusi & P",
+    "cost_code": "A241",
+    "group": "PI",
+    "created_by": "Seeder",
+    "updated_by": "Seeder"
+  },
+  {
+    "cost_center": "A002420000",
+    "deskripsi": "Departemen Pengadaan Bahan Baku & Bahan",
+    "cost_code": "A242",
+    "group": "PI",
+    "created_by": "Seeder",
+    "updated_by": "Seeder"
+  },
+  {
+    "cost_center": "A002500000",
+    "deskripsi": "Kompartemen Perencanaan Pengadaan",
+    "cost_code": "A250",
+    "group": "PI",
+    "created_by": "Seeder",
+    "updated_by": "Seeder"
+  },
+  {
+    "cost_center": "A002510000",
+    "deskripsi": "Departemen Pengelolaan Rekanan",
+    "cost_code": "A251",
+    "group": "PI",
+    "created_by": "Seeder",
+    "updated_by": "Seeder"
+  },
+  {
+    "cost_center": "A002520000",
+    "deskripsi": "Departemen Perencanaan Pengadaan Bahan B",
+    "cost_code": "A252",
+    "group": "PI",
+    "created_by": "Seeder",
+    "updated_by": "Seeder"
+  },
+  {
+    "cost_center": "A002530000",
+    "deskripsi": "Departemen Perencanaan Pengadaan Barang",
+    "cost_code": "A253",
+    "group": "PI",
+    "created_by": "Seeder",
+    "updated_by": "Seeder"
+  },
+  {
+    "cost_center": "A002540000",
+    "deskripsi": "Departemen Perencanaan Pengadaan Jasa",
+    "cost_code": "A254",
+    "group": "PI",
+    "created_by": "Seeder",
+    "updated_by": "Seeder"
+  },
+  {
+    "cost_center": "A002550000",
+    "deskripsi": "Departemen Strategi & Evaluasi Pengadaan",
+    "cost_code": "A255",
+    "group": "PI",
+    "created_by": "Seeder",
+    "updated_by": "Seeder"
+  },
+  {
+    "cost_center": "A002900000",
+    "deskripsi": "Fungsional Produksi",
+    "cost_code": "A290",
+    "group": "PI",
+    "created_by": "Seeder",
+    "updated_by": "Seeder"
+  },
+  {
+    "cost_center": "A003000000",
+    "deskripsi": "Direktorat Portofolio & Pengembangan Usa",
+    "cost_code": "A300",
+    "group": "PI",
+    "created_by": "Seeder",
+    "updated_by": "Seeder"
+  },
+  {
+    "cost_center": "A003100000",
+    "deskripsi": "GM Investasi dan Pengembangan",
+    "cost_code": "A310",
+    "group": "PI",
+    "created_by": "Seeder",
+    "updated_by": "Seeder"
+  },
+  {
+    "cost_center": "A003110000",
+    "deskripsi": "Manager Pengembangan dan Portofolio",
+    "cost_code": "A311",
+    "group": "PI",
+    "created_by": "Seeder",
+    "updated_by": "Seeder"
+  },
+  {
+    "cost_center": "A003120000",
+    "deskripsi": "Manager TI",
+    "cost_code": "A312",
+    "group": "PI",
+    "created_by": "Seeder",
+    "updated_by": "Seeder"
+  },
+  {
+    "cost_center": "A003130000",
+    "deskripsi": "Manager Riset dan Teknologi",
+    "cost_code": "A313",
+    "group": "PI",
+    "created_by": "Seeder",
+    "updated_by": "Seeder"
+  },
+  {
+    "cost_center": "A003200000",
+    "deskripsi": "KOMP PENGADAAN",
+    "cost_code": "A320",
+    "group": "PI",
+    "created_by": "Seeder",
+    "updated_by": "Seeder"
+  },
+  {
+    "cost_center": "A003210000",
+    "deskripsi": "DEP PROCUREMENT",
+    "cost_code": "A321",
+    "group": "PI",
+    "created_by": "Seeder",
+    "updated_by": "Seeder"
+  },
+  {
+    "cost_center": "A003220000",
+    "deskripsi": "DEP PENG JASA",
+    "cost_code": "A322",
+    "group": "PI",
+    "created_by": "Seeder",
+    "updated_by": "Seeder"
+  },
+  {
+    "cost_center": "A003230000",
+    "deskripsi": "DP PERMAT&PRGDNGN",
+    "cost_code": "A323",
+    "group": "PI",
+    "created_by": "Seeder",
+    "updated_by": "Seeder"
+  },
+  {
+    "cost_center": "A003300000",
+    "deskripsi": "Kompartemen Perencanaan Korporat",
+    "cost_code": "A330",
+    "group": "PI",
+    "created_by": "Seeder",
+    "updated_by": "Seeder"
+  },
+  {
+    "cost_center": "A003310000",
+    "deskripsi": "Departemen Program Korporat",
+    "cost_code": "A331",
+    "group": "PI",
+    "created_by": "Seeder",
+    "updated_by": "Seeder"
+  },
+  {
+    "cost_center": "A003320000",
+    "deskripsi": "Departemen Perencanaan Strategis",
+    "cost_code": "A332",
+    "group": "PI",
+    "created_by": "Seeder",
+    "updated_by": "Seeder"
+  },
+  {
+    "cost_center": "A003330000",
+    "deskripsi": "Departemen Portofolio Bisnis",
+    "cost_code": "A333",
+    "group": "PI",
+    "created_by": "Seeder",
+    "updated_by": "Seeder"
+  },
+  {
+    "cost_center": "A003340000",
+    "deskripsi": "Departemen Pengelolaan Investasi",
+    "cost_code": "A334",
+    "group": "PI",
+    "created_by": "Seeder",
+    "updated_by": "Seeder"
+  },
+  {
+    "cost_center": "A003430000",
+    "deskripsi": "Departemen Pengelolaan Aset",
+    "cost_code": "A343",
+    "group": "PI",
+    "created_by": "Seeder",
+    "updated_by": "Seeder"
+  },
+  {
+    "cost_center": "A003520000",
+    "deskripsi": "Departemen Manajemen Riset",
+    "cost_code": "A352",
+    "group": "PI",
+    "created_by": "Seeder",
+    "updated_by": "Seeder"
+  },
+  {
+    "cost_center": "A003600000",
+    "deskripsi": "Kompartemen Portofolio Bisnis",
+    "cost_code": "A360",
+    "group": "PI",
+    "created_by": "Seeder",
+    "updated_by": "Seeder"
+  },
+  {
+    "cost_center": "A003610000",
+    "deskripsi": "Departemen Portofolio Anak Perusahaan &",
+    "cost_code": "A361",
+    "group": "PI",
+    "created_by": "Seeder",
+    "updated_by": "Seeder"
+  },
+  {
+    "cost_center": "A003620000",
+    "deskripsi": "Departemen Portofolio Anak Perusahaan &",
+    "cost_code": "A362",
+    "group": "PI",
+    "created_by": "Seeder",
+    "updated_by": "Seeder"
+  },
+  {
+    "cost_center": "A003700000",
+    "deskripsi": "Kompartemen Pengembangan Usaha",
+    "cost_code": "A370",
+    "group": "PI",
+    "created_by": "Seeder",
+    "updated_by": "Seeder"
+  },
+  {
+    "cost_center": "A003710000",
+    "deskripsi": "Departemen Perencanaan & Pengelolaan Inv",
+    "cost_code": "A371",
+    "group": "PI",
+    "created_by": "Seeder",
+    "updated_by": "Seeder"
+  },
+  {
+    "cost_center": "A003720000",
+    "deskripsi": "Departemen Pengembangan Proyek Strategis",
+    "cost_code": "A372",
+    "group": "PI",
+    "created_by": "Seeder",
+    "updated_by": "Seeder"
+  },
+  {
+    "cost_center": "A003900000",
+    "deskripsi": "Fungsional Portofolio & Pengembngn Usaha",
+    "cost_code": "A390",
+    "group": "PI",
+    "created_by": "Seeder",
+    "updated_by": "Seeder"
+  },
+  {
+    "cost_center": "A004000000",
+    "deskripsi": "Direktorat Pemasaran",
+    "cost_code": "A400",
+    "group": "PI",
+    "created_by": "Seeder",
+    "updated_by": "Seeder"
+  },
+  {
+    "cost_center": "A004200000",
+    "deskripsi": "Komp. Distribusi",
+    "cost_code": "A420",
+    "group": "PI",
+    "created_by": "Seeder",
+    "updated_by": "Seeder"
+  },
+  {
+    "cost_center": "A004210000",
+    "deskripsi": "Dep. Sarana Prasarana Distribusi",
+    "cost_code": "A421",
+    "group": "PI",
+    "created_by": "Seeder",
+    "updated_by": "Seeder"
+  },
+  {
+    "cost_center": "A004220000",
+    "deskripsi": "Dept. Strategi Operasi Distribusi",
+    "cost_code": "A422",
+    "group": "PI",
+    "created_by": "Seeder",
+    "updated_by": "Seeder"
+  },
+  {
+    "cost_center": "A004290000",
+    "deskripsi": "Dept. Pengendalian Kualitas Distribusi",
+    "cost_code": "A429",
+    "group": "PI",
+    "created_by": "Seeder",
+    "updated_by": "Seeder"
+  },
+  {
+    "cost_center": "A0042B0000",
+    "deskripsi": "Dept. Pengendalian Operasi Distr Wil 1",
+    "cost_code": "A42B",
+    "group": "PI",
+    "created_by": "Seeder",
+    "updated_by": "Seeder"
+  },
+  {
+    "cost_center": "A0042C0000",
+    "deskripsi": "Dept. Pengendalian Operasi Dist. Wil 2",
+    "cost_code": "A42C",
+    "group": "PI",
+    "created_by": "Seeder",
+    "updated_by": "Seeder"
+  },
+  {
+    "cost_center": "A004300000",
+    "deskripsi": "Kompartemen Penjualan Korporasi",
+    "cost_code": "A430",
+    "group": "PI",
+    "created_by": "Seeder",
+    "updated_by": "Seeder"
+  },
+  {
+    "cost_center": "A004370000",
+    "deskripsi": "Dept. Pendukung Penjualan Korporasi",
+    "cost_code": "A437",
+    "group": "PI",
+    "created_by": "Seeder",
+    "updated_by": "Seeder"
+  },
+  {
+    "cost_center": "A004380000",
+    "deskripsi": "Departemen Perkebunan 1",
+    "cost_code": "A438",
+    "group": "PI",
+    "created_by": "Seeder",
+    "updated_by": "Seeder"
+  },
+  {
+    "cost_center": "A004390000",
+    "deskripsi": "Departemen Perkebunan 2",
+    "cost_code": "A439",
+    "group": "PI",
+    "created_by": "Seeder",
+    "updated_by": "Seeder"
+  },
+  {
+    "cost_center": "A0043A0000",
+    "deskripsi": "Departemen Industri",
+    "cost_code": "A43A",
+    "group": "PI",
+    "created_by": "Seeder",
+    "updated_by": "Seeder"
+  },
+  {
+    "cost_center": "A0043B0000",
+    "deskripsi": "Departemen Ekspor",
+    "cost_code": "A43B",
+    "group": "PI",
+    "created_by": "Seeder",
+    "updated_by": "Seeder"
+  },
+  {
+    "cost_center": "A004400000",
+    "deskripsi": "Komp. Strategi Penj.& Pelayanan Pelangga",
+    "cost_code": "A440",
+    "group": "PI",
+    "created_by": "Seeder",
+    "updated_by": "Seeder"
+  },
+  {
+    "cost_center": "A004410000",
+    "deskripsi": "Dept. Manajemen Stakeholder",
+    "cost_code": "A441",
+    "group": "PI",
+    "created_by": "Seeder",
+    "updated_by": "Seeder"
+  },
+  {
+    "cost_center": "A004420000",
+    "deskripsi": "Dept. Perencanaan Penjualan & Penagihan",
+    "cost_code": "A442",
+    "group": "PI",
+    "created_by": "Seeder",
+    "updated_by": "Seeder"
+  },
+  {
+    "cost_center": "A004430000",
+    "deskripsi": "Dept. Manajemen Saluran Penjualan",
+    "cost_code": "A443",
+    "group": "PI",
+    "created_by": "Seeder",
+    "updated_by": "Seeder"
+  },
+  {
+    "cost_center": "A004440000",
+    "deskripsi": "Dept. Perencanaan Penjualan & Penagihan",
+    "cost_code": "A444",
+    "group": "PI",
+    "created_by": "Seeder",
+    "updated_by": "Seeder"
+  },
+  {
+    "cost_center": "A004450000",
+    "deskripsi": "Dept. Pengelolaan Pelanggan",
+    "cost_code": "A445",
+    "group": "PI",
+    "created_by": "Seeder",
+    "updated_by": "Seeder"
+  },
+  {
+    "cost_center": "A004500000",
+    "deskripsi": "Kompartemen Wilayah 1",
+    "cost_code": "A450",
+    "group": "PI",
+    "created_by": "Seeder",
+    "updated_by": "Seeder"
+  },
+  {
+    "cost_center": "A004510000",
+    "deskripsi": "Departemen Sumbagut",
+    "cost_code": "A451",
+    "group": "PI",
+    "created_by": "Seeder",
+    "updated_by": "Seeder"
+  },
+  {
+    "cost_center": "A004520000",
+    "deskripsi": "Departemen Sumbasel",
+    "cost_code": "A452",
+    "group": "PI",
+    "created_by": "Seeder",
+    "updated_by": "Seeder"
+  },
+  {
+    "cost_center": "A004530000",
+    "deskripsi": "Departemen Jawa Barat & Banten",
+    "cost_code": "A453",
+    "group": "PI",
+    "created_by": "Seeder",
+    "updated_by": "Seeder"
+  },
+  {
+    "cost_center": "A004540000",
+    "deskripsi": "Departemen Jawa Tengah & DIY",
+    "cost_code": "A454",
+    "group": "PI",
+    "created_by": "Seeder",
+    "updated_by": "Seeder"
+  },
+  {
+    "cost_center": "A004550000",
+    "deskripsi": "Dept. Pendukung Penjualan Wilayah 1",
+    "cost_code": "A455",
+    "group": "PI",
+    "created_by": "Seeder",
+    "updated_by": "Seeder"
+  },
+  {
+    "cost_center": "A004560000",
+    "deskripsi": "Departemen Pergudangan Wilayah 1",
+    "cost_code": "A456",
+    "group": "PI",
+    "created_by": "Seeder",
+    "updated_by": "Seeder"
+  },
+  {
+    "cost_center": "A004600000",
+    "deskripsi": "Kompartemen Wilayah 2",
+    "cost_code": "A460",
+    "group": "PI",
+    "created_by": "Seeder",
+    "updated_by": "Seeder"
+  },
+  {
+    "cost_center": "A004610000",
+    "deskripsi": "Departemen Jawa Timur & Bali",
+    "cost_code": "A461",
+    "group": "PI",
+    "created_by": "Seeder",
+    "updated_by": "Seeder"
+  },
+  {
+    "cost_center": "A004630000",
+    "deskripsi": "Departemen Kalimantan & Nusra",
+    "cost_code": "A463",
+    "group": "PI",
+    "created_by": "Seeder",
+    "updated_by": "Seeder"
+  },
+  {
+    "cost_center": "A004640000",
+    "deskripsi": "Dept. Sulawesi, Maluku & Papua",
+    "cost_code": "A464",
+    "group": "PI",
+    "created_by": "Seeder",
+    "updated_by": "Seeder"
+  },
+  {
+    "cost_center": "A004650000",
+    "deskripsi": "Dept. Pendukung Penjualan Wilayah 2",
+    "cost_code": "A465",
+    "group": "PI",
+    "created_by": "Seeder",
+    "updated_by": "Seeder"
+  },
+  {
+    "cost_center": "A004660000",
+    "deskripsi": "Dept. Pergudangan Wilayah 2",
+    "cost_code": "A466",
+    "group": "PI",
+    "created_by": "Seeder",
+    "updated_by": "Seeder"
+  },
+  {
+    "cost_center": "A004700000",
+    "deskripsi": "Kompartemen Pemasaran",
+    "cost_code": "A470",
+    "group": "PI",
+    "created_by": "Seeder",
+    "updated_by": "Seeder"
+  },
+  {
+    "cost_center": "A004710000",
+    "deskripsi": "Dept. Strategi & Evaluasi Kinerja",
+    "cost_code": "A471",
+    "group": "PI",
+    "created_by": "Seeder",
+    "updated_by": "Seeder"
+  },
+  {
+    "cost_center": "A004720000",
+    "deskripsi": "Departemen Strategi Harga",
+    "cost_code": "A472",
+    "group": "PI",
+    "created_by": "Seeder",
+    "updated_by": "Seeder"
+  },
+  {
+    "cost_center": "A004730000",
+    "deskripsi": "Dept. Manajemen Produk & Merek",
+    "cost_code": "A473",
+    "group": "PI",
+    "created_by": "Seeder",
+    "updated_by": "Seeder"
+  },
+  {
+    "cost_center": "A004740000",
+    "deskripsi": "Departemen Komunikasi Pemasaran",
+    "cost_code": "A474",
+    "group": "PI",
+    "created_by": "Seeder",
+    "updated_by": "Seeder"
+  },
+  {
+    "cost_center": "A004750000",
+    "deskripsi": "Departemen Riset Pasar",
+    "cost_code": "A475",
+    "group": "PI",
+    "created_by": "Seeder",
+    "updated_by": "Seeder"
+  },
+  {
+    "cost_center": "A004900000",
+    "deskripsi": "Fungsional Pemasaran",
+    "cost_code": "A490",
+    "group": "PI",
+    "created_by": "Seeder",
+    "updated_by": "Seeder"
+  },
+  {
+    "cost_center": "A005000000",
+    "deskripsi": "Direktorat Keuangan",
+    "cost_code": "A500",
+    "group": "PI",
+    "created_by": "Seeder",
+    "updated_by": "Seeder"
+  },
+  {
+    "cost_center": "A005100000",
+    "deskripsi": "Kompartemen Keuangan & Pendanaan Investa",
+    "cost_code": "A510",
+    "group": "PI",
+    "created_by": "Seeder",
+    "updated_by": "Seeder"
+  },
+  {
+    "cost_center": "A005110000",
+    "deskripsi": "Departemen Perbendaharaan & Perbankan",
+    "cost_code": "A511",
+    "group": "PI",
+    "created_by": "Seeder",
+    "updated_by": "Seeder"
+  },
+  {
+    "cost_center": "A005130000",
+    "deskripsi": "Dep. Manajemen Piutang & Asuransi",
+    "cost_code": "A513",
+    "group": "PI",
+    "created_by": "Seeder",
+    "updated_by": "Seeder"
+  },
+  {
+    "cost_center": "A005140000",
+    "deskripsi": "Dep. Pendanaan Investasi & Pasar Modal",
+    "cost_code": "A514",
+    "group": "PI",
+    "created_by": "Seeder",
+    "updated_by": "Seeder"
+  },
+  {
+    "cost_center": "A005200000",
+    "deskripsi": "Kompartemen Akuntansi",
+    "cost_code": "A520",
+    "group": "PI",
+    "created_by": "Seeder",
+    "updated_by": "Seeder"
+  },
+  {
+    "cost_center": "A005210000",
+    "deskripsi": "Departemen Akuntansi Keuangan",
+    "cost_code": "A521",
+    "group": "PI",
+    "created_by": "Seeder",
+    "updated_by": "Seeder"
+  },
+  {
+    "cost_center": "A005220000",
+    "deskripsi": "Dep. Verifikasi & Pajak",
+    "cost_code": "A522",
+    "group": "PI",
+    "created_by": "Seeder",
+    "updated_by": "Seeder"
+  },
+  {
+    "cost_center": "A005230000",
+    "deskripsi": "Departemen Akuntansi Manjemen",
+    "cost_code": "A523",
+    "group": "PI",
+    "created_by": "Seeder",
+    "updated_by": "Seeder"
+  },
+  {
+    "cost_center": "A005300000",
+    "deskripsi": "Kompartemen Kinerja Korporat",
+    "cost_code": "A530",
+    "group": "PI",
+    "created_by": "Seeder",
+    "updated_by": "Seeder"
+  },
+  {
+    "cost_center": "A005310000",
+    "deskripsi": "Departemen Analisa Kinerja",
+    "cost_code": "A531",
+    "group": "PI",
+    "created_by": "Seeder",
+    "updated_by": "Seeder"
+  },
+  {
+    "cost_center": "A005320000",
+    "deskripsi": "Departemen Anggaran",
+    "cost_code": "A532",
+    "group": "PI",
+    "created_by": "Seeder",
+    "updated_by": "Seeder"
+  },
+  {
+    "cost_center": "A005330000",
+    "deskripsi": "Dept Manajemen Kinerja Bisnis",
+    "cost_code": "A533",
+    "group": "PI",
+    "created_by": "Seeder",
+    "updated_by": "Seeder"
+  },
+  {
+    "cost_center": "A005900000",
+    "deskripsi": "Fungsional Direktorat Keuangan",
+    "cost_code": "A590",
+    "group": "PI",
+    "created_by": "Seeder",
+    "updated_by": "Seeder"
+  },
+  {
+    "cost_center": "A006000000",
+    "deskripsi": "Direktorat Sumber Daya Manusia",
+    "cost_code": "A600",
+    "group": "PI",
+    "created_by": "Seeder",
+    "updated_by": "Seeder"
+  },
+  {
+    "cost_center": "A006100000",
+    "deskripsi": "Kompartemen Operasional SDM",
+    "cost_code": "A610",
+    "group": "PI",
+    "created_by": "Seeder",
+    "updated_by": "Seeder"
+  },
+  {
+    "cost_center": "A006110000",
+    "deskripsi": "Departemen Kompensasi & Benefit",
+    "cost_code": "A611",
+    "group": "PI",
+    "created_by": "Seeder",
+    "updated_by": "Seeder"
+  },
+  {
+    "cost_center": "A006120000",
+    "deskripsi": "Dept Pengelolaan Pascakerja",
+    "cost_code": "A612",
+    "group": "PI",
+    "created_by": "Seeder",
+    "updated_by": "Seeder"
+  },
+  {
+    "cost_center": "A006200000",
+    "deskripsi": "Kompartemen Manajemen & Pengembangan SDM",
+    "cost_code": "A620",
+    "group": "PI",
+    "created_by": "Seeder",
+    "updated_by": "Seeder"
+  },
+  {
+    "cost_center": "A006210000",
+    "deskripsi": "Departemen Pengelolaan Pembelajaran",
+    "cost_code": "A621",
+    "group": "PI",
+    "created_by": "Seeder",
+    "updated_by": "Seeder"
+  },
+  {
+    "cost_center": "A006220000",
+    "deskripsi": "Dept Manajemen Talenta",
+    "cost_code": "A622",
+    "group": "PI",
+    "created_by": "Seeder",
+    "updated_by": "Seeder"
+  },
+  {
+    "cost_center": "A006300000",
+    "deskripsi": "Kompartemen Umum & Aset",
+    "cost_code": "A630",
+    "group": "PI",
+    "created_by": "Seeder",
+    "updated_by": "Seeder"
+  },
+  {
+    "cost_center": "A006310000",
+    "deskripsi": "Departemen Umum",
+    "cost_code": "A631",
+    "group": "PI",
+    "created_by": "Seeder",
+    "updated_by": "Seeder"
+  },
+  {
+    "cost_center": "A006330000",
+    "deskripsi": "Dept Aset & Gedung",
+    "cost_code": "A633",
+    "group": "PI",
+    "created_by": "Seeder",
+    "updated_by": "Seeder"
+  },
+  {
+    "cost_center": "A006400000",
+    "deskripsi": "Kompartemen Manajemen Risiko Korporasi",
+    "cost_code": "A640",
+    "group": "PI",
+    "created_by": "Seeder",
+    "updated_by": "Seeder"
+  },
+  {
+    "cost_center": "A006410000",
+    "deskripsi": "Departemen Manajemen Resiko Holding",
+    "cost_code": "A641",
+    "group": "PI",
+    "created_by": "Seeder",
+    "updated_by": "Seeder"
+  },
+  {
+    "cost_center": "A006420000",
+    "deskripsi": "Departemen Manajemen Resiko Anak Perusah",
+    "cost_code": "A642",
+    "group": "PI",
+    "created_by": "Seeder",
+    "updated_by": "Seeder"
+  },
+  {
+    "cost_center": "A006500000",
+    "deskripsi": "Kompartemen Strategi & Kebijakan SDM",
+    "cost_code": "A650",
+    "group": "PI",
+    "created_by": "Seeder",
+    "updated_by": "Seeder"
+  },
+  {
+    "cost_center": "A006510000",
+    "deskripsi": "Dept Desain Organisasi & Perencanaan SDM",
+    "cost_code": "A651",
+    "group": "PI",
+    "created_by": "Seeder",
+    "updated_by": "Seeder"
+  },
+  {
+    "cost_center": "A006600000",
+    "deskripsi": "Kompartemen Tanggung Jawab Sosial & Ling",
+    "cost_code": "A660",
+    "group": "PI",
+    "created_by": "Seeder",
+    "updated_by": "Seeder"
+  },
+  {
+    "cost_center": "A006610000",
+    "deskripsi": "Departemen Pengelolaan TJSL",
+    "cost_code": "A661",
+    "group": "PI",
+    "created_by": "Seeder",
+    "updated_by": "Seeder"
+  },
+  {
+    "cost_center": "A006620000",
+    "deskripsi": "Departemen Pengelolaan CSV",
+    "cost_code": "A662",
+    "group": "PI",
+    "created_by": "Seeder",
+    "updated_by": "Seeder"
+  },
+  {
+    "cost_center": "A006900000",
+    "deskripsi": "Fungsional Direktorat SDM",
+    "cost_code": "A690",
+    "group": "PI",
+    "created_by": "Seeder",
+    "updated_by": "Seeder"
+  },
+  {
+    "cost_center": "A007000001",
+    "deskripsi": "Proyek Kapuas",
+    "cost_code": "A7000001",
+    "group": "PI",
+    "created_by": "Seeder",
+    "updated_by": "Seeder"
+  },
+  {
+    "cost_center": "A007000002",
+    "deskripsi": "Proyek Ketapang",
+    "cost_code": "A7000002",
+    "group": "PI",
+    "created_by": "Seeder",
+    "updated_by": "Seeder"
+  },
+  {
+    "cost_center": "A007000003",
+    "deskripsi": "Proyek ERP",
+    "cost_code": "A7000003",
+    "group": "PI",
+    "created_by": "Seeder",
+    "updated_by": "Seeder"
+  },
+  {
+    "cost_center": "A007000004",
+    "deskripsi": "Proyek Asean Aceh",
+    "cost_code": "A7000004",
+    "group": "PI",
+    "created_by": "Seeder",
+    "updated_by": "Seeder"
+  },
+  {
+    "cost_center": "A007000005",
+    "deskripsi": "Proyek Riset Merauke",
+    "cost_code": "A7000005",
+    "group": "PI",
+    "created_by": "Seeder",
+    "updated_by": "Seeder"
+  },
+  {
+    "cost_center": "A007000006",
+    "deskripsi": "Proyek Riset Pengolahan Sampah Organik",
+    "cost_code": "A7000006",
+    "group": "PI",
+    "created_by": "Seeder",
+    "updated_by": "Seeder"
+  },
+  {
+    "cost_center": "A007000007",
+    "deskripsi": "Proyek Senoro",
+    "cost_code": "A7000007",
+    "group": "PI",
+    "created_by": "Seeder",
+    "updated_by": "Seeder"
+  },
+  {
+    "cost_center": "A007000008",
+    "deskripsi": "Proyek Kerjasama Gasifikasi Batubara",
+    "cost_code": "A7000008",
+    "group": "PI",
+    "created_by": "Seeder",
+    "updated_by": "Seeder"
+  },
+  {
+    "cost_center": "A007000009",
+    "deskripsi": "Proyek Transformasi Bisnis",
+    "cost_code": "A7000009",
+    "group": "PI",
+    "created_by": "Seeder",
+    "updated_by": "Seeder"
+  },
+  {
+    "cost_center": "A007000015",
+    "deskripsi": "SPM Retail Management",
+    "cost_code": "A7000015",
+    "group": "PI",
+    "created_by": "Seeder",
+    "updated_by": "Seeder"
+  },
+  {
+    "cost_center": "A007000016",
+    "deskripsi": "SPM Agrosolution",
+    "cost_code": "A7000016",
+    "group": "PI",
+    "created_by": "Seeder",
+    "updated_by": "Seeder"
+  },
+  {
+    "cost_center": "A007000017",
+    "deskripsi": "SPM Retail Management System",
+    "cost_code": "A7000017",
+    "group": "PI",
+    "created_by": "Seeder",
+    "updated_by": "Seeder"
+  },
+  {
+    "cost_center": "A007020001",
+    "deskripsi": "Proyek Bintuni",
+    "cost_code": "A7020001",
+    "group": "PI",
+    "created_by": "Seeder",
+    "updated_by": "Seeder"
+  },
+  {
+    "cost_center": "A007020002",
+    "deskripsi": "Proyek Investasi Overseas",
+    "cost_code": "A7020002",
+    "group": "PI",
+    "created_by": "Seeder",
+    "updated_by": "Seeder"
+  },
+  {
+    "cost_center": "A007020003",
+    "deskripsi": "Proyek Gedung PI",
+    "cost_code": "A7020003",
+    "group": "PI",
+    "created_by": "Seeder",
+    "updated_by": "Seeder"
+  },
+  {
+    "cost_center": "A007020004",
+    "deskripsi": "Pembangunan Pusat Riset Pupuk Indonesia",
+    "cost_code": "A7020004",
+    "group": "PI",
+    "created_by": "Seeder",
+    "updated_by": "Seeder"
+  },
+  {
+    "cost_center": "A008000000",
+    "deskripsi": "Direktorat Transformasi Bisnis",
+    "cost_code": "A800",
+    "group": "PI",
+    "created_by": "Seeder",
+    "updated_by": "Seeder"
+  },
+  {
+    "cost_center": "A008100000",
+    "deskripsi": "Komp. Strategi Korporat",
+    "cost_code": "A810",
+    "group": "PI",
+    "created_by": "Seeder",
+    "updated_by": "Seeder"
+  },
+  {
+    "cost_center": "A008110000",
+    "deskripsi": "Departemen Pengelolaan Transformasi Bisn",
+    "cost_code": "A811",
+    "group": "PI",
+    "created_by": "Seeder",
+    "updated_by": "Seeder"
+  },
+  {
+    "cost_center": "A008120000",
+    "deskripsi": "Departemen Perencanaan Strategis",
+    "cost_code": "A812",
+    "group": "PI",
+    "created_by": "Seeder",
+    "updated_by": "Seeder"
+  },
+  {
+    "cost_center": "A008140000",
+    "deskripsi": "Departemen Sistem Manajemen Terpadu & In",
+    "cost_code": "A814",
+    "group": "PI",
+    "created_by": "Seeder",
+    "updated_by": "Seeder"
+  },
+  {
+    "cost_center": "A008200000",
+    "deskripsi": "Kompartemen Teknologi Informasi",
+    "cost_code": "A820",
+    "group": "PI",
+    "created_by": "Seeder",
+    "updated_by": "Seeder"
+  },
+  {
+    "cost_center": "A008210000",
+    "deskripsi": "Departemen Operasional Sistem TI",
+    "cost_code": "A821",
+    "group": "PI",
+    "created_by": "Seeder",
+    "updated_by": "Seeder"
+  },
+  {
+    "cost_center": "A008220000",
+    "deskripsi": "Departemen Strategi & Tata Kelola TI",
+    "cost_code": "A822",
+    "group": "PI",
+    "created_by": "Seeder",
+    "updated_by": "Seeder"
+  },
+  {
+    "cost_center": "A008230000",
+    "deskripsi": "Dep. Infrastruktur & Layanan TI",
+    "cost_code": "A823",
+    "group": "PI",
+    "created_by": "Seeder",
+    "updated_by": "Seeder"
+  },
+  {
+    "cost_center": "A008240000",
+    "deskripsi": "Departemen Teknologi Informasi PKG",
+    "cost_code": "A824",
+    "group": "PI",
+    "created_by": "Seeder",
+    "updated_by": "Seeder"
+  },
+  {
+    "cost_center": "A008250000",
+    "deskripsi": "Departemen Teknologi Informasi PKT",
+    "cost_code": "A825",
+    "group": "PI",
+    "created_by": "Seeder",
+    "updated_by": "Seeder"
+  },
+  {
+    "cost_center": "A008260000",
+    "deskripsi": "Departemen Teknologi Informasi PSP",
+    "cost_code": "A826",
+    "group": "PI",
+    "created_by": "Seeder",
+    "updated_by": "Seeder"
+  },
+  {
+    "cost_center": "A008270000",
+    "deskripsi": "Departemen Teknologi Informasi PKC",
+    "cost_code": "A827",
+    "group": "PI",
+    "created_by": "Seeder",
+    "updated_by": "Seeder"
+  },
+  {
+    "cost_center": "A008280000",
+    "deskripsi": "Departemen Teknologi Informasi PIM",
+    "cost_code": "A828",
+    "group": "PI",
+    "created_by": "Seeder",
+    "updated_by": "Seeder"
+  },
+  {
+    "cost_center": "A008300000",
+    "deskripsi": "Kompartemen Indonesia Fertilizer Researc",
+    "cost_code": "A830",
+    "group": "PI",
+    "created_by": "Seeder",
+    "updated_by": "Seeder"
+  },
+  {
+    "cost_center": "A008310000",
+    "deskripsi": "Departemen Perencaan Riset",
+    "cost_code": "A831",
+    "group": "PI",
+    "created_by": "Seeder",
+    "updated_by": "Seeder"
+  },
+  {
+    "cost_center": "A008900000",
+    "deskripsi": "Fungsional Direktur Transformasi Bisnis",
+    "cost_code": "A890",
+    "group": "PI",
+    "created_by": "Seeder",
+    "updated_by": "Seeder"
+  },
+  {
+    "cost_center": "A00A000000",
+    "deskripsi": "Direktorat Manajemen Risiko",
+    "cost_code": "AA00",
+    "group": "PI",
+    "created_by": "Seeder",
+    "updated_by": "Seeder"
+  },
+  {
+    "cost_center": "A00A100000",
+    "deskripsi": "Kompartemen Tata Kelola & Kepatuhan",
+    "cost_code": "AA10",
+    "group": "PI",
+    "created_by": "Seeder",
+    "updated_by": "Seeder"
+  },
+  {
+    "cost_center": "A00A110000",
+    "deskripsi": "Dept Kepatuhan",
+    "cost_code": "AA11",
+    "group": "PI",
+    "created_by": "Seeder",
+    "updated_by": "Seeder"
+  },
+  {
+    "cost_center": "A00A900000",
+    "deskripsi": "Fungsional Manajemen Risiko",
+    "cost_code": "AA90",
+    "group": "PI",
+    "created_by": "Seeder",
+    "updated_by": "Seeder"
+  }
+]

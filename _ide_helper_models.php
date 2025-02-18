@@ -16,6 +16,44 @@ namespace App\Models{
  * 
  *
  * @property int $id
+ * @property string $activity_type
+ * @property string|null $model_type
+ * @property int|null $model_id
+ * @property array|null $before_data
+ * @property array|null $after_data
+ * @property int|null $user_id
+ * @property string|null $ip_address
+ * @property string|null $user_agent
+ * @property string $logged_at
+ * @property \Illuminate\Support\Carbon|null $created_at
+ * @property \Illuminate\Support\Carbon|null $updated_at
+ * @method static \Illuminate\Database\Eloquent\Builder|AuditTrail newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder|AuditTrail newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder|AuditTrail onlyTrashed()
+ * @method static \Illuminate\Database\Eloquent\Builder|AuditTrail query()
+ * @method static \Illuminate\Database\Eloquent\Builder|AuditTrail whereActivityType($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|AuditTrail whereAfterData($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|AuditTrail whereBeforeData($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|AuditTrail whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|AuditTrail whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|AuditTrail whereIpAddress($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|AuditTrail whereLoggedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|AuditTrail whereModelId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|AuditTrail whereModelType($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|AuditTrail whereUpdatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|AuditTrail whereUserAgent($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|AuditTrail whereUserId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|AuditTrail withTrashed()
+ * @method static \Illuminate\Database\Eloquent\Builder|AuditTrail withoutTrashed()
+ */
+	class AuditTrail extends \Eloquent {}
+}
+
+namespace App\Models{
+/**
+ * 
+ *
+ * @property int $id
  * @property string $company_code
  * @property string $name
  * @property string|null $shortname
@@ -103,6 +141,47 @@ namespace App\Models{
  * 
  *
  * @property int $id
+ * @property string|null $group
+ * @property string $cost_center
+ * @property string $cost_code
+ * @property string|null $deskripsi
+ * @property \Illuminate\Support\Carbon|null $created_at
+ * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property \Illuminate\Support\Carbon|null $deleted_at
+ * @property string|null $created_by
+ * @property string|null $updated_by
+ * @property string|null $deleted_by
+ * @property-read \App\Models\Company|null $company
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\userGeneric> $userGeneric
+ * @property-read int|null $user_generic_count
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\userNIK> $userNIK
+ * @property-read int|null $user_n_i_k_count
+ * @method static \Illuminate\Database\Eloquent\Builder|CostCenter newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder|CostCenter newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder|CostCenter onlyTrashed()
+ * @method static \Illuminate\Database\Eloquent\Builder|CostCenter query()
+ * @method static \Illuminate\Database\Eloquent\Builder|CostCenter whereCostCenter($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|CostCenter whereCostCode($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|CostCenter whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|CostCenter whereCreatedBy($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|CostCenter whereDeletedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|CostCenter whereDeletedBy($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|CostCenter whereDeskripsi($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|CostCenter whereGroup($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|CostCenter whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|CostCenter whereUpdatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|CostCenter whereUpdatedBy($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|CostCenter withTrashed()
+ * @method static \Illuminate\Database\Eloquent\Builder|CostCenter withoutTrashed()
+ */
+	class CostCenter extends \Eloquent {}
+}
+
+namespace App\Models{
+/**
+ * 
+ *
+ * @property int $id
  * @property int|null $company_id
  * @property int|null $kompartemen_id
  * @property string $name
@@ -155,8 +234,7 @@ namespace App\Models{
  * @property string|null $updated_by
  * @property string|null $deleted_by
  * @property-read \App\Models\Company|null $company
- * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\CompositeRole> $compositeRoles
- * @property-read int|null $composite_roles_count
+ * @property-read \App\Models\CompositeRole|null $compositeRole
  * @property-read \App\Models\Departemen|null $departemen
  * @property-read \App\Models\Kompartemen|null $kompartemen
  * @method static \Illuminate\Database\Eloquent\Builder|JobRole newModelQuery()
@@ -336,5 +414,177 @@ namespace App\Models{
  * @method static \Illuminate\Database\Eloquent\Builder|User withoutRole($roles, $guard = null)
  */
 	class User extends \Eloquent {}
+}
+
+namespace App\Models{
+/**
+ * 
+ *
+ * @property int $id
+ * @property string $nama
+ * @property string $nik
+ * @property int|null $company_id
+ * @property string|null $direktorat
+ * @property int|null $kompartemen_id
+ * @property int|null $departemen_id
+ * @property string|null $email
+ * @property string|null $grade
+ * @property string|null $jabatan
+ * @property string|null $atasan
+ * @property string|null $cost_center
+ * @property \Illuminate\Support\Carbon|null $created_at
+ * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property \Illuminate\Support\Carbon|null $deleted_at
+ * @property string|null $created_by
+ * @property string|null $updated_by
+ * @property string|null $deleted_by
+ * @property-read \App\Models\Company|null $company
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\CostCenter> $costCenter
+ * @property-read int|null $cost_center_count
+ * @property-read \App\Models\Departemen|null $departemen
+ * @property-read \App\Models\Kompartemen|null $kompartemen
+ * @property-read \App\Models\User|null $user
+ * @property-read \App\Models\userNIK|null $userNIK
+ * @method static \Illuminate\Database\Eloquent\Builder|UserDetail newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder|UserDetail newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder|UserDetail onlyTrashed()
+ * @method static \Illuminate\Database\Eloquent\Builder|UserDetail query()
+ * @method static \Illuminate\Database\Eloquent\Builder|UserDetail whereAtasan($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|UserDetail whereCompanyId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|UserDetail whereCostCenter($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|UserDetail whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|UserDetail whereCreatedBy($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|UserDetail whereDeletedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|UserDetail whereDeletedBy($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|UserDetail whereDepartemenId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|UserDetail whereDirektorat($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|UserDetail whereEmail($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|UserDetail whereGrade($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|UserDetail whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|UserDetail whereJabatan($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|UserDetail whereKompartemenId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|UserDetail whereNama($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|UserDetail whereNik($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|UserDetail whereUpdatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|UserDetail whereUpdatedBy($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|UserDetail withTrashed()
+ * @method static \Illuminate\Database\Eloquent\Builder|UserDetail withoutTrashed()
+ */
+	class UserDetail extends \Eloquent {}
+}
+
+namespace App\Models{
+/**
+ * 
+ *
+ * @property int $id
+ * @property string $license_type
+ * @property string $contract_license_type
+ * @property \Illuminate\Support\Carbon|null $created_at
+ * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property \Illuminate\Support\Carbon|null $deleted_at
+ * @property int|null $deleted_by
+ * @property-read \App\Models\User|null $User
+ * @method static \Illuminate\Database\Eloquent\Builder|UserLicenseManagement newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder|UserLicenseManagement newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder|UserLicenseManagement onlyTrashed()
+ * @method static \Illuminate\Database\Eloquent\Builder|UserLicenseManagement query()
+ * @method static \Illuminate\Database\Eloquent\Builder|UserLicenseManagement whereContractLicenseType($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|UserLicenseManagement whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|UserLicenseManagement whereDeletedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|UserLicenseManagement whereDeletedBy($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|UserLicenseManagement whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|UserLicenseManagement whereLicenseType($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|UserLicenseManagement whereUpdatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|UserLicenseManagement withTrashed()
+ * @method static \Illuminate\Database\Eloquent\Builder|UserLicenseManagement withoutTrashed()
+ */
+	class UserLicenseManagement extends \Eloquent {}
+}
+
+namespace App\Models{
+/**
+ * 
+ *
+ * @property int $id
+ * @property string $user_code
+ * @property string $user_type
+ * @property string $cost_code
+ * @property string $license_type
+ * @property string|null $group
+ * @property string|null $valid_from
+ * @property string|null $valid_to
+ * @property \Illuminate\Support\Carbon|null $created_at
+ * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property \Illuminate\Support\Carbon|null $deleted_at
+ * @property int|null $created_by
+ * @property int|null $updated_by
+ * @property int|null $deleted_by
+ * @property-read \App\Models\Company|null $Company
+ * @property-read \App\Models\CostCenter|null $costCenter
+ * @method static \Illuminate\Database\Eloquent\Builder|userGeneric newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder|userGeneric newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder|userGeneric onlyTrashed()
+ * @method static \Illuminate\Database\Eloquent\Builder|userGeneric query()
+ * @method static \Illuminate\Database\Eloquent\Builder|userGeneric whereCostCode($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|userGeneric whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|userGeneric whereCreatedBy($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|userGeneric whereDeletedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|userGeneric whereDeletedBy($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|userGeneric whereGroup($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|userGeneric whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|userGeneric whereLicenseType($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|userGeneric whereUpdatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|userGeneric whereUpdatedBy($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|userGeneric whereUserCode($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|userGeneric whereUserType($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|userGeneric whereValidFrom($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|userGeneric whereValidTo($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|userGeneric withTrashed()
+ * @method static \Illuminate\Database\Eloquent\Builder|userGeneric withoutTrashed()
+ */
+	class userGeneric extends \Eloquent {}
+}
+
+namespace App\Models{
+/**
+ * 
+ *
+ * @property int $id
+ * @property string $user_code
+ * @property string $user_type
+ * @property string $license_type
+ * @property string|null $valid_from
+ * @property string|null $valid_to
+ * @property string|null $group
+ * @property \Illuminate\Support\Carbon|null $created_at
+ * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property \Illuminate\Support\Carbon|null $deleted_at
+ * @property string|null $created_by
+ * @property string|null $updated_by
+ * @property string|null $deleted_by
+ * @property-read \App\Models\Company|null $Company
+ * @property-read \App\Models\UserDetail|null $userDetail
+ * @method static \Illuminate\Database\Eloquent\Builder|userNIK newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder|userNIK newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder|userNIK onlyTrashed()
+ * @method static \Illuminate\Database\Eloquent\Builder|userNIK query()
+ * @method static \Illuminate\Database\Eloquent\Builder|userNIK whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|userNIK whereCreatedBy($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|userNIK whereDeletedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|userNIK whereDeletedBy($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|userNIK whereGroup($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|userNIK whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|userNIK whereLicenseType($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|userNIK whereUpdatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|userNIK whereUpdatedBy($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|userNIK whereUserCode($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|userNIK whereUserType($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|userNIK whereValidFrom($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|userNIK whereValidTo($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|userNIK withTrashed()
+ * @method static \Illuminate\Database\Eloquent\Builder|userNIK withoutTrashed()
+ */
+	class userNIK extends \Eloquent {}
 }
 

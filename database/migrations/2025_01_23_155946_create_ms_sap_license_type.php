@@ -11,15 +11,13 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('users', function (Blueprint $table) {
+        Schema::create('ms_sap_license_type', function (Blueprint $table) {
             $table->id();
-            $table->string('name');
-            $table->string('username')->nullable();
-            $table->string('email')->unique();
-            $table->timestamp('email_verified_at')->nullable();
-            $table->string('password');
-            $table->rememberToken();
+            $table->string('license_type');
+            $table->string('contract_license_type');
             $table->timestamps();
+            $table->softDeletes();
+            $table->foreignId('deleted_by')->nullable();
         });
     }
 
@@ -28,6 +26,7 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('users');
+        Schema::dropIfExists('tr_user_license_management');
+        Schema::dropIfExists('ms_sap_license_type');
     }
 };

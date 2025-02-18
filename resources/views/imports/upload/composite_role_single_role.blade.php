@@ -1,7 +1,7 @@
 @extends('layouts.app')
 
 @section('content')
-    <div class="container">
+<div style="padding-top: 30px; padding-inline-start: 30px;">
         <h1>Upload Composite & Single Roles</h1>
 
         @if (session('error'))

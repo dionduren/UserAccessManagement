@@ -10,20 +10,27 @@ use App\Http\Controllers\AdminController;
 use App\Http\Controllers\TcodeController;
 use App\Http\Controllers\CompanyController;
 use App\Http\Controllers\JobRoleController;
+use App\Http\Controllers\EmployeeController;
 use App\Http\Controllers\DepartemenController;
 use App\Http\Controllers\SingleRoleController;
 use App\Http\Controllers\KompartemenController;
 use App\Http\Controllers\TcodeImportController;
 use App\Http\Controllers\AccessMatrixController;
+
 use App\Http\Controllers\CompositeRoleController;
 
-use App\Http\Controllers\Relationship\JobCompositeController;
 
 // use App\Http\Controllers\IOExcel\ExcelImportController;
-use App\Http\Controllers\IOExcel\SingleRoleTcodeController;
-use App\Http\Controllers\IOExcel\TcodeSingleRoleController;
+use App\Http\Controllers\MasterData\CostCenterController;
+use App\Http\Controllers\MasterData\UserNIKController;
+use App\Http\Controllers\MasterData\UserGenericController;
+
 use App\Http\Controllers\IOExcel\CompanyKompartemenController;
 use App\Http\Controllers\IOExcel\CompositeRoleSingleRoleController;
+use App\Http\Controllers\IOExcel\SingleRoleTcodeController;
+use App\Http\Controllers\IOExcel\TcodeSingleRoleController;
+
+use App\Http\Controllers\Relationship\JobCompositeController;
 
 // Route::get('/', function () {
 //     return view('welcome');
@@ -105,11 +112,21 @@ Route::post('/tcode-single-role/preview', [SingleRoleTcodeController::class, 'pr
 Route::get('/tcode-single-role/preview-data', [SingleRoleTcodeController::class, 'getPreviewData'])->name('tcode_single_role.preview_data');
 Route::post('/tcode-single-role/confirm', [SingleRoleTcodeController::class, 'confirmImport'])->name('tcode_single_role.confirm');
 
+// ------------------ NEW MASTER DATA ------------------
+
+Route::resource('cost-center', CostCenterController::class);
+Route::resource('user-nik', UserNIKController::class);
+Route::resource('user-generic', UserGenericController::class);
+
+// ------------------ ACCESS MATRIX ------------------
+
 Route::get('/access-matrix', [AccessMatrixController::class, 'index'])->name('access-matrix');
 Route::post('/access-matrix/assign-role', [AccessMatrixController::class, 'assignRole'])->name('access-matrix.assign-role');
 Route::post('/access-matrix/assign-permission', [AccessMatrixController::class, 'assignPermission'])->name('access-matrix.assign-permission');
 
 Route::middleware(['role:Admin'])->group(function () {
+
+    Route::post('/admin/fetch-employee', [EmployeeController::class, 'fetchEmployeeData'])->name('admin.fetch-employee');
     Route::get('/admin/dashboard', [AdminController::class, 'dashboard'])->name('admin.dashboard');
     Route::get('/admin/manage-users', [AdminController::class, 'manageUsers'])->name('admin.manage-users');
     // In routes/web.php

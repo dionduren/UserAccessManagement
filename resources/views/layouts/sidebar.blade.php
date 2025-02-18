@@ -1,10 +1,10 @@
-<div class="sidebar-heading mt-2" style="padding-left: 10px;">
+<div class="sidebar-heading mt-2">
     <a href="/" class="d-flex align-items-center mb-3 mb-md-0 me-md-auto text-white text-decoration-none">
         <span class="fs-4"><i class="bi bi-h-square"></i> Hak Akses</span>
     </a>
 </div>
 <hr>
-<div class="list-group list-group-flush overflow-auto h-100 no-scrollbar" style="padding-left: 10px;">
+<div class="list-group list-group-flush overflow-auto h-100 no-scrollbar">
     <ul class="nav nav-pills flex-column mb-auto">
         <li class="nav-item">
             <a href="{{ route('home') }}" class="nav-link {{ request()->routeIs('home') ? 'active' : 'text-white' }}">
@@ -15,6 +15,15 @@
 
         <!-- Other Sidebar Links -->
         @can('manage company info')
+            {{-- <div class="mx-1">
+                <li>
+                    <a href="{{ route('cost-center.index') }}"
+                        class="nav-link {{ request()->routeIs('cost-center.index') ? 'active' : 'text-white' }}">
+                        <i class="bi bi-person-lines-fill me-2"></i> Dashboard Cost Center
+                    </a>
+                </li>
+            </div> --}}
+
             <div class="dropdown">
                 <a href="javascript:void(0)"
                     class="nav-link text-white dropdown-toggle {{ request()->is('companies*', 'kompartemens*', 'departemens*') ? 'active' : 'text-white' }}">
@@ -145,7 +154,44 @@
             </div>
         @endcan
 
+        <hr>
+        <div>
+            <h5>User & Cost Center</h5>
+        </div>
+
+        <div class="">
+            <li class="nav-item">
+                <a href="{{ route('user-nik.index') }}"
+                    class="nav-link {{ request()->routeIs('user-nik*') ? 'active' : 'text-white' }}">
+                    <i class="bi bi-person-badge"></i> User NIK
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="{{ route('user-generic.index') }}"
+                    class="nav-link {{ request()->routeIs('composite_single*') ? 'active' : 'text-white' }}">
+                    <i class="bi bi-person-lines-fill"></i> User Generic
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="{{ route('cost-center.index') }}"
+                    class="nav-link {{ request()->routeIs('cost-center*') ? 'active' : 'text-white' }}">
+                    <i class="bi bi-cash-stack"></i> Cost Center
+                </a>
+            </li>
+            {{-- <li class="nav-item">
+                <a href=""
+                    class="nav-link {{ request()->routeIs('tcode_single_role*') ? 'active' : 'text-white' }}">
+                    <i class="bi bi-vector-pen"></i> User License
+                </a>
+            </li> --}}
+        </div>
+        <hr>
+
         @can('manage access-matrix')
+            <div>
+                <h5>Admin Menu</h5>
+            </div>
+
             <li>
                 <a href="{{ route('access-matrix') }}"
                     class="nav-link {{ request()->routeIs('access-matrix') ? 'active' : 'text-white' }}">
@@ -174,15 +220,15 @@
     </ul>
 </div>
 
-<hr>
+{{-- <hr> --}}
 
 <!-- Profile Section -->
-<div class="dropdown" style="margin-left: 10px;margin-right:10px">
+{{-- <div class="dropdown mb-1" style="margin-left: 10px;margin-right:10px">
     @auth
         <a href="#" class="d-flex align-items-center text-white text-decoration-none dropdown-toggle"
             id="dropdownUser" data-bs-toggle="dropdown" aria-expanded="false">
-            <img src="{{ Auth::user()->profile_photo_url ?? 'https://via.placeholder.com/32' }}" alt=""
-                width="32" height="32" class="rounded-circle me-2">
+            <img src="{{ Auth::user()->profile_photo_url ?? 'https://randomuser.me/api/portraits/men/64.jpg' }}"
+                alt="" width="32" height="32" class="rounded-circle me-2">
             <strong>{{ Auth::user()->name }}</strong>
         </a>
         <ul class="dropdown-menu dropdown-menu-dark text-small shadow" aria-labelledby="dropdownUser">
@@ -200,4 +246,4 @@
     @else
         <a href="{{ route('login') }}" class="btn btn-primary w-100">Login</a>
     @endauth
-</div>
+</div> --}}

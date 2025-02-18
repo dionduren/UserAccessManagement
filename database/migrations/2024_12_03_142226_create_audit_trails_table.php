@@ -18,7 +18,7 @@ return new class extends Migration
             $table->unsignedBigInteger('model_id')->nullable(); // ID of the model being logged
             $table->json('before_data')->nullable(); // Data before the change (for update/delete)
             $table->json('after_data')->nullable(); // Data after the change (for create/update)
-            $table->unsignedBigInteger('user_id')->nullable(); // ID of the user who performed the activity
+            $table->string('username')->nullable(); // ID of the user who performed the activity
             $table->string('ip_address')->nullable(); // IP address of the user
             $table->string('user_agent')->nullable(); // User agent of the user
             $table->timestamp('logged_at')->default(DB::raw('CURRENT_TIMESTAMP')); // Time of activity

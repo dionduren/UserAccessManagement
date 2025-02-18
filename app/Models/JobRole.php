@@ -40,12 +40,6 @@ class JobRole extends Model
         return $this->belongsTo(Kompartemen::class);
     }
 
-    // Define the relationship with CompositeRole
-    // public function compositeRoles()
-    // {
-    //     return $this->belongsTo(CompositeRole::class, 'jabatan_id');
-    // }
-
     // One JobRole has one CompositeRole
     public function compositeRole()
     {

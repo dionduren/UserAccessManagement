@@ -1,0 +1,695 @@
+[
+  {
+    "user_code": "A1100000GM",
+    "user_type": "Generic",
+    "cost_code": "A110",
+    "license_type": "CB",
+    "valid_from": "04.06.2024",
+    "valid_to": "31.12.2024",
+    "group": "PI"
+  },
+  {
+    "user_code": "A110000OPR2",
+    "user_type": "Generic",
+    "cost_code": "A110",
+    "license_type": "CB",
+    "valid_from": "06.07.2023",
+    "valid_to": "31.03.2025",
+    "group": "PI"
+  },
+  {
+    "user_code": "A2120000OPR",
+    "user_type": "Generic",
+    "cost_code": "A212",
+    "license_type": "CB",
+    "valid_from": "",
+    "valid_to": "",
+    "group": "PI"
+  },
+  {
+    "user_code": "A2313000SPM1",
+    "user_type": "Generic",
+    "cost_code": "A231",
+    "license_type": "CB",
+    "valid_from": "03.07.2023",
+    "valid_to": "31.12.2024",
+    "group": "PI"
+  },
+  {
+    "user_code": "A2313000SPM2",
+    "user_type": "Generic",
+    "cost_code": "A231",
+    "license_type": "CB",
+    "valid_from": "03.07.2023",
+    "valid_to": "31.12.2024",
+    "group": "PI"
+  },
+  {
+    "user_code": "A2313000SPM3",
+    "user_type": "Generic",
+    "cost_code": "A231",
+    "license_type": "CB",
+    "valid_from": "",
+    "valid_to": "31.12.2024",
+    "group": "PI"
+  },
+  {
+    "user_code": "A2420000OPR1",
+    "user_type": "Generic",
+    "cost_code": "A242",
+    "license_type": "CB",
+    "valid_from": "",
+    "valid_to": "31.12.9999",
+    "group": "PI"
+  },
+  {
+    "user_code": "A2420000OPR2",
+    "user_type": "Generic",
+    "cost_code": "A242",
+    "license_type": "CB",
+    "valid_from": "",
+    "valid_to": "31.12.9999",
+    "group": "PI"
+  },
+  {
+    "user_code": "A2420000OPR3",
+    "user_type": "Generic",
+    "cost_code": "A242",
+    "license_type": "CB",
+    "valid_from": "",
+    "valid_to": "31.12.9999",
+    "group": "PI"
+  },
+  {
+    "user_code": "A2420000OPR4",
+    "user_type": "Generic",
+    "cost_code": "A242",
+    "license_type": "CB",
+    "valid_from": "",
+    "valid_to": "31.12.9999",
+    "group": "PI"
+  },
+  {
+    "user_code": "A2510000OPR1",
+    "user_type": "Generic",
+    "cost_code": "A251",
+    "license_type": "CB",
+    "valid_from": "",
+    "valid_to": "",
+    "group": "PI"
+  },
+  {
+    "user_code": "A2540000MGR",
+    "user_type": "Generic",
+    "cost_code": "A254",
+    "license_type": "CB",
+    "valid_from": "29.04.2021",
+    "valid_to": "",
+    "group": "PI"
+  },
+  {
+    "user_code": "A3210000SPR1",
+    "user_type": "Generic",
+    "cost_code": "A321",
+    "license_type": "CB",
+    "valid_from": "",
+    "valid_to": "",
+    "group": "PI"
+  },
+  {
+    "user_code": "A3210000SPR2",
+    "user_type": "Generic",
+    "cost_code": "A321",
+    "license_type": "CB",
+    "valid_from": "",
+    "valid_to": "",
+    "group": "PI"
+  },
+  {
+    "user_code": "A4110000MGR",
+    "user_type": "Generic",
+    "cost_code": "A411",
+    "license_type": "CB",
+    "valid_from": "",
+    "valid_to": "",
+    "group": "PI"
+  },
+  {
+    "user_code": "A4110000SPR2",
+    "user_type": "Generic",
+    "cost_code": "A411",
+    "license_type": "CB",
+    "valid_from": "",
+    "valid_to": "",
+    "group": "PI"
+  },
+  {
+    "user_code": "A4120000MGR",
+    "user_type": "Generic",
+    "cost_code": "A412",
+    "license_type": "CB",
+    "valid_from": "",
+    "valid_to": "",
+    "group": "PI"
+  },
+  {
+    "user_code": "A4210000OPR",
+    "user_type": "Generic",
+    "cost_code": "A421",
+    "license_type": "CB",
+    "valid_from": "19.03.2024",
+    "valid_to": "",
+    "group": "PI"
+  },
+  {
+    "user_code": "A4210000SPR",
+    "user_type": "Generic",
+    "cost_code": "A421",
+    "license_type": "CB",
+    "valid_from": "",
+    "valid_to": "",
+    "group": "PI"
+  },
+  {
+    "user_code": "A4210000SPR2",
+    "user_type": "Generic",
+    "cost_code": "A421",
+    "license_type": "CB",
+    "valid_from": "",
+    "valid_to": "",
+    "group": "PI"
+  },
+  {
+    "user_code": "A4210000SPR3",
+    "user_type": "Generic",
+    "cost_code": "A421",
+    "license_type": "CB",
+    "valid_from": "",
+    "valid_to": "",
+    "group": "PI"
+  },
+  {
+    "user_code": "A4240000OPR1",
+    "user_type": "Generic",
+    "cost_code": "A424",
+    "license_type": "CB",
+    "valid_from": "",
+    "valid_to": "",
+    "group": "PI"
+  },
+  {
+    "user_code": "A4430000SPR1",
+    "user_type": "Generic",
+    "cost_code": "A443",
+    "license_type": "CB",
+    "valid_from": "22.08.2023",
+    "valid_to": "",
+    "group": "PI"
+  },
+  {
+    "user_code": "A4700000OPR",
+    "user_type": "Generic",
+    "cost_code": "A470",
+    "license_type": "CB",
+    "valid_from": "",
+    "valid_to": "",
+    "group": "PI"
+  },
+  {
+    "user_code": "A4740000OPR1",
+    "user_type": "Generic",
+    "cost_code": "A474",
+    "license_type": "CB",
+    "valid_from": "11.09.2024",
+    "valid_to": "",
+    "group": "PI"
+  },
+  {
+    "user_code": "A5110000OPR1",
+    "user_type": "Generic",
+    "cost_code": "A511",
+    "license_type": "CB",
+    "valid_from": "",
+    "valid_to": "",
+    "group": "PI"
+  },
+  {
+    "user_code": "A5110000OPR2",
+    "user_type": "Generic",
+    "cost_code": "A511",
+    "license_type": "CB",
+    "valid_from": "",
+    "valid_to": "",
+    "group": "PI"
+  },
+  {
+    "user_code": "A5110000OPR3",
+    "user_type": "Generic",
+    "cost_code": "A511",
+    "license_type": "CB",
+    "valid_from": "",
+    "valid_to": "",
+    "group": "PI"
+  },
+  {
+    "user_code": "A5110000SPR",
+    "user_type": "Generic",
+    "cost_code": "A511",
+    "license_type": "CB",
+    "valid_from": "",
+    "valid_to": "",
+    "group": "PI"
+  },
+  {
+    "user_code": "A5120000OPR1",
+    "user_type": "Generic",
+    "cost_code": "A512",
+    "license_type": "CB",
+    "valid_from": "11.10.2021",
+    "valid_to": "",
+    "group": "PI"
+  },
+  {
+    "user_code": "A5120000OPR2",
+    "user_type": "Generic",
+    "cost_code": "A512",
+    "license_type": "CB",
+    "valid_from": "",
+    "valid_to": "",
+    "group": "PI"
+  },
+  {
+    "user_code": "A5120000OPR3",
+    "user_type": "Generic",
+    "cost_code": "A512",
+    "license_type": "CB",
+    "valid_from": "",
+    "valid_to": "",
+    "group": "PI"
+  },
+  {
+    "user_code": "A5130000OPR",
+    "user_type": "Generic",
+    "cost_code": "A513",
+    "license_type": "CB",
+    "valid_from": "29.10.2018",
+    "valid_to": "",
+    "group": "PI"
+  },
+  {
+    "user_code": "A5140000OPR1",
+    "user_type": "Generic",
+    "cost_code": "A514",
+    "license_type": "CB",
+    "valid_from": "31.05.2024",
+    "valid_to": "",
+    "group": "PI"
+  },
+  {
+    "user_code": "A5200000GM",
+    "user_type": "Generic",
+    "cost_code": "A520",
+    "license_type": "CB",
+    "valid_from": "",
+    "valid_to": "",
+    "group": "PI"
+  },
+  {
+    "user_code": "A5210000MGR",
+    "user_type": "Generic",
+    "cost_code": "A521",
+    "license_type": "CB",
+    "valid_from": "",
+    "valid_to": "",
+    "group": "PI"
+  },
+  {
+    "user_code": "A5210000OPR2",
+    "user_type": "Generic",
+    "cost_code": "A521",
+    "license_type": "CB",
+    "valid_from": "",
+    "valid_to": "",
+    "group": "PI"
+  },
+  {
+    "user_code": "A5210000OPR3",
+    "user_type": "Generic",
+    "cost_code": "A521",
+    "license_type": "CB",
+    "valid_from": "",
+    "valid_to": "",
+    "group": "PI"
+  },
+  {
+    "user_code": "A5210000SPR",
+    "user_type": "Generic",
+    "cost_code": "A521",
+    "license_type": "CB",
+    "valid_from": "",
+    "valid_to": "",
+    "group": "PI"
+  },
+  {
+    "user_code": "A5220000OPR1",
+    "user_type": "Generic",
+    "cost_code": "A522",
+    "license_type": "CB",
+    "valid_from": "",
+    "valid_to": "",
+    "group": "PI"
+  },
+  {
+    "user_code": "A5220000OPR2",
+    "user_type": "Generic",
+    "cost_code": "A522",
+    "license_type": "CB",
+    "valid_from": "",
+    "valid_to": "",
+    "group": "PI"
+  },
+  {
+    "user_code": "A5220000OPR3",
+    "user_type": "Generic",
+    "cost_code": "A522",
+    "license_type": "CB",
+    "valid_from": "",
+    "valid_to": "",
+    "group": "PI"
+  },
+  {
+    "user_code": "A5220000OPR4",
+    "user_type": "Generic",
+    "cost_code": "A522",
+    "license_type": "CB",
+    "valid_from": "",
+    "valid_to": "",
+    "group": "PI"
+  },
+  {
+    "user_code": "A5220000OPR5",
+    "user_type": "Generic",
+    "cost_code": "A522",
+    "license_type": "CB",
+    "valid_from": "",
+    "valid_to": "",
+    "group": "PI"
+  },
+  {
+    "user_code": "A5220000SPR",
+    "user_type": "Generic",
+    "cost_code": "A522",
+    "license_type": "CB",
+    "valid_from": "",
+    "valid_to": "",
+    "group": "PI"
+  },
+  {
+    "user_code": "A5310000MGR",
+    "user_type": "Generic",
+    "cost_code": "A531",
+    "license_type": "CB",
+    "valid_from": "30.04.2024",
+    "valid_to": "",
+    "group": "PI"
+  },
+  {
+    "user_code": "A5320000MGR",
+    "user_type": "Generic",
+    "cost_code": "A532",
+    "license_type": "CB",
+    "valid_from": "",
+    "valid_to": "",
+    "group": "PI"
+  },
+  {
+    "user_code": "A5330000OPR1",
+    "user_type": "Generic",
+    "cost_code": "A533",
+    "license_type": "CB",
+    "valid_from": "24.04.2024",
+    "valid_to": "",
+    "group": "PI"
+  },
+  {
+    "user_code": "A6100000OPR1",
+    "user_type": "Generic",
+    "cost_code": "A610",
+    "license_type": "CB",
+    "valid_from": "03.05.2023",
+    "valid_to": "",
+    "group": "PI"
+  },
+  {
+    "user_code": "A6100000OPR2",
+    "user_type": "Generic",
+    "cost_code": "A610",
+    "license_type": "CB",
+    "valid_from": "03.05.2023",
+    "valid_to": "",
+    "group": "PI"
+  },
+  {
+    "user_code": "A6100000OPR3",
+    "user_type": "Generic",
+    "cost_code": "A610",
+    "license_type": "CB",
+    "valid_from": "",
+    "valid_to": "",
+    "group": "PI"
+  },
+  {
+    "user_code": "A6110000MGR",
+    "user_type": "Generic",
+    "cost_code": "A611",
+    "license_type": "CB",
+    "valid_from": "",
+    "valid_to": "",
+    "group": "PI"
+  },
+  {
+    "user_code": "A6110000OPR1",
+    "user_type": "Generic",
+    "cost_code": "A611",
+    "license_type": "CB",
+    "valid_from": "",
+    "valid_to": "",
+    "group": "PI"
+  },
+  {
+    "user_code": "A6110000OPR2",
+    "user_type": "Generic",
+    "cost_code": "A611",
+    "license_type": "CB",
+    "valid_from": "",
+    "valid_to": "",
+    "group": "PI"
+  },
+  {
+    "user_code": "A6110000OPR3",
+    "user_type": "Generic",
+    "cost_code": "A611",
+    "license_type": "CB",
+    "valid_from": "",
+    "valid_to": "",
+    "group": "PI"
+  },
+  {
+    "user_code": "A6110000OPR4",
+    "user_type": "Generic",
+    "cost_code": "A611",
+    "license_type": "CB",
+    "valid_from": "",
+    "valid_to": "",
+    "group": "PI"
+  },
+  {
+    "user_code": "A6110000OPR5",
+    "user_type": "Generic",
+    "cost_code": "A611",
+    "license_type": "CB",
+    "valid_from": "",
+    "valid_to": "",
+    "group": "PI"
+  },
+  {
+    "user_code": "A6110000OPR6",
+    "user_type": "Generic",
+    "cost_code": "A611",
+    "license_type": "CB",
+    "valid_from": "09.09.2022",
+    "valid_to": "",
+    "group": "PI"
+  },
+  {
+    "user_code": "A6210000OPR1",
+    "user_type": "Generic",
+    "cost_code": "A621",
+    "license_type": "CB",
+    "valid_from": "23.02.2023",
+    "valid_to": "",
+    "group": "PI"
+  },
+  {
+    "user_code": "A6500000OPR1",
+    "user_type": "Generic",
+    "cost_code": "A650",
+    "license_type": "CB",
+    "valid_from": "01.11.2024",
+    "valid_to": "",
+    "group": "PI"
+  },
+  {
+    "user_code": "A6500000OPR2",
+    "user_type": "Generic",
+    "cost_code": "A650",
+    "license_type": "CB",
+    "valid_from": "01.11.2024",
+    "valid_to": "",
+    "group": "PI"
+  },
+  {
+    "user_code": "A6500000OPR3",
+    "user_type": "Generic",
+    "cost_code": "A650",
+    "license_type": "CB",
+    "valid_from": "15.11.2024",
+    "valid_to": "",
+    "group": "PI"
+  },
+  {
+    "user_code": "A6500000OPR4",
+    "user_type": "Generic",
+    "cost_code": "A650",
+    "license_type": "CB",
+    "valid_from": "15.11.2024",
+    "valid_to": "",
+    "group": "PI"
+  },
+  {
+    "user_code": "A7000015OPR",
+    "user_type": "Generic",
+    "cost_code": "A700",
+    "license_type": "CB",
+    "valid_from": "22.10.2021",
+    "valid_to": "",
+    "group": "PI"
+  },
+  {
+    "user_code": "A7000016OPR",
+    "user_type": "Generic",
+    "cost_code": "A700",
+    "license_type": "CB",
+    "valid_from": "12.10.2021",
+    "valid_to": "",
+    "group": "PI"
+  },
+  {
+    "user_code": "A8200000SPR1",
+    "user_type": "Generic",
+    "cost_code": "A820",
+    "license_type": "CB",
+    "valid_from": "20.07.2023",
+    "valid_to": "",
+    "group": "PI"
+  },
+  {
+    "user_code": "A8210000OPR1",
+    "user_type": "Generic",
+    "cost_code": "A821",
+    "license_type": "CB",
+    "valid_from": "04.07.2023",
+    "valid_to": "",
+    "group": "PI"
+  },
+  {
+    "user_code": "A8210000OPR2",
+    "user_type": "Generic",
+    "cost_code": "A821",
+    "license_type": "CB",
+    "valid_from": "04.07.2023",
+    "valid_to": "31.12.2024",
+    "group": "PI"
+  },
+  {
+    "user_code": "A8210000OPR3",
+    "user_type": "Generic",
+    "cost_code": "A821",
+    "license_type": "CB",
+    "valid_from": "03.02.2023",
+    "valid_to": "",
+    "group": "PI"
+  },
+  {
+    "user_code": "A8210000OPR4",
+    "user_type": "Generic",
+    "cost_code": "A821",
+    "license_type": "CB",
+    "valid_from": "03.02.2023",
+    "valid_to": "31.12.2024",
+    "group": "PI"
+  },
+  {
+    "user_code": "A8210000OPR5",
+    "user_type": "Generic",
+    "cost_code": "A821",
+    "license_type": "CB",
+    "valid_from": "20.07.2023",
+    "valid_to": "",
+    "group": "PI"
+  },
+  {
+    "user_code": "A8210000OPR6",
+    "user_type": "Generic",
+    "cost_code": "A821",
+    "license_type": "CB",
+    "valid_from": "",
+    "valid_to": "",
+    "group": "PI"
+  },
+  {
+    "user_code": "A8210000OPR7",
+    "user_type": "Generic",
+    "cost_code": "A821",
+    "license_type": "CA",
+    "valid_from": "",
+    "valid_to": "31.12.2024",
+    "group": "PI"
+  },
+  {
+    "user_code": "A8210000OPR8",
+    "user_type": "Generic",
+    "cost_code": "A821",
+    "license_type": "CA",
+    "valid_from": "",
+    "valid_to": "",
+    "group": "PI"
+  },
+  {
+    "user_code": "A8220000SPR1",
+    "user_type": "Generic",
+    "cost_code": "A822",
+    "license_type": "CB",
+    "valid_from": "20.07.2023",
+    "valid_to": "",
+    "group": "PI"
+  },
+  {
+    "user_code": "ABAP_SUPPORT",
+    "user_type": "Generic",
+    "cost_code": "ABAP_SUPPORT",
+    "license_type": "CB",
+    "valid_from": "03.01.2024",
+    "valid_to": "31.12.2024",
+    "group": "PI"
+  },
+  {
+    "user_code": "PIHC_ALL",
+    "user_type": "Generic",
+    "cost_code": "PIHC_ALL",
+    "license_type": "CB",
+    "valid_from": "",
+    "valid_to": "",
+    "group": "PI"
+  }
+]
