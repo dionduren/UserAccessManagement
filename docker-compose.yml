@@ -14,7 +14,7 @@ services:
         condition: service_healthy  # Use healthcheck for better startup control
     volumes:
       - ./php-config/php.ini:/usr/local/etc/php/conf.d/custom.ini  # Custom PHP config
-      - uam_dev:/var/www/html  # Named volume for application files
+      - .:/var/www/html  # 🔥 Fix: Bind the current directory to the container
     working_dir: /var/www/html
     environment:
       - APP_ENV=local
@@ -44,5 +44,4 @@ services:
 
 volumes:
   postgres_db_uam:  # Define a named volume for PostgreSQL persistence
-  uam_dev:  # Define a named volume for Laravel project files
 
