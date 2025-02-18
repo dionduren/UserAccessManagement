@@ -19,8 +19,15 @@ services:
     environment:
       - APP_ENV=local
       - APP_DEBUG=true
+    # command: >
+    #   sh -c "composer install --ignore-platform-req=ext-gd --ignore-platform-req=ext-zip && php artisan key:generate &&  php artisan storage:link &&  php artisan migrate --seed &&  php artisan serve --host=0.0.0.0 --port=8000  "
     command: >
-      sh -c "composer install --ignore-platform-req=ext-gd --ignore-platform-req=ext-zip && php artisan key:generate &&  php artisan storage:link &&  php artisan migrate --seed &&  php artisan serve --host=0.0.0.0 --port=8000  "
+      sh -c "cp -n .env.example .env &&
+             composer install --ignore-platform-req=ext-gd --ignore-platform-req=ext-zip &&
+             php artisan key:generate &&
+             php artisan storage:link &&
+             php artisan migrate --seed &&
+             php artisan serve --host=0.0.0.0 --port=8000"
     ports:
       - "8001:8000"
 

@@ -10,13 +10,18 @@ RUN apt-get update && apt-get install -y \
     libpng-dev \
     libzip-dev \
     libxml2-dev \
+    libcurl4-openssl-dev \
+    libssl-dev \
     && docker-php-ext-install \ 
     gd \
     zip \
     pdo_pgsql \
     pgsql \
     bcmath \
-    xml
+    xml \
+    curl \
+    fileinfo \
+    openssl
 # xml \
 # mbstring
 
