@@ -9,19 +9,14 @@ RUN apt-get update && apt-get install -y \
     libpq-dev \
     libpng-dev \
     libzip-dev \
-    libxml2-dev \
-    libcurl4-openssl-dev \
-    libssl-dev \
+    libxml2-dev 
     && docker-php-ext-install \ 
     gd \
     zip \
     pdo_pgsql \
     pgsql \
     bcmath \
-    xml \
-    curl \
-    fileinfo \
-    openssl
+    xml 
 # xml \
 # mbstring
 
