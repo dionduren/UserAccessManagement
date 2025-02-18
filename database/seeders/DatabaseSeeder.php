@@ -19,9 +19,9 @@ class DatabaseSeeder extends Seeder
             RoleSeeder::class,
             UserSeeder::class,
             MasterDataSeeder::class,
-            CostCenterSeeder::class,
-            UserNIKSeeder::class,
-            UserGenericSeeder::class,
+            // CostCenterSeeder::class,
+            // UserNIKSeeder::class,
+            // UserGenericSeeder::class,
         ]);
     }
 }
