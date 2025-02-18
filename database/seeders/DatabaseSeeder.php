@@ -20,6 +20,8 @@ class DatabaseSeeder extends Seeder
             UserSeeder::class,
             MasterDataSeeder::class,
             CostCenterSeeder::class,
+            UserNIKSeeder::class,
+            UserGenericSeeder::class,
         ]);
     }
 }
