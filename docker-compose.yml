@@ -1,14 +1,20 @@
 services:
   app:
     build: .
-    container_name: php_app
+    container_name: uam_dev
+    # depends_on:
+    #   db:
+    #     condition: service_started # Note: Consider adding healthchecks for better control
+    # volumes:
+    #   - type: bind
+    #     source: /var/www/UserAccessManagement
+    #     target: /var/www/html
     depends_on:
       db:
-        condition: service_started # Note: Consider adding healthchecks for better control
+        condition: service_healthy  # Use healthcheck for better startup control
     volumes:
-      - type: bind
-        source: /var/www/UserAccessManagement
-        target: /var/www/html
+      - ./php-config/php.ini:/usr/local/etc/php/conf.d/custom.ini  # Custom PHP config
+      - uam_dev:/var/www/html  # Named volume for application files
     working_dir: /var/www/html
     environment:
       - APP_ENV=local
@@ -20,10 +26,23 @@ services:
 
   db:
     image: postgres:latest
-    container_name: postgres_db
+    container_name: postgres_db_uam
+    restart: always
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
       POSTGRES_DB: user_access
     ports:
       - "5432:5432"
+    volumes:
+      - postgres_db_uam:/var/lib/postgresql/data  # Named volume for DB storage
+    healthcheck:  # Ensures database is ready before Laravel runs migrations
+      test: ["CMD", "pg_isready", "-U", "postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  postgres_db_uam:  # Define a named volume for PostgreSQL persistence
+  uam_dev:  # Define a named volume for Laravel project files
+

@@ -33,5 +33,7 @@ RUN mkdir -p storage bootstrap/cache \
     && chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache
 
 # Copy custom PHP configuration
-COPY php-config/php.ini /usr/local/etc/php/conf.d/custom.ini
+# COPY php-config/php.ini /usr/local/etc/php/conf.d/custom.ini
 
+# Define work directory
+WORKDIR /var/www/html
