@@ -4,6 +4,8 @@ namespace App\Models;
 
 use App\Models\Company;
 use App\Models\CostCenter;
+use App\Models\CostPrevUser;
+use App\Models\CostCurrentUser;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -38,5 +40,15 @@ class userGeneric extends Model
     public function Company()
     {
         return $this->hasOne(Company::class, 'shortname', 'group');
+    }
+
+    public function currentUser()
+    {
+        return $this->hasOne(CostCurrentUser::class, 'cost_code', 'user_code');
+    }
+
+    public function prevUser()
+    {
+        return $this->hasMany(CostPrevUser::class, 'cost_code', 'user_code');
     }
 }

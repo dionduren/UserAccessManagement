@@ -116,6 +116,8 @@ Route::post('/tcode-single-role/confirm', [SingleRoleTcodeController::class, 'co
 
 Route::resource('cost-center', CostCenterController::class);
 Route::resource('user-nik', UserNIKController::class);
+
+Route::get('/user-generic/dashboard', [UserGenericController::class, 'index_dashboard'])->name('user-generic.dashboard');
 Route::resource('user-generic', UserGenericController::class);
 
 // ------------------ ACCESS MATRIX ------------------

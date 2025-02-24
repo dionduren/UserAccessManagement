@@ -182,6 +182,80 @@ namespace App\Models{
  * 
  *
  * @property int $id
+ * @property string $user_code
+ * @property string $user_name
+ * @property string $cost_code
+ * @property string|null $dokumen_keterangan
+ * @property \Illuminate\Support\Carbon|null $created_at
+ * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property \Illuminate\Support\Carbon|null $deleted_at
+ * @property string|null $created_by
+ * @property string|null $updated_by
+ * @property string|null $deleted_by
+ * @property-read \App\Models\userGeneric|null $genericUser
+ * @method static \Illuminate\Database\Eloquent\Builder|CostCurrentUser newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder|CostCurrentUser newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder|CostCurrentUser onlyTrashed()
+ * @method static \Illuminate\Database\Eloquent\Builder|CostCurrentUser query()
+ * @method static \Illuminate\Database\Eloquent\Builder|CostCurrentUser whereCostCode($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|CostCurrentUser whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|CostCurrentUser whereCreatedBy($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|CostCurrentUser whereDeletedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|CostCurrentUser whereDeletedBy($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|CostCurrentUser whereDokumenKeterangan($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|CostCurrentUser whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|CostCurrentUser whereUpdatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|CostCurrentUser whereUpdatedBy($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|CostCurrentUser whereUserCode($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|CostCurrentUser whereUserName($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|CostCurrentUser withTrashed()
+ * @method static \Illuminate\Database\Eloquent\Builder|CostCurrentUser withoutTrashed()
+ */
+	class CostCurrentUser extends \Eloquent {}
+}
+
+namespace App\Models{
+/**
+ * 
+ *
+ * @property int $id
+ * @property string $user_code
+ * @property string $user_name
+ * @property string $cost_code
+ * @property string|null $dokumen_keterangan
+ * @property \Illuminate\Support\Carbon|null $created_at
+ * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property \Illuminate\Support\Carbon|null $deleted_at
+ * @property string|null $created_by
+ * @property string|null $updated_by
+ * @property string|null $deleted_by
+ * @property-read \App\Models\userGeneric|null $genericUser
+ * @method static \Illuminate\Database\Eloquent\Builder|CostPrevUser newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder|CostPrevUser newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder|CostPrevUser onlyTrashed()
+ * @method static \Illuminate\Database\Eloquent\Builder|CostPrevUser query()
+ * @method static \Illuminate\Database\Eloquent\Builder|CostPrevUser whereCostCode($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|CostPrevUser whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|CostPrevUser whereCreatedBy($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|CostPrevUser whereDeletedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|CostPrevUser whereDeletedBy($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|CostPrevUser whereDokumenKeterangan($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|CostPrevUser whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|CostPrevUser whereUpdatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|CostPrevUser whereUpdatedBy($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|CostPrevUser whereUserCode($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|CostPrevUser whereUserName($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|CostPrevUser withTrashed()
+ * @method static \Illuminate\Database\Eloquent\Builder|CostPrevUser withoutTrashed()
+ */
+	class CostPrevUser extends \Eloquent {}
+}
+
+namespace App\Models{
+/**
+ * 
+ *
+ * @property int $id
  * @property int|null $company_id
  * @property int|null $kompartemen_id
  * @property string $name
@@ -522,6 +596,9 @@ namespace App\Models{
  * @property int|null $deleted_by
  * @property-read \App\Models\Company|null $Company
  * @property-read \App\Models\CostCenter|null $costCenter
+ * @property-read \App\Models\CostCurrentUser|null $currentUser
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\CostPrevUser> $prevUser
+ * @property-read int|null $prev_user_count
  * @method static \Illuminate\Database\Eloquent\Builder|userGeneric newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|userGeneric newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|userGeneric onlyTrashed()

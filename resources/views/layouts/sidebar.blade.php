@@ -178,6 +178,12 @@
                     <i class="bi bi-cash-stack"></i> Cost Center
                 </a>
             </li>
+            <li class="nav-item">
+                <a href="{{ route('user-generic.dashboard') }}"
+                    class="nav-link {{ request()->routeIs('user-generic.dashboard') ? 'active' : 'text-white' }}">
+                    <i class="bi bi-person-lines-fill"></i> Dashboard Cost & User
+                </a>
+            </li>
             {{-- <li class="nav-item">
                 <a href=""
                     class="nav-link {{ request()->routeIs('tcode_single_role*') ? 'active' : 'text-white' }}">

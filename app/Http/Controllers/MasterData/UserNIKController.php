@@ -38,6 +38,9 @@ class UserNIKController extends Controller
                 ->addColumn('cost_center', function ($row) {
                     return $row->userDetail->cost_center ?? 'N/A'; // Get Direktorat
                 })
+                // ->addColumn('grade', function ($row) {
+                //     return $row->userDetail->grade ?? 'N/A'; // Get Direktorat
+                // })
                 ->addColumn('action', function ($row) {
                     // return '<a href="' . route('user-nik.edit', $row->id) . '" target="_blank" class="btn btn-sm btn-warning" disabled>Edit</a> 
                     return '<a target="_blank" class="btn btn-sm btn-outline-warning" disabled>Edit</a> 

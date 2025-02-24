@@ -2,12 +2,9 @@
 
 @section('content')
     <div class="container-fluid">
-        <h1>Dashboard User NIK</h1>
+        <h1>Dashboard User Generic</h1>
 
-        {{-- <a href="{{ route('user-nik.create') }}" target="_blank" class="btn btn-outline-secondary mb-3"> --}}
-        <a class="btn btn-outline-secondary mb-3" disabled>
-            <i class="bi bi-plus"></i> Buat User NIK Baru
-        </a>
+        {{-- <a href="{{ route('user-generic.create') }}" target="_blank" class="btn btn-outline-secondary mb-3"> --}}
 
         @if (session('status'))
             <div class="alert alert-success">{{ session('status') }}</div>
@@ -21,21 +18,25 @@
             </div>
         @endif
 
-        <table id="user_nik_table" class="table table-bordered table-striped table-hover cell-border mt-3">
+        <table id="user_generic_table" class="table table-bordered table-striped table-hover cell-border mt-3">
             <thead>
                 <tr>
                     <th>id</th>
                     <th>Perusahaan</th>
-                    <th>NIK</th>
-                    <th style="background-color:greenyellow">Nama</th>
+                    <th>User Code</th>
+                    <th>Cost Code</th>
+                    {{-- <th style="background-color:greenyellow">Nama</th>
                     <th style="background-color: greenyellow">Direktorat</th>
                     <th style="background-color: lightblue">Kompartemen</th>
-                    <th style="background-color: greenyellow">Cost Center</th>
-                    {{-- <th style="background-color: greenyellow">Grade</th> --}}
+                    <th style="background-color: greenyellow">Cost Center</th> --}}
+                    <th style="background-color: greenyellow">Code Center</th>
+                    <th style="background-color: greenyellow">Definisi</th>
+                    <th style="background-color: lightblue">User Terdaftar</th>
+                    <th style="background-color: lightblue">SK penunjukan</th>
+                    <th style="background-color:fuchsia">User Sebelumnya</th>
                     <th>Tipe Lisensi</th>
                     <th>Valid From</th>
                     <th>Valid To</th>
-                    <th>Action</th>
                 </tr>
             </thead>
         </table>
@@ -64,10 +65,10 @@
         $(document).ready(function() {
             let masterData = {}; // Store parsed JSON for efficient lookups
 
-            let userNikTable = $('#user_nik_table').DataTable({
+            let userGenericTable = $('#user_generic_table').DataTable({
                 processing: true,
                 serverSide: true,
-                ajax: "{{ route('user-nik.index') }}",
+                ajax: "{{ route('user-generic.dashboard') }}",
                 columns: [{
                         data: 'id',
                         name: 'id'
@@ -81,25 +82,29 @@
                         name: 'user_code'
                     },
                     {
-                        data: 'nama',
-                        name: 'nama'
-                    },
-                    {
-                        data: 'direktorat',
-                        name: 'direktorat'
-                    },
-                    {
-                        data: 'kompartemen_name',
-                        name: 'kompartemen_name'
+                        data: 'cost_code',
+                        name: 'cost_code'
                     },
                     {
                         data: 'cost_center',
                         name: 'cost_center'
                     },
-                    // {
-                    //     data: 'grade',
-                    //     name: 'grade'
-                    // },
+                    {
+                        data: 'deskripsi',
+                        name: 'deskripsi'
+                    },
+                    {
+                        data: 'current_user',
+                        name: 'current_user'
+                    },
+                    {
+                        data: 'dokumen_keterangan',
+                        name: 'dokumen_keterangan'
+                    },
+                    {
+                        data: 'prev_user',
+                        name: 'prev_user'
+                    },
                     {
                         data: 'license_type',
                         name: 'license_type'
@@ -111,12 +116,6 @@
                     {
                         data: 'valid_to',
                         name: 'valid_to'
-                    },
-                    {
-                        data: 'action',
-                        name: 'action',
-                        orderable: false,
-                        searchable: false
                     }
                 ],
                 responsive: true,
@@ -137,7 +136,7 @@
         });
 
         // ✅ SweetAlert2 Delete Confirmation
-        function deleteUserNIK(id) {
+        function deleteUserGeneric(id) {
             Swal.fire({
                 title: "Apakah anda yakin?",
                 text: "Anda tidak bisa mengembalikan data yang dihapus!",
@@ -150,7 +149,7 @@
             }).then((result) => {
                 if (result.isConfirmed) {
                     $.ajax({
-                        url: '/user-nik/' + id,
+                        url: '/costcenter-user/' + id,
                         type: 'DELETE',
                         data: {
                             _token: '{{ csrf_token() }}'
