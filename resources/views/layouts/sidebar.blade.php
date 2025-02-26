@@ -166,24 +166,36 @@
                     <i class="bi bi-person-badge"></i> User NIK
                 </a>
             </li>
-            <li class="nav-item">
-                <a href="{{ route('user-generic.index') }}"
-                    class="nav-link {{ request()->routeIs('composite_single*') ? 'active' : 'text-white' }}">
-                    <i class="bi bi-person-lines-fill"></i> User Generic
-                </a>
-            </li>
-            <li class="nav-item">
-                <a href="{{ route('cost-center.index') }}"
-                    class="nav-link {{ request()->routeIs('cost-center*') ? 'active' : 'text-white' }}">
-                    <i class="bi bi-cash-stack"></i> Cost Center
-                </a>
-            </li>
-            <li class="nav-item">
-                <a href="{{ route('user-generic.dashboard') }}"
-                    class="nav-link {{ request()->routeIs('user-generic.dashboard') ? 'active' : 'text-white' }}">
-                    <i class="bi bi-person-lines-fill"></i> Dashboard Cost & User
-                </a>
-            </li>
+            <a class="nav-link dropdown-toggle {{ request()->is('cost-center*') ? 'active' : 'text-white' }}"
+                data-bs-toggle="dropdown" href="#" role="button" aria-expanded="false">
+                <i class="bi bi-folder-fill me-2"></i> <span class="me-auto">MASTER DATA COST CENTER</span>
+            </a>
+            <div class="dropdown-content {{ request()->is('cost-center*') ? 'show' : '' }}">
+                <li class="nav-item">
+                    <a href="{{ route('dashboard.user-generic') }}"
+                        class="nav-link {{ request()->is('cost-center/user-generic/dashboard') ? 'active' : 'text-white' }}">
+                        <i class="bi bi-file-bar-graph"></i> Dashboard Cost & User
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="{{ route('cost-center.index') }}"
+                        class="nav-link {{ request()->routeIs('cost-center*') ? 'active' : 'text-white' }}">
+                        <i class="bi bi-cash-stack"></i> Cost Center
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="{{ route('user-generic.index') }}"
+                        class="nav-link {{ request()->routeIs('user-generic*') ? 'active' : 'text-white' }}">
+                        <i class="bi bi-person-lines-fill"></i> User Generic
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="{{ route('prev-user.index') }}"
+                        class="nav-link {{ request()->routeIs('prev-user.index') ? 'active' : 'text-white' }}">
+                        <i class="bi bi-person-lines-fill"></i> Previous User
+                    </a>
+                </li>
+            </div>
             {{-- <li class="nav-item">
                 <a href=""
                     class="nav-link {{ request()->routeIs('tcode_single_role*') ? 'active' : 'text-white' }}">

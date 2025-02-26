@@ -16,8 +16,8 @@ return new class extends Migration
             $table->string('user_code');
             $table->string('user_type');
             $table->string('license_type');
-            $table->string('valid_from')->nullable();
-            $table->string('valid_to')->nullable();
+            $table->date('valid_from')->nullable();
+            $table->date('valid_to')->nullable();
             $table->string('group')->nullable(); // nempel ke shortname ms_company
             $table->timestamps();
             $table->softDeletes();

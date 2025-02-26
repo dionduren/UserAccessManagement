@@ -32,8 +32,8 @@
                     <th style="background-color: greenyellow">Direktorat</th>
                     <th style="background-color: lightblue">Kompartemen</th>
                     <th style="background-color: greenyellow">Cost Center</th> --}}
-                    <th style="background-color: greenyellow">Code Center</th>
-                    <th style="background-color: greenyellow">Definisi</th>
+                    {{-- <th style="background-color: greenyellow">Code Center</th>
+                    <th style="background-color: greenyellow">Definisi</th> --}}
                     <th>Tipe Lisensi</th>
                     <th>Valid From</th>
                     <th>Valid To</th>
@@ -86,14 +86,14 @@
                         data: 'cost_code',
                         name: 'cost_code'
                     },
-                    {
-                        data: 'cost_center',
-                        name: 'cost_center'
-                    },
-                    {
-                        data: 'deskripsi',
-                        name: 'deskripsi'
-                    },
+                    // {
+                    //     data: 'cost_center',
+                    //     name: 'cost_center'
+                    // },
+                    // {
+                    //     data: 'deskripsi',
+                    //     name: 'deskripsi'
+                    // },
                     {
                         data: 'license_type',
                         name: 'license_type'
@@ -144,7 +144,7 @@
             }).then((result) => {
                 if (result.isConfirmed) {
                     $.ajax({
-                        url: '/user-generic/' + id,
+                        url: '/cost-center/user-generic/' + id,
                         type: 'DELETE',
                         data: {
                             _token: '{{ csrf_token() }}'

@@ -114,7 +114,7 @@
         .dropdown-toggle {
             display: flex;
             align-items: center;
-            margin-bottom: 10px;
+            margin-bottom: 5px;
             /* justify-content: space-between; */
             color: white !important;
             /* Ensures content is spaced properly */
@@ -165,6 +165,10 @@
             border-top-left-radius: 80px 80px;
             border-bottom-left-radius: 80px 80px;
             font-weight: bold;
+        }
+
+        .nav-item {
+            margin-bottom: 5px;
         }
 
         .nav-link {

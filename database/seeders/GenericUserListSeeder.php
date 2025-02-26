@@ -38,17 +38,22 @@ class GenericUserListSeeder extends Seeder
         }
 
         foreach ($data as $user) {
-            // Create CostPrevUser (only create, do not update)
-            CostPrevUser::create([
-                'user_code'          => $user['prev_nik'],
-                'user_name'          => $user['prev_user'],
-                'cost_code'          => $user['cost_code'],
-                'dokumen_keterangan' => null,
-                'created_at'         => now(),
-                'updated_at'         => now(),
-                'created_by'         => 'Seeder',
-                'updated_by'         => 'Seeder',
-            ]);
+
+            if ($user['prev_nik'] != "") {
+                if ($user['current_nik'] != $user['prev_nik']) {
+                    // Create CostPrevUser (only create, do not update)
+                    CostPrevUser::create([
+                        'user_code'          => $user['prev_nik'],
+                        'user_name'          => $user['prev_user'],
+                        'cost_code'          => $user['cost_code'],
+                        'dokumen_keterangan' => null,
+                        'created_at'         => now(),
+                        'updated_at'         => now(),
+                        'created_by'         => 'Seeder',
+                        'updated_by'         => 'Seeder',
+                    ]);
+                }
+            }
 
             // Update or create CostCurrentUser using cost_code as the unique key
             CostCurrentUser::updateOrCreate(

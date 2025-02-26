@@ -18,8 +18,8 @@ return new class extends Migration
             $table->string('cost_code');
             $table->string('license_type');
             $table->string('group')->nullable(); // nempel ke shortname ms_company
-            $table->string('valid_from')->nullable();
-            $table->string('valid_to')->nullable();
+            $table->date('valid_from')->nullable();
+            $table->date('valid_to')->nullable();
             $table->timestamps();
             $table->softDeletes();
             $table->foreignId('created_by')->nullable();

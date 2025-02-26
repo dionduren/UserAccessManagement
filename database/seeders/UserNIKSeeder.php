@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use Carbon\Carbon;
 use App\Models\userNIK;
 use App\Models\UserDetail;
 use Illuminate\Database\Seeder;
@@ -34,14 +35,28 @@ class UserNIKSeeder extends Seeder
 
         // Insert data into the database
         foreach ($data as $user) {
+            // Parse dates from the JSON if present
+            $validFrom = null;
+            $validTo   = null;
+
+            if (!empty($user['valid_from'])) {
+                // Convert from d.m.Y to a Y-m-d string
+                $validFrom = Carbon::createFromFormat('d.m.Y', $user['valid_from'])->format('Y-m-d');
+            }
+
+            if (!empty($user['valid_to'])) {
+                // Convert from d.m.Y to a Y-m-d string
+                $validTo = Carbon::createFromFormat('d.m.Y', $user['valid_to'])->format('Y-m-d');
+            }
+
             // Insert into UserNIK
             UserNIK::updateOrCreate(
                 ['user_code' => $user['user_code']],
                 [
                     'user_type' => $user['user_type'],
                     'license_type' => $user['license_type'],
-                    'valid_from' => $user['valid_from'] ?? null,
-                    'valid_to' => $user['valid_to'] ?? null,
+                    'valid_from' => $validFrom ?? null,
+                    'valid_to' => $validTo ?? null,
                     'group' => $user['group'],
                     'created_by' => "Seeder",
                     'updated_by' => "Seeder"

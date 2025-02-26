@@ -63,12 +63,10 @@
 @section('scripts')
     <script>
         $(document).ready(function() {
-            let masterData = {}; // Store parsed JSON for efficient lookups
-
             let userGenericTable = $('#user_generic_table').DataTable({
                 processing: true,
                 serverSide: true,
-                ajax: "{{ route('user-generic.dashboard') }}",
+                ajax: "{{ route('dashboard.user-generic') }}",
                 columns: [{
                         data: 'id',
                         name: 'id'
@@ -134,52 +132,5 @@
             });
 
         });
-
-        // ✅ SweetAlert2 Delete Confirmation
-        function deleteUserGeneric(id) {
-            Swal.fire({
-                title: "Apakah anda yakin?",
-                text: "Anda tidak bisa mengembalikan data yang dihapus!",
-                icon: "warning",
-                showCancelButton: true,
-                confirmButtonColor: "#d33",
-                cancelButtonColor: "#3085d6",
-                confirmButtonText: "Ya, hapus!",
-                cancelButtonText: "Tidak Jadi"
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    $.ajax({
-                        url: '/costcenter-user/' + id,
-                        type: 'DELETE',
-                        data: {
-                            _token: '{{ csrf_token() }}'
-                        },
-                        success: function(response) {
-                            Swal.fire({
-                                title: "Deleted!",
-                                text: response.success,
-                                icon: "success",
-                                showConfirmButton: false,
-                                timer: 1500
-                            });
-
-                            // Find the row to remove
-                            let row = $('#user_nik_table').DataTable().row($(
-                                `button[data-id="${id}"]`).parents('tr'));
-
-                            // Remove the row and redraw the table
-                            row.remove().draw();
-                        },
-                        error: function(xhr) {
-                            Swal.fire({
-                                title: "Error!",
-                                text: "Failed to delete record.",
-                                icon: "error"
-                            });
-                        }
-                    });
-                }
-            });
-        }
     </script>
 @endsection

@@ -26,7 +26,7 @@
                                     @foreach ($data['company'] as $company)
                                         <tr>
                                             <td>{{ $loop->iteration }}</td>
-                                            <td>{{ $company->name }}</td>
+                                            <td class="text-start">{{ $company->name }}</td>
                                             <td>{{ $data['groupedData']['kompartemen']->where('company_id', $company->id)->sum('total') }}
                                             </td>
                                             <td>{{ $data['groupedData']['departemen']->where('company_id', $company->id)->sum('total') }}

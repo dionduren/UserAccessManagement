@@ -14,9 +14,15 @@ if (!function_exists('getBreadcrumbs')) {
       'job-roles.index' => 'Master Data > Job Roles',
 
       'company_kompartemen.upload' => 'Import Data > Company & Job Roles > Upload',
+
       'cost-center.index' => 'User & Cost Center > Cost Center',
       'cost-center.create' => 'User & Cost Center > Cost Center > Create',
       'cost-center.edit' => 'User & Cost Center > Cost Center > Edit',
+
+      'user-nik.index' => 'User & Cost Center > User NIK',
+
+      'user-generic.index' => 'User & Cost Center > User Generic',
+      'user-generic.dashboard' => 'User & Cost Center > Cost Center > Dashboard',
 
       'access-matrix' => 'Access Matrix',
       'admin.dashboard' => 'Admin Page',

@@ -2,10 +2,11 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
+use Carbon\Carbon;
+use App\Models\userGeneric;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\File;
-use App\Models\userGeneric;
+use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 
 class UserGenericSeeder extends Seeder
 {
@@ -33,10 +34,19 @@ class UserGenericSeeder extends Seeder
 
         // Insert data into the database
         foreach ($data as $userGeneric) {
-            userGeneric::updateOrCreate(
+            if (!empty($userGeneric['valid_from'])) {
+                $userGeneric['valid_from'] = Carbon::createFromFormat('d.m.Y', $userGeneric['valid_from'])->format('Y-m-d');
+            }
+            if (!empty($userGeneric['valid_to'])) {
+                $userGeneric['valid_to'] = Carbon::createFromFormat('d.m.Y', $userGeneric['valid_to'])->format('Y-m-d');
+            }
+
+            UserGeneric::updateOrCreate(
                 ['user_code' => $userGeneric['user_code']],
                 $userGeneric
             );
         }
+
+        $this->command->info('User Generic data seeded successfully!');
     }
 }

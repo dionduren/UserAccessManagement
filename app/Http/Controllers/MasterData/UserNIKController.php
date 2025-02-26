@@ -21,10 +21,10 @@ class UserNIKController extends Controller
 
             return DataTables::of($userNik)
                 ->editColumn('valid_from', function ($row) {
-                    return $row->valid_from ? Carbon::createFromFormat('d.m.Y', $row->valid_from)->format('d M Y') : '-';
+                    return $row->valid_from ? Carbon::createFromFormat('Y-m-d', $row->valid_from)->format('d M Y') : '-';
                 })
                 ->editColumn('valid_to', function ($row) {
-                    return $row->valid_to ? Carbon::createFromFormat('d.m.Y', $row->valid_to)->format('d M Y') : '-';
+                    return $row->valid_to ? Carbon::createFromFormat('Y-m-d', $row->valid_to)->format('d M Y') : '-';
                 })
                 ->addColumn('nama', function ($row) {
                     return $row->userDetail->nama ?? 'N/A'; // Get User's Name

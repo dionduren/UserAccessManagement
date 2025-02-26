@@ -20,11 +20,17 @@ class UserGenericController extends Controller
                 ->select('id', 'group', 'user_code', 'user_type', 'cost_code', 'license_type', 'valid_from', 'valid_to');
             return DataTables::of($userGenerics)
                 ->editColumn('valid_from', function ($row) {
-                    return $row->valid_from ? Carbon::createFromFormat('d.m.Y', $row->valid_from)->format('d M Y') : '-';
+                    return $row->valid_from ? Carbon::createFromFormat('Y-m-d', $row->valid_from)->format('d M Y') : '-';
                 })
                 ->editColumn('valid_to', function ($row) {
-                    return $row->valid_to ? Carbon::createFromFormat('d.m.Y', $row->valid_to)->format('d M Y') : '-';
+                    return $row->valid_to ? Carbon::createFromFormat('Y-m-d', $row->valid_to)->format('d M Y') : '-';
                 })
+                // ->editColumn('valid_from', function ($row) {
+                //     return $row->valid_from ? $row->valid_from : '-';
+                // })
+                // ->editColumn('valid_to', function ($row) {
+                //     return $row->valid_to ? $row->valid_to : '-';
+                // })
                 ->addColumn('cost_center', function ($row) {
                     return $row->costCenter->cost_center ?? 'N/A'; // Get User's Name
                 })
@@ -53,34 +59,30 @@ class UserGenericController extends Controller
 
             return DataTables::of($userGenerics)
                 ->editColumn('valid_from', function ($row) {
-                    return $row->valid_from
-                        ? Carbon::createFromFormat('d.m.Y', $row->valid_from)->format('d M Y')
-                        : '-';
+                    return $row->valid_from ? Carbon::createFromFormat('Y-m-d', $row->valid_from)->format('d M Y') : '-';
                 })
                 ->editColumn('valid_to', function ($row) {
-                    return $row->valid_to
-                        ? Carbon::createFromFormat('d.m.Y', $row->valid_to)->format('d M Y')
-                        : '-';
+                    return $row->valid_to ? Carbon::createFromFormat('Y-m-d', $row->valid_to)->format('d M Y') : '-';
                 })
                 ->addColumn('cost_center', function ($row) {
-                    return $row->costCenter->cost_center ?? 'N/A';
+                    return $row->costCenter->cost_center ?? '-';
                 })
                 ->addColumn('deskripsi', function ($row) {
-                    return $row->costCenter->deskripsi ?? 'N/A';
+                    return $row->costCenter->deskripsi ?? '-';
                 })
                 ->addColumn('current_user', function ($row) {
                     // currentUser is a hasOne relation
-                    return $row->currentUser ? $row->currentUser->user_name : 'N/A';
+                    return $row->currentUser ? $row->currentUser->user_name : '-';
                 })
                 ->addColumn('dokumen_keterangan', function ($row) {
                     // currentUser is a hasOne relation
-                    return $row->currentUser ? $row->currentUser->dokumen_keterangan : 'N/A';
+                    return $row->currentUser ? $row->currentUser->dokumen_keterangan : '-';
                 })
                 ->addColumn('prev_user', function ($row) {
                     // prevUser is a hasMany relation; join user_name values if multiple exist
                     return ($row->prevUser && $row->prevUser->isNotEmpty())
                         ? $row->prevUser->pluck('user_name')->implode(', ')
-                        : 'N/A';
+                        : '-';
                 })
                 ->make(true);
         }

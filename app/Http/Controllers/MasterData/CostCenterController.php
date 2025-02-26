@@ -2,11 +2,12 @@
 
 namespace App\Http\Controllers\MasterData;
 
+use App\Models\Company;
 use App\Models\CostCenter;
+use App\Models\CostPrevUser;
 use Illuminate\Http\Request;
 use Yajra\DataTables\DataTables;
 use App\Http\Controllers\Controller;
-use App\Models\Company;
 
 class CostCenterController extends Controller
 {
@@ -28,6 +29,18 @@ class CostCenterController extends Controller
 
         return view('master-data.cost_center.index');
     }
+
+    public function index_prev_user(Request $request)
+    {
+        if ($request->ajax()) {
+            $costCenters = CostPrevUser::select('id', 'user_code', 'user_name', 'cost_code', 'dokumen_keterangan');
+            return DataTables::of($costCenters)
+                ->make(true);
+        }
+
+        return view('master-data.cost_center.prev-user.index');
+    }
+
 
     /**
      * Show the form for creating a new resource.
@@ -70,8 +83,8 @@ class CostCenterController extends Controller
      */
     public function show($id)
     {
-        $costCenter = CostCenter::findOrFail($id);
-        return view('master-data.cost_center.show', compact('costCenter'));
+        // $costCenter = CostCenter::findOrFail($id);
+        // return view('master-data.cost_center.show', compact('costCenter'));
     }
 
     /**
