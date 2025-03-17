@@ -147,4 +147,35 @@ class UserGenericController extends Controller
     {
         //
     }
+
+    public function compare(Request $request)
+    {
+        $periodes = Periode::select('id', 'definisi')->get();
+
+        return view('master-data.user-generic.compare', compact('periodes'));
+    }
+
+    public function getPeriodicGenericUser(Request $request)
+    {
+        if ($request->ajax()) {
+            $userGenerics = UserGeneric::with(['periode'])
+                ->select('id', 'group', 'periode_id', 'user_code', 'user_type', 'cost_code', 'license_type', 'valid_from', 'valid_to')
+                ->when($request->filled('periode'), function ($query) use ($request) {
+                    return $query->where('periode_id', $request->input('periode'));
+                });
+
+            return DataTables::of($userGenerics)
+                ->editColumn('valid_from', function ($row) {
+                    return $row->valid_from ? Carbon::createFromFormat('Y-m-d', $row->valid_from)->format('d M Y') : '-';
+                })
+                ->editColumn('valid_to', function ($row) {
+                    return $row->valid_to ? Carbon::createFromFormat('Y-m-d', $row->valid_to)->format('d M Y') : '-';
+                })
+                ->addColumn('periode', function ($row) {
+                    return $row->periode ? $row->periode->definisi : 'N/A';
+                })
+                ->rawColumns(['action'])
+                ->make(true);
+        }
+    }
 }

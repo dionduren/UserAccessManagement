@@ -130,13 +130,16 @@ Route::get('user-nik/mixed', [UserNIKController::class, 'index_mixed'])->name('u
 Route::get('user-nik/check-user-detail', [UserNIKController::class, 'checkUserDetail'])->name('user-nik.check-user-detail');
 Route::get('user-nik/download-template', [UserNIKController::class, 'downloadTemplate'])->name('user-nik.download-template');
 Route::get('user-nik/upload', [UserNIKController::class, 'upload'])->name('user-nik.upload-page');
+Route::get('user-nik/compare', [UserNIKController::class, 'compare'])->name('user-nik.compare');
+Route::get('user-nik/get-periodic', [UserNIKController::class, 'getPeriodicUserNIK'])->name('user-nik.get-periodic');
+
 
 // Finally, resource route at the end
 Route::resource('user-nik', UserNIKController::class);
 
-
-
 Route::get('cost-center/user-generic/dashboard', [UserGenericController::class, 'index_dashboard'])->name('dashboard.user-generic');
+Route::get('cost-center/user-generic/compare', [UserGenericController::class, 'compare'])->name('user-generic.compare');
+Route::get('cost-center/user-generic/get-periodic', [UserGenericController::class, 'getPeriodicGenericUser'])->name('user-generic.get-periodic');
 Route::resource('cost-center/user-generic', UserGenericController::class)->name('index', 'user-generic.index');
 Route::get('cost-center/prev-user', [CostCenterController::class, 'index_prev_user'])->name('prev-user.index');
 Route::resource('cost-center', CostCenterController::class);
