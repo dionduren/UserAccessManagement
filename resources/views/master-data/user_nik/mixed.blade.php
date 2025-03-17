@@ -2,11 +2,11 @@
 
 @section('content')
     <div class="container-fluid">
-        <h1>Dashboard User Generic</h1>
+        <h1>Dashboard User NIK</h1>
 
-        {{-- <a href="{{ route('user-generic.create') }}" target="_blank" class="btn btn-outline-secondary mb-3"> --}}
+        {{-- <a href="{{ route('user-nik.create') }}" target="_blank" class="btn btn-outline-secondary mb-3"> --}}
         <a class="btn btn-outline-secondary mb-3" disabled>
-            <i class="bi bi-plus"></i> Buat User Generic Baru
+            <i class="bi bi-plus"></i> Buat User NIK Baru
         </a>
 
         @if (session('status'))
@@ -21,24 +21,17 @@
             </div>
         @endif
 
-        <div class="form-group">
-            <label for="periode">Periode</label>
-            <select name="periode" id="periode" class="form-control">
-                <option value="">Silahkan Pilih Periode Data</option>
-                @foreach ($periodes as $periode)
-                    <option value="{{ $periode->id }}">{{ $periode->definisi }}</option>
-                @endforeach
-            </select>
-        </div>
-
-        <table id="user_generic_table" class="table table-bordered table-striped table-hover cell-border mt-3">
+        <table id="user_nik_table" class="table table-bordered table-striped table-hover cell-border mt-3">
             <thead>
                 <tr>
                     <th>id</th>
                     <th>Perusahaan</th>
-                    <th>Periode</th>
-                    <th>User Code</th>
-                    <th>Cost Code</th>
+                    <th>NIK</th>
+                    <th style="background-color:greenyellow">Nama</th>
+                    <th style="background-color: greenyellow">Direktorat</th>
+                    <th style="background-color: lightblue">Kompartemen</th>
+                    <th style="background-color: greenyellow">Cost Center</th>
+                    {{-- <th style="background-color: greenyellow">Grade</th> --}}
                     <th>Tipe Lisensi</th>
                     <th>Valid From</th>
                     <th>Valid To</th>
@@ -47,6 +40,23 @@
             </thead>
         </table>
     </div>
+
+    <!-- Modals -->
+    <div class="modal fade" id="userNIKModal" tabindex="-1" aria-labelledby="userNIKModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="userNIKModalLabel">User NIK Details</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body" id="modal-user-nick-details">
+                    <!-- Content will be loaded dynamically -->
+                </div>
+            </div>
+        </div>
+    </div>
 @endsection
 
 @section('scripts')
@@ -54,23 +64,10 @@
         $(document).ready(function() {
             let masterData = {}; // Store parsed JSON for efficient lookups
 
-            // Listen to select change event
-            $('#periode').on('change', function(e) {
-                let periodeId = $(this).val();
-
-                if (periodeId) {
-                    $('#user_generic_table').DataTable().ajax.url(
-                        "{{ route('user-generic.index') }}" + "?periode=" + periodeId).load();
-                } else {
-                    $('#user_generic_table').DataTable().ajax.url(
-                        "{{ route('user-generic.index') }}").load();
-                }
-            });
-
-            let userGenericTable = $('#user_generic_table').DataTable({
+            let userNikTable = $('#user_nik_table').DataTable({
                 processing: true,
                 serverSide: true,
-                ajax: "{{ route('user-generic.index') }}",
+                ajax: "{{ route('user-nik.index_mixed') }}",
                 columns: [{
                         data: 'id',
                         name: 'id'
@@ -80,26 +77,29 @@
                         name: 'group'
                     },
                     {
-                        data: 'periode',
-                        name: 'periode'
-                    },
-                    {
                         data: 'user_code',
                         name: 'user_code'
                     },
                     {
-                        data: 'cost_code',
-                        name: 'cost_code'
+                        data: 'nama',
+                        name: 'nama'
                     },
-
+                    {
+                        data: 'direktorat',
+                        name: 'direktorat'
+                    },
+                    {
+                        data: 'kompartemen_name',
+                        name: 'kompartemen_name'
+                    },
+                    {
+                        data: 'cost_center',
+                        name: 'cost_center'
+                    },
                     // {
-                    //     data: 'cost_center',
-                    //     name: 'cost_center'
+                    //     data: 'grade',
+                    //     name: 'grade'
                     // },
-                    // {
-                    //     data: 'deskripsi',
-                    //     name: 'deskripsi'
-                    // },                    
                     {
                         data: 'license_type',
                         name: 'license_type'
@@ -130,14 +130,14 @@
                     visible: false
                 }],
                 order: [
-                    [3, 'asc']
+                    [2, 'asc']
                 ]
             });
 
         });
 
         // ✅ SweetAlert2 Delete Confirmation
-        function deleteUserGeneric(id) {
+        function deleteUserNIK(id) {
             Swal.fire({
                 title: "Apakah anda yakin?",
                 text: "Anda tidak bisa mengembalikan data yang dihapus!",
@@ -150,7 +150,7 @@
             }).then((result) => {
                 if (result.isConfirmed) {
                     $.ajax({
-                        url: '/cost-center/user-generic/' + id,
+                        url: '/user-nik/' + id,
                         type: 'DELETE',
                         data: {
                             _token: '{{ csrf_token() }}'

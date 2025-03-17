@@ -2,8 +2,12 @@
 
 namespace App\Http\Controllers\MasterData;
 
+use Excel;
+use App\Models\Periode;
 use App\Models\userNIK;
+use App\Models\UserDetail;
 use Illuminate\Http\Request;
+use App\Exports\UserNIKExport;
 use Illuminate\Support\Carbon;
 use Yajra\DataTables\DataTables;
 use App\Http\Controllers\Controller;
@@ -14,6 +18,53 @@ class UserNIKController extends Controller
      * Display a listing of the resource.
      */
     public function index(Request $request)
+    {
+        if ($request->ajax()) {
+            $userNik = UserNIK::with(['periode'])
+                ->select('id', 'group', 'periode_id', 'user_code', 'user_type', 'last_login', 'license_type', 'valid_from', 'valid_to')
+                ->when($request->filled('periode'), function ($query) use ($request) {
+                    return $query->where('periode_id', $request->input('periode'));
+                })
+                ->when(!$request->filled('periode'), function ($query) {
+                    return $query->whereNull('periode_id');
+                });
+
+            return DataTables::of($userNik)
+                ->editColumn('last_login', function ($row) {
+                    return $row->last_login ? Carbon::createFromFormat('Y-m-d H:i:s', $row->last_login)->format('d M Y - H:i') : '-';
+                })
+                ->editColumn('valid_from', function ($row) {
+                    return $row->valid_from ? Carbon::createFromFormat('Y-m-d', $row->valid_from)->format('d M Y') : '-';
+                })
+                ->editColumn('valid_to', function ($row) {
+                    return $row->valid_to ? Carbon::createFromFormat('Y-m-d', $row->valid_to)->format('d M Y') : '-';
+                })
+                ->addColumn('periode', function ($row) {
+                    return $row->periode ? $row->periode->definisi : 'N/A';
+                })
+                ->addColumn('action', function ($row) {
+                    return '
+                    <button type="button" class="btn btn-sm btn-primary me-1" data-toggle="modal" data-target="#userNIKModal" data-id="' . $row->id . '">
+                        <i class="bi bi-info-circle-fill"></i> Detail
+                    </button>
+                    <a href="' . route('user-nik.edit', $row->id) . '" target="_blank" class="btn btn-sm btn-warning me-1">
+                        <i class="bi bi-pencil-fill"></i> Edit
+                    </a> 
+                    <button onclick="deleteUserNIK(' . $row->id . ')" class="btn btn-sm btn-danger">
+                        <i class="bi bi-trash-fill"></i> Delete
+                    </button>';
+                    // <button onclick="deleteUserNIK(' . $row->id . ')" class="btn btn-sm btn-danger" disabled>Delete</button>';
+                })
+                ->rawColumns(['action'])
+                ->make(true);
+        }
+        $periodes = Periode::select('id', 'definisi')->get();
+
+        return view('master-data.user_nik.index', compact('periodes'));
+    }
+
+
+    public function index_mixed(Request $request)
     {
         if ($request->ajax()) {
             $userNik = UserNIK::with(['userDetail.kompartemen']) // Join UserDetail and Kompartemen
@@ -51,7 +102,7 @@ class UserNIKController extends Controller
                 ->make(true);
         }
 
-        return view('master-data.user_nik.index');
+        return view('master-data.user_nik.mixed');
     }
 
 
@@ -74,25 +125,52 @@ class UserNIKController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(UserNIK $userNIK)
+    public function show($id)
     {
-        //
+        $userNIK = UserNIK::with('userDetail.kompartemen', 'userDetail.departemen', 'periode')->findOrFail($id);
+
+        return view('master-data.user_nik.show', compact('userNIK'));
     }
 
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(UserNIK $userNIK)
+    public function edit($id)
     {
-        //
+        $userNIK = UserNIK::findOrFail($id);
+        $periodes = Periode::select('id', 'definisi')->get();
+        return view('master-data.user_nik.edit', compact('userNIK', 'periodes'));
     }
 
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, UserNIK $userNIK)
+    public function update(Request $request, UserNIK $user_nik)
     {
-        //
+        try {
+            $request->validate([
+                'user_code' => 'required|string|max:255',
+                'license_type' => 'required|string|max:255',
+                'valid_from' => 'nullable|date',
+                'valid_to' => 'nullable|date',
+                'periode_id' => 'required',
+            ]);
+
+
+            UserNIK::where('id', $user_nik->id)->update([
+                'user_code' => $request->input('user_code'),
+                'license_type' => $request->input('license_type'),
+                'valid_from' => $request->input('valid_from'),
+                'valid_to' => $request->input('valid_to'),
+                'periode_id' => $request->input('periode_id'),
+            ]);
+
+            // \dd($request->input('periode_id'));
+
+            return redirect()->route('user-nik.index')->with('success', 'User NIK updated successfully');
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', $e->getMessage());
+        }
     }
 
     /**
@@ -101,5 +179,43 @@ class UserNIKController extends Controller
     public function destroy(UserNIK $userNIK)
     {
         //
+    }
+
+
+    /**
+     * Check if user detail exists or not.
+     */
+    public function checkUserDetail(Request $request)
+    {
+        $userCode = $request->input('user_code');
+
+        $userDetail = UserDetail::with(['company', 'kompartemen', 'departemen'])
+            ->where('nik', $userCode)
+            ->first();
+
+        if (empty($userDetail)) {
+            return response()->json(['message' => 'Data User Tidak Ditemukan'], 404);
+        }
+
+        return response()->json(['userDetail' => $userDetail]);
+    }
+
+
+    /**
+     * Download User NIK Template.
+     */
+    public function downloadTemplate()
+    {
+        return Excel::download(new UserNIKExport, 'user_nik_template.xlsx');
+    }
+
+
+    /**
+     * Show the form for uploading a new resource.
+     */
+    public function upload()
+    {
+        $periodes = Periode::select('id', 'definisi')->get();
+        return view('master-data.user_nik.upload', compact('periodes'));
     }
 }

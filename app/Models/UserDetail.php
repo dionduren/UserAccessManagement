@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Models\User;
 use App\Models\Company;
+use App\Models\Periode;
 use App\Models\userNIK;
 use App\Models\CostCenter;
 use App\Models\Departemen;
@@ -70,5 +71,9 @@ class UserDetail extends Model
     public function costCenter()
     {
         return $this->hasMany(CostCenter::class, 'cost_code', 'cost_code');
+    }
+
+    public function periode(){
+        return $this->belongsTo(Periode::class, 'id', 'periode_id');
     }
 }

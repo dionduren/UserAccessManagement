@@ -11,18 +11,13 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('tr_user_ussm_nik', function (Blueprint $table) {
+        Schema::create('tr_nik_job_role', function (Blueprint $table) {
             $table->id();
-            $table->string('user_code');
-            $table->string('user_type');
-            $table->string('license_type');
-            $table->date('valid_from')->nullable();
-            $table->date('valid_to')->nullable();
-            $table->string('group')->nullable(); // nempel ke shortname ms_company
-            // new column start
             $table->foreignId('periode_id')->nullable();
-            $table->dateTime('last_login')->nullable();
-            // new column end
+            $table->string('nik')->nullable();
+            $table->foreignId('job_role_id')->nullable();
+            $table->boolean('is_active')->default(true);
+            $table->dateTime('last_update')->nullable();
             $table->timestamps();
             $table->softDeletes();
             $table->string('created_by')->nullable();
@@ -36,6 +31,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('tr_user_ussm_nik');
+        Schema::dropIfExists('tr_nik_job_role');
     }
 };

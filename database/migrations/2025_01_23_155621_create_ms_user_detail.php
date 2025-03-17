@@ -24,6 +24,9 @@ return new class extends Migration
             $table->string('jabatan')->nullable();
             $table->string('atasan')->nullable();
             $table->string('cost_center')->nullable();
+            // new column start
+            $table->foreignId('periode_id')->nullable();
+            // new column end
             $table->timestamps();
             $table->softDeletes();
             $table->string('created_by')->nullable();

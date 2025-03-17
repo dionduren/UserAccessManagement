@@ -34,11 +34,17 @@ class UserGenericSeeder extends Seeder
 
         // Insert data into the database
         foreach ($data as $userGeneric) {
+            $userGeneric['periode_id'] = 1;
+            
             if (!empty($userGeneric['valid_from'])) {
                 $userGeneric['valid_from'] = Carbon::createFromFormat('d.m.Y', $userGeneric['valid_from'])->format('Y-m-d');
+            } else {
+                $userGeneric['valid_from'] = null;
             }
             if (!empty($userGeneric['valid_to'])) {
                 $userGeneric['valid_to'] = Carbon::createFromFormat('d.m.Y', $userGeneric['valid_to'])->format('Y-m-d');
+            } else {
+                $userGeneric['valid_to'] = null;
             }
 
             UserGeneric::updateOrCreate(

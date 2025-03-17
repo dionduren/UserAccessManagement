@@ -161,11 +161,25 @@
 
         <div class="">
             <li class="nav-item">
+                <a href="{{ route('periode.index') }}"
+                    class="nav-link {{ request()->routeIs('periode*') ? 'active' : 'text-white' }}">
+                    <i class="bi bi-calendar-event"></i> Periode
+                </a>
+            </li>
+
+            <li class="nav-item">
                 <a href="{{ route('user-nik.index') }}"
-                    class="nav-link {{ request()->routeIs('user-nik*') ? 'active' : 'text-white' }}">
+                    class="nav-link {{ request()->routeIs('user-nik*') && !request()->routeIs('user-nik.index_mixed') ? 'active' : 'text-white' }}">
                     <i class="bi bi-person-badge"></i> User NIK
                 </a>
             </li>
+            <li class="nav-item">
+                <a href="{{ route('user-nik.index_mixed') }}"
+                    class="nav-link {{ request()->routeIs('user-nik.index_mixed*') ? 'active' : 'text-white' }}">
+                    <i class="bi bi-person-badge"></i> User NIK Mixed
+                </a>
+            </li>
+
             <a class="nav-link dropdown-toggle {{ request()->is('cost-center*') ? 'active' : 'text-white' }}"
                 data-bs-toggle="dropdown" href="#" role="button" aria-expanded="false">
                 <i class="bi bi-folder-fill me-2"></i> <span class="me-auto">MASTER DATA COST CENTER</span>

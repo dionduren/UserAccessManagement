@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Models\Company;
+use App\Models\Periode;
 use App\Models\CostCenter;
 use App\Models\CostPrevUser;
 use App\Models\CostCurrentUser;
@@ -14,13 +15,14 @@ class userGeneric extends Model
 {
     use HasFactory, SoftDeletes;
 
-    protected $table = 'tr_user_ussm_generic';
+    protected $table = 'tr_user_generic';
     protected $primaryKey = 'id';
 
     protected $fillable = [
         'user_code',
         'user_type',
         'cost_code',
+        'periode_id',
         'license_type',
         'group',
         'valid_from',
@@ -50,5 +52,10 @@ class userGeneric extends Model
     public function prevUser()
     {
         return $this->hasMany(CostPrevUser::class, 'cost_code', 'user_code');
+    }
+
+    public function periode()
+    {
+        return $this->belongsTo(Periode::class, 'periode_id', 'id');
     }
 }

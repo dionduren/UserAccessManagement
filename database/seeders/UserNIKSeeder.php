@@ -58,6 +58,8 @@ class UserNIKSeeder extends Seeder
                     'valid_from' => $validFrom ?? null,
                     'valid_to' => $validTo ?? null,
                     'group' => $user['group'],
+                    'periode_id' => 1,
+                    'last_login' => now()->format('Y-m-d H:i:s'),
                     'created_by' => "Seeder",
                     'updated_by' => "Seeder"
                 ]

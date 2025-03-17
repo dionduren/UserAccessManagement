@@ -11,13 +11,17 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('tr_user_ussm_generic', function (Blueprint $table) {
+        Schema::create('tr_user_generic', function (Blueprint $table) {
             $table->id();
             $table->string('user_code');
             $table->string('user_type');
             $table->string('cost_code');
             $table->string('license_type');
             $table->string('group')->nullable(); // nempel ke shortname ms_company
+            // new column start
+            $table->foreignId('periode_id')->nullable();
+            $table->dateTime('last_login')->nullable();
+            // new column end
             $table->date('valid_from')->nullable();
             $table->date('valid_to')->nullable();
             $table->timestamps();
@@ -34,5 +38,6 @@ return new class extends Migration
     public function down(): void
     {
         Schema::dropIfExists('tr_user_ussm_generic');
+        Schema::dropIfExists('tr_user_generic');
     }
 };

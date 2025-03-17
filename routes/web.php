@@ -10,28 +10,30 @@ use App\Http\Controllers\AdminController;
 use App\Http\Controllers\TcodeController;
 use App\Http\Controllers\CompanyController;
 use App\Http\Controllers\JobRoleController;
+use App\Http\Controllers\PeriodeController;
 use App\Http\Controllers\EmployeeController;
 use App\Http\Controllers\DepartemenController;
 use App\Http\Controllers\SingleRoleController;
 use App\Http\Controllers\KompartemenController;
 use App\Http\Controllers\TcodeImportController;
-use App\Http\Controllers\AccessMatrixController;
 
-use App\Http\Controllers\CompositeRoleController;
+use App\Http\Controllers\AccessMatrixController;
 
 
 // use App\Http\Controllers\IOExcel\ExcelImportController;
-use App\Http\Controllers\MasterData\CostCenterController;
+use App\Http\Controllers\CompositeRoleController;
 use App\Http\Controllers\MasterData\UserNIKController;
-use App\Http\Controllers\MasterData\UserGenericController;
-use App\Http\Controllers\MasterData\CostPrevUserController;
+use App\Http\Controllers\IOExcel\UserNIKImportController;
+use App\Http\Controllers\MasterData\CostCenterController;
 
-use App\Http\Controllers\IOExcel\CompanyKompartemenController;
-use App\Http\Controllers\IOExcel\CompositeRoleSingleRoleController;
+use App\Http\Controllers\MasterData\UserGenericController;
 use App\Http\Controllers\IOExcel\SingleRoleTcodeController;
 use App\Http\Controllers\IOExcel\TcodeSingleRoleController;
+use App\Http\Controllers\MasterData\CostPrevUserController;
 
 use App\Http\Controllers\Relationship\JobCompositeController;
+use App\Http\Controllers\IOExcel\CompanyKompartemenController;
+use App\Http\Controllers\IOExcel\CompositeRoleSingleRoleController;
 
 // Route::get('/', function () {
 //     return view('welcome');
@@ -114,8 +116,25 @@ Route::get('/tcode-single-role/preview-data', [SingleRoleTcodeController::class,
 Route::post('/tcode-single-role/confirm', [SingleRoleTcodeController::class, 'confirmImport'])->name('tcode_single_role.confirm');
 
 // ------------------ NEW MASTER DATA ------------------
+Route::resource('periode', PeriodeController::class);
 
+Route::post('user-nik/upload', [UserNIKImportController::class, 'store'])->name('user-nik.upload');
+Route::get('user-nik/upload/preview', [UserNIKImportController::class, 'preview'])->name('user-nik.preview');
+Route::get('user-nik/upload/preview-data', [UserNIKImportController::class, 'getPreviewData'])->name('user-nik.preview_data');
+Route::post('user-nik/update-inline-session', [UserNIKImportController::class, 'updateInlineSession'])
+    ->name('user-nik.update-inline-session');
+
+Route::post('user-nik//upload/confirm', [UserNIKImportController::class, 'confirmImport'])->name('user-nik.confirm');
+
+Route::get('user-nik/mixed', [UserNIKController::class, 'index_mixed'])->name('user-nik.index_mixed');
+Route::get('user-nik/check-user-detail', [UserNIKController::class, 'checkUserDetail'])->name('user-nik.check-user-detail');
+Route::get('user-nik/download-template', [UserNIKController::class, 'downloadTemplate'])->name('user-nik.download-template');
+Route::get('user-nik/upload', [UserNIKController::class, 'upload'])->name('user-nik.upload-page');
+
+// Finally, resource route at the end
 Route::resource('user-nik', UserNIKController::class);
+
+
 
 Route::get('cost-center/user-generic/dashboard', [UserGenericController::class, 'index_dashboard'])->name('dashboard.user-generic');
 Route::resource('cost-center/user-generic', UserGenericController::class)->name('index', 'user-generic.index');

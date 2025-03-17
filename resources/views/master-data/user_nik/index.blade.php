@@ -5,8 +5,8 @@
         <h1>Dashboard User NIK</h1>
 
         {{-- <a href="{{ route('user-nik.create') }}" target="_blank" class="btn btn-outline-secondary mb-3"> --}}
-        <a class="btn btn-outline-secondary mb-3" disabled>
-            <i class="bi bi-plus"></i> Buat User NIK Baru
+        <a href="{{ route('user-nik.upload-page') }}" class="btn btn-outline-primary mb-3">
+            <i class="bi bi-upload"></i> Upload User NIK
         </a>
 
         @if (session('status'))
@@ -21,18 +21,25 @@
             </div>
         @endif
 
+        <div class="form-group">
+            <label for="periode">Periode</label>
+            <select name="periode" id="periode" class="form-control">
+                <option value="">Silahkan Pilih Periode Data</option>
+                @foreach ($periodes as $periode)
+                    <option value="{{ $periode->id }}">{{ $periode->definisi }}</option>
+                @endforeach
+            </select>
+        </div>
+
         <table id="user_nik_table" class="table table-bordered table-striped table-hover cell-border mt-3">
-            <thead>
+            <thead style="vertical-align: middle;">
                 <tr>
                     <th>id</th>
                     <th>Perusahaan</th>
+                    <th>Periode</th>
                     <th>NIK</th>
-                    <th style="background-color:greenyellow">Nama</th>
-                    <th style="background-color: greenyellow">Direktorat</th>
-                    <th style="background-color: lightblue">Kompartemen</th>
-                    <th style="background-color: greenyellow">Cost Center</th>
-                    {{-- <th style="background-color: greenyellow">Grade</th> --}}
                     <th>Tipe Lisensi</th>
+                    <th>Login Terakhir</th>
                     <th>Valid From</th>
                     <th>Valid To</th>
                     <th>Action</th>
@@ -41,28 +48,27 @@
         </table>
     </div>
 
-    <!-- Modals -->
-    <div class="modal fade" id="userNIKModal" tabindex="-1" aria-labelledby="userNIKModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-lg">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="userNIKModalLabel">User NIK Details</h5>
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                        <span aria-hidden="true">&times;</span>
-                    </button>
-                </div>
-                <div class="modal-body" id="modal-user-nick-details">
-                    <!-- Content will be loaded dynamically -->
-                </div>
-            </div>
-        </div>
-    </div>
+    <div id="modal-user-nick-details"></div>
 @endsection
 
 @section('scripts')
     <script>
         $(document).ready(function() {
             let masterData = {}; // Store parsed JSON for efficient lookups
+
+
+            // Listen to select change event
+            $('#periode').on('change', function(e) {
+                let periodeId = $(this).val();
+
+                if (periodeId) {
+                    $('#user_nik_table').DataTable().ajax.url(
+                        "{{ route('user-nik.index') }}" + "?periode=" + periodeId).load();
+                } else {
+                    $('#user_nik_table').DataTable().ajax.url(
+                        "{{ route('user-nik.index') }}").load();
+                }
+            });
 
             let userNikTable = $('#user_nik_table').DataTable({
                 processing: true,
@@ -77,46 +83,45 @@
                         name: 'group'
                     },
                     {
+                        data: 'periode',
+                        name: 'periode',
+                        width: '7.5%'
+                    },
+
+                    {
                         data: 'user_code',
                         name: 'user_code'
                     },
                     {
-                        data: 'nama',
-                        name: 'nama'
-                    },
-                    {
-                        data: 'direktorat',
-                        name: 'direktorat'
-                    },
-                    {
-                        data: 'kompartemen_name',
-                        name: 'kompartemen_name'
-                    },
-                    {
-                        data: 'cost_center',
-                        name: 'cost_center'
-                    },
-                    // {
-                    //     data: 'grade',
-                    //     name: 'grade'
-                    // },
-                    {
                         data: 'license_type',
-                        name: 'license_type'
+                        name: 'license_type',
+                        width: '7.5%'
+                    },
+                    {
+                        data: 'last_login',
+                        name: 'last_login',
+                        width: '10%'
                     },
                     {
                         data: 'valid_from',
-                        name: 'valid_from'
+                        name: 'valid_from',
+                        render: function(data, type, row, meta) {
+                            return `<div style="text-align: center">${data}</div>`;
+                        }
                     },
                     {
                         data: 'valid_to',
-                        name: 'valid_to'
+                        name: 'valid_to',
+                        render: function(data, type, row, meta) {
+                            return `<div style="text-align: center">${data}</div>`;
+                        }
                     },
                     {
                         data: 'action',
                         name: 'action',
                         orderable: false,
-                        searchable: false
+                        searchable: false,
+                        width: '17.5%'
                     }
                 ],
                 responsive: true,
@@ -135,6 +140,30 @@
             });
 
         });
+
+        $('#user_nik_table').on('click', 'button[data-target="#userNIKModal"]', function() {
+            let userId = $(this).data('id');
+
+            // Fetch user data and populate the modal
+            $.ajax({
+                url: `/user-nik/${userId}`,
+                type: 'GET',
+                success: function(response) {
+                    // Populate modal with user data
+                    $('#modal-user-nick-details').html(response);
+                    // Show the modal
+                    $('#userNIKModal').modal('show');
+                },
+                error: function(xhr) {
+                    Swal.fire({
+                        title: "Error!",
+                        text: "Failed to load user details.",
+                        icon: "error"
+                    });
+                }
+            });
+        });
+
 
         // ✅ SweetAlert2 Delete Confirmation
         function deleteUserNIK(id) {

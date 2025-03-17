@@ -2,11 +2,12 @@
 
 namespace App\Http\Controllers\MasterData;
 
-use App\Http\Controllers\Controller;
+use App\Models\Periode;
 use App\Models\userGeneric;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Yajra\DataTables\DataTables;
+use App\Http\Controllers\Controller;
 
 class UserGenericController extends Controller
 {
@@ -16,8 +17,16 @@ class UserGenericController extends Controller
     public function index(Request $request)
     {
         if ($request->ajax()) {
-            $userGenerics = UserGeneric::with(['costCenter'])
-                ->select('id', 'group', 'user_code', 'user_type', 'cost_code', 'license_type', 'valid_from', 'valid_to');
+            // $userGenerics = UserGeneric::with(['costCenter, periode'])
+            $userGenerics = UserGeneric::with(['periode'])
+                ->select('id', 'group', 'periode_id', 'user_code', 'user_type', 'cost_code', 'license_type', 'valid_from', 'valid_to')
+                ->when($request->filled('periode'), function ($query) use ($request) {
+                    return $query->where('periode_id', $request->input('periode'));
+                })
+                ->when(!$request->filled('periode'), function ($query) {
+                    return $query->whereNull('periode_id');
+                });
+
             return DataTables::of($userGenerics)
                 ->editColumn('valid_from', function ($row) {
                     return $row->valid_from ? Carbon::createFromFormat('Y-m-d', $row->valid_from)->format('d M Y') : '-';
@@ -25,29 +34,30 @@ class UserGenericController extends Controller
                 ->editColumn('valid_to', function ($row) {
                     return $row->valid_to ? Carbon::createFromFormat('Y-m-d', $row->valid_to)->format('d M Y') : '-';
                 })
-                // ->editColumn('valid_from', function ($row) {
-                //     return $row->valid_from ? $row->valid_from : '-';
-                // })
-                // ->editColumn('valid_to', function ($row) {
-                //     return $row->valid_to ? $row->valid_to : '-';
-                // })
-                ->addColumn('cost_center', function ($row) {
-                    return $row->costCenter->cost_center ?? 'N/A'; // Get User's Name
+                ->addColumn('periode', function ($row) {
+                    return $row->periode ? $row->periode->definisi : 'N/A';
                 })
-                ->addColumn('deskripsi', function ($row) {
-                    return $row->costCenter->deskripsi ?? 'N/A'; // Get User's Name
-                })
+                // ->addColumn('cost_center', function ($row) {
+                //     return $row->costCenter->cost_center ?? 'N/A';
+                // })
+                // ->addColumn('deskripsi', function ($row) {
+                //     return $row->costCenter->deskripsi ?? 'N/A';
+                // })
                 ->addColumn('action', function ($row) {
                     // return '<a href="' . route('user-generic.edit', $row->id) . '" target="_blank" class="btn btn-sm btn-warning">Edit</a> 
-                    return '<a target="_blank" class="btn btn-sm btn-outline-warning" disabled>Edit</a> 
-                        <button onclick="deleteUserGeneric(' . $row->id . ')" class="btn btn-sm btn-outline-danger" disabled>Delete</button>';
-                    // <button onclick="deleteUserGeneric(' . $row->id . ')" class="btn btn-sm btn-danger">Delete</button>';
+                    return '<a target="_blank" class="btn btn-sm btn-outline-warning" disabled>
+                    <i class="fas fa-edit"></i>Edit
+                    </a>
+                    <button onclick="deleteUserGeneric(' . $row->id . ')" class="btn btn-sm btn-outline-danger" disabled>
+                    <i class="fas fa-trash"></i>Delete</button>';
+                    // <button onclick="deleteUserGeneric(' . $row->id . ')" class="btn btn-sm btn-danger">Delete</button>';                
                 })
                 ->rawColumns(['action'])
                 ->make(true);
         }
+        $periodes = Periode::select('id', 'definisi')->get();
 
-        return view('master-data.user_generic.index');
+        return view('master-data.user_generic.index', compact('periodes'));
     }
 
     public function index_dashboard(Request $request)
