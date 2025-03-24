@@ -38,7 +38,7 @@
         </a>
 
         <!-- Upload Form -->
-        <form action="{{ route('user-nik.upload') }}" method="POST" enctype="multipart/form-data">
+        <form action="{{ route('user-nik.upload.store') }}" method="POST" enctype="multipart/form-data">
             @csrf
             <div class="mb-3">
                 <label for="periode_id" class="form-label">Pilih Periode</label>
@@ -50,10 +50,18 @@
                 </select>
             </div>
             <div class="mb-3">
-                <label for="excel_file" class="form-label">Select Excel File</label>
+                <label for="excel_file" class="form-label">Pilih File Excel</label>
                 <input type="file" name="excel_file" id="excel_file" class="form-control" required>
+
+                {{-- Loading Spiner --}}
+                <div class="d-flex justify-content-center mt-3" id="loading-spinner" style="display: none !important;">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                </div>
+
             </div>
-            <button type="submit" class="btn btn-primary">Upload and Preview</button>
+            <button type="submit" class="btn btn-primary" id="upload-btn">Upload and Preview</button>
         </form>
     </div>
 @endsection
@@ -63,7 +71,29 @@
         $(document).ready(function() {
             $('#excel_file').change(function() {
                 var fileName = $(this).val().split('\\').pop();
-                $(this).siblings('label').text(fileName);
+                $(this).siblings('label').text('File yang Diupload = ' + fileName);
+            });
+
+            $('#upload-btn').click(function(e) {
+                if ($('#periode_id').val() === '') {
+                    e.preventDefault();
+                    Swal.fire({
+                        title: 'Error',
+                        text: 'Periode harus diisi',
+                        icon: 'error',
+                        confirmButtonText: 'OK'
+                    });
+                } else if ($('#excel_file')[0].files.length === 0) {
+                    e.preventDefault();
+                    Swal.fire({
+                        title: 'Error',
+                        text: 'File excel harus diisi',
+                        icon: 'warning',
+                        confirmButtonText: 'OK'
+                    });
+                } else {
+                    $('#loading-spinner').show();
+                }
             });
         });
     </script>

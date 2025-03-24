@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id();
             $table->string('user_code');
             $table->string('user_type');
-            $table->string('cost_code');
+            $table->string('cost_code')->nullable(); //mungkin perlu dihapus
             $table->string('license_type');
             $table->string('group')->nullable(); // nempel ke shortname ms_company
             // new column start

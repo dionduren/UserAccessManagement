@@ -34,26 +34,4 @@ class UserNikImport implements ToModel, WithHeadingRow, WithChunkReading
             'valid_to' => empty($row['valid_to']) ? null : Carbon::parse($row['valid_to']),
         ]);
     }
-
-    // public function model(array $row)
-    // {
-    //     return new UserNIK([
-    //         'group' => $row['group'],
-    //         'user_code' => $row['user_code'],
-    //         'user_type' => $row['user_type'],
-    //         'license_type' => $row['license_type'],
-    //         'last_login' => $this->transformDate($row['last_login']),
-    //         'valid_from' => $this->transformDate($row['valid_from']),
-    //         'valid_to' => $row['valid_to'] ? $this->transformDate($row['valid_to']) : null,
-    //     ]);
-    // }
-
-    // private function transformDate($value)
-    // {
-    //     if (is_numeric($value)) {
-    //         return Date::excelToDateTimeObject($value);
-    //     }
-
-    //     return Carbon::parse($value);
-    // }
 }

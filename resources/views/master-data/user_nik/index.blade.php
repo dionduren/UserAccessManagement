@@ -5,7 +5,7 @@
         <h1>Dashboard User NIK</h1>
 
         {{-- <a href="{{ route('user-nik.create') }}" target="_blank" class="btn btn-outline-secondary mb-3"> --}}
-        <a href="{{ route('user-nik.upload-page') }}" class="btn btn-outline-primary mb-3">
+        <a href="{{ route('user-nik.upload.form') }}" class="btn btn-outline-primary mb-3">
             <i class="bi bi-upload"></i> Upload User NIK
         </a>
 

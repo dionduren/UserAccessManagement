@@ -2,17 +2,21 @@
 
 namespace App\Http\Controllers\IOExcel;
 
-use App\Http\Controllers\Controller;
-use App\Models\UserNIK;
-use App\Imports\UserNIKImport;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Validator;
-use Illuminate\Support\Facades\Log;
+use App\Models\Company;
 
-use Symfony\Component\HttpFoundation\StreamedResponse;
+use App\Models\Periode;
+use App\Models\UserNIK;
+use Illuminate\Http\Request;
+
+use App\Imports\UserNIKImport;
+use Illuminate\Support\Facades\Log;
+use App\Http\Controllers\Controller;
 
 use Maatwebsite\Excel\Facades\Excel;
+
 use Yajra\DataTables\Facades\DataTables;
+use Illuminate\Support\Facades\Validator;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class UserNIKImportController extends Controller
 {
@@ -44,7 +48,7 @@ class UserNIKImportController extends Controller
         'data' => $excelRows,
       ]);
 
-      return redirect()->route('user-nik.preview');
+      return redirect()->route('user-nik.upload.preview');
     } catch (\Maatwebsite\Excel\Exceptions\NoTypeDetectedException $e) {
       Log::error($e->getMessage());
       return redirect()->back()->with('error', 'No data available in the uploaded Excel file.');
@@ -59,31 +63,25 @@ class UserNIKImportController extends Controller
   {
     $data = session('parsedData');
 
-    // \dd($data);
-
     if (!$data) {
       return redirect()->back()->with('error', 'No data available in session.');
     }
 
     try {
-      // Process the data from session
       $parsedData = $data['data'];
       $periodeId = $data['periode_id'];
 
-      // Validate and parse each row
       $errors = [];
       $previewData = [];
 
       foreach ($parsedData as $index => $row) {
-        // Custom validation for each row (adjust rules as needed)
         $validator = Validator::make($row, [
-          'group' => 'required',
+          'group' => 'nullable',
           'user_code' => 'required',
-          'user_type' => 'required',
           'license_type' => 'required',
-          'last_login' => 'required|date',
-          'valid_from' => 'required|date',
-          'valid_to' => 'required|date'
+          'last_login' => 'nullable',
+          'valid_from' => 'nullable',
+          'valid_to' => 'nullable'
         ]);
 
         if ($validator->fails()) {
@@ -93,20 +91,32 @@ class UserNIKImportController extends Controller
           ];
           $errors[$index + 1] = $validator->errors()->all();
 
-          // Log the validation errors with details
           Log::error('Validation failed for User NIK data', $errorDetails);
         } else {
-          // Store validated data along with derived company name for preview
-          $previewData[] = [
-            'periode_id' => $periodeId,
-            'group' => $row['group'],
-            'user_code' => $row['user_code'],
-            'user_type' => $row['user_type'],
-            'license_type' => $row['license_type'],
-            'last_login' => $row['last_login'],
-            'valid_from' => $row['valid_from'],
-            'valid_to' => $row['valid_to'],
-          ];
+          $company = Company::where('shortname', $row['group'])->first();
+
+          if (!$company) {
+            $company = Company::find($row['group']);
+            if (!$company) {
+              $errorDetails = [
+                'row' => $index + 1,
+                'group' => $row['group'],
+              ];
+              Log::error('Company not found for User NIK data', $errorDetails);
+              $errors[$index + 1] = ["Company not found for group: {$row['group']}"];
+            }
+          } else {
+            $previewData[] = [
+              'periode_id' => $periodeId,
+              'group' => $company->id,
+              'user_code' => $row['user_code'],
+              'user_type' => "NIK",
+              'license_type' => $row['license_type'],
+              'last_login' => $row['last_login'] ? date('Y-m-d', strtotime(str_replace('.', '-', $row['last_login']))) : null,
+              'valid_from' => $row['valid_from'] ? date('Y-m-d', strtotime(str_replace('.', '-', $row['valid_from']))) : null,
+              'valid_to' => $row['valid_to'] ? date('Y-m-d', strtotime(str_replace('.', '-', $row['valid_to']))) : null,
+            ];
+          }
         }
       }
 
@@ -118,23 +128,18 @@ class UserNIKImportController extends Controller
           ->with('error', 'Validation errors occurred. Please check the highlighted rows.');
       }
 
-      // Store the parsed data in session for confirmation (or use another mechanism to pass data)
-      session([
-        'parsedData' => [
-          'periode_id' => $periodeId,
-          'data' => $previewData
-        ]
-      ]);
+      session(['parsedData' => [
+        'periode_id' => $periodeId,
+        'data' => $previewData
+      ]]);
 
-
-      return view('master-data.user_nik.preview', ['parsedData' => $previewData]);
+      return view('upload.user_nik.preview', ['previewData' => $previewData]);
     } catch (\Exception $e) {
       Log::error('Error during Preview', [
         'message' => $e->getMessage(),
         'trace' => $e->getTraceAsString(),
       ]);
 
-      // Temporary Debugging only:
       return redirect()->back()->with('error', 'Error during Preview: ' . $e->getMessage());
     }
   }
@@ -147,9 +152,7 @@ class UserNIKImportController extends Controller
   {
     $parsedData = session('parsedData');
 
-    // \dd($parsedData);
-
-    if (!$parsedData || !isset($parsedData['data'])) {
+    if (!$parsedData || !isset($parsedData['data']) || !isset($parsedData['periode_id'])) {
       return response()->json(['data' => []]);
     }
 
@@ -182,10 +185,57 @@ class UserNIKImportController extends Controller
     return response()->json(['success' => true]);
   }
 
+  public function submitSingle(Request $request)
+  {
+    $data = $request->all();
+    $parsedData = session('parsedData');
 
-  public function confirmImport(Request $request)
+    // Find row index from _row_index
+    $rowIndex = $data['_row_index'] ?? null;
+
+    if (is_null($rowIndex) || !isset($parsedData['data'][$rowIndex])) {
+      return response()->json(['message' => 'Row not found in session.'], 404);
+    }
+
+    // Process DB insert/update here...
+    UserNIK::updateOrCreate(
+      ['periode_id' => $parsedData['periode_id'], 'user_code' => $data['user_code']],
+      [
+        'group' => $data['group'],
+        'user_type' => "NIK",
+        'license_type' => $data['license_type'],
+        'last_login' => $data['last_login'],
+        'valid_from' => $data['valid_from'],
+        'valid_to' => $data['valid_to'],
+      ]
+    );
+
+    // Remove this row from session data
+    unset($parsedData['data'][$rowIndex]);
+    $parsedData['data'] = array_values($parsedData['data']); // Reindex
+
+    session()->put('parsedData', $parsedData);
+
+    return response()->json(['message' => 'Row submitted successfully']);
+  }
+
+
+
+  /**
+   * Submits all rows of data to the User NIK table.
+   *
+   * Returns a StreamedResponse object which sends a JSON response with a 'progress' key
+   * whose value increments from 0 to 100 as each row is processed.
+   *
+   * @param Request $request
+   * @return \Illuminate\Http\StreamedResponse
+   */
+
+  public function submitAll(Request $request)
   {
     $parsedData = session('parsedData');
+
+    // \dd('Tabulator request input= ', $parsedData, ' | $request = ', $request->all());
 
     if (!$parsedData || !isset($parsedData['data'])) {
       return response()->json(['error' => 'No data available for import.'], 400);
@@ -201,7 +251,7 @@ class UserNIKImportController extends Controller
           ['periode_id' => $periodeId, 'user_code' => $row['user_code']],
           [
             'group' => $row['group'],
-            'user_type' => $row['user_type'],
+            'user_type' => "NIK",
             'license_type' => $row['license_type'],
             'last_login' => $row['last_login'],
             'valid_from' => $row['valid_from'],

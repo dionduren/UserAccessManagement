@@ -14,6 +14,22 @@
             </select>
         </div>
 
+        <table id="user_generic_table1" class="table table-bordered table-striped table-hover mt-3">
+            <thead>
+                <tr>
+                    <th>Perusahaan</th>
+                    <th>Periode</th>
+                    <th>User Code</th>
+                    <th>Cost Code</th>
+                    <th>Tipe Lisensi</th>
+                    <th>Valid From</th>
+                    <th>Valid To</th>
+                </tr>
+            </thead>
+        </table>
+
+        <hr style="border-width: 3px;" class="my-4">
+
         <div class="form-group">
             <label for="periode2">Select Second Periode</label>
             <select name="periode2" id="periode2" class="form-control">
@@ -24,26 +40,9 @@
             </select>
         </div>
 
-        <table id="user_generic_table1" class="table table-bordered table-striped table-hover mt-3">
-            <thead>
-                <tr>
-                    <th>id</th>
-                    <th>Perusahaan</th>
-                    <th>Periode</th>
-                    <th>User Code</th>
-                    <th>Cost Code</th>
-                    <th>Tipe Lisensi</th>
-                    <th>Valid From</th>
-                    <th>Valid To</th>
-                    <th>Action</th>
-                </tr>
-            </thead>
-        </table>
-
         <table id="user_generic_table2" class="table table-bordered table-striped table-hover mt-3">
             <thead>
                 <tr>
-                    <th>id</th>
                     <th>Perusahaan</th>
                     <th>Periode</th>
                     <th>User Code</th>
@@ -51,7 +50,6 @@
                     <th>Tipe Lisensi</th>
                     <th>Valid From</th>
                     <th>Valid To</th>
-                    <th>Action</th>
                 </tr>
             </thead>
         </table>
@@ -73,10 +71,6 @@
                         }
                     },
                     columns: [{
-                            data: 'id',
-                            name: 'id'
-                        },
-                        {
                             data: 'group',
                             name: 'group'
                         },
@@ -103,12 +97,6 @@
                         {
                             data: 'valid_to',
                             name: 'valid_to'
-                        },
-                        {
-                            data: 'action',
-                            name: 'action',
-                            orderable: false,
-                            searchable: false
                         }
                     ],
                     responsive: true

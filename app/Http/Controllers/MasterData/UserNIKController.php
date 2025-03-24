@@ -216,7 +216,7 @@ class UserNIKController extends Controller
     public function upload()
     {
         $periodes = Periode::select('id', 'definisi')->get();
-        return view('master-data.user_nik.upload', compact('periodes'));
+        return view('upload.user_nik.upload', compact('periodes'));
     }
 
     public function compare(Request $request)
@@ -228,11 +228,10 @@ class UserNIKController extends Controller
 
     public function getPeriodicUserNIK(Request $request)
     {
-        $periode = Periode::findOrFail($request->input('periode_id'));
 
         $userNik = UserNIK::with(['periode'])
             ->select('id', 'group', 'periode_id', 'user_code', 'user_type', 'last_login', 'license_type', 'valid_from', 'valid_to')
-            ->where('periode_id', $periode->id)
+            ->where('periode_id', $request->input('periode'))
             ->get();
 
         return DataTables::of($userNik)
@@ -248,20 +247,6 @@ class UserNIKController extends Controller
             ->addColumn('periode', function ($row) {
                 return $row->periode ? $row->periode->definisi : 'N/A';
             })
-            ->addColumn('action', function ($row) {
-                return '
-                <button type="button" class="btn btn-sm btn-primary me-1" data-toggle="modal" data-target="#userNIKModal" data-id="' . $row->id . '">
-                    <i class="bi bi-info-circle-fill"></i> Detail
-                </button>
-                <a href="' . route('user-nik.edit', $row->id) . '" target="_blank" class="btn btn-sm btn-warning me-1">
-                    <i class="bi bi-pencil-fill"></i> Edit
-                </a> 
-                <button onclick="deleteUserNIK(' . $row->id . ')" class="btn btn-sm btn-danger">
-                    <i class="bi bi-trash-fill"></i> Delete
-                </button>';
-                // <button onclick="deleteUserNIK(' . $row->id . ')" class="btn btn-sm btn-danger" disabled>Delete</button>';
-            })
-            ->rawColumns(['action'])
             ->make(true);
     }
 }

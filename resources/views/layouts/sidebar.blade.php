@@ -167,9 +167,42 @@
                 </a>
             </li>
 
+            <div class="dropdown">
+                <a class="nav-link text-white dropdown-toggle {{ request()->is('user-nik.upload*', 'master-data-nik.upload*', 'user-generic.upload*', 'nik_job_role.upload*') ? 'active' : 'text-white' }}"
+                    data-bs-toggle="dropdown" href="#" role="button" aria-expanded="false">
+                    <i class="bi bi-folder-fill me-2"></i> UPLOAD DATA
+                </a>
+                <div class="dropdown-content">
+                    <li class="nav-item">
+                        <a href="{{ route('user-nik.upload.form') }}"
+                            class="nav-link {{ request()->routeIs('user-nik.upload.form') ? 'active' : 'text-white' }}">
+                            <i class="bi bi-person-badge"></i> User NIK
+                        </a>
+                    </li>
+                    {{-- <li class="nav-item">
+                        <a href="{{ route('master-data-nik.upload') }}"
+                            class="nav-link {{ request()->routeIs('master-data-nik.upload') ? 'active' : 'text-white' }}">
+                            <i class="bi bi-person-fill"></i> Master Data NIK
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="{{ route('user-generic.upload') }}"
+                            class="nav-link {{ request()->routeIs('user-generic.upload') ? 'active' : 'text-white' }}">
+                            <i class="bi bi-person-lines-fill"></i> User Generic
+                        </a>
+                    </li> --}}
+                    <li class="nav-item">
+                        <a href="{{ route('nik_job_role.upload.form') }}"
+                            class="nav-link {{ request()->routeIs('nik_job_role.upload.form') ? 'active' : 'text-white' }}">
+                            <i class="bi bi-file-earmark-spreadsheet"></i> NIK - Job Role
+                        </a>
+                    </li>
+                </div>
+            </div>
+
             <li class="nav-item">
                 <a href="{{ route('user-nik.index') }}"
-                    class="nav-link {{ request()->routeIs('user-nik*') && !request()->routeIs('user-nik.index_mixed') ? 'active' : 'text-white' }}">
+                    class="nav-link {{ request()->routeIs('user-nik.index') ? 'active' : 'text-white' }}">
                     <i class="bi bi-person-badge"></i> User NIK
                 </a>
             </li>
@@ -177,6 +210,26 @@
                 <a href="{{ route('user-nik.index_mixed') }}"
                     class="nav-link {{ request()->routeIs('user-nik.index_mixed*') ? 'active' : 'text-white' }}">
                     <i class="bi bi-person-badge"></i> User NIK Mixed
+                </a>
+            </li>
+
+            <li class="nav-item">
+                <a href="{{ route('nik-job.index') }}"
+                    class="nav-link {{ request()->routeIs('nik-job*') ? 'active' : 'text-white' }}">
+                    <i class="bi bi-file-earmark-spreadsheet"></i> Relationship NIK - Job Role
+                </a>
+            </li>
+
+            <li class="nav-item">
+                <a href="{{ route('user-nik.compare') }}"
+                    class="nav-link {{ request()->routeIs('user-nik.compare*') ? 'active' : 'text-white' }}">
+                    <i class="bi bi-file-diff"></i> Compare User NIK Periode
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="{{ route('user-generic.compare') }}"
+                    class="nav-link {{ request()->routeIs('user-generic.compare*') ? 'active' : 'text-white' }}">
+                    <i class="bi bi-file-diff"></i> Compare User Generic Periode
                 </a>
             </li>
 

@@ -23,14 +23,16 @@ use App\Http\Controllers\AccessMatrixController;
 // use App\Http\Controllers\IOExcel\ExcelImportController;
 use App\Http\Controllers\CompositeRoleController;
 use App\Http\Controllers\MasterData\UserNIKController;
+use App\Http\Controllers\Relationship\NIKJobController;
 use App\Http\Controllers\IOExcel\UserNIKImportController;
-use App\Http\Controllers\MasterData\CostCenterController;
 
+use App\Http\Controllers\MasterData\CostCenterController;
 use App\Http\Controllers\MasterData\UserGenericController;
 use App\Http\Controllers\IOExcel\SingleRoleTcodeController;
 use App\Http\Controllers\IOExcel\TcodeSingleRoleController;
-use App\Http\Controllers\MasterData\CostPrevUserController;
 
+use App\Http\Controllers\MasterData\CostPrevUserController;
+use App\Http\Controllers\IOExcel\NIKJobRoleImportController;
 use App\Http\Controllers\Relationship\JobCompositeController;
 use App\Http\Controllers\IOExcel\CompanyKompartemenController;
 use App\Http\Controllers\IOExcel\CompositeRoleSingleRoleController;
@@ -118,18 +120,17 @@ Route::post('/tcode-single-role/confirm', [SingleRoleTcodeController::class, 'co
 // ------------------ NEW MASTER DATA ------------------
 Route::resource('periode', PeriodeController::class);
 
-Route::post('user-nik/upload', [UserNIKImportController::class, 'store'])->name('user-nik.upload');
-Route::get('user-nik/upload/preview', [UserNIKImportController::class, 'preview'])->name('user-nik.preview');
-Route::get('user-nik/upload/preview-data', [UserNIKImportController::class, 'getPreviewData'])->name('user-nik.preview_data');
-Route::post('user-nik/update-inline-session', [UserNIKImportController::class, 'updateInlineSession'])
-    ->name('user-nik.update-inline-session');
-
-Route::post('user-nik//upload/confirm', [UserNIKImportController::class, 'confirmImport'])->name('user-nik.confirm');
+Route::get('user-nik/upload', [UserNIKController::class, 'upload'])->name('user-nik.upload.form');
+Route::post('user-nik/upload', [UserNIKImportController::class, 'store'])->name('user-nik.upload.store');
+Route::get('user-nik/upload/preview', [UserNIKImportController::class, 'preview'])->name('user-nik.upload.preview');
+Route::get('user-nik/upload/preview-data', [UserNIKImportController::class, 'getPreviewData'])->name('user-nik.upload.preview_data');
+Route::post('user-nik/update-inline-session', [UserNIKImportController::class, 'updateInlineSession'])->name('user-nik.upload.update-inline-session');
+Route::post('user-nik//upload/submit-single', [UserNIKImportController::class, 'submitSingle'])->name('user-nik.upload.submitSingle');
+Route::post('user-nik//upload/confirm', [UserNIKImportController::class, 'submitAll'])->name('user-nik.upload.confirm');
 
 Route::get('user-nik/mixed', [UserNIKController::class, 'index_mixed'])->name('user-nik.index_mixed');
 Route::get('user-nik/check-user-detail', [UserNIKController::class, 'checkUserDetail'])->name('user-nik.check-user-detail');
 Route::get('user-nik/download-template', [UserNIKController::class, 'downloadTemplate'])->name('user-nik.download-template');
-Route::get('user-nik/upload', [UserNIKController::class, 'upload'])->name('user-nik.upload-page');
 Route::get('user-nik/compare', [UserNIKController::class, 'compare'])->name('user-nik.compare');
 Route::get('user-nik/get-periodic', [UserNIKController::class, 'getPeriodicUserNIK'])->name('user-nik.get-periodic');
 
@@ -143,6 +144,23 @@ Route::get('cost-center/user-generic/get-periodic', [UserGenericController::clas
 Route::resource('cost-center/user-generic', UserGenericController::class)->name('index', 'user-generic.index');
 Route::get('cost-center/prev-user', [CostCenterController::class, 'index_prev_user'])->name('prev-user.index');
 Route::resource('cost-center', CostCenterController::class);
+
+Route::get('relationship/nik-job/get-by-periode-id', [NIKJobController::class, 'getNIKJobRolesByPeriodeId'])->name('nik-job.get-by-periode');
+Route::resource('relationship/nik-job', NIKJobController::class);
+
+// ------------------ UPLOAD DATA ------------------
+
+Route::prefix('nik-job/upload')->name('nik_job_role.upload.')->group(function () {
+    Route::get('/', [NIKJobRoleImportController::class, 'uploadForm'])->name('form');
+    Route::post('/', [NIKJobRoleImportController::class, 'store'])->name('store');
+    Route::get('/download-template', [NIKJobRoleImportController::class, 'downloadTemplate'])->name('download-template');
+    Route::get('/preview', [NIKJobRoleImportController::class, 'preview'])->name('preview');
+    Route::get('/preview-data', [NIKJobRoleImportController::class, 'getPreviewData'])->name('preview_data');
+    Route::post('/update-inline-session', [UserNIKImportController::class, 'updateInlineSession'])->name('update-inline-session');
+    Route::post('/confirm', [NIKJobRoleImportController::class, 'confirmImport'])->name('confirm');
+    Route::post('/submit-single', [NIKJobRoleImportController::class, 'submitSingle'])->name('submitSingle');
+    Route::post('/submit-all', [NIKJobRoleImportController::class, 'submitAll'])->name('submitAll');
+});
 
 // ------------------ ACCESS MATRIX ------------------
 

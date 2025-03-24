@@ -2,9 +2,9 @@
 
 namespace Database\Seeders;
 
-use Carbon\Carbon;
 use App\Models\userNIK;
 use App\Models\UserDetail;
+use Illuminate\Support\Carbon;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\File;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;

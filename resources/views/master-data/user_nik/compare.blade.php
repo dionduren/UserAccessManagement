@@ -27,11 +27,13 @@
         <table id="user_nik_table1" class="table table-bordered table-striped table-hover mt-3">
             <thead>
                 <tr>
-                    <th>id</th>
-                    <th>Cost Code</th>
-                    <th>Nama</th>
+                    <th>Perusahaan</th>
+                    <th>Periode</th>
                     <th>NIK</th>
-                    <th>Dokumen Keterangan</th>
+                    <th>Tipe Lisensi</th>
+                    <th>Login Terakhir</th>
+                    <th>Valid From</th>
+                    <th>Valid To</th>
                 </tr>
             </thead>
         </table>
@@ -39,11 +41,13 @@
         <table id="user_nik_table2" class="table table-bordered table-striped table-hover mt-3">
             <thead>
                 <tr>
-                    <th>id</th>
-                    <th>Cost Code</th>
-                    <th>Nama</th>
+                    <th>Perusahaan</th>
+                    <th>Periode</th>
                     <th>NIK</th>
-                    <th>Dokumen Keterangan</th>
+                    <th>Tipe Lisensi</th>
+                    <th>Login Terakhir</th>
+                    <th>Valid From</th>
+                    <th>Valid To</th>
                 </tr>
             </thead>
         </table>
@@ -65,24 +69,32 @@
                         }
                     },
                     columns: [{
-                            data: 'id',
-                            name: 'id'
+                            data: 'group',
+                            name: 'group'
                         },
                         {
-                            data: 'cost_code',
-                            name: 'cost_code'
+                            data: 'periode',
+                            name: 'periode'
                         },
                         {
-                            data: 'nama',
-                            name: 'nama'
+                            data: 'user_code',
+                            name: 'user_code'
                         },
                         {
-                            data: 'nik',
-                            name: 'nik'
+                            data: 'license_type',
+                            name: 'license_type'
                         },
                         {
-                            data: 'dokumen_keterangan',
-                            name: 'dokumen_keterangan'
+                            data: 'last_login',
+                            name: 'last_login'
+                        },
+                        {
+                            data: 'valid_from',
+                            name: 'valid_from'
+                        },
+                        {
+                            data: 'valid_to',
+                            name: 'valid_to'
                         }
                     ],
                     responsive: true

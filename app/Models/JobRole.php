@@ -18,7 +18,15 @@ class JobRole extends Model
     protected $table = 'tr_job_roles';
     protected $primaryKey = 'id';
 
-    protected $fillable = ['company_id', 'kompartemen_id', 'departemen_id', 'nama_jabatan', 'deskripsi', 'created_by', 'updated_by'];
+    protected $fillable = [
+        'company_id',
+        'kompartemen_id',
+        'departemen_id',
+        'nama_jabatan',
+        'deskripsi',
+        'created_by',
+        'updated_by'
+    ];
 
     protected $dates = ['deleted_at'];
 

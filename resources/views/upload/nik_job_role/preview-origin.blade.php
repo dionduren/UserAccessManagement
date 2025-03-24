@@ -2,7 +2,7 @@
 
 @section('content')
     <div class="container-fluid">
-        <h1>Preview User NIK</h1>
+        <h1>Preview NIK - Job Role</h1>
 
         <!-- Error Messages -->
         @if ($errors->any())
@@ -25,7 +25,7 @@
         @endif
 
         <!-- Datatable -->
-        <table id="userNIKTable" class="table table-bordered display responsive nowrap">
+        <table id="NIKJobRoleTable" class="table table-bordered display responsive nowrap">
         </table>
 
         <!-- Progress Bar -->
@@ -38,10 +38,10 @@
         </div>
 
         <!-- Form for Confirmation -->
-        <form id="confirm-form" action="{{ route('user-nik.confirm') }}" method="POST">
+        <form id="confirm-form" action="{{ route('nik_job_role.upload.confirm') }}" method="POST">
             @csrf
             <button type="submit" class="btn btn-success">Confirm Import</button>
-            <a href="{{ route('user-nik.upload') }}" class="btn btn-secondary">Cancel</a>
+            <a href="{{ route('nik_job_role.upload.form') }}" class="btn btn-secondary">Cancel</a>
         </form>
 
         <!-- Redirect Buttons after Success -->
@@ -50,7 +50,7 @@
                 {{ session('success') }}
             </div>
             <div class="d-flex justify-content-between mt-4">
-                <a href="{{ route('user-nik.upload') }}" class="btn btn-primary">Back to Upload Page</a>
+                <a href="{{ route('nik_job_role.upload.form') }}" class="btn btn-primary">Back to Upload Page</a>
                 <a href="{{ route('home') }}" class="btn btn-secondary">Go to Home Page</a>
             </div>
         @endif
@@ -68,45 +68,20 @@
 @section('scripts')
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            const table = $('#userNIKTable').DataTable({
+            const table = $('#NIKJobRoleTable').DataTable({
                 processing: true,
                 serverSide: true,
-                ajax: "{{ route('user-nik.preview_data') }}",
+                ajax: "{{ route('nik_job_role.upload.preview_data') }}",
                 columns: [{
-                        data: 'group',
-                        title: 'Perusahaan',
-                        render: editableField('group')
-                    },
-                    {
-                        data: 'user_code',
+                        data: 'nik',
                         title: 'NIK',
-                        render: editableField('user_code')
+                        render: editableField('nik')
                     },
                     {
-                        data: 'user_type',
-                        title: 'User Type',
-                        render: editableField('user_type')
-                    },
-                    {
-                        data: 'license_type',
-                        title: 'License Type',
-                        render: editableField('license_type')
-                    },
-                    {
-                        data: 'last_login',
-                        title: 'Login Terakhir',
-                        render: editableField('last_login')
-                    },
-                    {
-                        data: 'valid_from',
-                        title: 'Valid From',
-                        render: editableField('valid_from')
-                    },
-                    {
-                        data: 'valid_to',
-                        title: 'Valid To',
-                        render: editableField('valid_to')
-                    },
+                        data: 'job_role',
+                        title: 'Job Role',
+                        render: editableField('job_role')
+                    }
                 ],
                 responsive: true,
                 searching: true,
@@ -119,14 +94,14 @@
                 };
             }
 
-            $('#userNIKTable').on('change', 'input.inline-edit', function() {
+            $('#NIKJobRoleTable').on('change', 'input.inline-edit', function() {
                 const input = $(this);
-                const row = $('#userNIKTable').DataTable().row(input.closest('tr')).data();
+                const row = $('#NIKJobRoleTable').DataTable().row(input.closest('tr')).data();
                 const rowIndex = row._row_index; // explicitly using original index
                 const column = input.data('column');
                 const value = input.val();
 
-                fetch('{{ route('user-nik.update-inline-session') }}', {
+                fetch('{{ route('nik_job_role.upload.update-inline-session') }}', {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
@@ -176,7 +151,7 @@
 
                         if (data.progress >= 100) {
                             progressBar.textContent = '100%';
-                            location.href = "{{ route('user-nik.index') }}";
+                            location.href = "{{ route('nik_job_role.upload.form') }}";
                         }
                     } catch (err) {
                         console.error('Parsing error:', err);

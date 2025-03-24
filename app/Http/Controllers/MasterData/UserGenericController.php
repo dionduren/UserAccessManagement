@@ -152,7 +152,7 @@ class UserGenericController extends Controller
     {
         $periodes = Periode::select('id', 'definisi')->get();
 
-        return view('master-data.user-generic.compare', compact('periodes'));
+        return view('master-data.user_generic.compare', compact('periodes'));
     }
 
     public function getPeriodicGenericUser(Request $request)
@@ -174,7 +174,6 @@ class UserGenericController extends Controller
                 ->addColumn('periode', function ($row) {
                     return $row->periode ? $row->periode->definisi : 'N/A';
                 })
-                ->rawColumns(['action'])
                 ->make(true);
         }
     }

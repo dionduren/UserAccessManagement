@@ -1,4 +1,3 @@
-/************* ✨ Codeium Command 🌟 *************/
 <!-- Modal -->
 <div class="modal fade" id="userNIKModal" tabindex="-1" aria-labelledby="userNIKModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg">
@@ -46,5 +45,3 @@
         </div>
     </div>
 </div>
-
-/****** f1ce5d9e-5502-45b0-ac2d-c6c8cb0c2613 *******/

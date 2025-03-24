@@ -379,6 +379,47 @@ namespace App\Models{
  * 
  *
  * @property int $id
+ * @property int|null $periode_id
+ * @property string|null $nik
+ * @property int|null $job_role_id
+ * @property bool $is_active
+ * @property string|null $last_update
+ * @property \Illuminate\Support\Carbon|null $created_at
+ * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property \Illuminate\Support\Carbon|null $deleted_at
+ * @property string|null $created_by
+ * @property string|null $updated_by
+ * @property string|null $deleted_by
+ * @property-read \App\Models\JobRole|null $jobRole
+ * @property-read \App\Models\Periode|null $periode
+ * @property-read \App\Models\UserDetail|null $userDetail
+ * @method static \Illuminate\Database\Eloquent\Builder|NIKJobRole newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder|NIKJobRole newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder|NIKJobRole onlyTrashed()
+ * @method static \Illuminate\Database\Eloquent\Builder|NIKJobRole query()
+ * @method static \Illuminate\Database\Eloquent\Builder|NIKJobRole whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|NIKJobRole whereCreatedBy($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|NIKJobRole whereDeletedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|NIKJobRole whereDeletedBy($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|NIKJobRole whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|NIKJobRole whereIsActive($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|NIKJobRole whereJobRoleId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|NIKJobRole whereLastUpdate($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|NIKJobRole whereNik($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|NIKJobRole wherePeriodeId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|NIKJobRole whereUpdatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|NIKJobRole whereUpdatedBy($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|NIKJobRole withTrashed()
+ * @method static \Illuminate\Database\Eloquent\Builder|NIKJobRole withoutTrashed()
+ */
+	class NIKJobRole extends \Eloquent {}
+}
+
+namespace App\Models{
+/**
+ * 
+ *
+ * @property int $id
  * @property string|null $definisi
  * @property string|null $tanggal_create_periode
  * @property bool $is_active
