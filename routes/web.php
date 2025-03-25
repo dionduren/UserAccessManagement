@@ -22,15 +22,16 @@ use App\Http\Controllers\AccessMatrixController;
 
 // use App\Http\Controllers\IOExcel\ExcelImportController;
 use App\Http\Controllers\CompositeRoleController;
+use App\Http\Controllers\DynamicUploadController;
 use App\Http\Controllers\MasterData\UserNIKController;
 use App\Http\Controllers\Relationship\NIKJobController;
-use App\Http\Controllers\IOExcel\UserNIKImportController;
 
+use App\Http\Controllers\IOExcel\UserNIKImportController;
 use App\Http\Controllers\MasterData\CostCenterController;
 use App\Http\Controllers\MasterData\UserGenericController;
 use App\Http\Controllers\IOExcel\SingleRoleTcodeController;
-use App\Http\Controllers\IOExcel\TcodeSingleRoleController;
 
+use App\Http\Controllers\IOExcel\TcodeSingleRoleController;
 use App\Http\Controllers\MasterData\CostPrevUserController;
 use App\Http\Controllers\IOExcel\NIKJobRoleImportController;
 use App\Http\Controllers\Relationship\JobCompositeController;
@@ -120,22 +121,30 @@ Route::post('/tcode-single-role/confirm', [SingleRoleTcodeController::class, 'co
 // ------------------ NEW MASTER DATA ------------------
 Route::resource('periode', PeriodeController::class);
 
-Route::get('user-nik/upload', [UserNIKController::class, 'upload'])->name('user-nik.upload.form');
-Route::post('user-nik/upload', [UserNIKImportController::class, 'store'])->name('user-nik.upload.store');
-Route::get('user-nik/upload/preview', [UserNIKImportController::class, 'preview'])->name('user-nik.upload.preview');
-Route::get('user-nik/upload/preview-data', [UserNIKImportController::class, 'getPreviewData'])->name('user-nik.upload.preview_data');
-Route::post('user-nik/update-inline-session', [UserNIKImportController::class, 'updateInlineSession'])->name('user-nik.upload.update-inline-session');
-Route::post('user-nik//upload/submit-single', [UserNIKImportController::class, 'submitSingle'])->name('user-nik.upload.submitSingle');
-Route::post('user-nik//upload/confirm', [UserNIKImportController::class, 'submitAll'])->name('user-nik.upload.confirm');
+// Route::get('user-nik/upload', [UserNIKController::class, 'upload'])->name('user-nik.upload.form');
+// Route::post('user-nik/upload', [UserNIKImportController::class, 'store'])->name('user-nik.upload.store');
+// Route::get('user-nik/upload/preview', [UserNIKImportController::class, 'preview'])->name('user-nik.upload.preview');
+// Route::get('user-nik/upload/preview-data', [UserNIKImportController::class, 'getPreviewData'])->name('user-nik.upload.preview_data');
+// Route::post('user-nik/update-inline-session', [UserNIKImportController::class, 'updateInlineSession'])->name('user-nik.upload.update-inline-session');
+// Route::post('user-nik//upload/submit-single', [UserNIKImportController::class, 'submitSingle'])->name('user-nik.upload.submitSingle');
+// Route::post('user-nik//upload/confirm', [UserNIKImportController::class, 'submitAll'])->name('user-nik.upload.confirm');
 
+Route::prefix('user-nik/upload')->name('user-nik.upload.')->group(function () {
+    Route::get('/', [UserNIKImportController::class, 'uploadForm'])->name('form');
+    Route::post('/', [UserNIKImportController::class, 'store'])->name('store');
+    Route::get('/preview', [UserNIKImportController::class, 'preview'])->name('preview');
+    Route::get('/preview-data', [UserNIKImportController::class, 'getPreviewData'])->name('preview_data');
+    Route::post('/update-inline-session', [UserNIKImportController::class, 'updateInlineSession'])->name('update-inline-session');
+    Route::post('/submit-single', [UserNIKImportController::class, 'submitSingle'])->name('submitSingle');
+    Route::post('/confirm', [UserNIKImportController::class, 'submitAll'])->name('confirm');
+});
+// Additional Routes
 Route::get('user-nik/mixed', [UserNIKController::class, 'index_mixed'])->name('user-nik.index_mixed');
 Route::get('user-nik/check-user-detail', [UserNIKController::class, 'checkUserDetail'])->name('user-nik.check-user-detail');
 Route::get('user-nik/download-template', [UserNIKController::class, 'downloadTemplate'])->name('user-nik.download-template');
 Route::get('user-nik/compare', [UserNIKController::class, 'compare'])->name('user-nik.compare');
 Route::get('user-nik/get-periodic', [UserNIKController::class, 'getPeriodicUserNIK'])->name('user-nik.get-periodic');
-
-
-// Finally, resource route at the end
+// Resource Route
 Route::resource('user-nik', UserNIKController::class);
 
 Route::get('cost-center/user-generic/dashboard', [UserGenericController::class, 'index_dashboard'])->name('dashboard.user-generic');
@@ -160,6 +169,15 @@ Route::prefix('nik-job/upload')->name('nik_job_role.upload.')->group(function ()
     Route::post('/confirm', [NIKJobRoleImportController::class, 'confirmImport'])->name('confirm');
     Route::post('/submit-single', [NIKJobRoleImportController::class, 'submitSingle'])->name('submitSingle');
     Route::post('/submit-all', [NIKJobRoleImportController::class, 'submitAll'])->name('submitAll');
+});
+
+Route::prefix('dynamic-upload')->name('dynamic_upload.')->group(function () {
+    Route::get('/{module}/upload', [DynamicUploadController::class, 'upload'])->name('upload');
+    Route::post('/{module}/upload', [DynamicUploadController::class, 'handleUpload'])->name('handleUpload');
+    Route::get('/{module}/preview', [DynamicUploadController::class, 'preview'])->name('preview');
+    Route::get('/{module}/preview-data', [DynamicUploadController::class, 'getPreviewData'])->name('preview_data');
+    Route::post('/{module}/update-inline', [DynamicUploadController::class, 'updateInlineSession'])->name('update_inline');
+    Route::post('/{module}/submit-all', [DynamicUploadController::class, 'submitAll'])->name('submitAll');
 });
 
 // ------------------ ACCESS MATRIX ------------------

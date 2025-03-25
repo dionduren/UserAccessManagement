@@ -155,6 +155,35 @@
         @endcan
 
         <hr>
+
+        @php
+            $modules = config('dynamic_uploads.modules');
+        @endphp
+
+        <div class="dropdown">
+            <a class="nav-link dropdown-toggle {{ request()->is('dynamic_upload*') ? 'active' : 'text-white' }}"
+                href="#" data-bs-toggle="{{ request()->is('dynamic_upload*') ? '' : 'dropdown' }}" role="button"
+                aria-expanded="false">
+                <i class="bi bi-cloud-upload me-2"></i> <span class="me-auto">DYNAMIC UPLOAD</span>
+            </a>
+            <div class="dropdown-content">
+                <ul class="nav flex-column ms-3">
+                    @foreach ($modules as $key => $module)
+                        <li class="nav-item">
+                            <a class="nav-link {{ request()->routeIs('dynamic_upload.upload', ['module' => $key]) ? 'active' : 'text-white' }}"
+                                href="{{ route('dynamic_upload.upload', ['module' => $key]) }}">
+                                {{ $module['name'] }}
+                            </a>
+                        </li>
+                    @endforeach
+                </ul>
+            </div>
+        </div>
+
+
+
+        <hr>
+
         <div>
             <h5>User & Cost Center</h5>
         </div>
@@ -170,7 +199,7 @@
             <div class="dropdown">
                 <a class="nav-link text-white dropdown-toggle {{ request()->is('user-nik.upload*', 'master-data-nik.upload*', 'user-generic.upload*', 'nik_job_role.upload*') ? 'active' : 'text-white' }}"
                     data-bs-toggle="dropdown" href="#" role="button" aria-expanded="false">
-                    <i class="bi bi-folder-fill me-2"></i> UPLOAD DATA
+                    <i class="bi bi-folder-fill me-2"></i><span class="me-auto"> UPLOAD DATA</span>
                 </a>
                 <div class="dropdown-content">
                     <li class="nav-item">

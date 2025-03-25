@@ -14,7 +14,7 @@ class CreateJobRolesTable extends Migration
             $table->foreignId('kompartemen_id')->nullable()->constrained('ms_kompartemen')->onDelete('set null');
             $table->foreignId('departemen_id')->nullable()->constrained('ms_departemen')->onDelete('set null');
             $table->string('nama_jabatan'); // Job Role Name
-            $table->string('status');
+            $table->string('status')->nullable();
             $table->text('deskripsi')->nullable();
             $table->timestamps();
             $table->softDeletes();

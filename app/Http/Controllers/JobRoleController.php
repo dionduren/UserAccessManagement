@@ -134,7 +134,7 @@ class JobRoleController extends Controller
 
     public function getJobRoles(Request $request)
     {
-        $jsonPath = storage_path('app/public/master_data.json');
+        $jsonPath = storage_path('/app/public/master_data.json');
         if (!file_exists($jsonPath)) {
             return response()->json(['error' => 'Master data JSON not found'], 404);
         }
