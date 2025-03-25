@@ -73,6 +73,24 @@ return [
                     'db_field' => 'job_role_id'
                 ],
             ]
-        ]
+        ],
+
+        'terminated_employee' => [
+            'name' => 'Terminated Employee Upload',
+            'table' => 'ms_terminated_employee',
+            'user_type' => null, // Optional to make controller logic consistent
+            'columns' => [
+                'nik' => ['type' => 'string'],
+                'nama' => ['type' => 'string'],
+                'tanggal_resign' => ['type' => 'date'],
+                'status' => ['type' => 'string'],
+                'last_login_date' => ['type' => 'date'], // Split into date
+                'last_login_time' => ['type' => 'time'], // and time fields
+                'valid_from' => ['type' => 'date'],
+                'valid_to' => ['type' => 'date'],
+            ]
+        ],
+
+
     ]
 ];

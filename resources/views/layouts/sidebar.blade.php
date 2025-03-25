@@ -250,6 +250,13 @@
             </li>
 
             <li class="nav-item">
+                <a href="{{ route('terminated-employee.index') }}"
+                    class="nav-link {{ request()->routeIs('terminated-employee.index') ? 'active' : 'text-white' }}">
+                    <i class="bi bi-file-earmark-spreadsheet"></i> Terminated Employee
+                </a>
+            </li>
+
+            <li class="nav-item">
                 <a href="{{ route('user-nik.compare') }}"
                     class="nav-link {{ request()->routeIs('user-nik.compare*') ? 'active' : 'text-white' }}">
                     <i class="bi bi-file-diff"></i> Compare User NIK Periode

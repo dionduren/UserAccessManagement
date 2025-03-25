@@ -2,11 +2,13 @@
 
 namespace App\Http\Controllers;
 
+use Carbon\Carbon;
 use App\Models\Periode;
 use Illuminate\Http\Request;
 use App\Models\TempUploadSession;
 use Illuminate\Support\Facades\Log;
 use Maatwebsite\Excel\Facades\Excel;
+use PhpOffice\PhpSpreadsheet\Shared\Date;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class DynamicUploadController extends Controller
@@ -37,22 +39,63 @@ class DynamicUploadController extends Controller
 
         // 🔵 Convert header row to associative rows:
         $header = array_shift($rows);
-        $dateFields = array_filter(array_keys($modules[$module]['columns']), function ($col) use ($modules, $module) {
-            return $modules[$module]['columns'][$col]['type'] === 'date';
-        });
+        $columns = $modules[$module]['columns'];
+
+        $dateFields = array_keys(array_filter($columns, fn($meta) => $meta['type'] === 'date'));
+
+        $excelToDate = fn($value) =>
+        is_numeric($value)
+            ? Date::excelToDateTimeObject($value)->format('Y-m-d')
+            : Carbon::parse(str_replace(['.', '/'], '-', $value))->format('Y-m-d');
+
         $parsedRows = [];
 
+
         foreach ($rows as $row) {
-            // $parsedRows[] = array_combine($header, $row);
             $assocRow = array_combine($header, $row);
 
-            // Normalize dates to YYYY-MM-DD format
-            foreach ($dateFields as $dateField) {
-                if (!empty($assocRow[$dateField])) {
-                    $assocRow[$dateField] = \Carbon\Carbon::createFromFormat('d.m.Y', str_replace(['.', '/'], '.', $assocRow[$dateField]))
-                        ->format('Y-m-d');
+            // 🟢 Handle last_login only for terminated_employee
+            if ($module === 'terminated_employee') {
+                if (isset($assocRow['terminate_date']) && !isset($assocRow['tanggal_resign'])) {
+                    $assocRow['tanggal_resign'] = $assocRow['terminate_date'];
+                }
+
+                try {
+                    if (!empty($assocRow['last_login_date'])) {
+                        $assocRow['last_login_date'] = Carbon::parse(str_replace(['.', '/'], '-', $assocRow['last_login_date']))->format('Y-m-d');
+                    }
+                } catch (\Exception $e) {
+                    $assocRow['last_login_date'] = null;
+                }
+
+                try {
+                    if (!empty($assocRow['last_login_time'])) {
+                        $assocRow['last_login_time'] = is_numeric($assocRow['last_login_time'])
+                            ? Date::excelToDateTimeObject($assocRow['last_login_time'])->format('H:i:s')
+                            : Carbon::parse($assocRow['last_login_time'])->format('H:i:s');
+                    }
+                } catch (\Exception $e) {
+                    $assocRow['last_login_time'] = null;
+                }
+
+                foreach (['valid_from', 'valid_to'] as $field) {
+                    if (in_array($assocRow[$field] ?? '', ['0', '00/01/1900'])) {
+                        $assocRow[$field] = null;
+                    }
                 }
             }
+
+            // 🔁 Convert other date fields
+            foreach ($dateFields as $field) {
+                if (!empty($assocRow[$field])) {
+                    try {
+                        $assocRow[$field] = $excelToDate($assocRow[$field]);
+                    } catch (\Exception $e) {
+                        $assocRow[$field] = null;
+                    }
+                }
+            }
+
             $parsedRows[] = $assocRow;
         }
 
@@ -60,7 +103,7 @@ class DynamicUploadController extends Controller
             'module' => $module,
             'periode_id' => $request->periode_id,
             'data' => $parsedRows,
-            'columns' => $this->generateTabulatorColumns($modules[$module]['columns']),
+            'columns' => $this->generateTabulatorColumns($columns),
         ]);
 
         return redirect()->route('dynamic_upload.preview', $module);
@@ -147,10 +190,15 @@ class DynamicUploadController extends Controller
         return new StreamedResponse(function () use ($dataArray, $totalRows, $tableName, $modules, $module, $periodeId, $userType) {
             foreach ($dataArray as $index => $row) {
                 $payload = [];
+
                 if ($userType) {
                     $payload['user_type'] = $userType;
                 }
-                $payload['periode_id'] = $periodeId;
+
+                if (!in_array($tableName, ['ms_terminated_employee'])) {
+                    $payload['periode_id'] = $periodeId;
+                }
+
 
                 foreach ($modules[$module]['columns'] as $colName => $meta) {
                     $targetDbField = $meta['db_field'] ?? $colName;
@@ -205,6 +253,23 @@ class DynamicUploadController extends Controller
 
                     \DB::table($tableName)->updateOrInsert(
                         ['periode_id' => $periodeId, 'nik' => $row['user_code']], // map user_code → nik
+                        $payload
+                    );
+                } elseif ($tableName === 'ms_terminated_employee') {
+                    if ($module === 'terminated_employee') {
+                        $datePart = $row['last_login_date'] ?? null;
+                        $timePart = $row['last_login_time'] ?? '00:00:00';
+                        try {
+                            $merged = trim("{$datePart} {$timePart}");
+                            $payload['last_login'] = Carbon::parse($merged)->format('Y-m-d H:i:s');
+                        } catch (\Exception $e) {
+                            $payload['last_login'] = null;
+                        }
+                        unset($payload['last_login_date'], $payload['last_login_time']);
+                    }
+
+                    \DB::table($tableName)->updateOrInsert(
+                        ['nik' => $row['nik']], // map user_code → nik
                         $payload
                     );
                 } else {

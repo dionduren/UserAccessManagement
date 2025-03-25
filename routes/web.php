@@ -1,9 +1,10 @@
 <?php
 
+use App\Models\TerminatedEmployee;
 use Illuminate\Support\Facades\Auth;
+
+
 use Illuminate\Support\Facades\Route;
-
-
 use App\Http\Controllers\JSONController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\AdminController;
@@ -15,27 +16,28 @@ use App\Http\Controllers\EmployeeController;
 use App\Http\Controllers\DepartemenController;
 use App\Http\Controllers\SingleRoleController;
 use App\Http\Controllers\KompartemenController;
-use App\Http\Controllers\TcodeImportController;
 
-use App\Http\Controllers\AccessMatrixController;
+use App\Http\Controllers\TcodeImportController;
 
 
 // use App\Http\Controllers\IOExcel\ExcelImportController;
+use App\Http\Controllers\AccessMatrixController;
 use App\Http\Controllers\CompositeRoleController;
 use App\Http\Controllers\DynamicUploadController;
 use App\Http\Controllers\MasterData\UserNIKController;
-use App\Http\Controllers\Relationship\NIKJobController;
 
+use App\Http\Controllers\Relationship\NIKJobController;
 use App\Http\Controllers\IOExcel\UserNIKImportController;
 use App\Http\Controllers\MasterData\CostCenterController;
 use App\Http\Controllers\MasterData\UserGenericController;
-use App\Http\Controllers\IOExcel\SingleRoleTcodeController;
 
+use App\Http\Controllers\IOExcel\SingleRoleTcodeController;
 use App\Http\Controllers\IOExcel\TcodeSingleRoleController;
 use App\Http\Controllers\MasterData\CostPrevUserController;
 use App\Http\Controllers\IOExcel\NIKJobRoleImportController;
 use App\Http\Controllers\Relationship\JobCompositeController;
 use App\Http\Controllers\IOExcel\CompanyKompartemenController;
+use App\Http\Controllers\MasterData\TerminatedEmployeeController;
 use App\Http\Controllers\IOExcel\CompositeRoleSingleRoleController;
 
 // Route::get('/', function () {
@@ -146,6 +148,9 @@ Route::get('user-nik/compare', [UserNIKController::class, 'compare'])->name('use
 Route::get('user-nik/get-periodic', [UserNIKController::class, 'getPeriodicUserNIK'])->name('user-nik.get-periodic');
 // Resource Route
 Route::resource('user-nik', UserNIKController::class);
+
+Route::get('terminated-employee/getData', [TerminatedEmployeeController::class, 'getData'])->name('terminated-employee.get-data');
+Route::resource('terminated-employee', TerminatedEmployeeController::class);
 
 Route::get('cost-center/user-generic/dashboard', [UserGenericController::class, 'index_dashboard'])->name('dashboard.user-generic');
 Route::get('cost-center/user-generic/compare', [UserGenericController::class, 'compare'])->name('user-generic.compare');
