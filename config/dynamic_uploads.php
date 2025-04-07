@@ -17,7 +17,7 @@ return [
         ],
 
         'master_nik' => [
-            'name' => 'Master Data Detail Upload',
+            'name' => 'Master Karyawan NIK Upload',
             'table' => 'ms_user_detail',
             'user_type' => null, // Optional to make controller logic consistent
             'columns' => [

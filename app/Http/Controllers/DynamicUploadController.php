@@ -196,7 +196,7 @@ class DynamicUploadController extends Controller
                 }
 
                 if (!in_array($tableName, ['ms_terminated_employee'])) {
-                    $payload['periode_id'] = $periodeId;
+                    $payload['periode_id'] = $periodeId;r
                 }
 
 

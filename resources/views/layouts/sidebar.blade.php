@@ -306,6 +306,18 @@
                 </a>
             </li> --}}
         </div>
+
+        <hr>
+
+        <div>
+            <li>
+                <a href="{{ route('report.unit') }}"
+                    class="nav-link {{ request()->routeIs('report.unit') ? 'active' : 'text-white' }}">
+                    <i class="bi bi-clipboard-data me-2"></i> Report
+                </a>
+            </li>
+        </div>
+
         <hr>
 
         @can('manage access-matrix')

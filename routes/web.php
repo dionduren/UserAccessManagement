@@ -29,8 +29,9 @@ use App\Http\Controllers\MasterData\UserNIKController;
 use App\Http\Controllers\Relationship\NIKJobController;
 use App\Http\Controllers\IOExcel\UserNIKImportController;
 use App\Http\Controllers\MasterData\CostCenterController;
-use App\Http\Controllers\MasterData\UserGenericController;
+use App\Http\Controllers\Report\WorkUnitReportController;
 
+use App\Http\Controllers\MasterData\UserGenericController;
 use App\Http\Controllers\IOExcel\SingleRoleTcodeController;
 use App\Http\Controllers\IOExcel\TcodeSingleRoleController;
 use App\Http\Controllers\MasterData\CostPrevUserController;
@@ -183,6 +184,13 @@ Route::prefix('dynamic-upload')->name('dynamic_upload.')->group(function () {
     Route::get('/{module}/preview-data', [DynamicUploadController::class, 'getPreviewData'])->name('preview_data');
     Route::post('/{module}/update-inline', [DynamicUploadController::class, 'updateInlineSession'])->name('update_inline');
     Route::post('/{module}/submit-all', [DynamicUploadController::class, 'submitAll'])->name('submitAll');
+});
+
+// ------------------ REPORT ------------------
+
+Route::prefix('report')->name('report.')->group(function () {
+    Route::get('/unit', [WorkUnitReportController::class, 'index'])->name('unit');
+    Route::get('/unit/nested-data', [WorkUnitReportController::class, 'groupedJson'])->name('unit.nestedData');
 });
 
 // ------------------ ACCESS MATRIX ------------------
