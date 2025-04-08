@@ -10,15 +10,23 @@ class CreateCompositeRolesTable extends Migration
     {
         Schema::create('tr_composite_roles', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('company_id')->nullable()->constrained('ms_company')->onDelete('set null');
+            $table->string('company_id');
+            $table->unsignedBigInteger('jabatan_id')->nullable();
             $table->string('nama'); // Composite Role Name
             $table->text('deskripsi')->nullable();
-            $table->foreignId('jabatan_id')->nullable()->constrained('tr_job_roles')->onDelete('set null');
             $table->timestamps();
             $table->softDeletes();
             $table->text('created_by')->nullable();
             $table->text('updated_by')->nullable();
             $table->text('deleted_by')->nullable();
+
+            $table->index('company_id');
+            $table->index('jabatan_id');
+            $table->index('nama');
+            $table->index('deleted_at');
+
+            $table->foreign('company_id')->references('company_code')->on('ms_company')->onDelete('set null');
+            $table->foreign('jabatan_id')->references('id')->on('tr_job_roles')->onDelete('set null');
         });
     }
 

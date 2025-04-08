@@ -11,26 +11,33 @@ class Kompartemen extends Model
     use HasFactory, SoftDeletes;
 
     protected $table = 'ms_kompartemen';
-    protected $primaryKey = 'id';
+    protected $primaryKey = 'kompartemen_id';
+    public $incrementing = false;
+    protected $keyType = 'string';
 
-    protected $fillable = ['company_id', 'name', 'description', 'created_by', 'updated_by'];
+    protected $fillable = [
+        'kompartemen_id',
+        'company_id',
+        'nama',
+        'deskripsi',
+        'created_by',
+        'updated_by',
+    ];
 
     protected $dates = ['deleted_at'];
 
-    // A compartment belongs to a company
     public function company()
     {
-        return $this->belongsTo(Company::class);
+        return $this->belongsTo(Company::class, 'company_id', 'company_code');
     }
 
-    // A compartment has many departments
     public function departemen()
     {
-        return $this->hasMany(Departemen::class);
+        return $this->hasMany(Departemen::class, 'kompartemen_id', 'kompartemen_id');
     }
 
     public function jobRoles()
     {
-        return $this->hasMany(JobRole::class);
+        return $this->hasMany(JobRole::class, 'kompartemen_id', 'kompartemen_id');
     }
 }

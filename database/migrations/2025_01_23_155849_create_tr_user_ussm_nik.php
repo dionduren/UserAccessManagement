@@ -19,10 +19,8 @@ return new class extends Migration
             $table->date('valid_from')->nullable();
             $table->date('valid_to')->nullable();
             $table->string('group')->nullable(); // nempel ke shortname ms_company
-            // new column start
             $table->foreignId('periode_id')->nullable();
             $table->dateTime('last_login')->nullable();
-            // new column end
             $table->timestamps();
             $table->softDeletes();
             $table->string('created_by')->nullable();

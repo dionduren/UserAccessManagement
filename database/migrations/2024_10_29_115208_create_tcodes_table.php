@@ -9,9 +9,7 @@ class CreateTcodesTable extends Migration
     public function up()
     {
         Schema::create('tr_tcodes', function (Blueprint $table) {
-            $table->id();
-            // $table->foreignId('company_id')->nullable()->constrained('ms_company')->onDelete('set null');
-            $table->string('code'); // Tcode Identifier
+            $table->string('code')->primary(); // Tcode Identifier
             $table->string('sap_module')->nullable(); // SAP Module Name
             $table->text('deskripsi')->nullable(); // Description
             $table->timestamps();
@@ -19,6 +17,10 @@ class CreateTcodesTable extends Migration
             $table->text('created_by')->nullable();
             $table->text('updated_by')->nullable();
             $table->text('deleted_by')->nullable();
+
+            $table->index('code');
+            $table->index('sap_module');
+            $table->index('deleted_at');
         });
     }
 

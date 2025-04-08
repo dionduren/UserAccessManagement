@@ -10,7 +10,7 @@ class CreateSingleRolesTable extends Migration
     {
         Schema::create('tr_single_roles', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('company_id')->nullable()->constrained('ms_company')->onDelete('set null');
+            $table->string('company_id');
             $table->string('nama'); // Single Role Name
             $table->text('deskripsi')->nullable();
             $table->timestamps();
@@ -18,6 +18,12 @@ class CreateSingleRolesTable extends Migration
             $table->text('created_by')->nullable();
             $table->text('updated_by')->nullable();
             $table->text('deleted_by')->nullable();
+
+            $table->index('company_id');
+            $table->index('nama');
+            $table->index('deleted_at');
+
+            $table->foreign('company_id')->references('company_code')->on('ms_company')->onDelete('set null');
         });
     }
 

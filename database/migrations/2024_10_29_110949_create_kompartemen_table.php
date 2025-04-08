@@ -9,15 +9,22 @@ class CreateKompartemenTable extends Migration
     public function up()
     {
         Schema::create('ms_kompartemen', function (Blueprint $table) {
-            $table->id(); // Primary key
-            $table->foreignId('company_id')->nullable()->constrained('ms_company')->onDelete('set null');
-            $table->string('name'); // Name of the compartment
-            $table->text('description')->nullable(); // Optional description
+            $table->string('kompartemen_id')->primary(); // Primary key
+            $table->string('company_id'); // foreign key
+            $table->string('nama'); // Name of the compartment
+            $table->text('deskripsi')->nullable(); // Optional description
             $table->timestamps(); // Created at and updated at timestamps
             $table->softDeletes(); // Soft delete for safe record deletion
             $table->text('created_by')->nullable();
             $table->text('updated_by')->nullable();
             $table->text('deleted_by')->nullable();
+
+            $table->index('kompartemen_id');
+            $table->index('company_id');
+            $table->index('deleted_at');
+
+
+            $table->foreign('company_id')->references('company_code')->on('ms_company')->onDelete('set null');
         });
     }
 

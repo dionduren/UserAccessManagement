@@ -22,7 +22,8 @@ class JobRole extends Model
         'company_id',
         'kompartemen_id',
         'departemen_id',
-        'nama_jabatan',
+        'nama',
+        'status',
         'deskripsi',
         'created_by',
         'updated_by'
@@ -30,27 +31,23 @@ class JobRole extends Model
 
     protected $dates = ['deleted_at'];
 
-    // A job role belongs to a company
     public function company()
     {
-        return $this->belongsTo(Company::class);
+        return $this->belongsTo(Company::class, 'company_id', 'company_code');
     }
 
-    // A job role belongs to a department
-    public function departemen()
-    {
-        return $this->belongsTo(Departemen::class);
-    }
-
-    // A job role belongs to a compartment
     public function kompartemen()
     {
-        return $this->belongsTo(Kompartemen::class);
+        return $this->belongsTo(Kompartemen::class, 'kompartemen_id', 'kompartemen_id');
     }
 
-    // One JobRole has one CompositeRole
+    public function departemen()
+    {
+        return $this->belongsTo(Departemen::class, 'departemen_id', 'departemen_id');
+    }
+
     public function compositeRole()
     {
-        return $this->hasOne(CompositeRole::class, 'jabatan_id');
+        return $this->hasMany(CompositeRole::class, 'jabatan_id', 'id');
     }
 }
