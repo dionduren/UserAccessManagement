@@ -9,14 +9,10 @@ use App\Http\Controllers\JSONController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\TcodeController;
-use App\Http\Controllers\CompanyController;
 use App\Http\Controllers\JobRoleController;
 use App\Http\Controllers\PeriodeController;
 use App\Http\Controllers\EmployeeController;
-use App\Http\Controllers\DepartemenController;
 use App\Http\Controllers\SingleRoleController;
-use App\Http\Controllers\KompartemenController;
-
 use App\Http\Controllers\TcodeImportController;
 
 
@@ -24,6 +20,10 @@ use App\Http\Controllers\TcodeImportController;
 use App\Http\Controllers\AccessMatrixController;
 use App\Http\Controllers\CompositeRoleController;
 use App\Http\Controllers\DynamicUploadController;
+
+use App\Http\Controllers\MasterData\CompanyController;
+use App\Http\Controllers\MasterData\KompartemenController;
+use App\Http\Controllers\MasterData\DepartemenController;
 use App\Http\Controllers\MasterData\UserNIKController;
 
 use App\Http\Controllers\Relationship\NIKJobController;

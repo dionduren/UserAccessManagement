@@ -108,7 +108,7 @@ class UserNIKImportController extends Controller
           } else {
             $previewData[] = [
               'periode_id' => $periodeId,
-              'group' => $company->id,
+              'group' => $company->company_code,
               'user_code' => $row['user_code'],
               'user_type' => "NIK",
               'license_type' => $row['license_type'],

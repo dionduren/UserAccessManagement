@@ -81,7 +81,7 @@ class UserNIKController extends Controller
                     return $row->userDetail->nama ?? 'N/A'; // Get User's Name
                 })
                 ->addColumn('kompartemen_name', function ($row) {
-                    return $row->userDetail->kompartemen->name ?? 'N/A'; // Get Kompartemen Name
+                    return $row->userDetail->kompartemen->nama ?? 'N/A'; // Get Kompartemen Name
                 })
                 ->addColumn('direktorat', function ($row) {
                     return $row->userDetail->direktorat ?? 'N/A'; // Get Direktorat

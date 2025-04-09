@@ -55,9 +55,9 @@
                 <select id="companyDropdown" class="form-control" name="company_id" required>
                     <option value="">-- Pilih Perusahaan --</option>
                     @foreach ($companies as $company)
-                        <option value="{{ $company->id }}"
-                            {{ old('company_id', $nikJobRole->jobRole->company_id) == $company->id ? 'selected' : '' }}>
-                            {{ $company->name }}
+                        <option value="{{ $company->company_code }}"
+                            {{ old('company_id', $nikJobRole->jobRole->company_id) == $company->company_code ? 'selected' : '' }}>
+                            {{ $company->nama }}
                         </option>
                     @endforeach
                 </select>

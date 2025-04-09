@@ -14,9 +14,9 @@
                 <select name="company_id" id="company_id" class="form-control" required>
                     <option value="">Pilih Perusahaan</option>
                     @foreach ($companies as $company)
-                        <option value="{{ $company->id }}"
-                            {{ $company->id == $relationship->company_id ? 'selected' : '' }}>
-                            {{ $company->name }}
+                        <option value="{{ $company->company_code }}"
+                            {{ $company->company_code == $relationship->company_id ? 'selected' : '' }}>
+                            {{ $company->nama }}
                         </option>
                     @endforeach
                 </select>
@@ -72,7 +72,7 @@
 
                             $.each(roles, function(index, role) {
                                 let option = $('<option>').val(role.id).text(role
-                                    .nama_jabatan);
+                                    .nama);
                                 if (role.id == selectedJobRole) {
                                     option.attr('selected', 'selected');
                                 }

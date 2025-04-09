@@ -26,7 +26,11 @@ class JobCompositeController extends Controller
     public function create()
     {
         $companies = Company::all();
-        $jobRoles = JobRole::doesntHave('compositeRole')->get();
+        $jobRoles = JobRole::whereNotExists(function ($query) {
+            $query->select('*')
+                ->from('tr_composite_roles')
+                ->whereColumn('tr_job_roles.id', 'tr_composite_roles.jabatan_id');
+        })->get();
         $compositeRoles = CompositeRole::whereNull('jabatan_id')->get();
 
         // \dd($jobRoles, $compositeRoles);
@@ -35,12 +39,12 @@ class JobCompositeController extends Controller
         foreach ($jobRoles as $jobRole) {
             $companyId = $jobRole->company_id;
             $companyShortName = $jobRole->company->shortname;
-            $kompartemenName = $jobRole->kompartemen->name ?? 'No Kompartemen';
-            $departemenName = $jobRole->departemen->name ?? 'No Departemen';
+            $kompartemenName = $jobRole->kompartemen->nama ?? 'No Kompartemen';
+            $departemenName = $jobRole->departemen->nama ?? 'No Departemen';
 
             $job_roles_data[$companyId][$kompartemenName][$departemenName][] = [
                 'id' => $jobRole->id,
-                'nama_jabatan' => $jobRole->nama_jabatan,
+                'nama' => $jobRole->nama,
                 'company_shortname' => $companyShortName,
             ];
             // \dd($job_roles_data[$companyId][$kompartemenName][$departemenName]);
@@ -111,12 +115,12 @@ class JobCompositeController extends Controller
         foreach ($jobRoles as $jobRole) {
             $companyId = $jobRole->company_id;
             $companyShortName = $jobRole->company->shortname;
-            $kompartemenName = $jobRole->kompartemen->name ?? 'No Kompartemen';
-            $departemenName = $jobRole->departemen->name ?? 'No Departemen';
+            $kompartemenName = $jobRole->kompartemen->nama ?? 'No Kompartemen';
+            $departemenName = $jobRole->departemen->nama ?? 'No Departemen';
 
             $job_roles_data[$companyId][$kompartemenName][$departemenName][] = [
                 'id' => $jobRole->id,
-                'nama_jabatan' => $jobRole->nama_jabatan,
+                'nama' => $jobRole->nama,
                 'company_shortname' => $companyShortName,
             ];
         }
@@ -200,9 +204,9 @@ class JobCompositeController extends Controller
 
         $data = $compositeRoles->map(function ($role) {
             return [
-                'company' => $role->company->name ?? 'N/A',
+                'company' => $role->company->nama ?? 'N/A',
                 'nama' => $role->nama,
-                'job_role' => $role->jobRole->nama_jabatan ?? 'Not Assigned',
+                'job_role' => $role->jobRole->nama ?? 'Not Assigned',
                 'actions' => view('relationship.job-composite.components.action_buttons', ['role' => $role])->render(),
             ];
         });

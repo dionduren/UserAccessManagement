@@ -1,6 +1,6 @@
 <div>
     <h3>{{ $singleRole->nama }}</h3>
-    <p><strong>Company:</strong> {{ $singleRole->company->name ?? 'N/A' }}</p>
+    <p><strong>Company:</strong> {{ $singleRole->company->nama ?? 'N/A' }}</p>
     <p><strong>Description:</strong> {{ $singleRole->deskripsi ?? 'None' }}</p>
     <p><strong>Composite Roles:</strong></p>
     @if ($singleRole->compositeRoles->isNotEmpty())

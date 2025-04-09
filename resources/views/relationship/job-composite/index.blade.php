@@ -27,7 +27,7 @@
             <select id="companyDropdown" class="form-control select2">
                 <option value="">-- Select Company --</option>
                 @foreach ($companies as $company)
-                    <option value="{{ $company->id }}">{{ $company->name }}</option>
+                    <option value="{{ $company->company_code }}">{{ $company->nama }}</option>
                 @endforeach
             </select>
         </div>
@@ -177,9 +177,9 @@
                 resetDropdowns(['#kompartemenDropdown', '#departemenDropdown', '#jobRoleDropdown']);
 
                 if (selectedCompany) {
-                    populateDropdown('#kompartemenDropdown', selectedCompany.kompartemen, 'id', 'name');
+                    populateDropdown('#kompartemenDropdown', selectedCompany.kompartemen, 'id', 'nama');
                     populateDropdown('#departemenDropdown', selectedCompany.departemen_without_kompartemen,
-                        'id', 'name');
+                        'id', 'nama');
                 }
             });
 
@@ -192,7 +192,7 @@
 
                 resetDropdowns(['#departemenDropdown', '#jobRoleDropdown']);
                 if (kompartemen) {
-                    populateDropdown('#departemenDropdown', kompartemen.departemen, 'id', 'name');
+                    populateDropdown('#departemenDropdown', kompartemen.departemen, 'id', 'nama');
                 }
             });
 
@@ -230,7 +230,7 @@
                 console.log('Job Roles:', jobRoles);
 
                 // Populate Job Roles Dropdown
-                populateDropdown('#jobRoleDropdown', jobRoles, 'id', 'name');
+                populateDropdown('#jobRoleDropdown', jobRoles, 'id', 'nama');
             });
 
 

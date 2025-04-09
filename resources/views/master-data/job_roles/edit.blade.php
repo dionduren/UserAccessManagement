@@ -2,7 +2,7 @@
 
 @section('content')
     <div class="container">
-        <h1>Edit Departemen</h1>
+        <h1>Edit Job Role</h1>
 
         <!-- Error Messages -->
         @if ($errors->any())
@@ -16,7 +16,7 @@
             </div>
         @endif
 
-        <form action="{{ route('departemens.update', $departemen) }}" method="POST">
+        <form action="{{ route('job-roles.update', $jobRole->id) }}" method="POST">
             @csrf
             @method('PUT')
 
@@ -30,23 +30,31 @@
             <!-- Kompartemen Dropdown -->
             <div class="mb-3">
                 <label for="kompartemen_id" class="form-label">Kompartemen</label>
-                <select name="kompartemen_id" id="kompartemen_id" class="form-control select2" required>
+                <select name="kompartemen_id" id="kompartemen_id" class="form-control select2">
                 </select>
             </div>
 
-            <!-- Departemen Name -->
+            <!-- Departemen Dropdown -->
             <div class="mb-3">
-                <label for="name" class="form-label">Departemen Name</label>
-                <input type="text" class="form-control" name="name" value="{{ $departemen->name }}" required>
+                <label for="departemen_id" class="form-label">Departemen</label>
+                <select name="departemen_id" id="departemen_id" class="form-control select2">
+                </select>
+            </div>
+
+            <!-- Job Role Name -->
+            <div class="mb-3">
+                <label for="nama" class="form-label">Job Role</label>
+                <input type="text" class="form-control" name="nama" value="{{ $jobRole->nama }}" required>
             </div>
 
             <!-- Description -->
             <div class="mb-3">
-                <label for="description" class="form-label">Description</label>
-                <textarea class="form-control" name="description">{{ $departemen->description }}</textarea>
+                <label for="deskripsi" class="form-label">Deskripsi</label>
+                <textarea class="form-control" name="deskripsi">{{ $jobRole->deskripsi }}</textarea>
             </div>
 
-            <button type="submit" class="btn btn-primary">Update Departemen</button>
+            <button type="submit" class="btn btn-primary">Update Job Role</button>
+
         </form>
     </div>
 @endsection
@@ -66,13 +74,20 @@
                 success: function(data) {
                     masterData = data;
 
+
                     // Populate company dropdown
                     populateDropdown('#company_id', data, 'company_id', 'company_name',
-                        '{{ $company->id }}');
+                        '{{ $jobRole->company_id }}');
 
-                    // Load kompartemen based on the selected company
-                    handleCompanyChange('{{ $departemen->company_id }}',
-                        '{{ $departemen->kompartemen_id }}');
+                    // Load kompartemen and departemen based on the selected company
+                    handleCompanyChange('{{ $jobRole->company_id }}', '{{ $jobRole->kompartemen_id }}',
+                        '{{ $jobRole->departemen_id }}');
+
+                    // Load departemen based on the selected company and kompartemen if kompartemen is not null
+                    if ('{{ $jobRole->kompartemen_id }}') {
+                        handleKompartemenChange('{{ $jobRole->kompartemen_id }}',
+                            '{{ $jobRole->departemen_id }}');
+                    }
                 },
                 error: function() {
                     alert('Failed to load master data.');
@@ -85,6 +100,12 @@
                 handleCompanyChange(companyId);
             });
 
+            // Handle Kompartemen dropdown change
+            $('#kompartemen_id').on('change', function() {
+                const kompartemenId = $(this).val();
+                handleKompartemenChange(kompartemenId);
+            });
+
             // Populate dropdowns and set selected value
             function populateDropdown(selector, items, valueField, textField, selectedValue = null) {
                 let dropdown = $(selector);
@@ -93,8 +114,6 @@
                     dropdown.prop('disabled', false);
                     items.forEach(item => {
                         const isSelected = item[valueField] == selectedValue ? 'selected' : '';
-                        console.log('valueField = ', valueField, ' - ', item[valueField], ' == ',
-                            selectedValue, ' ? ', isSelected);
                         dropdown.append(
                             `<option value="${item[valueField]}" ${isSelected}>${item[textField]}</option>`
                         );
@@ -113,17 +132,43 @@
             }
 
             // Handle company dropdown change logic
-            function handleCompanyChange(companyId, selectedKompartemen = null) {
-                resetDropdowns(['#kompartemen_id']);
+            function handleCompanyChange(companyId, selectedKompartemen = null, selectedDepartemen = null) {
+                resetDropdowns(['#kompartemen_id', '#departemen_id']);
 
                 if (!companyId) return;
 
                 let companyData = masterData.find(c => c.company_id == companyId);
                 if (companyData) {
-                    populateDropdown('#kompartemen_id', companyData.kompartemen, 'id', 'name', selectedKompartemen);
+                    populateDropdown('#kompartemen_id', companyData.kompartemen, 'id', 'nama', selectedKompartemen);
+
+                    // Populate departemen without kompartemen
+                    if (!selectedKompartemen) {
+                        populateDropdown(
+                            '#departemen_id',
+                            companyData.departemen_without_kompartemen,
+                            'id',
+                            'nama',
+                            selectedDepartemen
+                        );
+                    }
                 }
             }
 
+            // Handle kompartemen dropdown change logic
+            function handleKompartemenChange(kompartemenId) {
+                resetDropdowns(['#departemen_id']);
+
+                if (!kompartemenId) return;
+
+                const companyId = $('#company_id').val();
+                const companyData = masterData.find(c => c.company_id == companyId);
+                const kompartemenData = companyData?.kompartemen.find(k => k.id == kompartemenId);
+
+                if (kompartemenData?.departemen?.length) {
+                    populateDropdown('#departemen_id', kompartemenData.departemen, 'id', 'nama',
+                        '{{ $jobRole->departemen_id }}');
+                }
+            }
         });
     </script>
 @endsection

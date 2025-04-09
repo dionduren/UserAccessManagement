@@ -71,7 +71,7 @@ class CompanyKompartemenController extends Controller
                 } else {
                     // Find the company name based on the company code
                     $company = Company::where('company_code', $row['company'])->first();
-                    $companyName = $company ? $company->name : 'N/A';
+                    $companyName = $company ? $company->nama : 'N/A';
 
                     $kompartemen = $row['kompartemen'] ?? 'None';
                     $departemen = $row['departemen'] ?? 'None';
@@ -170,41 +170,41 @@ class CompanyKompartemenController extends Controller
                     // Create or update Kompartemen and Departemen based on data
                     if (!$row['kompartemen'] == null && !$row['departemen'] == null) {
                         $kompartemen = Kompartemen::updateOrCreate(
-                            ['name' => $row['kompartemen'], 'company_id' => $company->id],
-                            ['company_id' => $company->id]
+                            ['name' => $row['kompartemen'], 'company_id' => $company->company_code],
+                            ['company_id' => $company->company_code]
                         );
 
                         $departemen = Departemen::updateOrCreate(
-                            ['name' => $row['departemen'], 'company_id' => $company->id, 'kompartemen_id' => $kompartemen->id],
-                            ['company_id' => $company->id, 'kompartemen_id' => $kompartemen->id]
+                            ['name' => $row['departemen'], 'company_id' => $company->company_code, 'kompartemen_id' => $kompartemen->kompartemen_id],
+                            ['company_id' => $company->company_code, 'kompartemen_id' => $kompartemen->kompartemen_id]
                         );
                     } elseif (!$row['departemen'] == null && $row['kompartemen'] == null) {
                         $departemen = Departemen::updateOrCreate(
-                            ['name' => $row['departemen'], 'company_id' => $company->id],
-                            ['company_id' => $company->id, 'kompartemen_id' => null]
+                            ['name' => $row['departemen'], 'company_id' => $company->company_code],
+                            ['company_id' => $company->company_code, 'kompartemen_id' => null]
                         );
                     } elseif (!$row['kompartemen'] == null && $row['departemen'] == null) {
                         $kompartemen = Kompartemen::updateOrCreate(
-                            ['name' => $row['kompartemen'], 'company_id' => $company->id],
-                            ['company_id' => $company->id]
+                            ['name' => $row['kompartemen'], 'company_id' => $company->company_code],
+                            ['company_id' => $company->company_code]
                         );
                     }
 
                     // Create or update JobRole
                     $jobRole = JobRole::updateOrCreate(
-                        ['nama_jabatan' => $row['job_function'], 'company_id' => $company->id],
+                        ['nama_jabatan' => $row['job_function'], 'company_id' => $company->company_code],
                         [
-                            'company_id' => $company->id,
-                            'kompartemen_id' => $kompartemen->id ?? null,
-                            'departemen_id' => $departemen->id ?? null
+                            'company_id' => $company->company_code,
+                            'kompartemen_id' => $kompartemen->kompartemen_id ?? null,
+                            'departemen_id' => $departemen->departemen_id ?? null
                         ]
                     );
 
                     // Create or update CompositeRole
                     if (!$row['composite_role'] == null) {
                         $compositeRole = CompositeRole::updateOrCreate(
-                            ['nama' => $row['composite_role'], 'company_id' => $company->id],
-                            ['company_id' => $company->id]
+                            ['nama' => $row['composite_role'], 'company_id' => $company->company_code],
+                            ['company_id' => $company->company_code]
                         );
 
                         $jobRole->compositeRole()->save($compositeRole);

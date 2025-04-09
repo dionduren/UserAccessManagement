@@ -26,16 +26,16 @@
                                     @foreach ($data['company'] as $company)
                                         <tr>
                                             <td>{{ $loop->iteration }}</td>
-                                            <td class="text-start">{{ $company->name }}</td>
-                                            <td>{{ $data['groupedData']['kompartemen']->where('company_id', $company->id)->sum('total') }}
+                                            <td class="text-start">{{ $company->nama }}</td>
+                                            <td>{{ $data['groupedData']['kompartemen']->where('company_id', $company->company_code)->sum('total') }}
                                             </td>
-                                            <td>{{ $data['groupedData']['departemen']->where('company_id', $company->id)->sum('total') }}
+                                            <td>{{ $data['groupedData']['departemen']->where('company_id', $company->company_code)->sum('total') }}
                                             </td>
-                                            <td>{{ $data['groupedData']['jobrole']->where('company_id', $company->id)->sum('total') }}
+                                            <td>{{ $data['groupedData']['jobrole']->where('company_id', $company->company_code)->sum('total') }}
                                             </td>
-                                            <td>{{ $data['groupedData']['compositerole']->where('company_id', $company->id)->sum('total') }}
+                                            <td>{{ $data['groupedData']['compositerole']->where('company_id', $company->company_code)->sum('total') }}
                                             </td>
-                                            <td>{{ $data['groupedData']['singlerole']->where('company_id', $company->id)->sum('total') }}
+                                            <td>{{ $data['groupedData']['singlerole']->where('company_id', $company->company_code)->sum('total') }}
                                             </td>
                                         </tr>
                                     @endforeach

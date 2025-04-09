@@ -54,32 +54,32 @@ class CompanyKompartemenController extends Controller
                     $kompartemen = \App\Models\Kompartemen::updateOrCreate(
                         [
                             'name' => $row['kompartemen'],
-                            'company_id' => $company->id,
+                            'company_id' => $company->company_code,
                         ],
                         [
-                            'company_id' => $company->id,
+                            'company_id' => $company->company_code,
                         ]
                     );
 
                     $departemen = \App\Models\Departemen::updateOrCreate(
                         [
                             'name' => $row['departemen'],
-                            'company_id' => $company->id,
-                            'kompartemen_id' => $kompartemen->id,
+                            'company_id' => $company->company_code,
+                            'kompartemen_id' => $kompartemen->kompartemen_id,
                         ],
                         [
-                            'company_id' => $company->id,
-                            'kompartemen_id' => $kompartemen->id,
+                            'company_id' => $company->company_code,
+                            'kompartemen_id' => $kompartemen->kompartemen_id,
                         ]
                     );
                 } elseif (!empty($row['departemen']) && empty($row['kompartemen'])) {
                     $departemen = \App\Models\Departemen::updateOrCreate(
                         [
                             'name' => $row['departemen'],
-                            'company_id' => $company->id,
+                            'company_id' => $company->company_code,
                         ],
                         [
-                            'company_id' => $company->id,
+                            'company_id' => $company->company_code,
                             'kompartemen_id' => null,
                         ]
                     );
@@ -87,10 +87,10 @@ class CompanyKompartemenController extends Controller
                     $kompartemen = \App\Models\Kompartemen::updateOrCreate(
                         [
                             'name' => $row['kompartemen'],
-                            'company_id' => $company->id,
+                            'company_id' => $company->company_code,
                         ],
                         [
-                            'company_id' => $company->id,
+                            'company_id' => $company->company_code,
                         ]
                     );
                 } else {
@@ -147,33 +147,33 @@ class CompanyKompartemenController extends Controller
                 // Create or update Kompartemen and Departemen based on data
                 if (!empty($row['kompartemen']) && !empty($row['departemen'])) {
                     $kompartemen = \App\Models\Kompartemen::updateOrCreate(
-                        ['name' => $row['kompartemen'], 'company_id' => $company->id],
-                        ['company_id' => $company->id]
+                        ['name' => $row['kompartemen'], 'company_id' => $company->company_code],
+                        ['company_id' => $company->company_code]
                     );
 
                     $departemen = \App\Models\Departemen::updateOrCreate(
-                        ['name' => $row['departemen'], 'company_id' => $company->id, 'kompartemen_id' => $kompartemen->id],
-                        ['company_id' => $company->id, 'kompartemen_id' => $kompartemen->id]
+                        ['name' => $row['departemen'], 'company_id' => $company->company_code, 'kompartemen_id' => $kompartemen->kompartemen_id],
+                        ['company_id' => $company->company_code, 'kompartemen_id' => $kompartemen->kompartemen_id]
                     );
                 } elseif (!empty($row['departemen']) && empty($row['kompartemen'])) {
                     $departemen = \App\Models\Departemen::updateOrCreate(
-                        ['name' => $row['departemen'], 'company_id' => $company->id],
-                        ['company_id' => $company->id, 'kompartemen_id' => null]
+                        ['name' => $row['departemen'], 'company_id' => $company->company_code],
+                        ['company_id' => $company->company_code, 'kompartemen_id' => null]
                     );
                 } elseif (!empty($row['kompartemen']) && empty($row['departemen'])) {
                     $kompartemen = \App\Models\Kompartemen::updateOrCreate(
-                        ['name' => $row['kompartemen'], 'company_id' => $company->id],
-                        ['company_id' => $company->id]
+                        ['name' => $row['kompartemen'], 'company_id' => $company->company_code],
+                        ['company_id' => $company->company_code]
                     );
                 }
 
                 // Create or update JobRole
                 $jobRole = \App\Models\JobRole::updateOrCreate(
-                    ['nama_jabatan' => $row['job_function'], 'company_id' => $company->id],
+                    ['nama_jabatan' => $row['job_function'], 'company_id' => $company->company_code],
                     [
-                        'company_id' => $company->id,
-                        'kompartemen_id' => $kompartemen->id ?? null,
-                        'departemen_id' => $departemen->id ?? null,
+                        'company_id' => $company->company_code,
+                        'kompartemen_id' => $kompartemen->kompartemen_id ?? null,
+                        'departemen_id' => $departemen->departemen_id ?? null,
                         'deskripsi' => $row['job_description'] ?? null,
                     ]
                 );
@@ -181,8 +181,8 @@ class CompanyKompartemenController extends Controller
                 // Create or update CompositeRole
                 if (!empty($row['composite_role'])) {
                     $compositeRole = \App\Models\CompositeRole::updateOrCreate(
-                        ['nama' => $row['composite_role'], 'company_id' => $company->id],
-                        ['company_id' => $company->id]
+                        ['nama' => $row['composite_role'], 'company_id' => $company->company_code],
+                        ['company_id' => $company->company_code]
                     );
 
                     // Associate CompositeRole with JobRole

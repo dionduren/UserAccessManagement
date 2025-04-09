@@ -23,7 +23,7 @@
             <select id="companyDropdown" class="form-control">
                 <option value="">-- Semua Perusahaan --</option>
                 @foreach ($companies as $company)
-                    <option value="{{ $company->id }}">{{ $company->name }}</option>
+                    <option value="{{ $company->company_code }}">{{ $company->nama }}</option>
                 @endforeach
             </select>
         </div>
@@ -135,11 +135,11 @@
 
                 if (companyData) {
                     // Populate kompartemen dropdown
-                    populateDropdown('#kompartemenDropdown', companyData.kompartemen, 'id', 'name');
+                    populateDropdown('#kompartemenDropdown', companyData.kompartemen, 'id', 'nama');
 
                     // Populate departemen_without_kompartemen
                     populateDropdown('#departemenDropdown', companyData.departemen_without_kompartemen,
-                        'id', 'name');
+                        'id', 'nama');
                 }
 
                 loadJobRoles();
@@ -156,7 +156,7 @@
 
                 if (kompartemenData?.departemen.length) {
                     // Populate departemen dropdown based on selected kompartemen
-                    populateDropdown('#departemenDropdown', kompartemenData.departemen, 'id', 'name');
+                    populateDropdown('#departemenDropdown', kompartemenData.departemen, 'id', 'nama');
                 }
 
                 loadJobRoles();

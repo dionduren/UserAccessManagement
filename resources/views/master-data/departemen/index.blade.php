@@ -16,7 +16,7 @@
             <select id="companyDropdown" class="form-control">
                 <option value="">-- Semua Perusahaan --</option>
                 @foreach ($companies as $company)
-                    <option value="{{ $company->id }}">{{ $company->name }}</option>
+                    <option value="{{ $company->company_code }}">{{ $company->nama }}</option>
                 @endforeach
             </select>
         </div>
@@ -46,10 +46,10 @@
                 @foreach ($departemens as $departemen)
                     <tr data-company-id="{{ $departemen->company_id }}"
                         data-kompartemen-id="{{ $departemen->kompartemen_id ?? '' }}">
-                        <td>{{ $departemen->company->name ?? 'N/A' }}</td>
-                        <td>{{ $departemen->kompartemen->name ?? 'N/A' }}</td>
-                        <td>{{ $departemen->name }}</td>
-                        <td>{{ $departemen->description }}</td>
+                        <td>{{ $departemen->company->nama ?? 'N/A' }}</td>
+                        <td>{{ $departemen->kompartemen->nama ?? 'N/A' }}</td>
+                        <td>{{ $departemen->nama }}</td>
+                        <td>{{ $departemen->deskripsi }}</td>
                         <td>
                             <a href="{{ route('departemens.edit', $departemen) }}" class="btn btn-warning btn-sm">Edit</a>
                             <form action="{{ route('departemens.destroy', $departemen) }}" method="POST"
@@ -98,7 +98,7 @@
                     let filteredKompartemens = allKompartemens.filter(k => k.company_id ==
                         selectedCompanyId);
                     filteredKompartemens.forEach(k => {
-                        $('#kompartemenDropdown').append('<option value="' + k.id + '">' + k.name +
+                        $('#kompartemenDropdown').append('<option value="' + k.id + '">' + k.nama +
                             '</option>');
                     });
                     $('#kompartemenDropdown').prop('disabled', false);

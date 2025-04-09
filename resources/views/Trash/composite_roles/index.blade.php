@@ -16,7 +16,7 @@
             <select id="companyDropdown" class="form-control select2">
                 <option value="">-- Select Company --</option>
                 @foreach ($companies as $company)
-                    <option value="{{ $company->id }}">{{ $company->name }}</option>
+                    <option value="{{ $company->company_code }}">{{ $company->nama }}</option>
                 @endforeach
             </select>
         </div>

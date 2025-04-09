@@ -22,32 +22,34 @@ class JobRoleController extends Controller
         // Fetch all companies to populate the initial dropdown
         $companies = Company::all();
 
-        return view('job_roles.index', compact('companies'));
+        return view('master-data.job_roles.index', compact('companies'));
     }
 
     public function create()
     {
         $companies = Company::all();
-        return view('job_roles.create', compact('companies'));
+        return view('master-data.job_roles.create', compact('companies'));
     }
 
     public function store(Request $request)
     {
         try {
             $request->validate([
-                'company_id' => 'required|exists:ms_company,id',
-                'nama_jabatan' => [
+                'company_id' => 'required|exists:ms_company,company_code',
+                'nama' => [
                     'required',
                     'string',
-                    Rule::unique('tr_job_roles', 'nama_jabatan')
+                    Rule::unique('tr_job_roles', 'nama')
                         ->where('company_id', $request->company_id)
                 ],
                 'deskripsi' => 'nullable|string',
-                'kompartemen_id' => 'nullable|exists:ms_kompartemen,id',
-                'departemen_id' => 'nullable|exists:ms_departemen,id',
+                'kompartemen_id' => 'nullable|exists:ms_kompartemen,kompartemen_id',
+                'departemen_id' => 'nullable|exists:ms_departemen,departemen_id',
             ]);
 
-            JobRole::create($request->all());
+            JobRole::create($request->all() + [
+                'created_by' => auth()->user()->name
+            ]);
 
             return redirect()
                 ->route('job-roles.index')
@@ -72,39 +74,39 @@ class JobRoleController extends Controller
     public function show($id)
     {
         $jobRole = JobRole::with(['company', 'kompartemen', 'departemen', 'compositeRole'])->findOrFail($id);
-        return view('job_roles.show', compact('jobRole'));
+        return view('master-data.job_roles.show', compact('jobRole'));
     }
 
     public function edit(JobRole $jobRole)
     {
-        $company = Company::where('id', $jobRole->company_id)->first();
+        $company = Company::where('company_code', $jobRole->company_id)->first();
 
         // Load kompartemens and departemens based on the current jobRole's selections
         $kompartemen = Kompartemen::where('company_id', $jobRole->company_id)->first();
         $departemen = Departemen::where('kompartemen_id', $jobRole->kompartemen_id)->first();
 
-        return view('job_roles.edit', compact('jobRole', 'company', 'kompartemen', 'departemen'));
+        return view('master-data.job_roles.edit', compact('jobRole', 'company', 'kompartemen', 'departemen'));
     }
 
     public function update(Request $request, JobRole $jobRole)
     {
         try {
             $request->validate([
-                'company_id' => 'required|exists:ms_company,id',
-                'nama_jabatan' => [
+                'company_id' => 'required|exists:ms_company,company_code',
+                'nama' => [
                     'required',
                     'string',
-                    Rule::unique('tr_job_roles', 'nama_jabatan')
+                    Rule::unique('tr_job_roles', 'nama')
                         ->where('company_id', $request->company_id)
-                        ->ignore($jobRole->id),
+                        ->ignore($jobRole->id, 'id')
                 ],
                 'deskripsi' => 'nullable|string',
-                'kompartemen_id' => 'nullable|exists:ms_kompartemen,id',
-                'departemen_id' => 'nullable|exists:ms_departemen,id',
+                'kompartemen_id' => 'nullable|exists:ms_kompartemen,kompartemen_id',
+                'departemen_id' => 'nullable|exists:ms_departemen,departemen_id',
             ]);
 
             $jobRole->update($request->all() + [
-                'updated_by' => auth()->id()
+                'updated_by' => auth()->user()->name
             ]);
 
             return redirect()->route('job-roles.index')->with('status', 'Job role updated successfully.');
@@ -174,9 +176,9 @@ class JobRoleController extends Controller
             'company' => $companyName,
             'kompartemen' => $kompartemenName ?? '-',
             'departemen' => $departemenName ?? '-',
-            'job_role' => $jobRole['name'],
+            'job_role' => $jobRole['nama'],
             'deskripsi' => $jobRole['description'] ?? 'N/A',
-            'actions' => view('job_roles.partials.actions', ['jobRole' => (object) $jobRole])->render(),
+            'actions' => view('master-data.job_roles.partials.actions', ['jobRole' => (object) $jobRole])->render(),
         ];
     }
 
@@ -197,7 +199,7 @@ class JobRoleController extends Controller
             foreach ($kompartemen['job_roles'] ?? [] as $jobRole) {
                 $filteredJobRoles[] = $this->mapJobRole(
                     $company['company_name'],
-                    $kompartemen['name'],
+                    $kompartemen['nama'],
                     '-',
                     $jobRole
                 );
@@ -207,8 +209,8 @@ class JobRoleController extends Controller
                 foreach ($departemen['job_roles'] ?? [] as $jobRole) {
                     $filteredJobRoles[] = $this->mapJobRole(
                         $company['company_name'],
-                        $kompartemen['name'],
-                        $departemen['name'],
+                        $kompartemen['nama'],
+                        $departemen['nama'],
                         $jobRole
                     );
                 }
@@ -221,7 +223,7 @@ class JobRoleController extends Controller
                 $filteredJobRoles[] = $this->mapJobRole(
                     $company['company_name'],
                     '-',
-                    $departemen['name'],
+                    $departemen['nama'],
                     $jobRole
                 );
             }
@@ -238,7 +240,7 @@ class JobRoleController extends Controller
             foreach ($kompartemen['job_roles'] ?? [] as $jobRole) {
                 $filteredJobRoles[] = $this->mapJobRole(
                     $company['company_name'],
-                    $kompartemen['name'],
+                    $kompartemen['nama'],
                     '-',
                     $jobRole
                 );
@@ -248,8 +250,8 @@ class JobRoleController extends Controller
                 foreach ($departemen['job_roles'] ?? [] as $jobRole) {
                     $filteredJobRoles[] = $this->mapJobRole(
                         $company['company_name'],
-                        $kompartemen['name'],
-                        $departemen['name'],
+                        $kompartemen['nama'],
+                        $departemen['nama'],
                         $jobRole
                     );
                 }
@@ -268,8 +270,8 @@ class JobRoleController extends Controller
                 foreach ($departemen['job_roles'] ?? [] as $jobRole) {
                     $filteredJobRoles[] = $this->mapJobRole(
                         $company['company_name'],
-                        $kompartemen['name'],
-                        $departemen['name'],
+                        $kompartemen['nama'],
+                        $departemen['nama'],
                         $jobRole
                     );
                 }
@@ -285,7 +287,7 @@ class JobRoleController extends Controller
                 $filteredJobRoles[] = $this->mapJobRole(
                     $company['company_name'],
                     '-',
-                    $departemen['name'],
+                    $departemen['nama'],
                     $jobRole
                 );
             }

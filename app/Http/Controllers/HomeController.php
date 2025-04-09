@@ -65,7 +65,7 @@ class HomeController extends Controller
 
         foreach ($models as $model) {
             $groupedData[strtolower($model)] = app("App\\Models\\$model")::selectRaw('company_id, COUNT(*) as total')
-                ->with('company:id,name') // Load company relationship with selected fields
+                ->with('company:company_code,nama') // Load company relationship with selected fields
                 ->groupBy('company_id')
                 ->get();
         }

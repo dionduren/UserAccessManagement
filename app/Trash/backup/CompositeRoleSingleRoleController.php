@@ -62,7 +62,7 @@ class CompositeRoleSingleRoleController extends Controller
                 } else {
                     // Find the company name based on the company code
                     $company = Company::where('company_code', $row['company'])->first();
-                    $companyName = $company ? $company->name : 'N/A';
+                    $companyName = $company ? $company->nama : 'N/A';
 
                     // Store validated data along with derived company name for preview
                     $parsedData[] = [
@@ -155,7 +155,7 @@ class CompositeRoleSingleRoleController extends Controller
 
                     // Step 2: Create or Update CompositeRole
                     $compositeRole = CompositeRole::updateOrCreate(
-                        ['nama' => $row['composite_role'], 'company_id' => $company->id]
+                        ['nama' => $row['composite_role'], 'company_id' => $company->company_code]
                     );
 
                     // Skip row if single_role (nama) is null
@@ -166,7 +166,7 @@ class CompositeRoleSingleRoleController extends Controller
 
                     // Step 3: Create or Update SingleRole
                     $singleRole = SingleRole::updateOrCreate(
-                        ['nama' => $row['single_role'], 'company_id' => $company->id],
+                        ['nama' => $row['single_role'], 'company_id' => $company->company_code],
                         ['deskripsi' => $row['description']]
                     );
 

@@ -16,20 +16,20 @@ class JSONService
             'jobRolesWithoutRelations'
         ])->get()->map(function ($company) {
             return [
-                'company_id' => $company->id,
-                'company_name' => $company->name,
+                'company_id' => $company->company_code,
+                'company_name' => $company->nama,
                 'kompartemen' => $company->kompartemen->map(function ($kompartemen) {
                     return [
-                        'id' => $kompartemen->id,
-                        'name' => $kompartemen->name,
+                        'id' => $kompartemen->kompartemen_id,
+                        'nama' => $kompartemen->nama,
                         'departemen' => $kompartemen->departemen->map(function ($departemen) {
                             return [
-                                'id' => $departemen->id,
-                                'name' => $departemen->name,
+                                'id' => $departemen->departemen_id,
+                                'nama' => $departemen->nama,
                                 'job_roles' => $departemen->jobRoles->map(function ($jobRole) {
                                     return [
                                         'id' => $jobRole->id,
-                                        'name' => $jobRole->nama_jabatan,
+                                        'nama' => $jobRole->nama,
                                         'description' => $jobRole->deskripsi ?? 'N/A',
                                     ];
                                 })
@@ -40,7 +40,7 @@ class JSONService
                         })->map(function ($jobRole) {
                             return [
                                 'id' => $jobRole->id,
-                                'name' => $jobRole->nama_jabatan,
+                                'nama' => $jobRole->nama,
                                 'description' => $jobRole->deskripsi ?? 'N/A',
                             ];
                         }),
@@ -48,12 +48,12 @@ class JSONService
                 }),
                 'departemen_without_kompartemen' => $company->departemenWithoutKompartemen->map(function ($departemen) {
                     return [
-                        'id' => $departemen->id,
-                        'name' => $departemen->name,
+                        'id' => $departemen->departemen_id,
+                        'nama' => $departemen->nama,
                         'job_roles' => $departemen->jobRoles->map(function ($jobRole) {
                             return [
                                 'id' => $jobRole->id,
-                                'name' => $jobRole->nama_jabatan,
+                                'nama' => $jobRole->nama,
                                 'description' => $jobRole->deskripsi ?? 'N/A',
                             ];
                         })
@@ -62,7 +62,7 @@ class JSONService
                 'job_roles_without_relations' => $company->jobRolesWithoutRelations->map(function ($jobRole) {
                     return [
                         'id' => $jobRole->id,
-                        'name' => $jobRole->nama_jabatan,
+                        'nama' => $jobRole->nama,
                         'description' => $jobRole->deskripsi ?? 'N/A',
                     ];
                 }),

@@ -18,22 +18,22 @@ class CompanyKompartemenImport implements ToModel, WithHeadingRow, WithChunkRead
         // Validate and map data from the row
         $company = Company::firstOrCreate(['company_code' => $row['company']]);
         $kompartemen = !empty($row['kompartemen'])
-            ? Kompartemen::firstOrCreate(['name' => $row['kompartemen'], 'company_id' => $company->id])
+            ? Kompartemen::firstOrCreate(['name' => $row['kompartemen'], 'company_id' => $company->company_code])
             : null;
         $departemen = !empty($row['departemen'])
             ? Departemen::firstOrCreate([
                 'name' => $row['departemen'],
-                'company_id' => $company->id,
-                'kompartemen_id' => $kompartemen->id ?? null,
+                'company_id' => $company->company_code,
+                'kompartemen_id' => $kompartemen->kompartemen_id ?? null,
             ])
             : null;
 
         $jobRole = JobRole::firstOrCreate([
             'nama_jabatan' => $row['job_function'],
-            'company_id' => $company->id,
+            'company_id' => $company->company_code,
         ], [
-            'kompartemen_id' => $kompartemen->id ?? null,
-            'departemen_id' => $departemen->id ?? null,
+            'kompartemen_id' => $kompartemen->kompartemen_id ?? null,
+            'departemen_id' => $departemen->departemen_id ?? null,
             'deskripsi' => $row['job_description'] ?? null,
         ]);
 
@@ -41,7 +41,7 @@ class CompanyKompartemenImport implements ToModel, WithHeadingRow, WithChunkRead
         if (!empty($row['composite_role'])) {
             $compositeRole = CompositeRole::firstOrCreate([
                 'nama' => $row['composite_role'],
-                'company_id' => $company->id,
+                'company_id' => $company->company_code,
             ]);
 
             // Associate JobRole with CompositeRole

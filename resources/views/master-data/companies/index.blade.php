@@ -27,9 +27,9 @@
                 @foreach ($companies as $company)
                     <tr>
                         <td>{{ $company->company_code }}</td>
-                        <td>{{ $company->name }}</td>
+                        <td>{{ $company->nama }}</td>
                         <td>{{ $company->shortname }}</td>
-                        <td>{{ $company->description }}</td>
+                        <td>{{ $company->deskripsi }}</td>
                         <td>
                             <a href="{{ route('companies.edit', $company) }}" class="btn btn-warning btn-sm">Edit</a>
                             <form action="{{ route('companies.destroy', $company) }}" method="POST"

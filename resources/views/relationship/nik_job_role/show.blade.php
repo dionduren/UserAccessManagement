@@ -22,13 +22,13 @@
                     <dd>{{ $nikJobRole->jobRole->nama_jabatan ?? '-' }}</dd>
 
                     <dt>Company</dt>
-                    <dd>{{ $nikJobRole->jobRole->company->name ?? '-' }}</dd>
+                    <dd>{{ $nikJobRole->jobRole->company->nama ?? '-' }}</dd>
 
                     <dt>Kompartemen</dt>
-                    <dd>{{ $nikJobRole->jobRole->kompartemen->name ?? '-' }}</dd>
+                    <dd>{{ $nikJobRole->jobRole->kompartemen->nama ?? '-' }}</dd>
 
                     <dt>Departemen</dt>
-                    <dd>{{ $nikJobRole->jobRole->departemen->name ?? '-' }}</dd>
+                    <dd>{{ $nikJobRole->jobRole->departemen->nama ?? '-' }}</dd>
                 </dl>
             </div>
         </div>

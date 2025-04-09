@@ -13,7 +13,7 @@
                 <select name="company_id" id="company_id" class="form-control" required>
                     <option value="">Select a company</option>
                     @foreach ($companies as $company)
-                        <option value="{{ $company->id }}">{{ $company->name }}</option>
+                        <option value="{{ $company->company_code }}">{{ $company->nama }}</option>
                     @endforeach
                 </select>
             </div>
@@ -71,7 +71,7 @@
                             // Add job roles to the optgroup
                             $.each(roles, function(index, role) {
                                 optgroup.append(
-                                    $('<option>').val(role.id).text(role.nama_jabatan)
+                                    $('<option>').val(role.id).text(role.nama)
                                 );
                             });
 

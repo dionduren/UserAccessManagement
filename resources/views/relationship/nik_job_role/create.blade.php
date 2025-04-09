@@ -41,9 +41,9 @@
                             {{ $user->userDetail
                                 ? $user->userDetail->nama .
                                     ' | ' .
-                                    ($user->userDetail->kompartemen ? 'Kompartemen: ' . $user->userDetail->kompartemen->name . ' - ' : '') .
+                                    ($user->userDetail->kompartemen ? 'Kompartemen: ' . $user->userDetail->kompartemen->nama . ' - ' : '') .
                                     ($user->userDetail->departemen
-                                        ? 'Departemen: ' . $user->userDetail->departemen->name
+                                        ? 'Departemen: ' . $user->userDetail->departemen->nama
                                         : 'Belum ada Data Karyawan')
                                 : 'Belum ada Data Karyawan' }}
                         </option>
@@ -57,7 +57,7 @@
                 <select id="companyDropdown" class="form-control">
                     <option value="">-- Semua Perusahaan --</option>
                     @foreach ($companies as $company)
-                        <option value="{{ $company->id }}">{{ $company->name }}</option>
+                        <option value="{{ $company->company_code }}">{{ $company->nama }}</option>
                     @endforeach
                 </select>
             </div>

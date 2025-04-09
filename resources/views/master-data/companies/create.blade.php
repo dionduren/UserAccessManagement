@@ -2,7 +2,17 @@
 
 @section('content')
     <div class="container">
-        <h1>Create Company</h1>
+        <h1>Buat Master Data Perusahaan Baru</h1>
+
+        @if ($errors->any())
+            <div class="alert alert-danger">
+                <ul>
+                    @foreach ($errors->all() as $error)
+                        <li>{{ $error }}</li>
+                    @endforeach
+                </ul>
+            </div>
+        @endif
 
         <form action="{{ route('companies.store') }}" method="POST">
             @csrf
@@ -12,8 +22,8 @@
             </div>
 
             <div class="mb-3">
-                <label for="name" class="form-label">Company Name</label>
-                <input type="text" class="form-control" name="name" required>
+                <label for="nama" class="form-label">Company Name</label>
+                <input type="text" class="form-control" name="nama" required>
             </div>
 
             <div class="mb-3">
@@ -22,8 +32,8 @@
             </div>
 
             <div class="mb-3">
-                <label for="description" class="form-label">Description</label>
-                <textarea class="form-control" name="description"></textarea>
+                <label for="deskripsi" class="form-label">Deskripsi</label>
+                <textarea class="form-control" name="deskripsi"></textarea>
             </div>
 
             <button type="submit" class="btn btn-primary">Create Company</button>

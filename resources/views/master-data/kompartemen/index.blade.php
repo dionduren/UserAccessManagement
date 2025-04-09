@@ -15,7 +15,7 @@
             <select id="companyDropdown" class="form-control">
                 <option value="">-- Semua Perusahaan --</option>
                 @foreach ($companies as $company)
-                    <option value="{{ $company->id }}">{{ $company->name }}</option>
+                    <option value="{{ $company->company_code }}">{{ $company->nama }}</option>
                 @endforeach
             </select>
         </div>
@@ -26,7 +26,7 @@
         <table id="kompartemenTable" class="table table-bordered table-striped table-hover cell-border mt-3">
             <thead>
                 <tr>
-                    <th>Company Name</th>
+                    <th>Nama Perusahaan</th>
                     <th>Nama Kompartemen</th>
                     <th>Deskripsi</th>
                     <th>Actions</th>
@@ -35,12 +35,12 @@
             <tbody>
                 @foreach ($kompartemens as $kompartemen)
                     <tr data-company-id="{{ $kompartemen->company_id }}">
-                        <td>{{ $kompartemen->company->name ?? 'N/A' }}</td>
-                        <td>{{ $kompartemen->name }}</td>
-                        <td>{{ $kompartemen->description }}</td>
+                        <td>{{ $kompartemen->company->nama ?? 'N/A' }}</td>
+                        <td>{{ $kompartemen->nama }}</td>
+                        <td>{{ $kompartemen->deskripsi }}</td>
                         <td>
-                            <a href="{{ route('kompartemens.edit', $company) }}" class="btn btn-warning btn-sm">Edit</a>
-                            <form action="{{ route('kompartemens.destroy', $company) }}" method="POST"
+                            <a href="{{ route('kompartemens.edit', $kompartemen) }}" class="btn btn-warning btn-sm">Edit</a>
+                            <form action="{{ route('kompartemens.destroy', $kompartemen) }}" method="POST"
                                 style="display:inline;">
                                 @csrf
                                 @method('DELETE')

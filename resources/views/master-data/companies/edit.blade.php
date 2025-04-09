@@ -2,7 +2,17 @@
 
 @section('content')
     <div class="container">
-        <h1>Edit Company</h1>
+        <h1>Edit Master Data Perusahaan</h1>
+
+        @if ($errors->any())
+            <div class="alert alert-danger">
+                <ul>
+                    @foreach ($errors->all() as $error)
+                        <li>{{ $error }}</li>
+                    @endforeach
+                </ul>
+            </div>
+        @endif
 
         <form action="{{ route('companies.update', $company) }}" method="POST">
             @csrf
@@ -14,8 +24,8 @@
             </div>
 
             <div class="mb-3">
-                <label for="name" class="form-label">Company Name</label>
-                <input type="text" class="form-control" name="name" value="{{ $company->name }}" required>
+                <label for="nama" class="form-label">Company Name</label>
+                <input type="text" class="form-control" name="nama" value="{{ $company->nama }}" required>
             </div>
 
             <div class="mb-3">
@@ -24,8 +34,8 @@
             </div>
 
             <div class="mb-3">
-                <label for="description" class="form-label">Description</label>
-                <textarea class="form-control" name="description">{{ $company->description }}</textarea>
+                <label for="deskripsi" class="form-label">Description</label>
+                <textarea class="form-control" name="deskripsi">{{ $company->deskripsi }}</textarea>
             </div>
 
             <button type="submit" class="btn btn-primary">Update Company</button>

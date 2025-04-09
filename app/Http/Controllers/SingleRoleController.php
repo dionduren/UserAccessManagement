@@ -35,7 +35,7 @@ class SingleRoleController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'company_id' => 'required|exists:ms_company,id',
+            'company_id' => 'required|exists:ms_company,company_code',
             'nama' => [
                 'required',
                 'string',
@@ -72,7 +72,7 @@ class SingleRoleController extends Controller
         $singleRole = SingleRole::findOrFail($id);
 
         $request->validate([
-            'company_id' => 'required|exists:ms_company,id',
+            'company_id' => 'required|exists:ms_company,company_code',
             'nama' => [
                 'required',
                 'string',
@@ -130,8 +130,8 @@ class SingleRoleController extends Controller
             $columnName = $orderableColumns[$columnIndex] ?? 'nama'; // Default to 'nama'
 
             if ($columnName === 'company') {
-                $query->leftJoin('ms_company', 'ms_company.id', '=', 'tr_single_roles.company_id')
-                    ->select('tr_single_roles.*', 'ms_company.name as company_name')
+                $query->leftJoin('ms_company', 'ms_company.company_code', '=', 'tr_single_roles.company_id')
+                    ->select('tr_single_roles.*', 'ms_company.nama as company_name')
                     ->orderBy('company_name', $columnDirection);
             } else {
                 $query->orderBy($columnName, $columnDirection);
@@ -145,7 +145,7 @@ class SingleRoleController extends Controller
         // Format data for DataTable
         $data = $singleRoles->map(function ($role) {
             return [
-                'company' => $role->company->name ?? 'N/A',
+                'company' => $role->company->nama ?? 'N/A',
                 'nama' => $role->nama,
                 'deskripsi' => $role->deskripsi,
                 'actions' => view('single_roles.partials.actions', ['role' => $role])->render(),

@@ -21,7 +21,7 @@
 
             <!-- Company Dropdown -->
             <div class="mb-3">
-                <label for="company_id" class="form-label">Company</label>
+                <label for="company_id" class="form-label">Perusahaan</label>
                 <select name="company_id" id="company_id" class="form-control select2" required>
                 </select>
             </div>
@@ -29,22 +29,28 @@
             <!-- Kompartemen Dropdown -->
             <div class="mb-3">
                 <label for="kompartemen_id" class="form-label">Kompartemen</label>
-                <select name="kompartemen_id" id="kompartemen_id" class="form-control select2" required>
+                <select name="kompartemen_id" id="kompartemen_id" class="form-control select2">
                     <option value="">Pilih Kompartemen</option>
                 </select>
             </div>
 
+            <!-- Departemen ID -->
             <div class="mb-3">
-                <label for="name" class="form-label">Departemen Name</label>
-                <input type="text" class="form-control" name="name" required>
+                <label for="departemen_id" class="form-label">Departemen ID</label>
+                <input type="text" class="form-control" name="departemen_id" required>
             </div>
 
             <div class="mb-3">
-                <label for="description" class="form-label">Description</label>
-                <textarea class="form-control" name="description"></textarea>
+                <label for="nama" class="form-label">Nama Departemen</label>
+                <input type="text" class="form-control" name="nama" required>
             </div>
 
-            <button type="submit" class="btn btn-primary">Create Departemen</button>
+            <div class="mb-3">
+                <label for="deskripsi" class="form-label">Deskripsi</label>
+                <textarea class="form-control" name="deskripsi"></textarea>
+            </div>
+
+            <button type="submit" class="btn btn-primary">Buat Departemen</button>
         </form>
     </div>
 @endsection
@@ -82,7 +88,7 @@
 
                     if (companyData) {
                         // Populate kompartemen dropdown
-                        populateDropdown('#kompartemen_id', companyData.kompartemen, 'id', 'name');
+                        populateDropdown('#kompartemen_id', companyData.kompartemen, 'id', 'nama');
                     }
                 }
             });

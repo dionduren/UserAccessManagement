@@ -9,8 +9,9 @@
             <select name="company_id" id="company_id" class="form-control select2">
                 <option value="">Select a company</option>
                 @foreach ($companies as $company)
-                    <option value="{{ $company->id }}" {{ $company->id == $singleRole->company_id ? 'selected' : '' }}>
-                        {{ $company->name }}
+                    <option value="{{ $company->company_code }}"
+                        {{ $company->company_code == $singleRole->company_id ? 'selected' : '' }}>
+                        {{ $company->nama }}
                     </option>
                 @endforeach
             </select>

@@ -2,7 +2,7 @@
 
 @section('content')
     <div class="container-fluid">
-        <h1>Create Job Role</h1>
+        <h1>Buat Master Data Job Role Baru</h1>
 
         <!-- Error Messages -->
         @if ($errors->any())
@@ -21,15 +21,16 @@
 
             <!-- Company Dropdown -->
             <div class="mb-3">
-                <label for="company_id" class="form-label">Company</label>
+                <label for="company_id" class="form-label">Perusahaan</label>
                 <select name="company_id" id="company_id" class="form-control select2" required>
+                    <option value="">Pilih Perusahaan</option>
                 </select>
             </div>
 
             <!-- Kompartemen Dropdown -->
             <div class="mb-3">
                 <label for="kompartemen_id" class="form-label">Kompartemen</label>
-                <select name="kompartemen_id" id="kompartemen_id" class="form-control select2" required>
+                <select name="kompartemen_id" id="kompartemen_id" class="form-control select2">
                     <option value="">Pilih Kompartemen</option>
                 </select>
             </div>
@@ -37,21 +38,21 @@
             <!-- Departemen Dropdown -->
             <div class="mb-3">
                 <label for="departemen_id" class="form-label">Departemen</label>
-                <select name="departemen_id" id="departemen_id" class="form-control select2" required>
+                <select name="departemen_id" id="departemen_id" class="form-control select2">
                     <option value="">Pilih Departemen</option>
                 </select>
             </div>
 
             <!-- Job Role Name -->
             <div class="mb-3">
-                <label for="nama_jabatan" class="form-label">Nama Job Role</label>
-                <input type="text" class="form-control" name="nama_jabatan" required>
+                <label for="nama" class="form-label">Nama Job Role</label>
+                <input type="text" class="form-control" name="nama" value="{{ old('nama') }}" required>
             </div>
 
             <!-- Description -->
             <div class="mb-3">
                 <label for="deskripsi" class="form-label">Deskripsi</label>
-                <textarea class="form-control" name="deskripsi"></textarea>
+                <textarea class="form-control" name="deskripsi">{{ old('deskripsi') }}</textarea>
             </div>
 
             <button type="submit" class="btn btn-primary">Buat Job Role</button>
@@ -65,6 +66,9 @@
             $('.select2').select2();
 
             let masterData = {};
+            const oldCompanyId = '{{ old('company_id') }}';
+            const oldKompartemenId = '{{ old('kompartemen_id') }}';
+            const oldDepartemenId = '{{ old('departemen_id') }}';
 
             // Fetch master data and initialize the page
             $.ajax({
@@ -74,7 +78,17 @@
                     masterData = data;
 
                     // Populate company dropdown
-                    populateDropdown('#company_id', data, 'company_id', 'company_name');
+                    populateDropdown('#company_id', data, 'company_id', 'company_name', oldCompanyId);
+
+                    if (oldCompanyId) {
+                        const selectedCompany = masterData.find(c => c.company_id == oldCompanyId);
+                        if (selectedCompany) {
+                            populateDropdown('#kompartemen_id', selectedCompany.kompartemen, 'id',
+                                'nama', oldKompartemenId);
+                            populateDropdown('#departemen_id', selectedCompany
+                                .departemen_without_kompartemen, 'id', 'nama', oldDepartemenId);
+                        }
+                    }
                 },
                 error: function() {
                     alert('Failed to load master data.');
@@ -89,14 +103,10 @@
 
                 if (companyId) {
                     let companyData = masterData.find(c => c.company_id == companyId);
-
                     if (companyData) {
-                        // Populate kompartemen dropdown
-                        populateDropdown('#kompartemen_id', companyData.kompartemen, 'id', 'name');
-
-                        // Populate departemen_without_kompartemen
+                        populateDropdown('#kompartemen_id', companyData.kompartemen, 'id', 'nama');
                         populateDropdown('#departemen_id', companyData.departemen_without_kompartemen, 'id',
-                            'name');
+                            'nama');
                     }
                 }
             });
@@ -113,20 +123,21 @@
                     let kompartemenData = companyData?.kompartemen.find(k => k.id == kompartemenId);
 
                     if (kompartemenData?.departemen.length) {
-                        // Populate departemen dropdown based on selected kompartemen
-                        populateDropdown('#departemen_id', kompartemenData.departemen, 'id', 'name');
+                        populateDropdown('#departemen_id', kompartemenData.departemen, 'id', 'nama');
                     }
                 }
             });
 
             // Helper function to populate dropdowns
-            function populateDropdown(selector, items, valueField, textField) {
+            function populateDropdown(selector, items, valueField, textField, selectedValue = '') {
                 let dropdown = $(selector);
-                dropdown.empty().append('<option value="">Pilih Perusahaan</option>');
+                dropdown.empty().append('<option value="">-- Select --</option>');
                 if (items?.length) {
                     dropdown.prop('disabled', false);
                     items.forEach(item => {
-                        dropdown.append(`<option value="${item[valueField]}">${item[textField]}</option>`);
+                        dropdown.append(
+                            `<option value="${item[valueField]}" ${item[valueField] == selectedValue ? 'selected' : ''}>${item[textField]}</option>`
+                        );
                     });
                 } else {
                     dropdown.prop('disabled', true);

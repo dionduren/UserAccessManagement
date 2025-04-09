@@ -41,12 +41,12 @@ class CompositeRoleController extends Controller
 
         foreach ($jobRoles as $jobRole) {
             $companyId = $jobRole->company_id;
-            $kompartemenName = $jobRole->kompartemen->name ?? 'No Kompartemen';
-            $departemenName = $jobRole->departemen->name ?? 'No Departemen';
+            $kompartemenName = $jobRole->kompartemen->nama ?? 'No Kompartemen';
+            $departemenName = $jobRole->departemen->nama ?? 'No Departemen';
 
             $job_roles_data[$companyId][$kompartemenName][$departemenName][] = [
                 'id' => $jobRole->id,
-                'nama_jabatan' => $jobRole->nama_jabatan,
+                'nama' => $jobRole->nama,
             ];
         }
 
@@ -56,7 +56,7 @@ class CompositeRoleController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'company_id' => 'required|exists:ms_company,id',
+            'company_id' => 'required|exists:ms_company,company_code',
             'jabatan_id' => 'nullable|exists:tr_job_roles,id',
             // 'nama' => 'required|string|max:255',
             'nama' => [
@@ -74,6 +74,7 @@ class CompositeRoleController extends Controller
             'jabatan_id' => $request->jabatan_id,
             'nama' => $request->nama,
             'deskripsi' => $request->deskripsi,
+            'Status' => "Active",
         ]);
 
         return redirect()->route('composite-roles.index')->with('success', 'Composite Role created successfully.');
@@ -89,8 +90,8 @@ class CompositeRoleController extends Controller
 
         foreach ($jobRoles as $jobRole) {
             $companyId = $jobRole->company_id;
-            $kompartemenName = $jobRole->kompartemen->name ?? 'No Kompartemen';
-            $departemenName = $jobRole->departemen->name ?? 'No Departemen';
+            $kompartemenName = $jobRole->kompartemen->nama ?? 'No Kompartemen';
+            $departemenName = $jobRole->departemen->nama ?? 'No Departemen';
 
             $job_roles_data[$companyId][$kompartemenName][$departemenName][] = [
                 'id' => $jobRole->id,
@@ -104,7 +105,7 @@ class CompositeRoleController extends Controller
     public function update(Request $request, CompositeRole $compositeRole)
     {
         $request->validate([
-            'company_id' => 'required|exists:ms_company,id',
+            'company_id' => 'required|exists:ms_company,company_code',
             'jabatan_id' => 'nullable|exists:tr_job_roles,id',
             // 'nama' => 'required|string|unique:tr_composite_roles,nama,' . $compositeRole->id,
             'nama' => [
@@ -172,7 +173,7 @@ class CompositeRoleController extends Controller
 
         $data = $compositeRoles->map(function ($role) {
             return [
-                'company' => $role->company->name ?? 'N/A',
+                'company' => $role->company->nama ?? 'N/A',
                 'nama' => $role->nama,
                 'deskripsi' => $role->deskripsi ?? '-',
                 // 'job_role' => $role->jobRole->nama_jabatan ?? 'Not Assigned',
