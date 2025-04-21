@@ -8,24 +8,28 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\JSONController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\AdminController;
-use App\Http\Controllers\TcodeController;
-use App\Http\Controllers\JobRoleController;
 use App\Http\Controllers\PeriodeController;
 use App\Http\Controllers\EmployeeController;
-use App\Http\Controllers\SingleRoleController;
 use App\Http\Controllers\TcodeImportController;
 
 
 // use App\Http\Controllers\IOExcel\ExcelImportController;
 use App\Http\Controllers\AccessMatrixController;
-use App\Http\Controllers\CompositeRoleController;
 use App\Http\Controllers\DynamicUploadController;
 
 use App\Http\Controllers\MasterData\CompanyController;
 use App\Http\Controllers\MasterData\KompartemenController;
 use App\Http\Controllers\MasterData\DepartemenController;
-use App\Http\Controllers\MasterData\UserNIKController;
+use App\Http\Controllers\MasterData\JobRoleController;
+use App\Http\Controllers\MasterData\CompositeRoleController;
+use App\Http\Controllers\MasterData\SingleRoleController;
+use App\Http\Controllers\MasterData\TcodeController;
 
+use App\Http\Controllers\Relationship\JobCompositeController;
+use App\Http\Controllers\Relationship\CompositeSingleController;
+use App\Http\Controllers\Relationship\SingleTcodeController;
+
+use App\Http\Controllers\MasterData\UserNIKController;
 use App\Http\Controllers\Relationship\NIKJobController;
 use App\Http\Controllers\IOExcel\UserNIKImportController;
 use App\Http\Controllers\MasterData\CostCenterController;
@@ -36,7 +40,6 @@ use App\Http\Controllers\IOExcel\SingleRoleTcodeController;
 use App\Http\Controllers\IOExcel\TcodeSingleRoleController;
 use App\Http\Controllers\MasterData\CostPrevUserController;
 use App\Http\Controllers\IOExcel\NIKJobRoleImportController;
-use App\Http\Controllers\Relationship\JobCompositeController;
 use App\Http\Controllers\IOExcel\CompanyKompartemenController;
 use App\Http\Controllers\MasterData\TerminatedEmployeeController;
 use App\Http\Controllers\IOExcel\CompositeRoleSingleRoleController;
@@ -98,6 +101,17 @@ Route::get('/relationship/job-composite/data', [JobCompositeController::class, '
 Route::get('/relationship/job-composite/empty-composite', [JobCompositeController::class, 'getEmptyCompositeRole'])->name('job-composite.empty-composite');
 Route::get('/relationship/job-composite/company-composite', [JobCompositeController::class, 'getCompositeFilterCompany'])->name('job-composite.company-composite');
 Route::resource('/relationship/job-composite', JobCompositeController::class);
+
+// Route::get('/relationship/composite-single/data', [CompositeSingleController::class, 'getSingleRoles'])->name('composite-single.jsonIndex');
+// Route::get('/relationship/composite-single/empty-single', [CompositeSingleController::class, 'getEmptySingleRole'])->name('composite-single.empty-single');
+// Route::get('/relationship/composite-single/composite-single', [CompositeSingleController::class, 'getCompositeSingleRoles'])->name('composite-single.composite-single');
+Route::get('/relationship/composite-single/data-set', [CompositeSingleController::class, 'jsonIndex'])->name('composite-single.jsonIndex');
+Route::get('/relationship/composite-single/data-filter-company', [CompositeSingleController::class, 'searchByCompany'])->name('composite-single.filter-company');
+Route::resource('/relationship/composite-single', CompositeSingleController::class);
+
+Route::get('/relationship/single-tcode/data-set', [SingleTcodeController::class, 'jsonIndex'])->name('single-tcode.jsonIndex');
+Route::get('/relationship/single-tcode/data-filter-company', [SingleTcodeController::class, 'searchByCompany'])->name('single-tcode.filter-company');
+Route::resource('/relationship/single-tcode', SingleTcodeController::class);
 
 // === import export excel
 // Route::get('/import', [ExcelImportController::class, 'showUploadForm'])->name('excel.upload');

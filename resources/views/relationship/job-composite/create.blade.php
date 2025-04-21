@@ -2,7 +2,7 @@
 
 @section('content')
     <div class="container">
-        <h1>Create Composite Role</h1>
+        <h1>Buat Relationship antara Job Role Composite Role</h1>
 
         <!-- Error Display -->
         @if (session('validationErrors') || session('error'))

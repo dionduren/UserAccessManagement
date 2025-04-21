@@ -48,6 +48,6 @@ class JobRole extends Model
 
     public function compositeRole()
     {
-        return $this->belongsTo(CompositeRole::class, 'jabatan_id', 'id');
+        return $this->hasOne(CompositeRole::class, 'jabatan_id', 'id');
     }
 }

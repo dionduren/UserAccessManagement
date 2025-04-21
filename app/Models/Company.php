@@ -63,4 +63,9 @@ class Company extends Model
         return $this->hasMany(Departemen::class, 'company_id', 'company_code')
             ->whereNull('kompartemen_id');
     }
+
+    public function singleRoles()
+    {
+        return $this->hasMany(SingleRole::class, 'company_id');
+    }
 }

@@ -1,6 +1,8 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\MasterData;
+
+use App\Http\Controllers\Controller;
 
 use App\Models\Company;
 use App\Models\SingleRole;
@@ -14,20 +16,20 @@ class SingleRoleController extends Controller
     public function index()
     {
         $companies = Company::all();
-        return view('single_roles.index', compact('companies'));
+        return view('master-data.single_roles.index', compact('companies'));
     }
 
     // Show the details of a Single Role
     public function show($id)
     {
         $singleRole = SingleRole::with(['compositeRoles', 'company', 'tcodes'])->findOrFail($id);
-        return view('single_roles.show', compact('singleRole'));
+        return view('master-data.single_roles.show', compact('singleRole'));
     }
 
     public function create()
     {
         $companies = Company::all();
-        return view('single_roles.create', compact('companies'));
+        return view('master-data.single_roles.create', compact('companies'));
     }
 
 
@@ -40,7 +42,9 @@ class SingleRoleController extends Controller
                 'required',
                 'string',
                 Rule::unique('tr_single_roles', 'nama')
-                    ->where('company_id', $request->company_id)
+                    ->where(function ($query) use ($request) {
+                        return $query->where('company_id', $request->company_id);
+                    }),
             ],
             'deskripsi' => 'nullable|string',
         ]);
@@ -50,7 +54,7 @@ class SingleRoleController extends Controller
         // Check if the request is an AJAX request
         if ($request->ajax()) {
             // Return HTML for the table row or a success message
-            $view = view('single_roles.partials.actions', compact('singleRole'))->render();
+            $view = view('master-data.single_roles.partials.actions', ['role' => $singleRole])->render();
             return response()->json(['status' => 'success', 'html' => $view]);
         }
 
@@ -63,7 +67,7 @@ class SingleRoleController extends Controller
         $companies = Company::all();
 
         // Render the view and pass the data to it
-        return view('single_roles.edit', compact('singleRole', 'companies'))->render();
+        return view('master-data.single_roles.edit', compact('singleRole', 'companies'))->render();
     }
 
 
@@ -87,7 +91,7 @@ class SingleRoleController extends Controller
 
         if ($request->ajax()) {
             // Pass the variable as `$role` to match the partial view expectation
-            $view = view('single_roles.partials.actions', ['role' => $singleRole])->render();
+            $view = view('master-data.single_roles.partials.actions', ['role' => $singleRole])->render();
             return response()->json(['status' => 'success', 'html' => $view]);
         }
 
@@ -148,7 +152,7 @@ class SingleRoleController extends Controller
                 'company' => $role->company->nama ?? 'N/A',
                 'nama' => $role->nama,
                 'deskripsi' => $role->deskripsi,
-                'actions' => view('single_roles.partials.actions', ['role' => $role])->render(),
+                'actions' => view('master-data.single_roles.partials.actions', ['role' => $role])->render(),
             ];
         });
 

@@ -2,12 +2,10 @@
 
 @section('content')
     <div class="container-fluid">
-        <h1>Master Data Company</h1>
-        <a href="{{ route('companies.create') }}" class="btn btn-primary mb-3">Buat Info Perusahaan Baru</a>
-
-        <!-- In a Blade view, e.g., admin.blade.php -->
-        <a href="{{ route('json.regenerate') }}" class="btn btn-primary">Regenerate JSON File</a>
-
+        <div class="d-flex justify-content-start mb-3">
+            <a href="{{ route('companies.create') }}" class="btn btn-primary mr-3">Buat Info Perusahaan Baru</a>
+            <a href="{{ route('json.regenerate') }}" class="btn btn-secondary ms-3">Regenerate JSON File</a>
+        </div>
 
         @if (session('success'))
             <div class="alert alert-success">{{ session('success') }}</div>
@@ -57,10 +55,10 @@
                     searching: true,
                     ordering: true,
                     columnDefs: [{
-                        width: '10%',
+                        width: '12.5%',
                         targets: 0
                     }, {
-                        width: '20%',
+                        width: '25%',
                         targets: 1
                     }, {
                         width: '10%',

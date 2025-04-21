@@ -1,9 +1,11 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\MasterData;
 
+use App\Http\Controllers\Controller;
 use App\Models\Tcode;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 use Yajra\DataTables\Facades\DataTables;
 
 class TcodeController extends Controller
@@ -11,18 +13,18 @@ class TcodeController extends Controller
     public function index()
     {
         $tcodes = Tcode::all();
-        return view('tcodes.index', compact('tcodes'));
+        return view('master-data.tcodes.index', compact('tcodes'));
     }
 
     public function show($id)
     {
         $tcode = Tcode::findOrFail($id);
-        return view('tcodes.show', compact('tcode'));
+        return view('master-data.tcodes.show', compact('tcode'));
     }
 
     public function create()
     {
-        return view('tcodes.create');
+        return view('master-data.tcodes.create');
     }
 
     public function store(Request $request)
@@ -40,13 +42,17 @@ class TcodeController extends Controller
 
     public function edit(Tcode $tcode)
     {
-        return view('tcodes.edit', compact('tcode'));
+        return view('master-data.tcodes.edit', compact('tcode'));
     }
 
     public function update(Request $request, Tcode $tcode)
     {
         $request->validate([
-            'code' => 'required|string|unique:tr_tcodes,code,' . $tcode->id,
+            'code' => [
+                'required',
+                'string',
+                Rule::unique('tr_tcodes', 'code')->ignore($tcode->code, 'code'),
+            ],
             'sap_module' => 'nullable|string',
             'deskripsi' => 'nullable|string'
         ]);
@@ -88,7 +94,7 @@ class TcodeController extends Controller
         // Return paginated data
         return DataTables::of($query)
             ->addColumn('actions', function ($tcode) {
-                return view('tcodes.partials.actions', ['tcode' => $tcode])->render();
+                return view('master-data.tcodes.partials.actions', ['tcode' => $tcode])->render();
             })
             ->rawColumns(['actions'])
             ->make(true);

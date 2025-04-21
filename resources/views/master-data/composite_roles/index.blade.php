@@ -2,14 +2,9 @@
 
 @section('content')
     <div class="container-fluid">
-        <h1>Master Data > Composite Roles</h1>
-
-        {{-- <button class="btn btn-primary mb-3" id="createCompositeRole">Create New Relationship</button> --}}
         <a href="{{ route('composite-roles.create') }}" class="btn btn-primary mb-3">
-            <i class="bi bi-plus"></i> Create New Composite Role
+            <i class="bi bi-plus"></i> Buat Composite Role Baru
         </a>
-
-        {{-- <button class="btn btn-primary mb-3" id="createCompositeRole">Create New Composite Role</button> --}}
 
         @if (session('status'))
             <div class="alert alert-success">{{ session('status') }}</div>
@@ -25,9 +20,9 @@
 
         <!-- Dropdowns for Filtering -->
         <div class="form-group">
-            <label for="companyDropdown">Select Company</label>
+            <label for="companyDropdown">Pilih Perusahaan</label>
             <select id="companyDropdown" class="form-control select2">
-                <option value="">-- Select Company --</option>
+                <option value="">-- Pilih Perusahaan --</option>
                 @foreach ($companies as $company)
                     <option value="{{ $company->company_code }}">{{ $company->nama }}</option>
                 @endforeach

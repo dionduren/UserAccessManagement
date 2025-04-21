@@ -6,7 +6,7 @@
 
         <!-- Trigger button for Create Modal -->
         <button type="button" id="triggerCreateModal" class="btn btn-primary mb-3">
-            Create New Single Role
+            Buat Single Role Baru
         </button>
 
         <!-- Status Messages -->
@@ -16,9 +16,9 @@
 
         <!-- Dropdowns for Filtering -->
         <div class="form-group">
-            <label for="companyDropdown">Select Company</label>
+            <label for="companyDropdown">Pilih Perusahaan</label>
             <select id="companyDropdown" class="form-control select2">
-                <option value="">-- Select Company --</option>
+                <option value="">-- Pilih Perusahaan --</option>
                 @foreach ($companies as $company)
                     <option value="{{ $company->company_code }}">{{ $company->nama }}</option>
                 @endforeach
@@ -90,14 +90,16 @@
                     {
                         data: 'deskripsi',
                         name: 'deskripsi',
-                        title: 'Deskripsi'
+                        title: 'Deskripsi',
+                        width: '50%'
                     },
                     {
                         data: 'actions',
                         name: 'actions',
                         orderable: false,
                         searchable: false,
-                        title: 'Actions'
+                        title: 'Actions',
+                        width: '10%'
                     },
                 ],
                 responsive: true,
@@ -191,6 +193,49 @@
             //         // Your existing logic for editing goes here
             //     });
             // }
+
+            $(document).on('click', '.delete-single-role', function(e) {
+                e.preventDefault();
+                const button = $(this);
+                const url = button.data('url');
+
+                Swal.fire({
+                    title: 'Menghapus Data Ini?',
+                    text: "Anda akan menghapus data ini secara permanen.",
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#d33',
+                    cancelButtonColor: '#6c757d',
+                    confirmButtonText: 'Ya, Hapus!',
+                    cancelButtonText: 'Batal'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        // Create and submit a hidden form dynamically
+                        const form = $('<form>', {
+                            method: 'POST',
+                            action: url
+                        });
+
+                        const token = $('meta[name="csrf-token"]').attr('content');
+
+                        form.append($('<input>', {
+                            type: 'hidden',
+                            name: '_token',
+                            value: token
+                        }));
+
+                        form.append($('<input>', {
+                            type: 'hidden',
+                            name: '_method',
+                            value: 'DELETE'
+                        }));
+
+                        $('body').append(form);
+                        form.submit();
+                    }
+                });
+            });
+
 
         });
     </script>

@@ -1,5 +1,5 @@
 <div>
-    <form id="editTcodeForm" method="POST" class="ajax-modal-form" action="{{ route('tcodes.update', $tcode->id) }}">
+    <form id="editTcodeForm" method="POST" class="ajax-modal-form" action="{{ route('tcodes.update', $tcode->code) }}">
         @csrf
         @method('PUT')
         <div class="modal-body">

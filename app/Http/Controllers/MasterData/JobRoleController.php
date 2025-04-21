@@ -1,11 +1,14 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\MasterData;
+
+use App\Http\Controllers\Controller;
 
 use App\Models\Company;
 use App\Models\JobRole;
 use App\Models\Departemen;
 use App\Models\Kompartemen;
+
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\Log;

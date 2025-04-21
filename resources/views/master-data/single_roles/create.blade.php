@@ -3,8 +3,8 @@
         @csrf
         <div class="form-group">
             <label for="company_id">Company</label>
-            <select name="company_id" id="company_id" class="form-control select2">
-                <option value="">Select a company</option>
+            <select name="company_id" id="company_id" class="form-control select2" required>
+                <option value="">Pilih perusahaan</option>
                 @foreach ($companies as $company)
                     <option value="{{ $company->company_code }}">{{ $company->nama }}</option>
                 @endforeach

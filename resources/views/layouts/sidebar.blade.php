@@ -95,7 +95,7 @@
 
             <!-- MASTER DATA RELATIONSHIP -->
             <div class="dropdown">
-                <a class="nav-link dropdown-toggle {{ request()->is('relationship/job-composite*', 'relationship/composite-single*', 'relationship/single-tcodes*') ? 'active' : 'text-white' }}"
+                <a class="nav-link dropdown-toggle {{ request()->is('relationship/job-composite*', 'relationship/composite-single*', 'relationship/single-tcode*') ? 'active' : 'text-white' }}"
                     data-bs-toggle="dropdown" href="#" role="button" aria-expanded="false">
                     <i class="bi bi-folder-fill me-2"></i> <span class="me-auto">MASTER DATA RELATIONSHIP</span>
                 </a>
@@ -108,14 +108,14 @@
                         </a>
                     </li>
                     <li>
-                        <a href=""
+                        <a href="{{ route('composite-single.index') }}"
                             class="nav-link {{ request()->routeIs('composite-single*') ? 'active' : 'text-white' }}">
                             <i class="bi bi-link-45deg"></i> Composite - Single Role
                         </a>
                     </li>
                     <li>
-                        <a href=""
-                            class="nav-link {{ request()->routeIs('single-tcodes*') ? 'active' : 'text-white' }}">
+                        <a href="{{ route('single-tcode.index') }}"
+                            class="nav-link {{ request()->routeIs('single-tcode*') ? 'active' : 'text-white' }}">
                             <i class="bi bi-link-45deg"></i> Single Role - Tcodes
                         </a>
                     </li>

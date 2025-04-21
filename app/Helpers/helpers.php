@@ -8,10 +8,30 @@ if (!function_exists('getBreadcrumbs')) {
     $routeName = Route::currentRouteName();
     $breadcrumbs = [
       'home' => 'Dashboard',
-      'companies.index' => 'Master Data > Companies',
-      'kompartemens.index' => 'Master Data > Kompartemen',
-      'departemens.index' => 'Master Data > Departemen',
-      'job-roles.index' => 'Master Data > Job Roles',
+
+      'companies.index' => 'Master Data > Companies - Index',
+      'companies.create' => 'Master Data > Companies - Create',
+      'companies.edit' => 'Master Data > Companies - Edit',
+
+      'kompartemens.index' => 'Master Data > Kompartemen - Index',
+      'kompartemens.create' => 'Master Data > Kompartemen - Create',
+      'kompartemens.edit' => 'Master Data > Kompartemen - Edit',
+
+      'departemens.index' => 'Master Data > Departemen - Index',
+      'departemens.create' => 'Master Data > Departemen - Create',
+      'departemens.edit' => 'Master Data > Departemen - Edit',
+
+      'job-roles.index' => 'Master Data > Job Roles - Index',
+      'job-roles.create' => 'Master Data > Job Roles - Create',
+      'job-roles.edit' => 'Master Data > Job Roles - Edit',
+
+      'composite-roles.index' => 'Master Data > Composite Roles - Index',
+      'composite-roles.create' => 'Master Data > Composite Roles - Create',
+      'composite-roles.edit' => 'Master Data > Composite Roles - Edit',
+
+      'single-roles.index' => 'Master Data > Single Roles - Index',
+
+      'tcodes.index' => 'Master Data > Tcodes',
 
       'company_kompartemen.upload' => 'Import Data > Company & Job Roles > Upload',
 
