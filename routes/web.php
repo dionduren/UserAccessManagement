@@ -17,6 +17,7 @@ use App\Http\Controllers\TcodeImportController;
 use App\Http\Controllers\AccessMatrixController;
 use App\Http\Controllers\DynamicUploadController;
 
+use App\Http\Controllers\IOExcel\CompanyMasterDataController;
 use App\Http\Controllers\MasterData\CompanyController;
 use App\Http\Controllers\MasterData\KompartemenController;
 use App\Http\Controllers\MasterData\DepartemenController;
@@ -67,6 +68,12 @@ Route::get('/get-kompartemen', [KompartemenController::class, 'getKompartemenByC
 Route::get('/get-departemen', [DepartemenController::class, 'getDepartemenByKompartemen']);
 Route::get('/get-departemen-by-company', [DepartemenController::class, 'getDepartemenByCompany']);
 Route::get('/get-job-roles', [JobRoleController::class, 'getJobRoles'])->name('job-roles.getData');
+
+// Upload Company Master Data
+
+Route::get('/upload/unit-kerja', [CompanyMasterDataController::class, 'showForm'])->name('unit-kerja.upload-form');
+Route::post('/upload/unit-kerja', [CompanyMasterDataController::class, 'upload'])->name('unit-kerja.upload');
+
 
 // In routes/web.php
 // Route::get('/master-data-json', function () {

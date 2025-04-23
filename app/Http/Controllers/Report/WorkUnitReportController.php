@@ -24,9 +24,9 @@ class WorkUnitReportController extends Controller
     {
         return view('report.unit_kerja.index', [
             'periodes' => Periode::select('id', 'definisi')->orderByDesc('id')->get(),
-            'companies' => Company::select('id', 'name')->orderBy('name')->get(),
-            'kompartemens' => Kompartemen::select('id', 'name')->get(),
-            'departemens' => Departemen::select('id', 'name')->get(),
+            'companies' => Company::select('company_code', 'nama')->orderBy('nama')->get(),
+            'kompartemens' => Kompartemen::select('kompartemen_id', 'nama')->get(),
+            'departemens' => Departemen::select('departemen_id', 'nama')->get(),
         ]);
     }
 

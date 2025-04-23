@@ -20,8 +20,8 @@
                     <label>🏢 Company</label>
                     <select id="company_id" class="form-select select2">
                         <option value="">All</option>
-                        @foreach (\App\Models\Company::select('id', 'name')->get() as $c)
-                            <option value="{{ $c->id }}">{{ $c->name }}</option>
+                        @foreach (\App\Models\Company::select('company_code', 'nama')->get() as $c)
+                            <option value="{{ $c->company_code }}">{{ $c->nama }}</option>
                         @endforeach
                     </select>
                 </div>
@@ -62,7 +62,7 @@
             let data = await res.json();
             let html = '<option value="">All</option>';
             data.forEach(opt => {
-                html += `<option value="${opt.id}">${opt.name}</option>`;
+                html += `<option value="${opt.id}">${opt.nama}</option>`;
             });
             $(target).html(html);
         };

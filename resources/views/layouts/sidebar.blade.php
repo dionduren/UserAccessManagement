@@ -55,6 +55,13 @@
                             <i class="bi bi-person-badge me-2"></i> Job Roles
                         </a>
                     </li>
+                    <li>
+                        <a href="{{ route('unit-kerja.upload-form') }}"
+                            class="nav-link {{ request()->routeIs('unit-kerja.upload-form') ? 'active' : 'text-white' }}">
+                            <i class="bi bi-cloud-upload me-2"></i> Upload Unit Kerja
+                        </a>
+                    </li>
+
                 </div>
             </div>
         @endcan
@@ -99,8 +106,14 @@
                     data-bs-toggle="dropdown" href="#" role="button" aria-expanded="false">
                     <i class="bi bi-folder-fill me-2"></i> <span class="me-auto">MASTER DATA RELATIONSHIP</span>
                 </a>
-                <div
-                    class="dropdown-content {{ request()->is('relationship/job-composite*', 'relationship/composite-single*', 'relationship/single-tcodes*') ? 'show' : '' }}">
+
+                <div class="dropdown-content {{ request()->is('relationship*') ? 'show' : '' }}">
+                    <li class="nav-item">
+                        <a href="{{ route('nik-job.index') }}"
+                            class="nav-link {{ request()->routeIs('nik-job*') ? 'active' : 'text-white' }}">
+                            <i class="bi bi-file-earmark-spreadsheet"></i> NIK - Job Role
+                        </a>
+                    </li>
                     <li>
                         <a href="{{ route('job-composite.index') }}"
                             class="nav-link {{ request()->routeIs('job-composite*') ? 'active' : 'text-white' }}">
@@ -196,7 +209,7 @@
                 </a>
             </li>
 
-            <div class="dropdown">
+            {{-- <div class="dropdown">
                 <a class="nav-link text-white dropdown-toggle {{ request()->is('user-nik.upload*', 'master-data-nik.upload*', 'user-generic.upload*', 'nik_job_role.upload*') ? 'active' : 'text-white' }}"
                     data-bs-toggle="dropdown" href="#" role="button" aria-expanded="false">
                     <i class="bi bi-folder-fill me-2"></i><span class="me-auto"> UPLOAD DATA</span>
@@ -208,7 +221,7 @@
                             <i class="bi bi-person-badge"></i> User NIK
                         </a>
                     </li>
-                    {{-- <li class="nav-item">
+                    <li class="nav-item">
                         <a href="{{ route('master-data-nik.upload') }}"
                             class="nav-link {{ request()->routeIs('master-data-nik.upload') ? 'active' : 'text-white' }}">
                             <i class="bi bi-person-fill"></i> Master Data NIK
@@ -219,7 +232,7 @@
                             class="nav-link {{ request()->routeIs('user-generic.upload') ? 'active' : 'text-white' }}">
                             <i class="bi bi-person-lines-fill"></i> User Generic
                         </a>
-                    </li> --}}
+                    </li>
                     <li class="nav-item">
                         <a href="{{ route('nik_job_role.upload.form') }}"
                             class="nav-link {{ request()->routeIs('nik_job_role.upload.form') ? 'active' : 'text-white' }}">
@@ -227,7 +240,7 @@
                         </a>
                     </li>
                 </div>
-            </div>
+            </div> --}}
 
             <li class="nav-item">
                 <a href="{{ route('user-nik.index') }}"
@@ -241,13 +254,13 @@
                     <i class="bi bi-person-badge"></i> User NIK Mixed
                 </a>
             </li>
-
+            {{-- 
             <li class="nav-item">
                 <a href="{{ route('nik-job.index') }}"
                     class="nav-link {{ request()->routeIs('nik-job*') ? 'active' : 'text-white' }}">
                     <i class="bi bi-file-earmark-spreadsheet"></i> Relationship NIK - Job Role
                 </a>
-            </li>
+            </li> --}}
 
             <li class="nav-item">
                 <a href="{{ route('terminated-employee.index') }}"

@@ -15,7 +15,6 @@
     <meta name="apple-mobile-web-app-title" content="User Access Management" />
     <link rel="manifest" href="/site.webmanifest" />
 
-
     <!-- jQuery (required for Select2 and DataTables) -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
 
