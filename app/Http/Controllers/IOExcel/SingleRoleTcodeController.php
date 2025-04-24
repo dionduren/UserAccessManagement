@@ -52,8 +52,6 @@ class SingleRoleTcodeController extends Controller
                     Log::info('Skipping row due to missing required fields', [
                         'row_index' => $index + 1,
                         'company_code' => $row['company'],
-                        'kompartemen' => $row['kompartemen'] ?? 'null',
-                        'departemen' => $row['departemen'] ?? 'null',
                         'tcode' => $row['tcode'] ?? 'null',
                         'single_role' => $row['single_role'] ?? 'null'
                     ]);
@@ -81,13 +79,13 @@ class SingleRoleTcodeController extends Controller
                     Log::error('Validation failed for Tcode-Single data', $errorDetails);
                 } else {
                     // Find the company name based on the company code
-                    $company = Company::where('company_code', $row['company'])->first();
-                    $companyName = $company ? $company->nama : 'N/A';
+                    // $company = Company::where('company_code', $row['company'])->first();
+                    // $companyName = $company ? $company->nama : 'N/A';
 
                     // Store validated data along with derived company name for preview
                     $parsedData[] = [
                         'company_code' => $row['company'],
-                        'company_name' => $companyName,
+                        // 'company_name' => $companyName,
                         'single_role' => $row['single_role'],
                         'single_role_desc' => $row['single_role_desc'] ?? 'None',
                         'tcode' => $row['tcode'],
@@ -122,7 +120,7 @@ class SingleRoleTcodeController extends Controller
             return [
                 'id' => $key + 1, // Assign a unique ID
                 'company_code' => $row['company_code'] ?? null,
-                'company_name' => $row['company_name'] ?? null,
+                // 'company_name' => $row['company_name'] ?? null,
                 'single_role' => $row['single_role'] ?? null,
                 'single_role_desc' => $row['single_role_desc'] ?? null,
                 'tcode' => $row['tcode'] ?? null,

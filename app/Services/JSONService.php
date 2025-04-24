@@ -20,11 +20,11 @@ class JSONService
                 'company_name' => $company->nama,
                 'kompartemen' => $company->kompartemen->map(function ($kompartemen) {
                     return [
-                        'id' => $kompartemen->kompartemen_id,
+                        'kompartemen_id' => $kompartemen->kompartemen_id,
                         'nama' => $kompartemen->nama,
                         'departemen' => $kompartemen->departemen->map(function ($departemen) {
                             return [
-                                'id' => $departemen->departemen_id,
+                                'departemen_id' => $departemen->departemen_id,
                                 'nama' => $departemen->nama,
                                 'job_roles' => $departemen->jobRoles->map(function ($jobRole) {
                                     return [
@@ -48,7 +48,7 @@ class JSONService
                 }),
                 'departemen_without_kompartemen' => $company->departemenWithoutKompartemen->map(function ($departemen) {
                     return [
-                        'id' => $departemen->departemen_id,
+                        'departemen_id' => $departemen->departemen_id,
                         'nama' => $departemen->nama,
                         'job_roles' => $departemen->jobRoles->map(function ($jobRole) {
                             return [

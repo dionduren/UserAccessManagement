@@ -165,8 +165,8 @@
                         return acc;
                     }, {});
                     // populateDropdown('#companyDropdown', masterData, 'company_id', 'company_name');
-                    populateDropdown('#companyDropdown', Object.values(masterData), 'company_id',
-                        'company_name');
+                    // populateDropdown('#companyDropdown', Object.values(masterData), 'company_id',
+                    //     'company_name');
 
                 },
                 error: function() {
@@ -181,9 +181,10 @@
                 resetDropdowns(['#kompartemenDropdown', '#departemenDropdown', '#jobRoleDropdown']);
 
                 if (selectedCompany) {
-                    populateDropdown('#kompartemenDropdown', selectedCompany.kompartemen, 'id', 'name');
+                    populateDropdown('#kompartemenDropdown', selectedCompany.kompartemen, 'kompartemen_id',
+                        'nama');
                     populateDropdown('#departemenDropdown', selectedCompany.departemen_without_kompartemen,
-                        'id', 'name');
+                        'departemen_id', 'nama');
                 }
             });
 
@@ -196,7 +197,8 @@
 
                 resetDropdowns(['#departemenDropdown', '#jobRoleDropdown']);
                 if (kompartemen) {
-                    populateDropdown('#departemenDropdown', kompartemen.departemen, 'id', 'name');
+                    populateDropdown('#departemenDropdown', kompartemen.departemen, 'departemen_id',
+                        'nama');
                 }
             });
 
@@ -234,7 +236,7 @@
                 console.log('Job Roles:', jobRoles);
 
                 // Populate Job Roles Dropdown
-                populateDropdown('#jobRoleDropdown', jobRoles, 'id', 'name');
+                populateDropdown('#jobRoleDropdown', jobRoles, 'id', 'nama');
             });
 
 
@@ -260,7 +262,7 @@
                 dropdown.empty().append('<option value="">-- Select --</option>');
 
                 if (Array.isArray(items) && items.length) {
-                    items.forEach((item) => {
+                    items.sort((a, b) => a[textField].localeCompare(b[textField])).forEach((item) => {
                         dropdown.append(`<option value="${item[valueField]}">${item[textField]}</option>`);
                     });
                     dropdown.prop('disabled', false);

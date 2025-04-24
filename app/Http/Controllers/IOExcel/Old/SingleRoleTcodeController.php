@@ -2,27 +2,27 @@
 
 namespace App\Http\Controllers\IOExcel;
 
-use App\Http\Controllers\Controller;
 use App\Models\Company;
-use App\Models\CompositeRole;
 use App\Models\SingleRole;
-use App\Imports\CompositeRoleSingleRoleImport;
 
 use Illuminate\Http\Request;
-use Illuminate\Support\Collection;
-use Illuminate\Support\Facades\Validator;
-use Illuminate\Support\Facades\Log;
 
+use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Log;
+use App\Http\Controllers\Controller;
+use Maatwebsite\Excel\Facades\Excel;
+
+use App\Imports\TcodeSingleRoleImport;
+use App\Models\Tcode;
+use Yajra\DataTables\Facades\DataTables;
+use Illuminate\Support\Facades\Validator;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
-use Maatwebsite\Excel\Facades\Excel;
-use Yajra\DataTables\Facades\DataTables;
-
-class CompositeRoleSingleRoleController extends Controller
+class SingleRoleTcodeController extends Controller
 {
     public function uploadForm()
     {
-        return view('imports.upload.composite_role_single_role');
+        return view('imports.upload.tcode_single_role');
     }
 
     // Preview the data from the uploaded Excel file
@@ -32,22 +32,42 @@ class CompositeRoleSingleRoleController extends Controller
             'excel_file' => 'required|file|mimes:xlsx,xls|max:20480',
         ]);
 
-        $filePath = $request->file('excel_file')->getRealPath();
+        $filePath = $request->file('excel_file');
+        // $filePath = $request->file('excel_file')->getRealPath();
 
         try {
             // Load the data into a collection
-            $data = Excel::toCollection(new CompositeRoleSingleRoleImport, $filePath)->first();
+            $data = Excel::toCollection(new TcodeSingleRoleImport, $filePath)->first();
 
             // Validate and parse each row
             $errors = [];
             $parsedData = [];
             foreach ($data as $index => $row) {
+                // Normalize and check for empty fields
+                $tcode = trim($row['tcode'] ?? '');
+                $singleRole = trim($row['single_role'] ?? '');
+
+                // Skip the row if 'tcode' or 'single_role' is empty
+                if ($tcode == null || $singleRole == null) {
+                    Log::info('Skipping row due to missing required fields', [
+                        'row_index' => $index + 1,
+                        'company_code' => $row['company'],
+                        'kompartemen' => $row['kompartemen'] ?? 'null',
+                        'departemen' => $row['departemen'] ?? 'null',
+                        'tcode' => $row['tcode'] ?? 'null',
+                        'single_role' => $row['single_role'] ?? 'null'
+                    ]);
+                    continue; // Skip to the next row
+                }
+
                 // Custom validation for each row (adjust rules as needed)
                 $validator = Validator::make($row->toArray(), [
                     'company' => 'required|string',
-                    'composite_role' => 'required|string',
-                    'single_role' => 'nullable|string',
-                    'single_role_desc' => 'nullable|string'
+                    'single_role' => 'required',
+                    'single_role_desc' => 'nullable',
+                    'tcode' => 'required',
+                    'tcode_desc' => 'nullable',
+                    'sap_module' => 'nullable|string'
                 ]);
 
                 if ($validator->fails()) {
@@ -58,7 +78,7 @@ class CompositeRoleSingleRoleController extends Controller
                     $errors[$index + 1] = $validator->errors()->all();
 
                     // Log the validation errors with details
-                    Log::error('Validation failed for Composite-Single data', $errorDetails);
+                    Log::error('Validation failed for Tcode-Single data', $errorDetails);
                 } else {
                     // Find the company name based on the company code
                     $company = Company::where('company_code', $row['company'])->first();
@@ -68,22 +88,22 @@ class CompositeRoleSingleRoleController extends Controller
                     $parsedData[] = [
                         'company_code' => $row['company'],
                         'company_name' => $companyName,
-                        'composite_role' => $row['composite_role'],
                         'single_role' => $row['single_role'],
-                        'single_role_desc' => $row['description'] ?? 'None'
+                        'single_role_desc' => $row['single_role_desc'] ?? 'None',
+                        'tcode' => $row['tcode'],
+                        'tcode_desc' => $row['tcode_desc'] ?? 'None',
+                        'sap_module' => $row['sap_module'] ?? 'None'
                     ];
                 }
             }
 
+
             if (!empty($errors)) {
-                // Redirect back with validation errors if any
                 return redirect()->back()->with('validationErrors', $errors);
             }
+            session(['parsedData' => $parsedData]);
 
-            // Store parsed data in session for preview and confirmation
-            session(['parsedData' => $data]);
-
-            return view('imports.preview.composite_role_single_role');
+            return view('imports.preview.tcode_single_role');
         } catch (\Exception $e) {
             return redirect()->back()->withErrors(['error' => 'Error: ' . $e->getMessage()]);
         }
@@ -101,10 +121,13 @@ class CompositeRoleSingleRoleController extends Controller
         $formattedData = collect($data)->map(function ($row, $key) {
             return [
                 'id' => $key + 1, // Assign a unique ID
-                'composite_role' => $row['composite_role'] ?? null,
+                'company_code' => $row['company_code'] ?? null,
+                'company_name' => $row['company_name'] ?? null,
                 'single_role' => $row['single_role'] ?? null,
-                'single_role_desc' => $row['description'] ?? null,
-                'company' => $row['company'] ?? null,
+                'single_role_desc' => $row['single_role_desc'] ?? null,
+                'tcode' => $row['tcode'] ?? null,
+                'tcode_desc' => $row['tcode_desc'] ?? null,
+                'sap_module' => $row['sap_module'] ?? null
             ];
         });
 
@@ -135,48 +158,52 @@ class CompositeRoleSingleRoleController extends Controller
                 $lastUpdate = microtime(true); // Track last time progress was sent
 
                 echo json_encode(['progress' => 0]) . "\n";
+
+                // Start output buffering
+                if (!ob_get_level()) {
+                    ob_start();
+                }
                 ob_flush();
                 flush();
 
                 foreach ($dataArray as $index => $row) {
                     // Skip invalid rows
-                    if (!isset($row['company'], $row['single_role'], $row['composite_role'])) {
+                    if ($row['single_role'] == null || $row['tcode'] == null) {
                         Log::warning('Skipping invalid row.', ['row' => $row]);
                         continue;
                     }
 
                     // Step 1: Find the Company by company_code
-                    $company = Company::where('company_code', $row['company'])->first();
+                    $company = Company::where('company_code', $row['company_code'])->first();
 
                     if (!$company) {
                         Log::warning('Company not found for row', ['row' => $row]);
                         continue;
                     }
 
-                    // Step 2: Create or Update CompositeRole
-                    $compositeRole = CompositeRole::updateOrCreate(
-                        ['nama' => $row['composite_role'], 'company_id' => $company->company_code]
-                    );
-
-                    // Skip row if single_role (nama) is null
-                    if (empty($row['single_role'])) {
-                        Log::warning('Skipping row due to missing single_role', ['row' => $row]);
-                        continue;
-                    }
-
-                    // Step 3: Create or Update SingleRole
+                    // Step 2: Create or Update SingleRole
                     $singleRole = SingleRole::updateOrCreate(
                         ['nama' => $row['single_role'], 'company_id' => $company->company_code],
-                        ['deskripsi' => $row['description']]
+                        ['deskripsi' => $row['single_role_desc']]
                     );
 
-                    // Step 4: Link SingleRole to CompositeRole
-                    $compositeRole->singleRoles()->syncWithoutDetaching([$singleRole->id]);
+                    // Step 3: Create or Update TCode
+                    $tCode = Tcode::updateOrCreate(
+                        ['code' => $row['tcode']],
+                        [
+                            'deskripsi' => $row['tcode_desc'],
+                            'sap_module' => $row['sap_module'],
+                        ]
+                    );
+
+                    // Step 4: Link SingleRole to tCode
+                    $singleRole->tcodes()->save($tCode);
 
                     // Update progress
                     $processedRows++;
+
                     // Check if 3 seconds have passed since the last update
-                    if (microtime(true) - $lastUpdate >= 3 || $processedRows === $totalRows) {
+                    if (microtime(true) - $lastUpdate >= 1 || $processedRows === $totalRows) {
                         $progress = round(($processedRows / $totalRows) * 100);
                         echo json_encode(['progress' => $progress]) . "\n";
                         ob_flush();

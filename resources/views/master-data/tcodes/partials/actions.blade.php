@@ -1,7 +1,8 @@
 <div class="btn-group" role="group">
-    <button type="button" class="btn btn-sm btn-primary show-tcode" data-id="{{ $tcode->code }}">
+    <button type="button" class="btn btn-sm btn-primary show-tcode" data-id="{{ urlencode($tcode->code) }}">
         <i class="bi bi-eye"></i>
     </button>
+
     <button type="button" class="btn btn-sm btn-warning edit-tcode mx-1 " data-id="{{ $tcode->code }}">
         <i class="bi bi-pencil"></i>
     </button>

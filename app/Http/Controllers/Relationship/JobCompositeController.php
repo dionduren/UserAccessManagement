@@ -6,6 +6,7 @@ use App\Models\Company;
 use App\Models\JobRole;
 use Illuminate\Http\Request;
 use App\Models\CompositeRole;
+use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
 
 class JobCompositeController extends Controller

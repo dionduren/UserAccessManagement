@@ -236,7 +236,7 @@ class JobRoleController extends Controller
     private function filterByKompartemen($company, $kompartemenId, &$filteredJobRoles)
     {
         foreach ($company['kompartemen'] ?? [] as $kompartemen) {
-            if ($kompartemenId != $kompartemen['id']) {
+            if ($kompartemenId != $kompartemen['kompartemen_id']) {
                 continue;
             }
 
@@ -266,7 +266,7 @@ class JobRoleController extends Controller
     {
         foreach ($company['kompartemen'] ?? [] as $kompartemen) {
             foreach ($kompartemen['departemen'] ?? [] as $departemen) {
-                if ($departemenId != $departemen['id']) {
+                if ($departemenId != $departemen['departemen_id']) {
                     continue;
                 }
 
@@ -282,7 +282,7 @@ class JobRoleController extends Controller
         }
 
         foreach ($company['departemen_without_kompartemen'] ?? [] as $departemen) {
-            if ($departemenId != $departemen['id']) {
+            if ($departemenId != $departemen['departemen_id']) {
                 continue;
             }
 

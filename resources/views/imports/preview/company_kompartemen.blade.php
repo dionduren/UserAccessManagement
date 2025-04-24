@@ -54,8 +54,11 @@
         <table id="previewTable" class="table table-bordered">
             <thead>
                 <tr>
-                    <th>Company</th>
+                    <th>Company Code</th>
+                    <th>Perusahaan</th>
+                    <th>Kompartemen ID</th>
                     <th>Kompartemen</th>
+                    <th>Departemen ID</th>
                     <th>Departemen</th>
                     <th>Job Function</th>
                     <th>Description</th>
@@ -112,8 +115,16 @@
                         title: 'Perusahaan'
                     },
                     {
+                        data: 'kompartemen_id',
+                        title: 'Kompartemen ID'
+                    },
+                    {
                         data: 'kompartemen',
                         title: 'Kompartemen'
+                    },
+                    {
+                        data: 'departemen_id',
+                        title: 'Departemen ID'
                     },
                     {
                         data: 'departemen',

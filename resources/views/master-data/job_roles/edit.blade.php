@@ -139,14 +139,15 @@
 
                 let companyData = masterData.find(c => c.company_id == companyId);
                 if (companyData) {
-                    populateDropdown('#kompartemen_id', companyData.kompartemen, 'id', 'nama', selectedKompartemen);
+                    populateDropdown('#kompartemen_id', companyData.kompartemen, 'kompartemen_id', 'nama',
+                        selectedKompartemen);
 
                     // Populate departemen without kompartemen
                     if (!selectedKompartemen) {
                         populateDropdown(
                             '#departemen_id',
                             companyData.departemen_without_kompartemen,
-                            'id',
+                            'departemen_id',
                             'nama',
                             selectedDepartemen
                         );
@@ -162,10 +163,10 @@
 
                 const companyId = $('#company_id').val();
                 const companyData = masterData.find(c => c.company_id == companyId);
-                const kompartemenData = companyData?.kompartemen.find(k => k.id == kompartemenId);
+                const kompartemenData = companyData?.kompartemen.find(k => k.kompartemen_id == kompartemenId);
 
                 if (kompartemenData?.departemen?.length) {
-                    populateDropdown('#departemen_id', kompartemenData.departemen, 'id', 'nama',
+                    populateDropdown('#departemen_id', kompartemenData.departemen, 'departemen_id', 'nama',
                         '{{ $jobRole->departemen_id }}');
                 }
             }

@@ -18,6 +18,8 @@ class CompositeRole extends Model
 
     protected $fillable = [
         'company_id',
+        'kompartemen_id',
+        'departemen_id',
         'jabatan_id',
         'nama',
         'deskripsi',
@@ -32,6 +34,16 @@ class CompositeRole extends Model
     public function company()
     {
         return $this->belongsTo(Company::class, 'company_id', 'company_code');
+    }
+
+    public function kompartemen()
+    {
+        return $this->belongsTo(Kompartemen::class, 'kompartemen_id', 'kompartemen_id');
+    }
+
+    public function departemen()
+    {
+        return $this->belongsTo(Departemen::class, 'departemen_id', 'departemen_id');
     }
 
     public function jobRole()

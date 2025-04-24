@@ -84,10 +84,11 @@
                 columns: [{
                         data: 'company_code',
                         title: 'Company Code'
-                    }, {
-                        data: 'company_name',
-                        title: 'Perusahaan'
                     },
+                    // {
+                    //     data: 'company_name',
+                    //     title: 'Perusahaan'
+                    // },
                     {
                         data: 'single_role',
                         title: 'Single Role'

@@ -19,7 +19,7 @@ class DepartemenController extends Controller
     {
         // Retrieve all companies and departemens to pass to the view
         $companies = Company::all();
-        $kompartemens = Kompartemen::all();
+        $kompartemens = Kompartemen::orderBy('nama')->get();
         $departemens = Departemen::with(['company'])->get();
 
         return view('master-data.departemen.index', compact('companies', 'departemens', 'kompartemens'));

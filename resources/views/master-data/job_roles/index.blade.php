@@ -119,7 +119,7 @@
                     masterData = data;
 
                     // Populate company dropdown
-                    populateDropdown('#companyDropdown', data, 'company_id', 'company_name');
+                    // populateDropdown('#companyDropdown', data, 'company_id', 'company_name');
                 },
                 error: function() {
                     alert('Failed to load master data.');
@@ -135,11 +135,12 @@
 
                 if (companyData) {
                     // Populate kompartemen dropdown
-                    populateDropdown('#kompartemenDropdown', companyData.kompartemen, 'id', 'nama');
+                    populateDropdown('#kompartemenDropdown', companyData.kompartemen, 'kompartemen_id',
+                        'nama');
 
                     // Populate departemen_without_kompartemen
                     populateDropdown('#departemenDropdown', companyData.departemen_without_kompartemen,
-                        'id', 'nama');
+                        'departemen_id', 'nama');
                 }
 
                 loadJobRoles();
@@ -152,11 +153,12 @@
 
                 resetDropdowns(['#departemenDropdown']);
                 let companyData = masterData.find(c => c.company_id == companyId);
-                let kompartemenData = companyData?.kompartemen.find(k => k.id == kompartemenId);
+                let kompartemenData = companyData?.kompartemen.find(k => k.kompartemen_id == kompartemenId);
 
                 if (kompartemenData?.departemen.length) {
                     // Populate departemen dropdown based on selected kompartemen
-                    populateDropdown('#departemenDropdown', kompartemenData.departemen, 'id', 'nama');
+                    populateDropdown('#departemenDropdown', kompartemenData.departemen, 'kompartemen_id',
+                        'nama');
                 }
 
                 loadJobRoles();
@@ -171,6 +173,7 @@
             function loadJobRoles() {
                 const companyId = $('#companyDropdown').val();
                 const kompartemenId = $('#kompartemenDropdown').val();
+                console.log(kompartemenId);
                 const departemenId = $('#departemenDropdown').val();
 
                 $.ajax({
@@ -196,7 +199,7 @@
                 dropdown.empty().append('<option value="">-- Select --</option>');
                 if (items?.length) {
                     dropdown.prop('disabled', false);
-                    items.forEach(item => {
+                    items.sort((a, b) => a[textField].localeCompare(b[textField])).forEach(item => {
                         dropdown.append(`<option value="${item[valueField]}">${item[textField]}</option>`);
                     });
                 } else {
