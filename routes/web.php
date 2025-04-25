@@ -17,31 +17,32 @@ use App\Http\Controllers\TcodeImportController;
 use App\Http\Controllers\AccessMatrixController;
 use App\Http\Controllers\DynamicUploadController;
 
-use App\Http\Controllers\IOExcel\CompanyMasterDataController;
-use App\Http\Controllers\MasterData\CompanyController;
-use App\Http\Controllers\MasterData\KompartemenController;
-use App\Http\Controllers\MasterData\DepartemenController;
-use App\Http\Controllers\MasterData\JobRoleController;
-use App\Http\Controllers\MasterData\CompositeRoleController;
-use App\Http\Controllers\MasterData\SingleRoleController;
 use App\Http\Controllers\MasterData\TcodeController;
-
-use App\Http\Controllers\Relationship\JobCompositeController;
-use App\Http\Controllers\Relationship\CompositeSingleController;
-use App\Http\Controllers\Relationship\SingleTcodeController;
-
+use App\Http\Controllers\MasterData\CompanyController;
+use App\Http\Controllers\MasterData\JobRoleController;
 use App\Http\Controllers\MasterData\UserNIKController;
 use App\Http\Controllers\Relationship\NIKJobController;
+use App\Http\Controllers\Report\EmptyJobRoleController;
 use App\Http\Controllers\IOExcel\UserNIKImportController;
 use App\Http\Controllers\MasterData\CostCenterController;
+
+use App\Http\Controllers\MasterData\DepartemenController;
+use App\Http\Controllers\MasterData\SingleRoleController;
 use App\Http\Controllers\Report\WorkUnitReportController;
 
+use App\Http\Controllers\MasterData\KompartemenController;
 use App\Http\Controllers\MasterData\UserGenericController;
 use App\Http\Controllers\IOExcel\SingleRoleTcodeController;
 use App\Http\Controllers\IOExcel\TcodeSingleRoleController;
 use App\Http\Controllers\MasterData\CostPrevUserController;
+
 use App\Http\Controllers\IOExcel\NIKJobRoleImportController;
+use App\Http\Controllers\MasterData\CompositeRoleController;
+use App\Http\Controllers\Relationship\SingleTcodeController;
+use App\Http\Controllers\IOExcel\CompanyMasterDataController;
+use App\Http\Controllers\Relationship\JobCompositeController;
 use App\Http\Controllers\IOExcel\CompanyKompartemenController;
+use App\Http\Controllers\Relationship\CompositeSingleController;
 use App\Http\Controllers\MasterData\TerminatedEmployeeController;
 use App\Http\Controllers\IOExcel\CompositeRoleSingleRoleController;
 
@@ -212,6 +213,7 @@ Route::prefix('dynamic-upload')->name('dynamic_upload.')->group(function () {
 Route::prefix('report')->name('report.')->group(function () {
     Route::get('/unit', [WorkUnitReportController::class, 'index'])->name('unit');
     Route::get('/unit/nested-data', [WorkUnitReportController::class, 'groupedJson'])->name('unit.nestedData');
+    Route::get('/empty-job-role', [EmptyJobRoleController::class, 'index'])->name('empty-job-role.index');
 });
 
 // ------------------ ACCESS MATRIX ------------------

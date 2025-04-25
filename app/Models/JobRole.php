@@ -50,4 +50,9 @@ class JobRole extends Model
     {
         return $this->hasOne(CompositeRole::class, 'jabatan_id', 'id');
     }
+
+    public function NIKJobRole()
+    {
+        return $this->hasMany(NIKJobRole::class, 'job_role_id');
+    }
 }

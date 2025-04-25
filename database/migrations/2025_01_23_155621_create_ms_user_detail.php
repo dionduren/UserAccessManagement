@@ -16,9 +16,12 @@ return new class extends Migration
             $table->string('nama');
             $table->string('nik');
             $table->string('company_id')->nullable();
+            $table->string('company')->nullable();
             $table->string('direktorat')->nullable();
             $table->string('kompartemen_id')->nullable();
+            $table->string('kompartemen')->nullable();
             $table->string('departemen_id')->nullable();
+            $table->string('departemen')->nullable();
             $table->string('email')->nullable();
             $table->string('grade')->nullable();
             $table->string('jabatan')->nullable();

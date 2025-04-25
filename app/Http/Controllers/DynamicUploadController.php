@@ -109,7 +109,6 @@ class DynamicUploadController extends Controller
         return redirect()->route('dynamic_upload.preview', $module);
     }
 
-
     public function preview($module)
     {
         $modules = config('dynamic_uploads.modules');
@@ -203,19 +202,47 @@ class DynamicUploadController extends Controller
                 foreach ($modules[$module]['columns'] as $colName => $meta) {
                     $targetDbField = $meta['db_field'] ?? $colName;
 
-                    if ($meta['type'] === 'lookup' && isset($meta['model'])) {
-                        if (($module === 'user_nik' || $module === 'user_generic') && $colName === 'group') {
+                    // if ($meta['type'] === 'lookup' && isset($meta['model'])) {
+                    //     if (($module === 'user_nik' || $module === 'user_generic') && $colName === 'group') {
 
-                            $payload[$targetDbField] = $row[$colName] ?? null;
+                    //         $payload[$targetDbField] = $row[$colName] ?? null;
+                    //     } else {
+                    //         // For other modules, still resolve to ID
+                    //         $model = $meta['model'];
+                    //         $field = $meta['field'];
+                    //         $record = $model::where($field, $row[$colName])->first();
+                    //         $payload[$targetDbField] = $record ? $record->id : null;
+                    //     }
+                    // } else {
+                    //     $payload[$targetDbField] = $row[$colName] ?? null;
+                    // }
+                    if ($meta['type'] === 'lookup' && isset($meta['model'], $meta['field'])) {
+                        $model = $meta['model'];
+                        $field = $meta['field'];
+                        $dbField = $meta['db_field'] ?? $colName;
+
+                        $modelFound = $model::where($field, $row[$colName])->first();
+
+                        if ($modelFound) {
+                            // ✅ Save ID (foreign key)
+                            $payload[$dbField] = $modelFound->getKey();
+
+                            // ✅ Save raw value too if enabled
+                            if (!empty($meta['store_raw'])) {
+                                $payload[$colName] = $row[$colName];
+                            }
+
+                            // 🟡 Optional: if using explicit ID field in Excel (kompartemen_id column)
+                            if (!empty($meta['id_field']) && isset($row[$meta['id_field']])) {
+                                $payload[$meta['id_field']] = $row[$meta['id_field']];
+                            }
                         } else {
-                            // For other modules, still resolve to ID
-                            $model = $meta['model'];
-                            $field = $meta['field'];
-                            $record = $model::where($field, $row[$colName])->first();
-                            $payload[$targetDbField] = $record ? $record->id : null;
+                            // if model not found, fallback raw to nulls
+                            $payload[$dbField] = null;
+                            if (!empty($meta['store_raw'])) {
+                                $payload[$colName] = null;
+                            }
                         }
-                    } else {
-                        $payload[$targetDbField] = $row[$colName] ?? null;
                     }
                 }
 
@@ -230,7 +257,7 @@ class DynamicUploadController extends Controller
                     // Get JobRole ID from dropdown value (nama_jabatan)
                     $cleanName = trim(strtolower($row['job_role']));
                     $jobRole = \App\Models\JobRole::get()
-                        ->firstWhere(fn($r) => strtolower(trim($r->nama_jabatan)) === $cleanName);
+                        ->firstWhere(fn($r) => strtolower(trim($r->nama)) === $cleanName);
                     // if (!$jobRole) {
                     //     Log::warning("❌ Failed to find job_role_id for '{$row['job_role']}' (NIK {$row['nik']})");
                     // }
@@ -251,8 +278,16 @@ class DynamicUploadController extends Controller
                 } elseif ($tableName === 'ms_user_detail') {
                     unset($payload['user_code']); // Remove user_code field from payload if not needed in this table
 
+                    // $validColumns = \Schema::getColumnListing($tableName);
+                    // $payload = array_filter($payload, fn($val, $key) => in_array($key, $validColumns), ARRAY_FILTER_USE_BOTH);
+
                     \DB::table($tableName)->updateOrInsert(
-                        ['periode_id' => $periodeId, 'nik' => $row['user_code']], // map user_code → nik
+                        [
+                            'periode_id' => $periodeId,
+                            'nik' => $row['user_code'],
+                            'nama' => $row['nama'],
+                            'direktorat' => $row['direktorat']
+                        ], // map user_code → nik'], // map user_code → nik
                         $payload
                     );
                 } elseif ($tableName === 'ms_terminated_employee') {
@@ -269,7 +304,31 @@ class DynamicUploadController extends Controller
                     }
 
                     \DB::table($tableName)->updateOrInsert(
-                        ['nik' => $row['nik']], // map user_code → nik
+                        [
+                            'nik' => $row['nik'],
+                        ],
+                        [
+                            'nama' => $row['nama'],
+                            'tanggal_resign' => $row['tanggal_resign'],
+                            'status' => $row['status'],
+                            'valid_from' => $row['valid_from'],
+                            'valid_to' => $row['valid_to'],
+                            'created_by' => auth()->user()->name ?? 'System',
+                        ], // map user_code → nik'], // map user_code → nik
+                        $payload
+                    );
+                } elseif ($tableName === 'tr_user_generic') {
+                    \DB::table($tableName)->updateOrInsert(
+                        [
+                            'periode_id' => $periodeId,
+                            'group' => $row['group'] ?? null,
+                            'user_code' => $row['user_code'],
+                            'cost_code' => $row['cc_code'],
+                            'license_type' => $row['license_type'],
+                            'last_login' => $row['last_login'],
+                            'valid_from' => $row['valid_from'],
+                            'valid_to' => $row['valid_to'],
+                        ],
                         $payload
                     );
                 } else {
@@ -300,8 +359,8 @@ class DynamicUploadController extends Controller
             ];
 
             // ✅ Special case for Job Role dropdown
-            if ($field === 'job_role' || $field === 'nama_jabatan') {
-                $jobRoles = \App\Models\JobRole::pluck('nama_jabatan')->toArray();
+            if ($field === 'job_role' || $field === 'nama') {
+                $jobRoles = \App\Models\JobRole::pluck('nama')->toArray();
                 $column['editor'] = 'list';
                 $column['editorParams'] = [
                     'values' => $jobRoles,

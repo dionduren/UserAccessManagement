@@ -28,20 +28,26 @@ return [
                     'type' => 'lookup',
                     'model' => \App\Models\Company::class,
                     'field' => 'shortname',
-                    'db_field' => 'company_id', // 🟢 Add this key
+                    'db_field' => 'company_id',
+                    'id_field' => 'company_code',
+                    'store_raw' => true,
                 ],
                 'direktorat' => ['type' => 'string'],
                 'kompartemen' => [
                     'type' => 'lookup',
                     'model' => \App\Models\Kompartemen::class,
-                    'field' => 'name',
-                    'db_field' => 'kompartemen_id'
+                    'field' => 'nama',
+                    'db_field' => 'kompartemen_id',
+                    'id_field' => 'kompartemen_id',
+                    'store_raw' => true,
                 ], // 🟢 Add this key,
                 'departemen' => [
                     'type' => 'lookup',
                     'model' => \App\Models\Departemen::class,
-                    'field' => 'name',
-                    'db_field' => 'departemen_id'
+                    'field' => 'nama',
+                    'db_field' => 'departemen_id',
+                    'id_field' => 'departemen_id',
+                    'store_raw' => true,
                 ],
             ]
         ],
@@ -51,8 +57,12 @@ return [
             'table' => 'tr_user_generic',
             'user_type' => 'Generic',
             'columns' => [
-                'group' => ['type' => 'lookup', 'model' => \App\Models\Company::class, 'field' => 'shortname'],
+                'group' => ['type' => 'string'],
                 'user_code' => ['type' => 'string'],
+                'cc_code' => [
+                    'type' => 'string',
+                    'field' => 'cost_code'
+                ],
                 'license_type' => ['type' => 'string'],
                 'last_login' => ['type' => 'date'],
                 'valid_from' => ['type' => 'date'],
@@ -69,7 +79,7 @@ return [
                 'job_role' => [
                     'type' => 'lookup',
                     'model' => \App\Models\JobRole::class,
-                    'field' => 'nama_jabatan',
+                    'field' => 'nama',
                     'db_field' => 'job_role_id'
                 ],
             ]

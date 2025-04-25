@@ -15,27 +15,26 @@
                     <dd class="col-sm-9">{{ $userNIK->userDetail->nama ?? 'N/A' }}</dd>
 
                     <dt class="col-sm-3">Perusahaan</dt>
-                    <dd class="col-sm-9">{{ $userNIK->userDetail->company->nama ?? 'N/A' }}</dd>
+                    <dd class="col-sm-9">{{ $userNIK->userDetail->company_data->nama ?? 'N/A' }}</dd>
 
                     <dt class="col-sm-3">Direktorat</dt>
                     <dd class="col-sm-9">{{ $userNIK->userDetail->direktorat ?? 'N/A' }}</dd>
 
                     <dt class="col-sm-3">Kompartemen</dt>
-                    <dd class="col-sm-9">{{ $userNIK->userDetail->kompartemen->nama ?? 'N/A' }}</dd>
+                    <dd class="col-sm-9">{{ $userNIK->userDetail->kompartemen ?? 'N/A' }}</dd>
 
                     <dt class="col-sm-3">Departemen</dt>
-                    <dd class="col-sm-9">{{ $userNIK->userDetail->departemen->nama ?? 'N/A' }}</dd>
+                    <dd class="col-sm-9">{{ $userNIK->userDetail->departemen ?? 'N/A' }}</dd>
 
 
-                    <dt class="col-sm-3">Cost Center</dt>
+                    {{-- <dt class="col-sm-3">Cost Center</dt>
                     <dd class="col-sm-9">{{ $userNIK->userDetail->cost_center ?? 'N/A' }}</dd>
 
                     <dt class="col-sm-3">Jabatan</dt>
                     <dd class="col-sm-9">{{ $userNIK->userDetail->jabatan ?? 'N/A' }}</dd>
 
-
                     <dt class="col-sm-3">Email</dt>
-                    <dd class="col-sm-9">{{ $userNIK->userDetail->email ?? 'N/A' }}</dd>
+                    <dd class="col-sm-9">{{ $userNIK->userDetail->email ?? 'N/A' }}</dd> --}}
                 </dl>
             </div>
             <div class="modal-footer">

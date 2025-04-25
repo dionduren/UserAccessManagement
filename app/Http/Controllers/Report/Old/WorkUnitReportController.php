@@ -71,9 +71,9 @@ class WorkUnitReportController extends Controller
                 'cr.nama as composite_role',
                 'cr.id as composite_role_id'
             )
-            ->when($companyId, fn($q) => $q->where('c.company_code', $companyId))
-            ->when($kompartemenId, fn($q) => $q->where('k.kompartemen_id', $kompartemenId))
-            ->when($departemenId, fn($q) => $q->where('d.departemen_id', $departemenId))
+            ->when($companyId, fn($q) => $q->where('c.id', $companyId))
+            ->when($kompartemenId, fn($q) => $q->where('k.id', $kompartemenId))
+            ->when($departemenId, fn($q) => $q->where('d.id', $departemenId))
             ->whereNotNull('jr.id')
             ->get();
 
@@ -93,10 +93,10 @@ class WorkUnitReportController extends Controller
             $grouped[$key]['users'][] = [
                 'nik' => $row->nik,
                 'nama' => $row->nama,
-                'job_role_id' => $row->job_role_id,
                 'job_role' => $row->job_role,
-                'composite_role_id' => $row->composite_role_id,
                 'composite_role' => $row->composite_role,
+                'job_role_id' => $row->job_role_id,
+                'composite_role_id' => $row->composite_role_id,
             ];
         }
 

@@ -40,21 +40,21 @@ class UserDetail extends Model
 
     protected $dates = ['deleted_at'];
 
-    public function company()
+    public function company_data()
     {
-        return $this->belongsTo(Company::class);
+        return $this->belongsTo(Company::class, 'company_id', 'company_code');
     }
 
     // A job role belongs to a department
     public function departemen()
     {
-        return $this->belongsTo(Departemen::class);
+        return $this->belongsTo(Departemen::class, 'departemen_id', 'departemen_id');
     }
 
     // A job role belongs to a compartment
     public function kompartemen()
     {
-        return $this->belongsTo(Kompartemen::class);
+        return $this->belongsTo(Kompartemen::class, 'kompartemen_id', 'kompartemen_id');
     }
 
     public function userNIK()
@@ -73,7 +73,8 @@ class UserDetail extends Model
         return $this->hasMany(CostCenter::class, 'cost_code', 'cost_code');
     }
 
-    public function periode(){
+    public function periode()
+    {
         return $this->belongsTo(Periode::class, 'id', 'periode_id');
     }
 }

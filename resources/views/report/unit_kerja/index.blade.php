@@ -17,8 +17,8 @@
                 <label>Company</label>
                 <select id="company_id" class="form-select">
                     <option value="">All</option>
-                    @foreach ($companies as $c)
-                        <option value="{{ $c->id }}">{{ $c->name }}</option>
+                    @foreach ($companies->sortBy('company_code') as $c)
+                        <option value="{{ $c->company_code }}">{{ $c->nama }}</option>
                     @endforeach
                 </select>
             </div>
@@ -26,8 +26,8 @@
                 <label>Kompartemen</label>
                 <select id="kompartemen_id" class="form-select">
                     <option value="">All</option>
-                    @foreach ($kompartemens as $k)
-                        <option value="{{ $k->id }}">{{ $k->name }}</option>
+                    @foreach ($kompartemens->sortBy('nama') as $k)
+                        <option value="{{ $k->kompartemen_id }}">{{ $k->nama }}</option>
                     @endforeach
                 </select>
             </div>
@@ -35,8 +35,8 @@
                 <label>Departemen</label>
                 <select id="departemen_id" class="form-select">
                     <option value="">All</option>
-                    @foreach ($departemens as $d)
-                        <option value="{{ $d->id }}">{{ $d->name }}</option>
+                    @foreach ($departemens->sortBy('nama') as $d)
+                        <option value="{{ $d->departemen_id }}">{{ $d->nama }}</option>
                     @endforeach
                 </select>
             </div>
@@ -66,7 +66,7 @@
                     if (table) table.destroy();
                     table = new Tabulator("#report-table", {
                         layout: "fitDataStretch",
-                        data: data,
+                        data: data.data,
                         columns: [{
                                 title: "Company",
                                 field: "company",

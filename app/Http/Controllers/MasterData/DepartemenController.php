@@ -27,7 +27,9 @@ class DepartemenController extends Controller
 
     public function create()
     {
-        return view('master-data.departemen.create');
+        $companies = Company::all();
+
+        return view('master-data.departemen.create', compact('companies'));
     }
 
     public function store(Request $request)
@@ -65,9 +67,10 @@ class DepartemenController extends Controller
 
     public function edit(Departemen $departemen)
     {
+        $companies = Company::all();
         $company = Company::where('company_code', $departemen->company_id)->first();
         $kompartemen = Kompartemen::where('company_id', $departemen->company_id)->first();
-        return view('master-data.departemen.edit', compact('company', 'kompartemen', 'departemen'));
+        return view('master-data.departemen.edit', compact('companies', 'company', 'kompartemen', 'departemen'));
     }
 
     public function update(Request $request, Departemen $departemen)

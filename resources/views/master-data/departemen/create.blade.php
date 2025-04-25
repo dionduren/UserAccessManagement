@@ -23,6 +23,10 @@
             <div class="mb-3">
                 <label for="company_id" class="form-label">Perusahaan</label>
                 <select name="company_id" id="company_id" class="form-control select2" required>
+                    <option value="">Pilih Perusahaan</option>
+                    @foreach ($companies as $company)
+                        <option value="{{ $company->company_code }}">{{ $company->nama }}</option>
+                    @endforeach
                 </select>
             </div>
 
@@ -70,7 +74,7 @@
                     masterData = data;
 
                     // Populate company dropdown
-                    populateDropdown('#company_id', data, 'company_id', 'company_name');
+                    // populateDropdown('#company_id', data, 'company_id', 'company_name');
                 },
                 error: function() {
                     alert('Failed to load master data.');
@@ -88,7 +92,8 @@
 
                     if (companyData) {
                         // Populate kompartemen dropdown
-                        populateDropdown('#kompartemen_id', companyData.kompartemen, 'id', 'nama');
+                        populateDropdown('#kompartemen_id', companyData.kompartemen, 'kompartemen_id',
+                            'nama');
                     }
                 }
             });
@@ -98,6 +103,7 @@
                 let dropdown = $(selector);
                 dropdown.empty().append('<option value="">Pilih Perusahaan</option>');
                 if (items?.length) {
+                    items.sort((a, b) => a[textField].localeCompare(b[textField]));
                     dropdown.prop('disabled', false);
                     items.forEach(item => {
                         dropdown.append(`<option value="${item[valueField]}">${item[textField]}</option>`);

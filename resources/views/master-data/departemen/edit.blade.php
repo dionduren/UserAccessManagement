@@ -24,6 +24,13 @@
             <div class="mb-3">
                 <label for="company_id" class="form-label">Perusahaan</label>
                 <select name="company_id" id="company_id" class="form-control select2" required>
+                    <option value="">Pilih Perusahaan</option>
+                    @foreach ($companies as $company)
+                        <option value="{{ $company->company_code }}"
+                            {{ $company->company_code == $departemen->company_id ? 'selected' : '' }}>
+                            {{ $company->nama }}
+                        </option>
+                    @endforeach
                 </select>
             </div>
 
@@ -74,8 +81,8 @@
                     masterData = data;
 
                     // Populate company dropdown
-                    populateDropdown('#company_id', data, 'company_id', 'company_name',
-                        '{{ $company->company_code }}');
+                    // populateDropdown('#company_id', data, 'company_id', 'company_name',
+                    //     '{{ $company->company_code }}');
 
                     // Load kompartemen based on the selected company
                     handleCompanyChange('{{ $departemen->company_id }}',
@@ -98,6 +105,7 @@
                 dropdown.empty().append('<option value="">-- Select --</option>');
                 if (items?.length) {
                     dropdown.prop('disabled', false);
+                    items.sort((a, b) => a[valueField].localeCompare(b[valueField]));
                     items.forEach(item => {
                         const isSelected = item[valueField] == selectedValue ? 'selected' : '';
                         console.log('valueField = ', valueField, ' - ', item[valueField], ' == ',
@@ -127,7 +135,8 @@
 
                 let companyData = masterData.find(c => c.company_id == companyId);
                 if (companyData) {
-                    populateDropdown('#kompartemen_id', companyData.kompartemen, 'id', 'nama', selectedKompartemen);
+                    populateDropdown('#kompartemen_id', companyData.kompartemen, 'kompartemen_id', 'nama',
+                        selectedKompartemen);
                 }
             }
 

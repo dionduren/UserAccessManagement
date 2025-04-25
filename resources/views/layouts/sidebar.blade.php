@@ -166,8 +166,11 @@
                 </div>
             </div>
         @endcan
-
         <hr>
+
+        <div>
+            <h5>User & Cost Center</h5>
+        </div>
 
         @php
             $modules = config('dynamic_uploads.modules');
@@ -191,14 +194,6 @@
                     @endforeach
                 </ul>
             </div>
-        </div>
-
-
-
-        <hr>
-
-        <div>
-            <h5>User & Cost Center</h5>
         </div>
 
         <div class="">
@@ -323,10 +318,20 @@
         <hr>
 
         <div>
-            <li>
+            <h5>Report</h5>
+        </div>
+
+        <div>
+            <li class="nav-item">
                 <a href="{{ route('report.unit') }}"
                     class="nav-link {{ request()->routeIs('report.unit') ? 'active' : 'text-white' }}">
-                    <i class="bi bi-clipboard-data me-2"></i> Report
+                    <i class="bi bi-clipboard-data me-2"></i> Report Unit Kerja
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="{{ route('report.empty-job-role.index') }}"
+                    class="nav-link {{ request()->routeIs('report.empty-job-role.index') ? 'active' : 'text-white' }}">
+                    <i class="bi bi-file-earmark-spreadsheet me-2"></i> Empty Job Role
                 </a>
             </li>
         </div>
