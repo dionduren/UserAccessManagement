@@ -212,7 +212,8 @@ Route::prefix('dynamic-upload')->name('dynamic_upload.')->group(function () {
 
 Route::prefix('report')->name('report.')->group(function () {
     Route::get('/unit', [WorkUnitReportController::class, 'index'])->name('unit');
-    Route::get('/unit/nested-data', [WorkUnitReportController::class, 'groupedJson'])->name('unit.nestedData');
+    Route::get('/unit/grouped-data', [WorkUnitReportController::class, 'groupedJson'])->name('unit.groupedData');
+    // Route::get('/unit/nested-data', [WorkUnitReportController::class, 'groupedJson'])->name('unit.nestedData');
     Route::get('/empty-job-role', [EmptyJobRoleController::class, 'index'])->name('empty-job-role.index');
 });
 

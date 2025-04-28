@@ -6,9 +6,9 @@ use Illuminate\Support\Facades\DB;
 
 class WorkUnitService
 {
-    public static function getNestedStructure($periodeId, $filters = [])
+    public static function getGroupedData($periodeId, $filters = [])
     {
-        $rows = DB::table('ms_user_detail as ud')
+        $query = DB::table('ms_user_detail as ud')
             ->leftJoin('tr_nik_job_role as njr', function ($join) use ($periodeId) {
                 $join->on('njr.nik', '=', 'ud.nik')
                     ->where('njr.periode_id', '=', $periodeId);
@@ -38,63 +38,26 @@ class WorkUnitService
                 tc.code AS tcode,
                 tc.sap_module,
                 tc.deskripsi AS tcode_desc
-            ')
-            ->whereNotNull('jr.id')
-            ->orderBy('ud.nik')
-            ->get();
+            ');
 
-        $grouped = [];
-
-        foreach ($rows as $row) {
-            $key = implode('|', [$row->company, $row->kompartemen, $row->departemen, $row->job_role]);
-
-            if (!isset($grouped[$key])) {
-                $grouped[$key] = [
-                    'company' => $row->company,
-                    'kompartemen' => $row->kompartemen,
-                    'departemen' => $row->departemen,
-                    'job_role' => $row->job_role,
-                    'composite_roles' => [],
-                ];
-            }
-
-            $compRef = &$grouped[$key]['composite_roles'];
-            $cr_id = $row->composite_role_id;
-
-            if ($cr_id && !isset($compRef[$cr_id])) {
-                $compRef[$cr_id] = [
-                    'name' => $row->composite_role,
-                    'single_roles' => [],
-                ];
-            }
-
-            if ($cr_id) {
-                $sr_id = $row->single_role_id;
-
-                if (!isset($compRef[$cr_id]['single_roles'][$sr_id])) {
-                    $compRef[$cr_id]['single_roles'][$sr_id] = [
-                        'name' => $row->single_role,
-                        'deskripsi' => $row->single_role_desc,
-                        'tcodes' => [],
-                    ];
-                }
-
-                if ($row->tcode) {
-                    $compRef[$cr_id]['single_roles'][$sr_id]['tcodes'][] = [
-                        'code' => $row->tcode,
-                        'sap_module' => $row->sap_module,
-                        'deskripsi' => $row->tcode_desc,
-                    ];
-                }
-            }
+        // 🛡 Filters
+        if (!empty($filters['company_id'])) {
+            $query->where('ud.company_id', $filters['company_id']);
+        }
+        if (!empty($filters['kompartemen_id'])) {
+            $query->where('ud.kompartemen_id', $filters['kompartemen_id']);
+        }
+        if (!empty($filters['departemen_id'])) {
+            $query->where('ud.departemen_id', $filters['departemen_id']);
         }
 
-        return array_values(array_map(function ($item) {
-            $item['composite_roles'] = array_values(array_map(function ($cr) {
-                $cr['single_roles'] = array_values($cr['single_roles']);
-                return $cr;
-            }, $item['composite_roles']));
-            return $item;
-        }, $grouped));
+        return $query->whereNotNull('jr.id')
+            ->orderBy('company')
+            ->orderBy('kompartemen')
+            ->orderBy('departemen')
+            ->orderBy('job_role')
+            ->orderBy('single_role')
+            ->get()
+            ->toArray();
     }
 }

@@ -1,13 +1,5 @@
 @extends('layouts.app')
 
-@section('header-scripts')
-    <!-- Tabulator CSS -->
-    <link href="https://unpkg.com/tabulator-tables@6.3.1/dist/css/tabulator.min.css" rel="stylesheet">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/tabulator/6.3.0/css/tabulator_semanticui.min.css" rel="stylesheet">
-    <!-- Tabulator JS -->
-    <script src="https://unpkg.com/tabulator-tables@6.3.1/dist/js/tabulator.min.js"></script>
-@endsection
-
 @section('content')
     <div class="container-fluid">
         <h1 class="mb-4">Report Empty Job Role</h1>

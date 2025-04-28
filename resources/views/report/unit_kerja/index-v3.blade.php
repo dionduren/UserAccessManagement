@@ -1,9 +1,9 @@
+{{-- resources/views/report/nested/index.blade.php --}}
 @extends('layouts.app')
 
 @section('content')
     <div class="container-fluid">
-        <h4 class="mb-3">🔍 Grouped Work Unit Mapping</h4>
-
+        <h4 class="mb-3">🔍 Nested Work Unit Mapping</h4>
         <div class="row mb-3 g-2">
             <div class="col-md-3">
                 <label>Periode</label>
@@ -57,58 +57,69 @@
                 periode_id: $('#periode_id').val(),
                 company_id: $('#company_id').val(),
                 kompartemen_id: $('#kompartemen_id').val(),
-                departemen_id: $('#departemen_id').val(),
+                departemen_id: $('#departemen_id').val()
             };
 
-            fetch(`{{ route('report.unit.groupedData') }}?` + new URLSearchParams(params))
+            fetch(`{{ route('report.unit.nestedData') }}?` + new URLSearchParams(params))
                 .then(res => res.json())
-                .then(data => {
+                .then(response => {
                     if (table) table.destroy();
 
                     table = new Tabulator("#report-table", {
-                        data: data.data,
-                        layout: "fitColumns",
-                        groupBy: ["company", "kompartemen", "departemen", "job_role"],
-                        groupHeader: function(value, count, data, group) {
-                            return value + ` (${count} items)`;
-                        },
-                        groupStartOpen: false,
+                        dataTree: true,
+                        dataTreeStartExpanded: false,
+                        dataTreeChildField: "children",
+                        layout: "fitDataStretch",
+                        data: response.data,
                         columns: [{
+                                title: "Company",
+                                field: "company",
+                            },
+                            {
+                                title: "Kompartemen",
+                                field: "kompartemen",
+                            },
+                            {
+                                title: "Departemen",
+                                field: "departemen",
+                            },
+                            {
+                                title: "Job Role",
+                                field: "job_role",
+                                visible: false, // Hidden at parent level
+                            },
+                            {
                                 title: "Composite Role",
                                 field: "composite_role",
-                                headerSort: false
+                                visible: false, // Hidden at parent level
                             },
                             {
                                 title: "Single Role",
                                 field: "single_role",
-                                headerSort: false
+                                visible: false, // Hidden at parent level
                             },
                             {
-                                title: "Single Role Desc",
-                                field: "single_role_desc",
-                                headerSort: false
+                                title: "Single Role Description",
+                                field: "deskripsi",
+                                visible: false, // Hidden at parent level
                             },
                             {
                                 title: "TCode",
                                 field: "tcode",
-                                headerSort: false
-                            },
-                            {
-                                title: "SAP Module",
-                                field: "sap_module",
-                                headerSort: false
+                                visible: false,
                             },
                             {
                                 title: "TCode Desc",
                                 field: "tcode_desc",
-                                headerSort: false
+                                visible: false,
                             },
+                            {
+                                title: "SAP Module",
+                                field: "sap_module",
+                                visible: false,
+                            }
                         ],
-                        responsiveLayout: "collapse",
-                        movableColumns: true,
-                        resizableColumns: true,
-                        tooltips: true,
-                        height: "700px",
+                        dataTreeElementColumn: "company", // Dynamically change as depth increases (advanced: optional improvement)
                     });
                 });
         });

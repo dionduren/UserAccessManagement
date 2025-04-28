@@ -35,8 +35,8 @@ class WorkUnitReportController extends Controller
         $periodeId = $request->input('periode_id');
         $filters = $request->only(['company_id', 'kompartemen_id', 'departemen_id']);
 
-        $data = WorkUnitService::getNestedStructure($periodeId, $filters);
-
+        $data = WorkUnitService::getGroupedData($periodeId, $filters);
+        // $data = WorkUnitService::getNestedStructure($periodeId, $filters);
 
         return response()->json(['data' => $data]);
     }
