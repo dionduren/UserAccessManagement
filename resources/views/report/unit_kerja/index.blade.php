@@ -68,36 +68,48 @@
                     table = new Tabulator("#report-table", {
                         data: data.data,
                         layout: "fitColumns",
-                        groupBy: ["company", "kompartemen", "departemen", "job_role"],
+                        groupBy: ["company", "kompartemen", "departemen", "job_role", "composite_role",
+                            "single_role"
+                        ],
                         groupHeader: function(value, count, data, group) {
-                            return value + ` (${count} items)`;
+                            let groupName = group.getField() === "company" ? "Perusahaan: " +
+                                value :
+                                group.getField() === "kompartemen" ? "Kompartemen: " + value :
+                                group.getField() === "departemen" ? "Departemen: " + value :
+                                group.getField() === "job_role" ? "Job Role: " + value :
+                                group.getField() === "composite_role" ? "Composite Role: " + value :
+                                group.getField() === "single_role" ? "Single Role: " + value +
+                                " - " + data[0].single_role_desc :
+                                "";
+                            return `${groupName} (${count} items)`;
                         },
                         groupStartOpen: false,
-                        columns: [{
-                                title: "Composite Role",
-                                field: "composite_role",
-                                headerSort: false
-                            },
-                            {
-                                title: "Single Role",
-                                field: "single_role",
-                                headerSort: false
-                            },
-                            {
-                                title: "Single Role Desc",
-                                field: "single_role_desc",
-                                headerSort: false
-                            },
+                        columns: [
+                            // {
+                            //     title: "Composite Role",
+                            //     field: "composite_role",
+                            //     headerSort: false
+                            // },
+                            // {
+                            //     title: "Single Role",
+                            //     field: "single_role",
+                            //     headerSort: false
+                            // },
+                            // {
+                            //     title: "Single Role Desc",
+                            //     field: "single_role_desc",
+                            //     headerSort: false
+                            // },
                             {
                                 title: "TCode",
                                 field: "tcode",
                                 headerSort: false
                             },
-                            {
-                                title: "SAP Module",
-                                field: "sap_module",
-                                headerSort: false
-                            },
+                            // {
+                            //     title: "SAP Module",
+                            //     field: "sap_module",
+                            //     headerSort: false
+                            // },
                             {
                                 title: "TCode Desc",
                                 field: "tcode_desc",

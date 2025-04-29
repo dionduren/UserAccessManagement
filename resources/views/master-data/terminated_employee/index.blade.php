@@ -30,22 +30,50 @@
                         {
                             title: "Nama",
                             field: "nama",
-                            headerFilter: true
+                            headerFilter: true,
+                            widthGrow: 2
                         },
                         {
                             title: "Tanggal Resign",
                             field: "tanggal_resign",
-                            headerFilter: true
+                            headerFilter: true,
+                            formatter: function(cell) {
+                                var value = cell.getValue();
+                                var date = new Date(value);
+                                var options = {
+                                    year: 'numeric',
+                                    month: 'long',
+                                    day: 'numeric'
+                                };
+                                return `<div style="text-align: end">${date.toLocaleDateString('id-ID', options)}</div>`;
+                            }
                         },
                         {
                             title: "Status",
                             field: "status",
-                            headerFilter: true
+                            headerFilter: true,
+                            widthGrow: 2
                         },
                         {
                             title: "Last Login",
                             field: "last_login",
-                            headerFilter: true
+                            headerFilter: true,
+                            formatter: function(cell) {
+                                var value = cell.getValue();
+                                var date = new Date(value);
+                                var options = {
+                                    year: 'numeric',
+                                    month: 'long',
+                                    day: 'numeric',
+                                    hour: '2-digit',
+                                    minute: '2-digit',
+                                    second: '2-digit',
+                                    timeZone: 'Asia/Jakarta',
+                                    hour12: false
+                                };
+                                return `<div style="text-align: end">${date.toLocaleString('id-ID', options)}</div>`;
+                            },
+                            widthGrow: 2
                         },
                         {
                             title: "Valid From",
