@@ -15,7 +15,8 @@ return new class extends Migration
             $table->id();
             $table->string('group')->nullable();
             $table->string('cost_center')->index();
-            $table->string('cost_code')->index();
+            $table->string('cost_code')->index()->nullable();
+            $table->string('periode')->nullable();
             $table->text('deskripsi')->nullable();
             $table->timestamps();
             $table->softDeletes();

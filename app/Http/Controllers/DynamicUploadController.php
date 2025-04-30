@@ -194,13 +194,13 @@ class DynamicUploadController extends Controller
                     $payload['user_type'] = $userType;
                 }
 
-                if (!in_array($tableName, ['ms_terminated_employee'])) {
+                if (!in_array($tableName, ['ms_terminated_employee', 'ms_cc_user', 'tr_cc_prev_user', 'ms_cost_center'])) {
                     $payload['periode_id'] = $periodeId;
                 }
 
 
                 foreach ($modules[$module]['columns'] as $colName => $meta) {
-                    $targetDbField = $meta['db_field'] ?? $colName;
+                    // $targetDbField = $meta['db_field'] ?? $colName;
 
                     // if ($meta['type'] === 'lookup' && isset($meta['model'])) {
                     //     if (($module === 'user_nik' || $module === 'user_generic') && $colName === 'group') {
@@ -328,6 +328,37 @@ class DynamicUploadController extends Controller
                             'last_login' => $row['last_login'],
                             'valid_from' => $row['valid_from'],
                             'valid_to' => $row['valid_to'],
+                        ],
+                        $payload
+                    );
+                } elseif ($tableName === 'ms_cc_user') {
+                    \DB::table($tableName)->updateOrInsert(
+                        [
+                            'user_code' => $row['user_code'],
+                            'user_name' => $row['user_name'],
+                            'cost_code' => $row['cost_code'],
+                            'periode_terdaftar' => $periodeId, // Different column name for current cost center user
+                        ],
+                        $payload
+                    );
+                } elseif ($tableName === 'tr_cc_prev_user') {
+                    \DB::table($tableName)->updateOrInsert(
+                        [
+                            'periode_sebelumnya' => $periodeId, // Different column name for prev cost center user
+                            'user_code' => $row['user_code'],
+                            'user_name' => $row['user_name'],
+                            'cost_code' => $row['cost_code'],
+                        ],
+                        $payload
+                    );
+                } elseif ($tableName === 'ms_cost_center') {
+                    \DB::table($tableName)->updateOrInsert(
+                        [
+                            'group' => $row['group'],
+                            'cost_center' => $row['cost_center'],
+                            'cost_code' => $row['cost_code'],
+                            'deskripsi' => $row['deskripsi'],
+                            'periode' => $periodeId
                         ],
                         $payload
                     );

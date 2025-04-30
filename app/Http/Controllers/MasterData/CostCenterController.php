@@ -33,12 +33,68 @@ class CostCenterController extends Controller
     public function index_prev_user(Request $request)
     {
         if ($request->ajax()) {
-            $costCenters = CostPrevUser::select('id', 'user_code', 'user_name', 'cost_code', 'dokumen_keterangan');
+            // $costCenters = CostPrevUser::select('id', 'user_code', 'user_name', 'cost_code', 'dokumen_keterangan');
+            $costCenters = CostPrevUser::select('id', 'user_code', 'user_name', 'cost_code', 'flagged', 'keterangan');
             return DataTables::of($costCenters)
+                ->addColumn('action', function ($row) {
+                    return '<button type="button" class="btn btn-sm btn-primary btn-edit"
+                    data-id="' . $row->id . '"
+                    data-flagged="' . $row->flagged . '"
+                    data-keterangan="' . e($row->keterangan) . '">
+                    Tandai
+                </button>
+                <a href="' . route('prev-user.edit', $row->id) . '" class="btn btn-sm btn-secondary" target="_blank">
+                    Edit
+                </a>';
+                })
+                ->rawColumns(['action'])
                 ->make(true);
         }
 
         return view('master-data.cost_center.prev-user.index');
+    }
+
+    public function update_prev_user(Request $request)
+    {
+        $costPrevUser = CostPrevUser::findOrFail($request->id);
+        $costPrevUser->flagged = $request->flagged;
+        $costPrevUser->keterangan = $request->keterangan;
+        $costPrevUser->save();
+
+        return response()->json(['success' => true]);
+    }
+
+    /**
+     * Show the form for editing the specified resource.
+     */
+    public function edit_prev_user($id)
+    {
+        $costPrevUser = CostPrevUser::findOrFail($id);
+        return view('master-data.cost_center.prev-user.edit', compact('costPrevUser'));
+    }
+
+    /**
+     * Update the specified resource in storage.
+     */
+    public function full_update_prev_user(Request $request, $id)
+    {
+        $request->validate([
+            'user_code' => 'required|string|max:255',
+            'user_name' => 'required|string|max:255',
+            'cost_code' => 'required|string|max:255',
+            'flagged' => 'required|boolean',
+            'keterangan' => 'nullable|string',
+        ]);
+
+        try {
+            $costPrevUser = CostPrevUser::findOrFail($id);
+            $costPrevUser->update($request->all());
+
+            return redirect()->route('prev-user.index')->with('success', 'Previous User updated successfully!');
+        } catch (\Exception $e) {
+            Log::info('Error updating Previous User = ', $e->getMessage());
+            return redirect()->back()->with('error', 'Failed to update the previous user. Please try again.');
+        }
     }
 
 

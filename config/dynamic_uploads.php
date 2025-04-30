@@ -101,6 +101,38 @@ return [
             ]
         ],
 
+        'current_cc_user' => [
+            'name' => 'Current Cost Center User',
+            'table' => 'ms_cc_user',
+            'user_type' => null, // Optional to make controller logic consistent
+            'columns' => [
+                'user_code' => ['type' => 'string'],
+                'user_name' => ['type' => 'string'],
+                'cost_code' => ['type' => 'string'],
+            ]
+        ],
 
+        'prev_cc_user' => [
+            'name' => 'Previous Cost Center User',
+            'table' => 'tr_cc_prev_user',
+            'user_type' => null, // Optional to make controller logic consistent
+            'columns' => [
+                'user_code' => ['type' => 'string'],
+                'user_name' => ['type' => 'string'],
+                'cost_code' => ['type' => 'string'],
+            ]
+        ],
+
+        'ms_cost_center' => [
+            'name' => 'Master Data Cost Center',
+            'table' => 'ms_cost_center',
+            'user_type' => null, // Optional to make controller logic consistent
+            'columns' => [
+                'group' => ['type' => 'string'],
+                'cost_center' => ['type' => 'string'],
+                'cost_code' => ['type' => 'string'],
+                'deskripsi' => ['type' => 'string'],
+            ]
+        ],
     ]
 ];

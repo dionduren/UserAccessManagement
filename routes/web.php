@@ -180,6 +180,9 @@ Route::get('cost-center/user-generic/compare', [UserGenericController::class, 'c
 Route::get('cost-center/user-generic/get-periodic', [UserGenericController::class, 'getPeriodicGenericUser'])->name('user-generic.get-periodic');
 Route::resource('cost-center/user-generic', UserGenericController::class)->name('index', 'user-generic.index');
 Route::get('cost-center/prev-user', [CostCenterController::class, 'index_prev_user'])->name('prev-user.index');
+Route::put('cost-center/prev-user/update', [CostCenterController::class, 'update_prev_user'])->name('prev-user.update');
+Route::get('cost-center/prev-user/{id}/edit', [CostCenterController::class, 'edit_prev_user'])->name('prev-user.edit');
+Route::put('cost-center/prev-user/full-update', [CostCenterController::class, 'full_update_prev_user'])->name('prev-user.full-update');
 Route::resource('cost-center', CostCenterController::class);
 
 Route::get('relationship/nik-job/get-by-periode-id', [NIKJobController::class, 'getNIKJobRolesByPeriodeId'])->name('nik-job.get-by-periode');

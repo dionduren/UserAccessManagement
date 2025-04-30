@@ -46,13 +46,14 @@ class userGeneric extends Model
 
     public function currentUser()
     {
-        return $this->hasOne(CostCurrentUser::class, 'cost_code', 'user_code');
+        return $this->hasOne(CostCurrentUser::class, 'user_code', 'user_code');
     }
 
     public function prevUser()
     {
-        return $this->hasMany(CostPrevUser::class, 'cost_code', 'user_code');
+        return $this->hasMany(CostPrevUser::class, 'user_code', 'user_code');
     }
+
 
     public function periode()
     {

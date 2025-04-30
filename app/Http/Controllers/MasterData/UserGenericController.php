@@ -64,8 +64,17 @@ class UserGenericController extends Controller
     {
         if ($request->ajax()) {
             // Load relationships: costCenter, currentUser, and prevUser
+            // $userGenerics = UserGeneric::with(['costCenter', 'currentUser', 'prevUser'])
+            //     ->select('id', 'group', 'user_code', 'user_type', 'cost_code', 'license_type', 'valid_from', 'valid_to');
+
+            $periodeId = $request->input('periode_id');
+
             $userGenerics = UserGeneric::with(['costCenter', 'currentUser', 'prevUser'])
                 ->select('id', 'group', 'user_code', 'user_type', 'cost_code', 'license_type', 'valid_from', 'valid_to');
+
+            if ($periodeId) {
+                $userGenerics->where('periode_id', $periodeId);
+            }
 
             return DataTables::of($userGenerics)
                 ->editColumn('valid_from', function ($row) {
@@ -83,21 +92,25 @@ class UserGenericController extends Controller
                 ->addColumn('current_user', function ($row) {
                     // currentUser is a hasOne relation
                     return $row->currentUser ? $row->currentUser->user_name : '-';
+                    // return $row->currentUser;
                 })
-                ->addColumn('dokumen_keterangan', function ($row) {
-                    // currentUser is a hasOne relation
-                    return $row->currentUser ? $row->currentUser->dokumen_keterangan : '-';
-                })
+                // ->addColumn('dokumen_keterangan', function ($row) {
+                //     // currentUser is a hasOne relation
+                //     return $row->currentUser ? $row->currentUser->dokumen_keterangan : '-';
+                // })
                 ->addColumn('prev_user', function ($row) {
                     // prevUser is a hasMany relation; join user_name values if multiple exist
                     return ($row->prevUser && $row->prevUser->isNotEmpty())
                         ? $row->prevUser->pluck('user_name')->implode(', ')
                         : '-';
+                    // return $row->prevUser;
                 })
                 ->make(true);
         }
 
-        return view('dashboard.costcenter-user.index');
+        $periodes = \App\Models\Periode::select('id', 'definisi')->get();
+
+        return view('dashboard.costcenter-user.index', compact('periodes'));
     }
 
     /**
