@@ -11,21 +11,30 @@ return new class extends Migration
         Schema::create('pt_single_role_tcode', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('single_role_id')->nullable();
-            $table->string('tcode_id')->nullable(); // Fix: must match tr_tcodes PK
+            $table->unsignedBigInteger('tcode_id')->nullable(); // Changed to match tr_tcodes id column
             $table->timestamps();
             $table->softDeletes();
             $table->text('created_by')->nullable();
             $table->text('updated_by')->nullable();
             $table->text('deleted_by')->nullable();
 
-            // Indexes for FK speed
+            // Indexes
             $table->index('single_role_id');
             $table->index('tcode_id');
             $table->index('deleted_at');
 
             // Foreign keys
-            $table->foreign('single_role_id')->references('id')->on('tr_single_roles')->onDelete('set null')->onUpdate('cascade');
-            $table->foreign('tcode_id')->references('code')->on('tr_tcodes')->onDelete('set null')->onUpdate('cascade');
+            $table->foreign('single_role_id')
+                ->references('id')
+                ->on('tr_single_roles')
+                ->onDelete('set null')
+                ->onUpdate('cascade');
+
+            $table->foreign('tcode_id')
+                ->references('id')  // Now referencing the id column
+                ->on('tr_tcodes')
+                ->onDelete('set null')
+                ->onUpdate('cascade');
         });
     }
 

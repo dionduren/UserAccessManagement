@@ -15,16 +15,18 @@ class TcodeSingleRoleImport implements ToModel, WithHeadingRow, WithChunkReading
 {
     public function model(array $row)
     {
-        $company = Company::firstOrCreate(['company_code' => $row['company']]);
-        $kompartemen = Kompartemen::firstOrCreate(['name' => $row['kompartemen']]);
-        $departemen = Departemen::firstOrCreate(['name' => $row['departemen']]);
+        // $company = Company::firstOrCreate(['company_code' => $row['company']]);
+        // $kompartemen = Kompartemen::firstOrCreate(['name' => $row['kompartemen']]);
+        // $departemen = Departemen::firstOrCreate(['name' => $row['departemen']]);
         $singleRole = SingleRole::firstOrCreate([
+            'company_id' => $row['company_code'],
             'nama' => $row['single_role'],
             'deskripsi' => $row['single_role_desc'],
         ]);
 
         $tcode = Tcode::firstOrCreate([
             'code' => $row['tcode'],
+            'code' => $row['sap_module'],
             'deskripsi' => $row['tcode_desc'],
         ]);
 

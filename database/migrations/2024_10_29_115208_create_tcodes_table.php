@@ -9,7 +9,8 @@ class CreateTcodesTable extends Migration
     public function up()
     {
         Schema::create('tr_tcodes', function (Blueprint $table) {
-            $table->string('code')->primary(); // Tcode Identifier
+            $table->id();
+            $table->string('code');
             $table->string('sap_module')->nullable(); // SAP Module Name
             $table->text('deskripsi')->nullable(); // Description
             $table->timestamps();

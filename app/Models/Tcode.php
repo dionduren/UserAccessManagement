@@ -11,11 +11,13 @@ class Tcode extends Model
     use HasFactory, SoftDeletes;
 
     protected $table = 'tr_tcodes';
-    protected $primaryKey = 'code';
-    public $incrementing = false;
-    protected $keyType = 'string';
+    protected $primaryKey = 'id';
+    // protected $primaryKey = 'code';
+    // public $incrementing = false;
+    // protected $keyType = 'string';
 
     protected $fillable = [
+        'company_id',
         'code',
         'sap_module',
         'deskripsi',
