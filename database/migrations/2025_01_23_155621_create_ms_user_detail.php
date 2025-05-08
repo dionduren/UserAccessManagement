@@ -16,15 +16,15 @@ return new class extends Migration
             $table->string('nama');
             $table->string('nik');
             $table->string('company_id')->nullable();
-            $table->string('company')->nullable();
+            // $table->string('company')->nullable();
             $table->string('direktorat')->nullable();
             $table->string('kompartemen_id')->nullable();
-            $table->string('kompartemen')->nullable();
+            // $table->string('kompartemen')->nullable();
             $table->string('departemen_id')->nullable();
-            $table->string('departemen')->nullable();
+            // $table->string('departemen')->nullable();
             $table->string('email')->nullable();
-            $table->string('grade')->nullable();
-            $table->string('jabatan')->nullable();
+            // $table->string('grade')->nullable();
+            // $table->string('jabatan')->nullable();
             $table->string('atasan')->nullable();
             $table->foreignId('periode_id')->nullable();
             $table->timestamps();
@@ -34,9 +34,9 @@ return new class extends Migration
             $table->string('deleted_by')->nullable();
 
 
-            $table->foreign('company_id')->references('company_code')->on('ms_company')->onDelete('set null');
-            $table->foreign('kompartemen_id')->references('kompartemen_id')->on('ms_kompartemen')->onDelete('set null');
-            $table->foreign('departemen_id')->references('departemen_id')->on('ms_departemen')->onDelete('set null');
+            // $table->foreign('company_id')->references('company_code')->on('ms_company')->onDelete('set null');
+            // $table->foreign('kompartemen_id')->references('kompartemen_id')->on('ms_kompartemen')->onDelete('set null');
+            // $table->foreign('departemen_id')->references('departemen_id')->on('ms_departemen')->onDelete('set null');
         });
     }
 

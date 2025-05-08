@@ -18,7 +18,11 @@ class CostCenter extends Model
     protected $primaryKey = 'id';
 
     protected $fillable = [
-        'group',
+        'company_id',
+        'parent_id',
+        'level',
+        'level_id',
+        'level_name',
         'cost_center',
         'cost_code',
         'deskripsi',
@@ -32,7 +36,7 @@ class CostCenter extends Model
     // CostCenter belongs to a Company
     public function company()
     {
-        return $this->belongsTo(Company::class, 'shortname', 'group');
+        return $this->belongsTo(Company::class, 'company_code', 'company_id');
     }
 
 

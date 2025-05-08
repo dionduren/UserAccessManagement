@@ -21,10 +21,12 @@
                     <dd class="col-sm-9">{{ $userNIK->userDetail->direktorat ?? 'N/A' }}</dd>
 
                     <dt class="col-sm-3">Kompartemen</dt>
-                    <dd class="col-sm-9">{{ $userNIK->userDetail->kompartemen ?? 'N/A' }}</dd>
+                    <dd class="col-sm-9">
+                        {{ $userNIK->userDetail->kompartemen ? $userNIK->userDetail->kompartemen->nama : 'N/A' }}</dd>
 
                     <dt class="col-sm-3">Departemen</dt>
-                    <dd class="col-sm-9">{{ $userNIK->userDetail->departemen ?? 'N/A' }}</dd>
+                    <dd class="col-sm-9">
+                        {{ $userNIK->userDetail->departemen ? $userNIK->userDetail->departemen->nama : 'N/A' }}</dd>
 
 
                     {{-- <dt class="col-sm-3">Cost Center</dt>

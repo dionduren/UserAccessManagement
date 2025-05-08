@@ -22,11 +22,17 @@ class JobRole extends Model
         'company_id',
         'kompartemen_id',
         'departemen_id',
+        'job_role_id',
         'nama',
         'status',
         'deskripsi',
         'created_by',
-        'updated_by'
+        'updated_by',
+        'deleted_by',
+        'error_kompartemen_name',
+        'error_departemen_name',
+        'flagged',
+        'keterangan',
     ];
 
     protected $dates = ['deleted_at'];

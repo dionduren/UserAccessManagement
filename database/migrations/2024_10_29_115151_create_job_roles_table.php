@@ -13,9 +13,14 @@ class CreateJobRolesTable extends Migration
             $table->string('company_id')->nullable();
             $table->string('kompartemen_id')->nullable();
             $table->string('departemen_id')->nullable();
+            $table->string('job_role_id')->nullable();
             $table->string('nama'); // Job Role Name
             $table->string('status')->default('Active')->nullable();
             $table->text('deskripsi')->nullable();
+            $table->string('error_kompartemen_name')->nullable();
+            $table->string('error_departemen_name')->nullable();
+            $table->boolean('flagged')->default(false);
+            $table->text('keterangan')->nullable();
             $table->timestamps();
             $table->softDeletes();
             $table->text('created_by')->nullable();
@@ -29,9 +34,9 @@ class CreateJobRolesTable extends Migration
             $table->index('status');
             $table->index('deleted_at');
 
-            $table->foreign('company_id')->references('company_code')->on('ms_company')->onDelete('set null');
-            $table->foreign('kompartemen_id')->references('kompartemen_id')->on('ms_kompartemen')->onDelete('set null');
-            $table->foreign('departemen_id')->references('departemen_id')->on('ms_departemen')->onDelete('set null');
+            // $table->foreign('company_id')->references('company_code')->on('ms_company')->onDelete('set null');
+            // $table->foreign('kompartemen_id')->references('kompartemen_id')->on('ms_kompartemen')->onDelete('set null');
+            // $table->foreign('departemen_id')->references('departemen_id')->on('ms_departemen')->onDelete('set null');
         });
     }
 

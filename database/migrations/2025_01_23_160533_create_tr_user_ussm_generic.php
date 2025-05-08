@@ -26,9 +26,9 @@ return new class extends Migration
             $table->date('valid_to')->nullable();
             $table->timestamps();
             $table->softDeletes();
-            $table->foreignId('created_by')->nullable();
-            $table->foreignId('updated_by')->nullable();
-            $table->foreignId('deleted_by')->nullable();
+            $table->string('created_by')->nullable();
+            $table->string('updated_by')->nullable();
+            $table->string('deleted_by')->nullable();
         });
     }
 

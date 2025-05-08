@@ -13,10 +13,13 @@ return new class extends Migration
     {
         Schema::create('ms_cost_center', function (Blueprint $table) {
             $table->id();
-            $table->string('group')->nullable();
+            $table->string('company_id')->nullable();
+            $table->string('parent_id')->nullable();
+            $table->string('level');
+            $table->string('level_id');
+            $table->string('level_name');
             $table->string('cost_center')->index();
             $table->string('cost_code')->index()->nullable();
-            $table->string('periode')->nullable();
             $table->text('deskripsi')->nullable();
             $table->timestamps();
             $table->softDeletes();

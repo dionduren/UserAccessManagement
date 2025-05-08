@@ -25,8 +25,8 @@ class CreateDepartemenTable extends Migration
             $table->index('kompartemen_id');
             $table->index('deleted_at');
 
-            $table->foreign('company_id')->references('company_code')->on('ms_company')->onDelete('set null');
-            $table->foreign('kompartemen_id')->references('kompartemen_id')->on('ms_kompartemen')->onDelete('set null'); // Link to kompartemen
+            // $table->foreign('company_id')->references('company_code')->on('ms_company')->onDelete('set null');
+            // $table->foreign('kompartemen_id')->references('kompartemen_id')->on('ms_kompartemen')->onDelete('set null'); // Link to kompartemen
         });
     }
 

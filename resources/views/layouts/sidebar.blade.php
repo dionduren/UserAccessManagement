@@ -177,16 +177,16 @@
         @endphp
 
         <div class="dropdown">
-            <a class="nav-link dropdown-toggle {{ request()->is('dynamic_upload*') ? 'active' : 'text-white' }}"
-                href="#" data-bs-toggle="{{ request()->is('dynamic_upload*') ? '' : 'dropdown' }}" role="button"
-                aria-expanded="false">
+            <a class="nav-link dropdown-toggle {{ request()->routeIs('dynamic_upload.*') ? 'active' : 'text-white' }}"
+                href="#" data-bs-toggle="dropdown" role="button"
+                aria-expanded="{{ request()->routeIs('dynamic_upload.*') ? 'true' : 'false' }}">
                 <i class="bi bi-cloud-upload me-2"></i> <span class="me-auto">DYNAMIC UPLOAD</span>
             </a>
-            <div class="dropdown-content">
+            <div class="dropdown-content {{ request()->routeIs('dynamic_upload.*') ? 'show' : '' }}">
                 <ul class="nav flex-column ms-3">
                     @foreach ($modules as $key => $module)
                         <li class="nav-item">
-                            <a class="nav-link {{ request()->routeIs('dynamic_upload.upload', ['module' => $key]) ? 'active' : 'text-white' }}"
+                            <a class="nav-link {{ request()->routeIs('dynamic_upload.*') && request()->route('module') === $key ? 'active' : 'text-white' }}"
                                 href="{{ route('dynamic_upload.upload', ['module' => $key]) }}">
                                 {{ $module['name'] }}
                             </a>
@@ -195,6 +195,8 @@
                 </ul>
             </div>
         </div>
+
+
 
         <div class="">
             <li class="nav-item">

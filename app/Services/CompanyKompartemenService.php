@@ -3,10 +3,11 @@
 namespace App\Services;
 
 use App\Models\Company;
-use App\Models\Kompartemen;
-use App\Models\Departemen;
 use App\Models\JobRole;
+use App\Models\CostCenter;
 use App\Models\CompositeRole;
+use App\Models\PenomoranJobRole;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Auth;
 
 class CompanyKompartemenService
@@ -106,26 +107,98 @@ class CompanyKompartemenService
         //     }
         // }
 
-        // Create/Update JobRole
-        $jobRole = JobRole::updateOrCreate(
-            [
-                'nama' => $row['job_function'],
-                'company_id' => $company->company_code,
-                'kompartemen_id' => $row['kompartemen_id'],
-                'departemen_id' => $row['departemen_id']
-            ],
-            [
-                'created_by' => $user,
-                'updated_by' => $user
-            ]
-        );
+        $jobRole = null;
+        $cc_level = null;
+
+        try {
+            // Get cost code from CostCenter based on departemen_id or kompartemen_id
+            $costCenter = null;
+            if (!empty($row['departemen_id'])) {
+                $costCenter = CostCenter::where('level_id', $row['departemen_id'])
+                    ->where('level', 'Departemen')
+                    ->first();
+                $cc_level = 'DEP';
+            } elseif (!empty($row['kompartemen_id'])) {
+                $costCenter = CostCenter::where('level_id', $row['kompartemen_id'])
+                    ->where('level', 'Kompartemen')
+                    ->first();
+                $cc_level = 'KOM';
+            } else {
+                throw new \Exception("Tidak ada Kompartemen ataupun Departemen yang terdaftar pada Cost Center.");
+            }
+
+            // Get next number from PenomoranJobRole
+            $penomoran = PenomoranJobRole::where('company_id', $row['company_code'])->first();
+            $nextNumber = $penomoran ? $penomoran->last_number + 1 : 1;
+
+            // Update the number in PenomoranJobRole
+            PenomoranJobRole::updateOrCreate(
+                [
+                    'company_id' => $row['company_code']
+                ],
+                ['last_number' => $nextNumber]
+            );
+
+
+            // Format job_role_id
+            $costCode = $costCenter ? $costCenter->cost_code : '';
+            // Log::info('Try - $costCenter = ' . $costCenter);
+            $formattedNumber = str_pad($nextNumber, 4, '0', STR_PAD_LEFT);
+            $job_role_id = $costCode . '_' . $cc_level . '_JR_' . $formattedNumber;
+
+
+            // Log::info('Try - $job_role_id = ' . $job_role_id);
+
+            // Create/Update JobRole
+            $jobRole = JobRole::updateOrCreate(
+                [
+                    'company_id' => $company->company_code,
+                    'nama' => $row['job_function'],
+                    'kompartemen_id' => $row['kompartemen_id'],
+                    'departemen_id' => $row['departemen_id'],
+                ],
+                [
+                    'kompartemen_id' => $row['kompartemen_id'],
+                    'departemen_id' => $row['departemen_id'],
+                    'job_role_id' => $job_role_id,
+                    'created_by' => $user,
+                    'updated_by' => $user,
+                    'flagged' => false,
+                    'keterangan' => null
+                ]
+            );
+
+            Log::info('Try - $jobRole = ' . $jobRole);
+        } catch (\Exception $e) {
+            // Create/Update JobRole with error details
+            Log::error('Catch - Error Message = ' . $e->getMessage());
+            $jobRole = JobRole::updateOrCreate(
+                [
+                    'company_id' => $company->company_code,
+                    'nama' => $row['job_function'],
+                    'kompartemen_id' => $row['kompartemen_id'],
+                    'departemen_id' => $row['departemen_id'],
+                ],
+                [
+                    'job_role_id' => null,
+                    'error_kompartemen_name' => $row['kompartemen'],
+                    'error_departemen_name' => $row['departemen'],
+                    'created_by' => $user,
+                    'updated_by' => $user,
+                    'flagged' => true,
+                    'keterangan' => $e->getMessage()
+                ]
+            );
+
+            // Log::error('Catch - $jobRole = ' . $jobRole);
+        }
 
         // Composite Role
-        // $compositeRole = CompositeRole::updateOrCreate(
-        CompositeRole::updateOrCreate(
+        $compositeRole = CompositeRole::updateOrCreate(
+            // CompositeRole::updateOrCreate(
             [
-                'nama' => $row['composite_role'],
                 'company_id' => $company->company_code,
+                'nama' => $row['composite_role'],
                 'kompartemen_id' => $row['kompartemen_id'],
                 'departemen_id' => $row['departemen_id'],
                 'jabatan_id' => $jobRole->id
@@ -137,6 +210,6 @@ class CompanyKompartemenService
         );
 
         // Properly associate it to the JobRole
-        // $jobRole->compositeRole()->save($compositeRole);
+        $jobRole->compositeRole()->save($compositeRole);
     }
 }

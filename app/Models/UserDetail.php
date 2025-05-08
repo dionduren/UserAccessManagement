@@ -28,6 +28,7 @@ class UserDetail extends Model
         'direktorat',
         'kompartemen_id',
         'departemen_id',
+        'periode_id',
         'email',
         'grade',
         'jabatan',

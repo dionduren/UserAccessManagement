@@ -24,11 +24,37 @@
                     <option value="">Pilih Perusahaan</option>
                     @foreach ($shortName as $group)
                         <option value="{{ $group->shortname }}"
-                            {{ $group->shortname == $costCenter->group ? 'selected' : '' }}>{{ $group->shortname }} -
-                            {{ $group->name }}</option>
+                            {{ $group->company_code == $costCenter->company_id ? 'selected' : '' }}>
+                            {{ $group->company_code }}
+                            -
+                            {{ $group->nama }}</option>
                     @endforeach
                 </select>
             </div>
+
+            <div class="mb-3">
+                <label>Level</label>
+                <select name="level" class="form-control" required>
+                    <option value="">Select Level</option>
+                    <option value="Direktorat" {{ $costCenter->level == 'Direktorat' ? 'selected' : '' }}>Direktorat
+                    </option>
+                    <option value="Kompartemen" {{ $costCenter->level == 'Kompartemen' ? 'selected' : '' }}>Kompartemen
+                    </option>
+                    <option value="Departemen" {{ $costCenter->level == 'Departemen' ? 'selected' : '' }}>Departemen
+                    </option>
+                </select>
+            </div>
+
+            <div class="mb-3">
+                <label>Level ID</label>
+                <input type="text" name="level_id" value="{{ $costCenter->level_id }}" class="form-control" required>
+            </div>
+            <div class="mb-3">
+                <label>Level Name</label>
+                <input type="text" name="level_name" value="{{ $costCenter->level_name }}" class="form-control"
+                    required>
+            </div>
+
             <div class="mb-3">
                 <label>Cost Center</label>
                 <input type="text" name="cost_center" value="{{ $costCenter->cost_center }}" class="form-control"

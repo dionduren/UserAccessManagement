@@ -37,7 +37,8 @@
                 <tr>
                     <th>Perusahaan</th>
                     <th>Kompartemen</th>
-                    <th>Departemen</th>
+                    <th>ID Departemen</th>
+                    <th>Nama Departemen</th>
                     <th>Deskripsi</th>
                     <th>Actions</th>
                 </tr>
@@ -48,6 +49,7 @@
                         data-kompartemen-id="{{ $departemen->kompartemen_id ?? '' }}">
                         <td>{{ $departemen->company->nama ?? null }}</td>
                         <td>{{ $departemen->kompartemen->nama ?? null }}</td>
+                        <td>{{ $departemen->departemen_id }}</td>
                         <td>{{ $departemen->nama }}</td>
                         <td>{{ $departemen->deskripsi }}</td>
                         <td>
@@ -80,7 +82,7 @@
                 columnDefs: [{
                     width: '12.5%',
                     orderable: false,
-                    targets: [4] // Disable ordering for the 'Actions' column
+                    targets: [5] // Disable ordering for the 'Actions' column
                 }]
             });
 

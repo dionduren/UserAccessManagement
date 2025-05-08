@@ -205,8 +205,10 @@ Route::prefix('nik-job/upload')->name('nik_job_role.upload.')->group(function ()
 Route::prefix('dynamic-upload')->name('dynamic_upload.')->group(function () {
     Route::get('/{module}/upload', [DynamicUploadController::class, 'upload'])->name('upload');
     Route::post('/{module}/upload', [DynamicUploadController::class, 'handleUpload'])->name('handleUpload');
+
     Route::get('/{module}/preview', [DynamicUploadController::class, 'preview'])->name('preview');
     Route::get('/{module}/preview-data', [DynamicUploadController::class, 'getPreviewData'])->name('preview_data');
+
     Route::post('/{module}/update-inline', [DynamicUploadController::class, 'updateInlineSession'])->name('update_inline');
     Route::post('/{module}/submit-all', [DynamicUploadController::class, 'submitAll'])->name('submitAll');
 });

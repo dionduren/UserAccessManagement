@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\IOExcel;
 
 use App\Http\Controllers\Controller;
+use App\Models\CostCenter;
 use App\Models\Departemen;
 use App\Models\Kompartemen;
 use Illuminate\Http\Request;
@@ -26,10 +27,19 @@ class CompanyMasterDataController extends Controller
 
         $spreadsheet = IOFactory::load($request->file('excel_file'));
         $rows = $spreadsheet->getActiveSheet()->toArray(null, true, true, true);
-        // $data = array_values(array_filter($rows, fn($row, $i) => $i !== 0, ARRAY_FILTER_USE_BOTH));
-        $data = array_slice($rows, 1); // Skip the header row
 
-        return new StreamedResponse(function () use ($data) {
+        $headers = array_map('strtolower', $rows[1]); // assumes first row has headers
+        $columnMap = [];
+        foreach ($headers as $colLetter => $headerName) {
+            $columnMap[$colLetter] = trim($headerName);
+        }
+
+        $data = array_slice($rows, 1); // skip header row (row 1) + titles
+
+        // $data = array_values(array_filter($rows, fn($row, $i) => $i !== 0, ARRAY_FILTER_USE_BOTH));
+        // $data = array_slice($rows, 1); // Skip the header row
+
+        return new StreamedResponse(function () use ($data, $columnMap) {
             $currentCompany = null;
             $processed = 0;
             $totalRows = count($data);
@@ -41,61 +51,131 @@ class CompanyMasterDataController extends Controller
             flush();
 
             foreach ($data as $row) {
-                $company = trim($row['A'] ?? '');
-                $komp_id = trim($row['B'] ?? '');
-                $komp_title = trim($row['C'] ?? '');
-                $dept_id = trim($row['D'] ?? '');
-                $dept_title = trim($row['E'] ?? '');
+                $company = trim($row[array_search('company', $columnMap)] ?? '');
+                $dir_id = trim($row[array_search('dir_id', $columnMap)] ?? '');
+                $dir_title = trim($row[array_search('dir_title', $columnMap)] ?? '');
+                $komp_id = trim($row[array_search('komp_id', $columnMap)] ?? '');
+                $komp_title = trim($row[array_search('komp_title', $columnMap)] ?? '');
+                $dept_id = trim($row[array_search('dept_id', $columnMap)] ?? '');
+                $dept_title = trim($row[array_search('dept_title', $columnMap)] ?? '');
+                $cost_center = trim($row[array_search('cost_center', $columnMap)] ?? '');
+                $cost_code = trim($row[array_search('cost_code', $columnMap)] ?? '');
+
+                // Log::info($company, [
+                //     'dir_id' => $dir_id,
+                //     'dir_title' => $dir_title,
+                //     'komp_id' => $komp_id,
+                //     'komp_title' => $komp_title,
+                //     'dept_id' => $dept_id,
+                //     'dept_title' => $dept_title,
+                //     'cost_center' => $cost_center,
+                //     'cost_code' => $cost_code,
+                // ]);
 
                 if ($company && !$komp_id && !$dept_id) {
-                    $currentCompany = $company;
+                    // $currentCompany = $company;
                     $processed++;
+                    CostCenter::updateOrCreate(
+                        ['cost_center' => $cost_center],
+                        [
+                            'company_id' => $company,
+                            'parent_id' => $company,
+                            'level' => 'Direktorat',
+                            'level_id' => $dir_id,
+                            'level_name' => $dir_title,
+                            'cost_center' => $cost_center,
+                            'cost_code' => $cost_code,
+                            'created_by' => $user,
+                        ]
+                    );
                     continue;
                 }
 
                 if ($komp_id && $komp_title && !$dept_id) {
-                    \App\Models\Kompartemen::updateOrCreate(
+                    Kompartemen::updateOrCreate(
                         ['kompartemen_id' => $komp_id],
                         [
                             'nama' => $komp_title,
-                            'company_id' => $currentCompany,
-                            'updated_by' => $user,
+                            'company_id' => $company,
+                            'created_by' => $user,
+                        ]
+                    );
+
+                    CostCenter::updateOrCreate(
+                        [
+                            'cost_center' => $cost_center,
+                            'level' => 'Kompartemen',
+                        ],
+                        [
+                            'company_id' => $company,
+                            'parent_id' => $dir_id,
+                            'level_id' => $komp_id,
+                            'level_name' => $komp_title,
+                            'cost_center' => $cost_center,
+                            'cost_code' => $cost_code,
                             'created_by' => $user,
                         ]
                     );
                 }
 
                 if ($komp_id && $komp_title && $dept_id && $dept_title) {
-                    \App\Models\Kompartemen::firstOrCreate(
+                    Kompartemen::firstOrCreate(
                         ['kompartemen_id' => $komp_id],
                         [
                             'nama' => $komp_title,
-                            'company_id' => $currentCompany,
+                            'company_id' => $company,
                             'created_by' => $user,
-                            'updated_by' => $user,
                         ]
                     );
 
-                    \App\Models\Departemen::updateOrCreate(
+                    Departemen::updateOrCreate(
                         ['departemen_id' => $dept_id],
                         [
                             'nama' => $dept_title,
-                            'company_id' => $currentCompany,
+                            'company_id' => $company,
                             'kompartemen_id' => $komp_id,
-                            'updated_by' => $user,
+                            'created_by' => $user,
+                        ]
+                    );
+
+                    CostCenter::updateOrCreate(
+                        [
+                            'cost_center' => $cost_center,
+                            'level' => 'Departemen',
+                        ],
+                        [
+                            'company_id' => $company,
+                            'parent_id' => $komp_id,
+                            'level_id' => $dept_id,
+                            'level_name' => $dept_title,
+                            'cost_center' => $cost_center,
+                            'cost_code' => $cost_code,
                             'created_by' => $user,
                         ]
                     );
                 }
 
                 if (!$komp_id && $dept_id && $dept_title) {
-                    \App\Models\Departemen::updateOrCreate(
+                    Departemen::updateOrCreate(
                         ['departemen_id' => $dept_id],
                         [
                             'nama' => $dept_title,
-                            'company_id' => $currentCompany,
+                            'company_id' => $company,
                             'kompartemen_id' => null,
-                            'updated_by' => $user,
+                            'created_by' => $user,
+                        ]
+                    );
+
+                    CostCenter::updateOrCreate(
+                        ['cost_center' => $cost_center],
+                        [
+                            'company_id' => $company,
+                            'parent_id' => $company,
+                            'level' => 'Departemen',
+                            'level_id' => $dept_id,
+                            'level_name' => $dept_title,
+                            'cost_center' => $cost_center,
+                            'cost_code' => $cost_code,
                             'created_by' => $user,
                         ]
                     );

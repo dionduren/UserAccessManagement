@@ -7,6 +7,7 @@ use App\Models\CostCenter;
 use App\Models\CostPrevUser;
 use Illuminate\Http\Request;
 use Yajra\DataTables\DataTables;
+use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
 
 class CostCenterController extends Controller
@@ -17,7 +18,7 @@ class CostCenterController extends Controller
     public function index(Request $request)
     {
         if ($request->ajax()) {
-            $costCenters = CostCenter::select('id', 'group', 'cost_center', 'cost_code', 'deskripsi');
+            $costCenters = CostCenter::select('id', 'company_id', 'parent_id', 'level', 'level_id', 'level_name', 'cost_center', 'cost_code', 'deskripsi');
             return DataTables::of($costCenters)
                 ->addColumn('action', function ($row) {
                     return '<a href="' . route('cost-center.edit', $row->id) . '" target="_blank" class="btn btn-sm btn-warning">Edit</a> 
@@ -114,7 +115,7 @@ class CostCenterController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'group' => 'nullable|string',
+            'company_id' => 'nullable|string',
             'cost_center' => 'required|string|max:255',
             'cost_code' => 'required|string|max:255',
             'deskripsi' => 'nullable|string',
@@ -129,7 +130,7 @@ class CostCenterController extends Controller
             Log::info('Error creating Cost Center = ', $e->getMessage());
             // return back()->with('error', 'Failed to create the cost center. Please try again.');
             return redirect()->back()
-                ->withErrors($e->validator->errors())
+                ->with('error', 'Failed to update the cost center. Please try again.')
                 ->withInput();
         }
     }
@@ -159,7 +160,7 @@ class CostCenterController extends Controller
     public function update(Request $request, $id)
     {
         $request->validate([
-            'group' => 'required|string',
+            'company_id' => 'required|string',
             'cost_center' => 'required|unique:ms_cost_center,cost_center,' . $id,
             'cost_code' => 'required|string|max:255',
             'deskripsi' => 'nullable|string',
@@ -173,7 +174,7 @@ class CostCenterController extends Controller
         } catch (\Exception $e) {
             Log::info('Error updating Cost Center = ', $e->getMessage());
             return redirect()->back()
-                ->withErrors($e->validator->errors())
+                ->with('error', 'Failed to update the cost center. Please try again.')
                 ->withInput();
         }
     }

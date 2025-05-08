@@ -2,7 +2,7 @@
 
 @section('content')
     <div class="container-fluid">
-        <h1>Company-Kompartemen Data Preview</h1>
+        <h1>Data Preview Job Role - Composite Role</h1>
 
         <!-- Error Display -->
         @if (session('validationErrors') || session('error'))

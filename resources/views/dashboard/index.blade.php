@@ -39,7 +39,7 @@
                                             </td>
                                         </tr>
                                     @endforeach
-                                    <tr class="text-start fw-bold" style="background-color: rgb(176, 176, 176)">
+                                    <tr class="text-center fw-bold " style="background-color: rgb(176, 176, 176)">
                                         <td colspan="2" class="text-end">TOTAL
                                         </td>
                                         <td>{{ $data['kompartemen'] }}</td>
@@ -261,9 +261,9 @@
             let ctx = document.getElementById('chart_' + key).getContext('2d');
             let sortedData = chartData[key].sort((a, b) => a.company_id - b.company_id);
             let myData = sortedData.map(item => item.total);
-            let myLabels = sortedData.map(item => item.company ? item.company.name : 'Unknown');
+            let myLabels = sortedData.map(item => item.company ? item.company.nama : 'Unknown');
             let myColors = sortedData.map(item => {
-                let companyName = item.company ? item.company.name : 'Unknown';
+                let companyName = item.company ? item.company.nama : 'Unknown';
                 let colorStops = companyColorMap[companyName] || ['#000000'];
                 return colorStops;
             });

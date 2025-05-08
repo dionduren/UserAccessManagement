@@ -27,6 +27,7 @@
             <thead>
                 <tr>
                     <th>Nama Perusahaan</th>
+                    <th>ID Kompartemen</th>
                     <th>Nama Kompartemen</th>
                     <th>Deskripsi</th>
                     <th>Actions</th>
@@ -36,6 +37,7 @@
                 @foreach ($kompartemens as $kompartemen)
                     <tr data-company-id="{{ $kompartemen->company_id }}">
                         <td>{{ $kompartemen->company->nama ?? 'N/A' }}</td>
+                        <td>{{ $kompartemen->kompartemen_id }}</td>
                         <td>{{ $kompartemen->nama }}</td>
                         <td>{{ $kompartemen->deskripsi }}</td>
                         <td>
@@ -68,10 +70,24 @@
                     searching: true,
                     ordering: true,
                     columnDefs: [{
-                        width: '12.5%',
-                        orderable: false,
-                        targets: [2] // Disable ordering for the 'Actions' column
-                    }]
+                            width: '20%',
+                            targets: [0] // Set 1st column size to 10%
+                        },
+                        {
+                            width: '11%',
+                            targets: [1], // Set 2nd column size to 10%
+                            className: "text-center"
+                        },
+                        {
+                            width: '25%',
+                            targets: [2] // Set 3rd column size to 10%
+                        },
+                        {
+                            width: '12.5%',
+                            orderable: false,
+                            targets: [4] // Disable ordering for the 'Actions' column
+                        }
+                    ]
                 });
             } else {
                 console.error('DataTable library not loaded.');

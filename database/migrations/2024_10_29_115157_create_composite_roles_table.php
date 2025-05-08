@@ -27,8 +27,8 @@ class CreateCompositeRolesTable extends Migration
             $table->index('nama');
             $table->index('deleted_at');
 
-            $table->foreign('company_id')->references('company_code')->on('ms_company')->onDelete('set null');
-            $table->foreign('jabatan_id')->references('id')->on('tr_job_roles')->onDelete('set null');
+            // $table->foreign('company_id')->references('company_code')->on('ms_company')->onDelete('set null');
+            // $table->foreign('jabatan_id')->references('id')->on('tr_job_roles')->onDelete('set null');
         });
     }
 

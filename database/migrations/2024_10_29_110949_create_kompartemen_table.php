@@ -24,7 +24,7 @@ class CreateKompartemenTable extends Migration
             $table->index('deleted_at');
 
 
-            $table->foreign('company_id')->references('company_code')->on('ms_company')->onDelete('set null');
+            // $table->foreign('company_id')->references('company_code')->on('ms_company')->onDelete('set null');
         });
     }
 
