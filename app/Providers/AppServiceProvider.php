@@ -2,12 +2,13 @@
 
 namespace App\Providers;
 
-use Illuminate\Support\ServiceProvider;
+use Carbon\Carbon;
 use App\Models\Company;
-use App\Models\Kompartemen;
-use App\Models\Departemen;
 use App\Models\JobRole;
+use App\Models\Departemen;
+use App\Models\Kompartemen;
 use App\Observers\MasterDataObserver;
+use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -28,5 +29,6 @@ class AppServiceProvider extends ServiceProvider
         Kompartemen::observe(MasterDataObserver::class);
         Departemen::observe(MasterDataObserver::class);
         JobRole::observe(MasterDataObserver::class);
+        Carbon::setLocale('id');
     }
 }

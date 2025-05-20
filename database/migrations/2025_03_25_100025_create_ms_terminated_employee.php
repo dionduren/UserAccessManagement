@@ -13,6 +13,7 @@ return new class extends Migration
     {
         Schema::create('ms_terminated_employee', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('periode_id')->nullable();
             $table->string('nik')->index();
             $table->string('nama');
             $table->date('tanggal_resign')->nullable();

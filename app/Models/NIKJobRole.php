@@ -31,12 +31,13 @@ class NIKJobRole extends Model
 
     public function userDetail()
     {
-        return $this->hasOne(UserDetail::class, 'nik', 'nik');
+        // Change from hasOne to belongsTo since UserDetail is the parent table
+        return $this->belongsTo(UserDetail::class, 'nik', 'nik');
     }
 
     public function jobRole()
     {
-        return $this->belongsTo(JobRole::class, 'job_role_id');
+        return $this->belongsTo(JobRole::class, 'job_role_id', 'job_role_id');
     }
 
     public function periode()

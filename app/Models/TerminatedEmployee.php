@@ -13,6 +13,7 @@ class TerminatedEmployee extends Model
     protected $table = 'ms_terminated_employee';
 
     protected $fillable = [
+        'periode_id',
         'nik',
         'nama',
         'tanggal_resign',

@@ -18,7 +18,7 @@ class CostPrevUser extends Model
         'user_code',
         'user_name',
         'cost_code',
-        'periode_sebelumnya',
+        'periode_id',
         'flagged',
         'keterangan',
         'dokumen_keterangan',

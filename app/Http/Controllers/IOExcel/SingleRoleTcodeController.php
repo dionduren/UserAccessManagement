@@ -194,8 +194,10 @@ class SingleRoleTcodeController extends Controller
                         ]
                     );
 
-                    // Step 4: Link SingleRole to tCode
-                    $singleRole->tcodes()->save($tCode);
+                    // Step 4: Link SingleRole to tCode if not already linked
+                    if (!$singleRole->tcodes()->where('tcode_id', $tCode->id)->exists()) {
+                        $singleRole->tcodes()->attach($tCode->id);
+                    }
 
                     // Update progress
                     $processedRows++;

@@ -169,7 +169,10 @@ class CompositeRoleSingleRoleController extends Controller
                     );
 
                     // Step 4: Link SingleRole to CompositeRole
-                    $compositeRole->singleRoles()->syncWithoutDetaching([$singleRole->id]);
+                    if (!$compositeRole->singleRoles()->where('single_role_id', $singleRole->id)->exists()) {
+                        $compositeRole->singleRoles()->attach($singleRole->id);
+                    }
+
 
                     // Update progress
                     $processedRows++;

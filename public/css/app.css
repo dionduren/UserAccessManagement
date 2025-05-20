@@ -203,6 +203,16 @@
 
 /* NEW CSS TESTING */
 
+.error-row {
+    background-color: #dc3545 !important;
+    color: white !important;
+}
+
+.warning-row {
+    background-color: #ffc107 !important;
+    color: black !important;
+}
+
 /* Sidebar and Toggle Button Behavior on Mobile */
 @media (max-width: 768px) {
     #sidebar {

@@ -107,6 +107,9 @@
                 processing: true,
                 serverSide: true,
                 ajax: "{{ route('company_kompartemen.preview_data') }}",
+                order: [
+                    [8, 'desc']
+                ], // 8 is the index of our hidden status column
                 columns: [{
                         data: 'company_code',
                         title: 'Company Code'
@@ -137,8 +140,29 @@
                     {
                         data: 'composite_role',
                         title: 'Composite Role'
+                    },
+                    {
+                        // Hidden column for status type ordering
+                        data: 'status_type',
+                        visible: false,
+                        searchable: false,
+                        render: function(data, type, row) {
+                            if (row.status && row.status.type === 'error') return 2;
+                            if (row.status && row.status.type === 'warning') return 1;
+                            return 0;
+                        }
+                    },
+                    {
+                        // Status message column
+                        data: 'status_message',
+                        title: 'Status'
                     }
                 ],
+                createdRow: function(row, data, dataIndex) {
+                    if (data.row_class) {
+                        $(row).addClass(data.row_class);
+                    }
+                },
                 responsive: true,
                 searching: true,
                 paging: true,

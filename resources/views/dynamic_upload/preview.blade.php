@@ -25,8 +25,12 @@
                             '#ffdddd' // red for errors
                             :
                             '#fff3cd'; // yellow for warnings
-                        row.getElement().title = [...data._row_errors, ...data._row_warnings].join(
-                            '; ');
+                        // row.getElement().title = [...data._row_errors, ...data._row_warnings].join(
+                        //     '; ');
+                        row.getElement().title = [
+                            ...(data._row_errors || []),
+                            ...(data._row_warnings || [])
+                        ].join('; ');
                     }
                 },
                 layout: "fitColumns",
@@ -52,35 +56,8 @@
                 paginationSize: 10,
                 movableColumns: true,
                 height: "500px",
-                cellEdited: function(cell) {
-                    let rowData = cell.getRow().getData();
-                    $.post("{{ route('dynamic_upload.update_inline', $module) }}", {
-                        _token: '{{ csrf_token() }}',
-                        row_index: rowData._row_index,
-                        column: cell.getField(),
-                        value: cell.getValue()
-                    }, function(data) {
-                        if (data.success) {
-                            cell.getRow().update(data.updated_row);
-                        } else {
-                            alert('Update failed.');
-                        }
-                    });
-                }
             });
 
-            // $('#submit-all').click(function() {
-            //     $.post("{{ route('dynamic_upload.submitAll', $module) }}", {
-            //         _token: '{{ csrf_token() }}'
-            //     }, function(data) {
-            //         if (data.success) {
-            //             alert(`${data.saved} rows saved.`);
-            //             table.setData();
-            //         } else {
-            //             alert('Submission failed.');
-            //         }
-            //     });
-            // });
 
             $('#submit-all').on('click', function() {
                 fetch("{{ route('dynamic_upload.submitAll', $module) }}", {

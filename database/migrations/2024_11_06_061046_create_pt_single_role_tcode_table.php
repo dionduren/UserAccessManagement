@@ -23,6 +23,9 @@ return new class extends Migration
             $table->index('tcode_id');
             $table->index('deleted_at');
 
+            // Unique Values
+            $table->unique(['single_role_id', 'tcode_id'], 'unique_role_tcode');
+
             // Foreign keys
             $table->foreign('single_role_id')
                 ->references('id')

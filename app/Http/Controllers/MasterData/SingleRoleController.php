@@ -105,48 +105,109 @@ class SingleRoleController extends Controller
         return redirect()->route('single-roles.index')->with('status', 'Single role deleted successfully.');
     }
 
+    // public function getSingleRoles(Request $request)
+    // {
+    //     $query = SingleRole::with(['company', 'tcodes', 'compositeRoles']);
+
+    //     // Filter by `company_id`
+    //     if ($request->filled('company_id')) {
+    //         $query->where('company_id', $request->company_id);
+    //     }
+
+    //     // Global search
+    //     if ($request->filled('search.value')) {
+    //         $searchValue = $request->input('search.value');
+    //         $query->where(function ($q) use ($searchValue) {
+    //             $q->where('nama', 'like', "%{$searchValue}%")
+    //                 ->orWhere('deskripsi', 'like', "%{$searchValue}%")
+    //                 ->orWhereHas('company', function ($companyQuery) use ($searchValue) {
+    //                     $companyQuery->where('name', 'like', "%{$searchValue}%");
+    //                 });
+    //         });
+    //     }
+
+    //     // Join with `ms_company` for proper ordering by company name
+    //     if ($request->filled('order.0.column')) {
+    //         $orderableColumns = ['company', 'nama', 'deskripsi']; // Map columns by index
+    //         $columnIndex = $request->input('order.0.column');
+    //         $columnDirection = $request->input('order.0.dir', 'asc');
+    //         $columnName = $orderableColumns[$columnIndex] ?? 'nama'; // Default to 'nama'
+
+    //         if ($columnName === 'company') {
+    //             $query->leftJoin('ms_company', 'ms_company.company_code', '=', 'tr_single_roles.company_id')
+    //                 ->select('tr_single_roles.*', 'ms_company.nama as company_name')
+    //                 ->orderBy('company_name', $columnDirection);
+    //         } else {
+    //             $query->orderBy($columnName, $columnDirection);
+    //         }
+    //     }
+
+    //     // Get filtered and paginated data
+    //     $recordsFiltered = $query->count();
+    //     $singleRoles = $query->skip($request->start)->take($request->length)->get();
+
+    //     // Format data for DataTable
+    //     $data = $singleRoles->map(function ($role) {
+    //         return [
+    //             'company' => $role->company->nama ?? 'N/A',
+    //             'nama' => $role->nama,
+    //             'deskripsi' => $role->deskripsi,
+    //             'actions' => view('master-data.single_roles.partials.actions', ['role' => $role])->render(),
+    //         ];
+    //     });
+
+    //     return response()->json([
+    //         'draw' => intval($request->draw),
+    //         'recordsTotal' => SingleRole::count(), // Total number of records
+    //         'recordsFiltered' => $recordsFiltered, // Total number of filtered records
+    //         'data' => $data,
+    //     ]);
+    // }
+
     public function getSingleRoles(Request $request)
     {
-        $query = SingleRole::with(['company', 'tcodes', 'compositeRoles']);
+        $query = SingleRole::with(['company', 'tcodes', 'compositeRoles'])
+            ->select('tr_single_roles.*'); // Ensure default select
 
         // Filter by `company_id`
         if ($request->filled('company_id')) {
-            $query->where('company_id', $request->company_id);
+            $query->where('tr_single_roles.company_id', $request->company_id);
         }
 
         // Global search
         if ($request->filled('search.value')) {
             $searchValue = $request->input('search.value');
+
             $query->where(function ($q) use ($searchValue) {
-                $q->where('nama', 'like', "%{$searchValue}%")
-                    ->orWhere('deskripsi', 'like', "%{$searchValue}%")
+                $q->where('tr_single_roles.nama', 'like', "%{$searchValue}%")
+                    ->orWhere('tr_single_roles.deskripsi', 'like', "%{$searchValue}%")
                     ->orWhereHas('company', function ($companyQuery) use ($searchValue) {
-                        $companyQuery->where('name', 'like', "%{$searchValue}%");
+                        $companyQuery->where('nama', 'like', "%{$searchValue}%");
                     });
             });
         }
 
-        // Join with `ms_company` for proper ordering by company name
+        // Join for ordering
         if ($request->filled('order.0.column')) {
-            $orderableColumns = ['company', 'nama', 'deskripsi']; // Map columns by index
+            $orderableColumns = ['company', 'tr_single_roles.nama', 'tr_single_roles.deskripsi'];
             $columnIndex = $request->input('order.0.column');
             $columnDirection = $request->input('order.0.dir', 'asc');
-            $columnName = $orderableColumns[$columnIndex] ?? 'nama'; // Default to 'nama'
+            $columnName = $orderableColumns[$columnIndex] ?? 'tr_single_roles.nama';
 
             if ($columnName === 'company') {
                 $query->leftJoin('ms_company', 'ms_company.company_code', '=', 'tr_single_roles.company_id')
-                    ->select('tr_single_roles.*', 'ms_company.nama as company_name')
+                    ->addSelect('ms_company.nama as company_name')
                     ->orderBy('company_name', $columnDirection);
             } else {
                 $query->orderBy($columnName, $columnDirection);
             }
         }
 
-        // Get filtered and paginated data
+        // Apply pagination
         $recordsFiltered = $query->count();
         $singleRoles = $query->skip($request->start)->take($request->length)->get();
 
-        // Format data for DataTable
+        // Format for datatable
         $data = $singleRoles->map(function ($role) {
             return [
                 'company' => $role->company->nama ?? 'N/A',
@@ -158,8 +219,8 @@ class SingleRoleController extends Controller
 
         return response()->json([
             'draw' => intval($request->draw),
-            'recordsTotal' => SingleRole::count(), // Total number of records
-            'recordsFiltered' => $recordsFiltered, // Total number of filtered records
+            'recordsTotal' => SingleRole::count(),
+            'recordsFiltered' => $recordsFiltered,
             'data' => $data,
         ]);
     }

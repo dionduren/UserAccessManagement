@@ -65,6 +65,7 @@ class CompanyKompartemenController extends Controller
                     'departemen' => $row['departemen'] ?? null,
                     'job_function' => $row['job_function'],
                     'composite_role' => $row['composite_role'],
+                    'status' => $row['status'] ?? ['type' => 'valid', 'message' => '']
                 ];
             }
 
@@ -83,6 +84,17 @@ class CompanyKompartemenController extends Controller
         }
     }
 
+    // public function getPreviewData()
+    // {
+    //     $data = session('parsedData');
+
+    //     if (!$data) {
+    //         return response()->json(['error' => 'No preview data found'], 400);
+    //     }
+
+    //     return DataTables::of(collect($data))->make(true);
+    // }
+
     public function getPreviewData()
     {
         $data = session('parsedData');
@@ -91,7 +103,34 @@ class CompanyKompartemenController extends Controller
             return response()->json(['error' => 'No preview data found'], 400);
         }
 
-        return DataTables::of(collect($data))->make(true);
+        return DataTables::of(collect($data))
+            ->addColumn('row_class', function ($row) {
+                if (isset($row['status']) && $row['status']['type'] === 'error') {
+                    return 'error-row';
+                }
+                if (isset($row['status']) && $row['status']['type'] === 'warning') {
+                    return 'warning-row';
+                }
+                return '';
+            })
+            ->addColumn('status_message', function ($row) {
+                return $row['status']['message'] ?? '';
+            })
+            ->addColumn('status_type', function ($row) {
+                if (isset($row['status'])) {
+                    switch ($row['status']['type']) {
+                        case 'error':
+                            return 2;
+                        case 'warning':
+                            return 1;
+                        default:
+                            return 0;
+                    }
+                }
+                return 0;
+            })
+            ->rawColumns(['row_class'])
+            ->make(true);
     }
 
     public function confirmImport()

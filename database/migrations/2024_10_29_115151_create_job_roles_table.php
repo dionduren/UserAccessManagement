@@ -17,7 +17,9 @@ class CreateJobRolesTable extends Migration
             $table->string('nama'); // Job Role Name
             $table->string('status')->default('Active')->nullable();
             $table->text('deskripsi')->nullable();
+            $table->string('error_kompartemen_id')->nullable();
             $table->string('error_kompartemen_name')->nullable();
+            $table->string('error_departemen_id')->nullable();
             $table->string('error_departemen_name')->nullable();
             $table->boolean('flagged')->default(false);
             $table->text('keterangan')->nullable();

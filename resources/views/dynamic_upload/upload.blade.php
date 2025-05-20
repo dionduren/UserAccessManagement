@@ -16,15 +16,18 @@
             enctype="multipart/form-data">
             @csrf
 
-            <div class="mb-3">
-                <label>Periode:</label>
+            {{-- check apakah module butuh value periode --}}
+            @if ($moduleConfig['uses_periode'] ?? false)
+                <div class="mb-3">
+                    <label>Periode:</label>
 
-                <select name="periode_id" class="form-control" required>
-                    @foreach ($periodes as $periode)
-                        <option value="{{ $periode->id }}">{{ $periode->definisi }}</option>
-                    @endforeach
-                </select>
-            </div>
+                    <select name="periode_id" class="form-control" required>
+                        @foreach ($periodes as $periode)
+                            <option value="{{ $periode->id }}">{{ $periode->definisi }}</option>
+                        @endforeach
+                    </select>
+                </div>
+            @endif
 
             <div class="mb-3">
                 <label>Upload Excel File:</label>

@@ -50,12 +50,6 @@
                         </a>
                     </li>
                     <li>
-                        <a href="{{ route('job-roles.index') }}"
-                            class="nav-link {{ request()->routeIs('job-roles.index') ? 'active' : 'text-white' }}">
-                            <i class="bi bi-person-badge me-2"></i> Job Roles
-                        </a>
-                    </li>
-                    <li>
                         <a href="{{ route('unit-kerja.upload-form') }}"
                             class="nav-link {{ request()->routeIs('unit-kerja.upload-form') ? 'active' : 'text-white' }}">
                             <i class="bi bi-cloud-upload me-2"></i> Upload Unit Kerja
@@ -72,12 +66,19 @@
         @can('manage roles')
             <!-- MASTER DATA USER ACCESS -->
             <div class="dropdown">
-                <a class="nav-link dropdown-toggle {{ request()->is('composite-roles*', 'single-roles*', 'tcodes*') ? 'active' : 'text-white' }}"
+                <a class="nav-link dropdown-toggle {{ request()->is('job-roles*', 'composite-roles*', 'single-roles*', 'tcodes*') ? 'active' : 'text-white' }}"
                     data-bs-toggle="dropdown" href="#" role="button" aria-expanded="false">
                     <i class="bi bi-folder-fill me-2"></i> <span class="me-auto">MASTER DATA USER ACCESS</span>
                 </a>
                 <div
                     class="dropdown-content {{ request()->is('composite-roles*', 'single-roles*', 'tcodes*') ? 'show' : '' }}">
+
+                    <li>
+                        <a href="{{ route('job-roles.index') }}"
+                            class="nav-link {{ request()->routeIs('job-roles.index') ? 'active' : 'text-white' }}">
+                            <i class="bi bi-person-badge me-2"></i> Job Roles
+                        </a>
+                    </li>
                     <li>
                         <a href="{{ route('composite-roles.index') }}"
                             class="nav-link {{ request()->routeIs('composite-roles.index') ? 'active' : 'text-white' }}">
@@ -240,6 +241,13 @@
             </div> --}}
 
             <li class="nav-item">
+                <a href="{{ route('user-detail.index') }}"
+                    class="nav-link {{ request()->routeIs('user-detail*') ? 'active' : 'text-white' }}">
+                    <i class="bi bi-person-vcard"></i> User Detail
+                </a>
+            </li>
+
+            <li class="nav-item">
                 <a href="{{ route('user-nik.index') }}"
                     class="nav-link {{ request()->routeIs('user-nik.index') ? 'active' : 'text-white' }}">
                     <i class="bi bi-person-badge"></i> User NIK
@@ -249,6 +257,19 @@
                 <a href="{{ route('user-nik.index_mixed') }}"
                     class="nav-link {{ request()->routeIs('user-nik.index_mixed*') ? 'active' : 'text-white' }}">
                     <i class="bi bi-person-badge"></i> User NIK Mixed
+                </a>
+            </li>
+
+            <li class="nav-item">
+                <a href="{{ route('user-generic.index') }}"
+                    class="nav-link {{ request()->routeIs('user-generic*') ? 'active' : 'text-white' }}">
+                    <i class="bi bi-person-lines-fill"></i> User Generic
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="{{ route('prev-user.index') }}"
+                    class="nav-link {{ request()->routeIs('prev-user.index') ? 'active' : 'text-white' }}">
+                    <i class="bi bi-person-lines-fill"></i> Generic Previous User
                 </a>
             </li>
             {{-- 
@@ -296,18 +317,6 @@
                         <i class="bi bi-cash-stack"></i> Cost Center
                     </a>
                 </li>
-                <li class="nav-item">
-                    <a href="{{ route('user-generic.index') }}"
-                        class="nav-link {{ request()->routeIs('user-generic*') ? 'active' : 'text-white' }}">
-                        <i class="bi bi-person-lines-fill"></i> User Generic
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a href="{{ route('prev-user.index') }}"
-                        class="nav-link {{ request()->routeIs('prev-user.index') ? 'active' : 'text-white' }}">
-                        <i class="bi bi-person-lines-fill"></i> Previous User
-                    </a>
-                </li>
             </div>
             {{-- <li class="nav-item">
                 <a href=""
@@ -328,6 +337,12 @@
                 <a href="{{ route('report.unit') }}"
                     class="nav-link {{ request()->routeIs('report.unit') ? 'active' : 'text-white' }}">
                     <i class="bi bi-clipboard-data me-2"></i> Report Unit Kerja
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="{{ route('report.filled-job-role.index') }}"
+                    class="nav-link {{ request()->routeIs('report.filled-job-role.index') ? 'active' : 'text-white' }}">
+                    <i class="bi bi-file-earmark-spreadsheet me-2"></i> Filled Job Role
                 </a>
             </li>
             <li class="nav-item">

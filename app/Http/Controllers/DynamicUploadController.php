@@ -2,16 +2,12 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Periode;
-use App\Models\Departemen;
-use App\Models\Kompartemen;
-use App\Models\TempUploadSession;
-
-use App\Services\DynamicUploadService;
-
 use Illuminate\Http\Request;
-
+use App\Models\TempUploadSession;
+use App\Models\Periode;
+use App\Services\DynamicUploadService;
 use Maatwebsite\Excel\Facades\Excel;
+use Maatwebsite\Excel\Excel as ExcelFormat;
 
 class DynamicUploadController extends Controller
 {
@@ -22,177 +18,113 @@ class DynamicUploadController extends Controller
         $this->uploadService = $uploadService;
     }
 
-    public function upload($module)
+    private function getModuleConfig($module)
     {
         $modules = config('dynamic_uploads.modules');
-        $moduleConfig = $modules[$module];
+        abort_unless(isset($modules[$module]), 404);
+        return $modules[$module];
+    }
+
+    public function upload($module)
+    {
+        $moduleConfig = $this->getModuleConfig($module);
         $periodes = Periode::select('id', 'definisi')->get();
         return view('dynamic_upload.upload', compact('module', 'moduleConfig', 'periodes'));
     }
 
     public function handleUpload(Request $request, $module)
     {
-        $modules = config('dynamic_uploads.modules');
-        // $moduleConfig = $modules[$module];
-
         $request->validate(['excel_file' => 'required|mimes:xlsx,xls']);
+        $rows = Excel::toArray(new class implements \Maatwebsite\Excel\Concerns\ToArray {
+            public function array(array $array)
+            {
+                return $array;
+            }
+        }, $request->file('excel_file'), ExcelFormat::XLSX)[0] ?? [];
 
-        $rows = Excel::toArray([], $request->file('excel_file'))[0] ?? [];
         $header = array_shift($rows);
-
-        $processedRows = [];
         $periodeId = $request->input('periode_id');
+        $usePeriode = $moduleConfig['uses_periode'] ?? false;
 
-        foreach ($rows as $row) {
-            $assocRow = array_combine($header, $row);
-            $assocRow['periode_id'] = $periodeId;
-            $processedRows[] = $assocRow;
-        }
+        $processed = array_map(function ($row) use ($header, $periodeId, $usePeriode) {
+            $combined = array_combine($header, $row);
+            if ($usePeriode) {
+                $combined['periode_id'] = $periodeId;
+            }
+            return $combined;
+        }, $rows);
 
-        TempUploadSession::create(['module' => $module, 'data' => $processedRows]);
+        TempUploadSession::create(['module' => $module, 'data' => $processed, 'periode_id' => $periodeId]);
         return redirect()->route('dynamic_upload.preview', $module);
     }
 
     public function preview($module)
     {
-        $modules = config('dynamic_uploads.modules');
-        $moduleConfig = $modules[$module];
+        $moduleConfig = $this->getModuleConfig($module);
         $columns = $this->uploadService->generateTabulatorColumns($moduleConfig);
         return view('dynamic_upload.preview', compact('module', 'columns', 'moduleConfig'));
     }
 
     public function getPreviewData($module)
     {
-        $modules = config('dynamic_uploads.modules');
-        $moduleConfig = $modules[$module];
-
-        $temp = TempUploadSession::where('module', $module)->latest()->first();
-        $data = $temp?->data ?? [];
-
-        $processedData = [];
-        foreach ($data as $index => $row) {
-            [$payload,, $errors, $warnings, $cellErrors, $cellWarnings, $enrichedRow] =
-                $this->uploadService->processRow($moduleConfig, $row);
-
-            $enrichedRow['_row_index'] = $index;
-            $enrichedRow['_row_errors'] = $errors;
-            $enrichedRow['_row_warnings'] = $warnings;
-            $enrichedRow['_row_issues_count'] = count($errors) + count($warnings);
-            $enrichedRow['_cell_errors'] = $cellErrors;
-            $enrichedRow['_cell_warnings'] = $cellWarnings;
-
-            $processedData[] = $enrichedRow;
-        }
-
-        return response()->json(['data' => $processedData]);
+        $moduleConfig = $this->getModuleConfig($module);
+        $data = TempUploadSession::where('module', $module)->latest()->first()?->data ?? [];
+        return response()->json(['data' => array_map(fn($row, $i) => array_merge(
+            ['_row_index' => $i],
+            $this->uploadService->handle($moduleConfig, $row)[6]
+        ), $data, array_keys($data))]);
     }
 
-    public function updateInlineSession(Request $request, $module)
-    {
-        $modules = config('dynamic_uploads.modules');
-        $moduleConfig = $modules[$module];
-
-        $temp = TempUploadSession::where('module', $module)->latest()->first();
-        $data = $temp->data ?? [];
-        $rowIndex = (int) $request->input('row_index');
-        $column = $request->input('column');
-        $value = $request->input('value');
-
-        $data[$rowIndex][$column] = $value;
-
-        [$payload,, $errors, $warnings, $cellErrors, $cellWarnings, $enrichedRow] =
-            $this->uploadService->processRow($moduleConfig, $data[$rowIndex]);
-
-        $enrichedRow['_row_index'] = $rowIndex;
-        $enrichedRow['_row_errors'] = $errors;
-        $enrichedRow['_row_warnings'] = $warnings;
-        $enrichedRow['_row_issues_count'] = count($errors) + count($warnings);
-        $enrichedRow['_cell_errors'] = $cellErrors;
-        $enrichedRow['_cell_warnings'] = $cellWarnings;
-
-        $data[$rowIndex] = $enrichedRow;
-        $temp->update(['data' => $data]);
-
-        return response()->json(['success' => true, 'updated_row' => $enrichedRow]);
-    }
-
-    // public function submitAll(Request $request, $module)
     public function submitAll($module)
     {
-        $modules = config('dynamic_uploads.modules');
-        abort_unless(isset($modules[$module]), 404);
-
-        $moduleConfig = $modules[$module];
-
+        $moduleConfig = $this->getModuleConfig($module);
         $temp = TempUploadSession::where('module', $module)->latest()->first();
+
         if (!$temp) {
             return response()->json(['error' => 'No session found'], 404);
         }
 
+        $periodeId = $temp->periode_id;
         $rows = $temp->data ?? [];
-        $savedCount = 0;
-        $skippedRows = [];
+
+        $saved = 0;
+        $skipped = [];
 
         foreach ($rows as $index => $row) {
-            $skipReasons = [];
-
-            // convert ke id dari masing-masing value (untuk company)
-            $payload = $this->uploadService->transformPayload($moduleConfig, $row);
-
-            // ambil parameter & error
-            [, $where, $errors] = $this->uploadService->processRow($moduleConfig, $payload);
-
-
-            // validation untuk kompartemen dan departemen yang belum terdaftar
-            if (
-                !empty($payload['kompartemen_id']) &&
-                !Kompartemen::where('kompartemen_id', $payload['kompartemen_id'])->exists()
-            ) {
-                $skipReasons[] = "ID Kompartemen {$payload['kompartemen_id']} belum terdaftar";
+            // Inject periode_id if missing
+            if (($moduleConfig['uses_periode'] ?? false) && empty($row['periode_id'])) {
+                $row['periode_id'] = $periodeId;
             }
 
-            if (
-                !empty($payload['departemen_id']) &&
-                !Departemen::where('departemen_id', $payload['departemen_id'])->exists()
-            ) {
-                $skipReasons[] = "ID Departemen {$payload['departemen_id']} belum terdaftar";
+            [$payload, $where, $errors,,,, $previewRow] = $this->uploadService->handle($moduleConfig, $row);
+
+            // ✅ Validate all required `where_fields` + optional periode_id
+            $missingKeys = [];
+            foreach ($moduleConfig['where_fields'] as $key) {
+                if (empty($where[$key])) $missingKeys[] = $key;
+            }
+            if (($moduleConfig['uses_periode'] ?? false) && empty($where['periode_id'])) {
+                $missingKeys[] = 'periode_id';
             }
 
-            if (count($errors) > 0) {
-                $skipReasons[] = "Validation errors: " . implode('; ', $errors);
-            }
-
-            if (count($skipReasons) > 0) {
-                $skippedRows[] = [
+            if (count($missingKeys)) {
+                $skipped[] = [
                     'row' => $index + 1,
                     'payload' => $payload,
-                    'reasons' => $skipReasons,
+                    'reasons' => ['Missing keys: ' . implode(', ', $missingKeys)],
                 ];
                 continue;
             }
 
-
-            // set null untuk value yang kosong
-            if (empty($payload['departemen_id'])) {
-                $payload['departemen_id'] = null;
-            }
-
-            if (empty($payload['kompartemen_id'])) {
-                $payload['kompartemen_id'] = null;
-            }
-
-
-            // if (count($errors) === 0) {
             $this->uploadService->submitRow($moduleConfig, $payload, $where);
-            $savedCount++;
-            // }
+            $saved++;
         }
 
         return response()->json([
             'success' => true,
-            'saved' => $savedCount,
-            'skipped' => count($skippedRows),
-            'skipped_details' => $skippedRows,
-        ], 200, ['Content-Type' => 'application/json']);
+            'saved' => $saved,
+            'skipped' => count($skipped),
+            'skipped_details' => $skipped,
+        ]);
     }
 }

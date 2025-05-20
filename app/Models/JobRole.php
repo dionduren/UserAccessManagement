@@ -29,10 +29,15 @@ class JobRole extends Model
         'created_by',
         'updated_by',
         'deleted_by',
+        'error_kompartemen_id',
         'error_kompartemen_name',
+        'error_departemen_id',
         'error_departemen_name',
         'flagged',
         'keterangan',
+        'created_by',
+        'updated_by',
+        'deleted_by',
     ];
 
     protected $dates = ['deleted_at'];
@@ -59,6 +64,6 @@ class JobRole extends Model
 
     public function NIKJobRole()
     {
-        return $this->hasMany(NIKJobRole::class, 'job_role_id');
+        return $this->hasMany(NIKJobRole::class, 'job_role_id', 'job_role_id');
     }
 }

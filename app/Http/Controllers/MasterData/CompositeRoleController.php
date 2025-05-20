@@ -138,6 +138,64 @@ class CompositeRoleController extends Controller
         return redirect()->route('composite-roles.index')->with('status', 'Composite role deleted successfully.');
     }
 
+    // public function getCompositeRoles(Request $request)
+    // {
+    //     $query = CompositeRole::with(['company', 'jobRole', 'singleRoles']);
+
+    //     if ($request->filled('company_id')) {
+    //         $query->where('company_id', $request->company_id);
+    //     }
+
+    //     if ($request->filled('kompartemen_id')) {
+    //         $query->whereHas('jobRole', function ($q) use ($request) {
+    //             $q->where('kompartemen_id', $request->kompartemen_id);
+    //         });
+    //     }
+
+    //     if ($request->filled('departemen_id')) {
+    //         $query->whereHas('jobRole', function ($q) use ($request) {
+    //             $q->where('departemen_id', $request->departemen_id);
+    //         });
+    //     }
+
+    //     if ($request->filled('job_role_id')) {
+    //         $query->where('jabatan_id', $request->job_role_id);
+    //     }
+
+    //     // Debug the SQL Query
+    //     // Log::info($query->toSql());
+    //     // Log::info($query->getBindings());
+
+    //     $recordsFiltered = $query->count();
+    //     $compositeRoles = $query->skip($request->start)->take($request->length)->get();
+
+    //     // Check the fetched data
+    //     // Log::info($compositeRoles);
+
+    //     $data = $compositeRoles->map(function ($role) {
+    //         return [
+    //             'company' => $role->company->nama ?? 'N/A',
+    //             'nama' => $role->nama,
+    //             'deskripsi' => $role->deskripsi ?? '-',
+    //             // 'job_role' => $role->jobRole->nama_jabatan ?? 'Not Assigned',
+    //             // 'single_roles' => $role->singleRoles
+    //             //     ->pluck('nama')
+    //             //     ->map(function ($roleName) {
+    //             //         return "<li>{$roleName}</li>";
+    //             //     })
+    //             //     ->implode('') ?? '<li>No Single Roles</li>',
+    //             'actions' => view('master-data.composite_roles.components.action_buttons', ['role' => $role])->render(),
+    //         ];
+    //     });
+
+    //     return response()->json([
+    //         'draw' => intval($request->draw),
+    //         'recordsTotal' => CompositeRole::count(), // Total number of records
+    //         'recordsFiltered' => $recordsFiltered, // Total number of filtered records
+    //         'data' => $data,
+    //     ]);
+    // }
+
     public function getCompositeRoles(Request $request)
     {
         $query = CompositeRole::with(['company', 'jobRole', 'singleRoles']);
@@ -162,36 +220,32 @@ class CompositeRoleController extends Controller
             $query->where('jabatan_id', $request->job_role_id);
         }
 
-        // Debug the SQL Query
-        // Log::info($query->toSql());
-        // Log::info($query->getBindings());
+        // ✅ Apply general search
+        if ($search = $request->input('search.value')) {
+            $query->where(function ($q) use ($search) {
+                $q->where('nama', 'like', "%{$search}%")
+                    ->orWhere('deskripsi', 'like', "%{$search}%")
+                    ->orWhereHas('company', fn($q2) => $q2->where('nama', 'like', "%{$search}%"))
+                    ->orWhereHas('jobRole', fn($q3) => $q3->where('nama', 'like', "%{$search}%"));
+            });
+        }
 
         $recordsFiltered = $query->count();
         $compositeRoles = $query->skip($request->start)->take($request->length)->get();
-
-        // Check the fetched data
-        // Log::info($compositeRoles);
 
         $data = $compositeRoles->map(function ($role) {
             return [
                 'company' => $role->company->nama ?? 'N/A',
                 'nama' => $role->nama,
                 'deskripsi' => $role->deskripsi ?? '-',
-                // 'job_role' => $role->jobRole->nama_jabatan ?? 'Not Assigned',
-                // 'single_roles' => $role->singleRoles
-                //     ->pluck('nama')
-                //     ->map(function ($roleName) {
-                //         return "<li>{$roleName}</li>";
-                //     })
-                //     ->implode('') ?? '<li>No Single Roles</li>',
                 'actions' => view('master-data.composite_roles.components.action_buttons', ['role' => $role])->render(),
             ];
         });
 
         return response()->json([
             'draw' => intval($request->draw),
-            'recordsTotal' => CompositeRole::count(), // Total number of records
-            'recordsFiltered' => $recordsFiltered, // Total number of filtered records
+            'recordsTotal' => CompositeRole::count(),
+            'recordsFiltered' => $recordsFiltered,
             'data' => $data,
         ]);
     }

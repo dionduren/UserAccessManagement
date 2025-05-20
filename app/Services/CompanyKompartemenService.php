@@ -18,113 +18,52 @@ class CompanyKompartemenService
         $company = Company::where('company_code', $row['company_code'])->first();
         if (!$company) return;
 
-        // $kompartemen = null;
-        // $departemen = null;
-
-        // Create or update Kompartemen and Departemen based on data
-        // //1. If Kompartemen & Departemen not null
-        // if (!empty($row['kompartemen']) && !empty($row['departemen'])) {
-        //     $existing = Kompartemen::find($row['kompartemen_id']);
-        //     if ($existing) {
-        //         $existing->update([
-        //             'nama' => $row['kompartemen'],
-        //             'company_id' => $company->company_code,
-        //             'updated_by' => $user,
-        //         ]);
-        //         $kompartemen = $existing;
-        //     } else {
-        //         $kompartemen = Kompartemen::create([
-        //             'kompartemen_id' => $row['kompartemen_id'],
-        //             'nama' => $row['kompartemen'],
-        //             'company_id' => $company->company_code,
-        //             'created_by' => $user,
-        //             'updated_by' => $user,
-        //         ]);
-        //     }
-
-        //     $existing = Departemen::find($row['departemen_id']);
-        //     if ($existing) {
-        //         $existing->update([
-        //             'nama' => $row['departemen'],
-        //             'company_id' => $company->company_code,
-        //             'kompartemen_id' => $row['kompartemen_id'] ?? null,
-        //             'updated_by' => $user,
-        //         ]);
-        //         $departemen = $existing;
-        //     } else {
-        //         $departemen = Departemen::create([
-        //             'departemen_id' => $row['departemen_id'],
-        //             'nama' => $row['departemen'],
-        //             'company_id' => $company->company_code,
-        //             'kompartemen_id' => $row['kompartemen_id'] ?? null,
-        //             'created_by' => $user,
-        //             'updated_by' => $user,
-        //         ]);
-        //     }
-        // }
-
-        // //2. If Kompartemen Row is Null 
-        // elseif (!empty($row['departemen']) && empty($row['kompartemen'])) {
-        //     $existing = Departemen::find($row['departemen_id']);
-        //     if ($existing) {
-        //         $existing->update([
-        //             'nama' => $row['departemen'],
-        //             'company_id' => $company->company_code,
-        //             'kompartemen_id' => $row['kompartemen_id'] ?? null,
-        //             'updated_by' => $user,
-        //         ]);
-        //         $departemen = $existing;
-        //     } else {
-        //         $departemen = Departemen::create([
-        //             'departemen_id' => $row['departemen_id'],
-        //             'nama' => $row['departemen'],
-        //             'company_id' => $company->company_code,
-        //             'kompartemen_id' => $row['kompartemen_id'] ?? null,
-        //             'created_by' => $user,
-        //             'updated_by' => $user,
-        //         ]);
-        //     }
-        // }
-
-        // //3. If Kompartemen Exists but Departemen Row is Null 
-        // elseif (!empty($row['kompartemen']) && empty($row['departemen'])) {
-        //     $existing = Kompartemen::find($row['kompartemen_id']);
-        //     if ($existing) {
-        //         $existing->update([
-        //             'nama' => $row['kompartemen'],
-        //             'company_id' => $company->company_code,
-        //             'updated_by' => $user,
-        //         ]);
-        //         $kompartemen = $existing;
-        //     } else {
-        //         $kompartemen = Kompartemen::create([
-        //             'kompartemen_id' => $row['kompartemen_id'],
-        //             'nama' => $row['kompartemen'],
-        //             'company_id' => $company->company_code,
-        //             'created_by' => $user,
-        //             'updated_by' => $user
-        //         ]);
-        //     }
-        // }
-
         $jobRole = null;
         $cc_level = null;
+        $flag_status = false;
+        $keterangan_flag = null;
 
         try {
             // Get cost code from CostCenter based on departemen_id or kompartemen_id
+
             $costCenter = null;
+            $costCode = null;
+
+            // 🚫 departemen provided but no ID → skip & log
+            if (!empty($row['departemen']) && empty($row['departemen_id'])) {
+                throw new \Exception("Departemen diberikan tanpa departemen_id. Harap cek kembali mapping master data.");
+            }
+
+            // ✅ Normal case: departemen_id exists
             if (!empty($row['departemen_id'])) {
                 $costCenter = CostCenter::where('level_id', $row['departemen_id'])
                     ->where('level', 'Departemen')
                     ->first();
+
+                if (!$costCenter) {
+                    throw new \Exception("CostCenter tidak ditemukan untuk Departemen ID: {$row['departemen_id']}");
+                }
+
                 $cc_level = 'DEP';
-            } elseif (!empty($row['kompartemen_id'])) {
+            }
+
+            // ✅ Fallback: no departemen info at all → use kompartemen
+            if (empty($row['departemen']) && empty($row['departemen_id']) && !empty($row['kompartemen_id'])) {
                 $costCenter = CostCenter::where('level_id', $row['kompartemen_id'])
                     ->where('level', 'Kompartemen')
                     ->first();
+
+                if (!$costCenter) {
+                    throw new \Exception("CostCenter tidak ditemukan untuk Kompartemen ID: {$row['kompartemen_id']}");
+                }
+
                 $cc_level = 'KOM';
-            } else {
-                throw new \Exception("Tidak ada Kompartemen ataupun Departemen yang terdaftar pada Cost Center.");
+                $flag_status = true;
+                $keterangan_flag = "Departemen tidak tersedia, menggunakan Kompartemen sebagai cost center.";
+            }
+
+            if (!$costCenter) {
+                throw new \Exception("Tidak ada departemen_id atau kompartemen_id yang valid ditemukan di CostCenter.");
             }
 
             // Get next number from PenomoranJobRole
@@ -146,29 +85,45 @@ class CompanyKompartemenService
             $formattedNumber = str_pad($nextNumber, 4, '0', STR_PAD_LEFT);
             $job_role_id = $costCode . '_' . $cc_level . '_JR_' . $formattedNumber;
 
-
-            // Log::info('Try - $job_role_id = ' . $job_role_id);
-
             // Create/Update JobRole
-            $jobRole = JobRole::updateOrCreate(
-                [
-                    'company_id' => $company->company_code,
-                    'nama' => $row['job_function'],
-                    'kompartemen_id' => $row['kompartemen_id'],
-                    'departemen_id' => $row['departemen_id'],
-                ],
-                [
-                    'kompartemen_id' => $row['kompartemen_id'],
-                    'departemen_id' => $row['departemen_id'],
-                    'job_role_id' => $job_role_id,
-                    'created_by' => $user,
-                    'updated_by' => $user,
-                    'flagged' => false,
-                    'keterangan' => null
-                ]
-            );
+            if ($flag_status) {
+                $jobRole = JobRole::updateOrCreate(
+                    [
+                        'company_id' => $company->company_code,
+                        'nama' => $row['job_function'],
+                        'kompartemen_id' => $row['kompartemen_id'],
+                        'departemen_id' => $row['departemen_id'],
+                    ],
+                    [
+                        'error_departemen_name' => $row['departemen'],
+                        'job_role_id' => $job_role_id,
+                        'created_by' => $user,
+                        'updated_by' => $user,
+                        'flagged' => $flag_status,
+                        'keterangan' => $keterangan_flag
+                    ]
+                );
+            } else {
+                $jobRole = JobRole::updateOrCreate(
+                    [
+                        'company_id' => $company->company_code,
+                        'nama' => $row['job_function'],
+                        'kompartemen_id' => $row['kompartemen_id'],
+                        'departemen_id' => $row['departemen_id'],
+                    ],
+                    [
+                        'job_role_id' => $job_role_id,
+                        'created_by' => $user,
+                        'updated_by' => $user,
+                        'flagged' => $flag_status,
+                        'keterangan' => $keterangan_flag
+                    ]
+                );
+            }
 
-            Log::info('Try - $jobRole = ' . $jobRole);
+
+
+            // Log::info('Try - $jobRole = ' . $jobRole);
         } catch (\Exception $e) {
             // Create/Update JobRole with error details
             Log::error('Catch - Error Message = ' . $e->getMessage());
@@ -176,12 +131,12 @@ class CompanyKompartemenService
                 [
                     'company_id' => $company->company_code,
                     'nama' => $row['job_function'],
-                    'kompartemen_id' => $row['kompartemen_id'],
-                    'departemen_id' => $row['departemen_id'],
                 ],
                 [
                     'job_role_id' => null,
+                    'error_kompartemen_id' => $row['kompartemen_id'],
                     'error_kompartemen_name' => $row['kompartemen'],
+                    'error_departemen_id' => $row['departemen_id'],
                     'error_departemen_name' => $row['departemen'],
                     'created_by' => $user,
                     'updated_by' => $user,
@@ -189,27 +144,28 @@ class CompanyKompartemenService
                     'keterangan' => $e->getMessage()
                 ]
             );
-
-            // Log::error('Catch - $jobRole = ' . $jobRole);
         }
 
         // Composite Role
         $compositeRole = CompositeRole::updateOrCreate(
-            // CompositeRole::updateOrCreate(
             [
-                'company_id' => $company->company_code,
-                'nama' => $row['composite_role'],
-                'kompartemen_id' => $row['kompartemen_id'],
-                'departemen_id' => $row['departemen_id'],
-                'jabatan_id' => $jobRole->id
+                'company_id'      => trim($company->company_code),
+                'nama'            => trim($row['composite_role']),
+                'kompartemen_id'  => $row['kompartemen_id'] ?: null,
+                'departemen_id'   => $row['departemen_id'] ?: null,
+                'jabatan_id'      => $jobRole->id,
             ],
             [
-                'created_by' => $user,
-                'updated_by' => $user
+                'created_by'      => $user,
+                'updated_by'      => $user,
             ]
         );
 
-        // Properly associate it to the JobRole
-        $jobRole->compositeRole()->save($compositeRole);
+        // Properly associate it to the JobRole if not already linked
+        if ($compositeRole->jabatan_id !== $jobRole->id) {
+            $compositeRole->jabatan_id = $jobRole->id;
+            $compositeRole->updated_by = $user;
+            $compositeRole->save();
+        }
     }
 }

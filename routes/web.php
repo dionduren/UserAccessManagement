@@ -18,26 +18,27 @@ use App\Http\Controllers\AccessMatrixController;
 use App\Http\Controllers\DynamicUploadController;
 
 use App\Http\Controllers\MasterData\TcodeController;
+use App\Http\Controllers\MasterData\CompositeRoleController;
 use App\Http\Controllers\MasterData\CompanyController;
 use App\Http\Controllers\MasterData\JobRoleController;
 use App\Http\Controllers\MasterData\UserNIKController;
-use App\Http\Controllers\Relationship\NIKJobController;
-use App\Http\Controllers\Report\EmptyJobRoleController;
+use App\Http\Controllers\Report\JobRoleReportController;
 use App\Http\Controllers\IOExcel\UserNIKImportController;
-use App\Http\Controllers\MasterData\CostCenterController;
 
+use App\Http\Controllers\MasterData\CostCenterController;
+use App\Http\Controllers\MasterData\CostPrevUserController;
+use App\Http\Controllers\MasterData\KompartemenController;
 use App\Http\Controllers\MasterData\DepartemenController;
 use App\Http\Controllers\MasterData\SingleRoleController;
-use App\Http\Controllers\Report\WorkUnitReportController;
+use App\Http\Controllers\MasterData\UserDetailController;
 
-use App\Http\Controllers\MasterData\KompartemenController;
+use App\Http\Controllers\Report\WorkUnitReportController;
 use App\Http\Controllers\MasterData\UserGenericController;
 use App\Http\Controllers\IOExcel\SingleRoleTcodeController;
 use App\Http\Controllers\IOExcel\TcodeSingleRoleController;
-use App\Http\Controllers\MasterData\CostPrevUserController;
+use App\Http\Controllers\Relationship\NIKJobController;
 
 use App\Http\Controllers\IOExcel\NIKJobRoleImportController;
-use App\Http\Controllers\MasterData\CompositeRoleController;
 use App\Http\Controllers\Relationship\SingleTcodeController;
 use App\Http\Controllers\IOExcel\CompanyMasterDataController;
 use App\Http\Controllers\Relationship\JobCompositeController;
@@ -172,6 +173,9 @@ Route::get('user-nik/get-periodic', [UserNIKController::class, 'getPeriodicUserN
 // Resource Route
 Route::resource('user-nik', UserNIKController::class);
 
+Route::get('user-detail/data', [UserDetailController::class, 'getData'])->name('user-detail.getData');
+Route::resource('user-detail', UserDetailController::class);
+
 Route::get('terminated-employee/getData', [TerminatedEmployeeController::class, 'getData'])->name('terminated-employee.get-data');
 Route::resource('terminated-employee', TerminatedEmployeeController::class);
 
@@ -190,17 +194,17 @@ Route::resource('relationship/nik-job', NIKJobController::class);
 
 // ------------------ UPLOAD DATA ------------------
 
-Route::prefix('nik-job/upload')->name('nik_job_role.upload.')->group(function () {
-    Route::get('/', [NIKJobRoleImportController::class, 'uploadForm'])->name('form');
-    Route::post('/', [NIKJobRoleImportController::class, 'store'])->name('store');
-    Route::get('/download-template', [NIKJobRoleImportController::class, 'downloadTemplate'])->name('download-template');
-    Route::get('/preview', [NIKJobRoleImportController::class, 'preview'])->name('preview');
-    Route::get('/preview-data', [NIKJobRoleImportController::class, 'getPreviewData'])->name('preview_data');
-    Route::post('/update-inline-session', [UserNIKImportController::class, 'updateInlineSession'])->name('update-inline-session');
-    Route::post('/confirm', [NIKJobRoleImportController::class, 'confirmImport'])->name('confirm');
-    Route::post('/submit-single', [NIKJobRoleImportController::class, 'submitSingle'])->name('submitSingle');
-    Route::post('/submit-all', [NIKJobRoleImportController::class, 'submitAll'])->name('submitAll');
-});
+// Route::prefix('nik-job/upload')->name('nik_job_role.upload.')->group(function () {
+//     Route::get('/', [NIKJobRoleImportController::class, 'uploadForm'])->name('form');
+//     Route::post('/', [NIKJobRoleImportController::class, 'store'])->name('store');
+//     Route::get('/download-template', [NIKJobRoleImportController::class, 'downloadTemplate'])->name('download-template');
+//     Route::get('/preview', [NIKJobRoleImportController::class, 'preview'])->name('preview');
+//     Route::get('/preview-data', [NIKJobRoleImportController::class, 'getPreviewData'])->name('preview_data');
+//     Route::post('/update-inline-session', [UserNIKImportController::class, 'updateInlineSession'])->name('update-inline-session');
+//     Route::post('/confirm', [NIKJobRoleImportController::class, 'confirmImport'])->name('confirm');
+//     Route::post('/submit-single', [NIKJobRoleImportController::class, 'submitSingle'])->name('submitSingle');
+//     Route::post('/submit-all', [NIKJobRoleImportController::class, 'submitAll'])->name('submitAll');
+// });
 
 Route::prefix('dynamic-upload')->name('dynamic_upload.')->group(function () {
     Route::get('/{module}/upload', [DynamicUploadController::class, 'upload'])->name('upload');
@@ -209,7 +213,6 @@ Route::prefix('dynamic-upload')->name('dynamic_upload.')->group(function () {
     Route::get('/{module}/preview', [DynamicUploadController::class, 'preview'])->name('preview');
     Route::get('/{module}/preview-data', [DynamicUploadController::class, 'getPreviewData'])->name('preview_data');
 
-    Route::post('/{module}/update-inline', [DynamicUploadController::class, 'updateInlineSession'])->name('update_inline');
     Route::post('/{module}/submit-all', [DynamicUploadController::class, 'submitAll'])->name('submitAll');
 });
 
@@ -219,7 +222,8 @@ Route::prefix('report')->name('report.')->group(function () {
     Route::get('/unit', [WorkUnitReportController::class, 'index'])->name('unit');
     Route::get('/unit/grouped-data', [WorkUnitReportController::class, 'groupedJson'])->name('unit.groupedData');
     // Route::get('/unit/nested-data', [WorkUnitReportController::class, 'groupedJson'])->name('unit.nestedData');
-    Route::get('/empty-job-role', [EmptyJobRoleController::class, 'index'])->name('empty-job-role.index');
+    Route::get('/filled-job-role', [JobRoleReportController::class, 'index'])->name('filled-job-role.index');
+    Route::get('/empty-job-role', [JobRoleReportController::class, 'index_empty'])->name('empty-job-role.index');
 });
 
 // ------------------ ACCESS MATRIX ------------------

@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('periode_id')->nullable();
             $table->string('nik')->nullable();
-            $table->foreignId('job_role_id')->nullable();
+            $table->string('job_role_id')->nullable();
             $table->boolean('is_active')->default(true);
             $table->dateTime('last_update')->nullable();
             $table->timestamps();

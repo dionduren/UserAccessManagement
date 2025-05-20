@@ -13,7 +13,7 @@ class WorkUnitService
                 $join->on('njr.nik', '=', 'ud.nik')
                     ->where('njr.periode_id', '=', $periodeId);
             })
-            ->leftJoin('tr_job_roles as jr', 'jr.id', '=', 'njr.job_role_id')
+            ->leftJoin('tr_job_roles as jr', 'jr.job_role_id', '=', 'njr.job_role_id')
             ->leftJoin('ms_company as c', 'c.company_code', '=', 'ud.company_id')
             ->leftJoin('ms_kompartemen as k', 'k.kompartemen_id', '=', 'ud.kompartemen_id')
             ->leftJoin('ms_departemen as d', 'd.departemen_id', '=', 'ud.departemen_id')
@@ -21,7 +21,7 @@ class WorkUnitService
             ->leftJoin('pt_composite_role_single_role as cr_sr', 'cr.id', '=', 'cr_sr.composite_role_id')
             ->leftJoin('tr_single_roles as sr', 'sr.id', '=', 'cr_sr.single_role_id')
             ->leftJoin('pt_single_role_tcode as sr_tc', 'sr.id', '=', 'sr_tc.single_role_id')
-            ->leftJoin('tr_tcodes as tc', 'tc.code', '=', 'sr_tc.tcode_id')
+            ->leftJoin('tr_tcodes as tc', 'tc.id', '=', 'sr_tc.tcode_id')
             ->selectRaw('
                 ud.nik,
                 ud.nama,

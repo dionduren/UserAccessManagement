@@ -20,15 +20,15 @@ return [
             'user_type' => null,
             'table' => 'ms_user_detail',
             'model' => UserDetail::class,
-            'where_fields' => ['nik', 'periode_id'],
+            'uses_periode' => true,
+            'where_fields' => ['nik'],
             'columns' => [
-                'company' => ['type' => 'string'],
-                'nik' => ['type' => 'string'],
-                'nama' => ['type' => 'string'],
-                'direktorat' => ['type' => 'string'],
-                'kompartemen_id' => ['type' => 'lookup', 'model' => Kompartemen::class, 'id_field' => 'kompartemen_id'],
-                'departemen_id' => ['type' => 'lookup', 'model' => Departemen::class, 'id_field' => 'departemen_id'],
-                'periode_id' => ['type' => 'string'], // hidden from table but kept in payload
+                'company' => ['type' => 'lookup', 'header_name' => 'Perusahaan', 'model' => Company::class, 'id_field' => 'shortname', 'db_field' => 'company_id', 'alias' => 'company_id'],
+                'nik' => ['type' => 'string', 'header_name' => 'NIK'],
+                'nama' => ['type' => 'string', 'header_name' => 'Nama User'],
+                'direktorat' => ['type' => 'string', 'header_name' => 'Direktorat'],
+                'kompartemen_id' => ['type' => 'lookup', 'model' => Kompartemen::class, 'id_field' => 'kompartemen_id', 'header_name' => 'ID Kompartemen'],
+                'departemen_id' => ['type' => 'lookup', 'model' => Departemen::class, 'id_field' => 'departemen_id', 'header_name' => 'ID Departemen'],
             ],
             'validate_columns' => ['kompartemen_id', 'departemen_id']
         ],
@@ -37,7 +37,8 @@ return [
             'user_type' => 'NIK',
             'table' => 'tr_user_ussm_nik',
             'model' => userNIK::class,
-            'where_fields' => ['user_code', 'periode_id'],
+            'uses_periode' => true,
+            'where_fields' => ['user_code'],
             'columns' => [
                 'user_code' => ['type' => 'string'],
                 'user_type' => ['type' => 'string'],
@@ -45,7 +46,6 @@ return [
                 'license_type' => ['type' => 'string'],
                 'valid_from' => ['type' => 'date'],
                 'valid_to' => ['type' => 'date'],
-                'periode_id' => ['type' => 'string'],
             ],
         ],
         'user_generic' => [
@@ -53,7 +53,8 @@ return [
             'user_type' => 'Generic',
             'table' => 'tr_user_generic',
             'model' => userGeneric::class,
-            'where_fields' => ['user_code', 'periode_id'],
+            'uses_periode' => true,
+            'where_fields' => ['user_code'],
             'columns' => [
                 'user_code' => ['type' => 'string'],
                 'user_type' => ['type' => 'string'],
@@ -62,7 +63,6 @@ return [
                 'license_type' => ['type' => 'string'],
                 'valid_from' => ['type' => 'date'],
                 'valid_to' => ['type' => 'date'],
-                'periode_id' => ['type' => 'string'],
             ],
         ],
         'nik_job_role' => [
@@ -70,50 +70,61 @@ return [
             'user_type' => null, // Optional to make controller logic consistent
             'table' => 'tr_nik_job_role',
             'model' => NIKJobRole::class,
-            'where_fields' => ['nik', 'periode_id'],
+            'uses_periode' => true,
+            'where_fields' => ['nik'],
             'columns' => [
-                'nik' => ['type' => 'string'],
-                'job_role_id' => ['type' => 'lookup', 'model' => JobRole::class],
-                'periode_id' => ['type' => 'string'],
+                // 'nik' => ['type' => 'string', 'is_nik' => true],
+                'nik' => ['type' => 'lookup', 'alias' => 'nik', 'model' => UserDetail::class, 'id_field' => 'nik'],
+                // 'job_role_id' => ['type' => 'lookup', 'model' => JobRole::class, 'id_field' => 'job_role_id'],
+                // 'job_role' => ['type' => 'string'],
+                'job_role' => ['type' => 'lookup', 'header_name' => 'Job Role ID', 'model' => JobRole::class, 'id_field' => 'nama',  'db_field' => 'job_role_id'],
             ],
         ],
         'terminated_employee' => [
             'name' => 'Terminated Employee Upload',
             'table' => 'ms_terminated_employee',
             'model' => TerminatedEmployee::class,
+            'uses_periode' => true,
             'where_fields' => ['nik'],
             'columns' => [
-                'nik' => ['type' => 'string'],
+                'nik' => ['type' => 'string', 'is_nik' => true],
                 'nama' => ['type' => 'string'],
                 'tanggal_resign' => ['type' => 'date'],
                 'status' => ['type' => 'string'],
-                'last_login' => ['type' => 'datetime'],
+                'last_login' => [
+                    'type' => 'datetime',
+                    'header_name' => 'Last Login', // Custom header name
+                    'format' => 'Y-m-d H:i:s'  // Display format
+                ],
                 'valid_from' => ['type' => 'date'],
                 'valid_to' => ['type' => 'date'],
+            ],
+            'composite_datetime' => [
+                'last_login' => ['last_login_date', 'last_login_time'],
             ],
         ],
         'current_cc_user' => [
             'name' => 'Current Cost Center User',
             'table' => 'ms_cc_user',
             'model' => CostCurrentUser::class,
-            'where_fields' => ['user_code', 'periode_terdaftar'],
+            'uses_periode' => true,
+            'where_fields' => ['user_code'],
             'columns' => [
                 'user_code' => ['type' => 'string'],
                 'user_name' => ['type' => 'string'],
                 'cost_code' => ['type' => 'string'],
-                'periode_id' => ['type' => 'string'],
             ],
         ],
         'prev_cc_user' => [
             'name' => 'Previous Cost Center User',
             'table' => 'tr_cc_prev_user',
             'model' => CostPrevUser::class,
-            'where_fields' => ['user_code', 'periode_sebelumnya'],
+            'uses_periode' => true,
+            'where_fields' => ['user_code'],
             'columns' => [
                 'user_code' => ['type' => 'string'],
                 'user_name' => ['type' => 'string'],
                 'cost_code' => ['type' => 'string'],
-                'periode_id' => ['type' => 'string'],
             ],
         ],
         // 'ms_cost_center' => [

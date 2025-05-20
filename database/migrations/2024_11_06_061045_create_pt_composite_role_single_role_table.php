@@ -25,6 +25,8 @@ return new class extends Migration
             $table->index('composite_role_id');
             $table->index('deleted_at');
 
+            $table->unique(['composite_role_id', 'single_role_id'], 'unique_composite_single');
+
             $table->foreign('composite_role_id')->references('id')->on('tr_composite_roles')->onDelete('set null')->onUpdate('cascade');
             $table->foreign('single_role_id')->references('id')->on('tr_single_roles')->onDelete('set null')->onUpdate('cascade');
         });

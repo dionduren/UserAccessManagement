@@ -19,7 +19,7 @@ class CostCurrentUser extends Model
         'user_code',
         'user_name',
         'cost_code',
-        'periode_terdaftar',
+        'periode_id',
         'flagged',
         'keterangan',
         'dokumen_keterangan',
