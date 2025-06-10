@@ -37,6 +37,7 @@ class NIKJobRole extends Model
 
     public function jobRole()
     {
+        // Change from job_role_id to job_role_id
         return $this->belongsTo(JobRole::class, 'job_role_id', 'job_role_id');
     }
 

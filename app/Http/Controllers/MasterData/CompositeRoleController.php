@@ -96,7 +96,7 @@ class CompositeRoleController extends Controller
 
             $job_roles_data[$companyId][$kompartemenName][$departemenName][] = [
                 'id' => $jobRole->id,
-                'nama_jabatan' => $jobRole->nama_jabatan,
+                'nama' => $jobRole->nama,
             ];
         }
 

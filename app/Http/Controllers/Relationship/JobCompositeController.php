@@ -191,7 +191,7 @@ class JobCompositeController extends Controller
         if ($request->filled('search_job_role')) {
             $searchJobRole = strtolower($request->input('search_job_role'));
             $query->whereHas('jobRole', function ($jobQuery) use ($searchJobRole) {
-                $jobQuery->whereRaw('LOWER(nama_jabatan) LIKE ?', ["%{$searchJobRole}%"]);
+                $jobQuery->whereRaw('LOWER(nama) LIKE ?', ["%{$searchJobRole}%"]);
             });
         }
 

@@ -38,13 +38,13 @@
 @section('scripts')
     <script>
         const jobRoles = {!! json_encode(
-            \App\Models\JobRole::select('id', 'nama_jabatan', 'departemen_id', 'kompartemen_id')->with('departemen:id,name')->with('kompartemen:id,name')->get(),
+            \App\Models\JobRole::select('id', 'nama', 'departemen_id', 'kompartemen_id')->with('departemen:id,name')->with('kompartemen:id,name')->get(),
         ) !!};
 
         $(function() {
             const jobRoleOptions = jobRoles.map(role => ({
                 value: role.id,
-                label: `${role.nama_jabatan} (${(role.kompartemen ? "Kompartemen " + role.kompartemen.name : 'NullKompartemen')} - ${(role.departemen ? "Departemen " + role.departemen.name : 'NullDepartemen')})`
+                label: `${role.nama} (${(role.kompartemen ? "Kompartemen " + role.kompartemen.name : 'NullKompartemen')} - ${(role.departemen ? "Departemen " + role.departemen.name : 'NullDepartemen')})`
             }));
 
 

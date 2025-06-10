@@ -74,7 +74,7 @@
                                 let selected = role.id == selectedJobRoleId ? 'selected' :
                                     '';
                                 optgroup.append(
-                                    $('<option>').val(role.id).text(role.nama_jabatan)
+                                    $('<option>').val(role.id).text(role.nama)
                                     .attr('selected', selected)
                                 );
 

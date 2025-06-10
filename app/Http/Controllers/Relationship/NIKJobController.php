@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers\Relationship;
 
+use App\Http\Controllers\Controller;
+
 use App\Models\Company;
 use App\Models\JobRole;
 use App\Models\Periode;
@@ -9,7 +11,6 @@ use App\Models\userNIK;
 use App\Models\NIKJobRole;
 use Illuminate\Http\Request;
 use Yajra\DataTables\DataTables;
-use App\Http\Controllers\Controller;
 
 class NIKJobController extends Controller
 {
@@ -39,19 +40,47 @@ class NIKJobController extends Controller
      */
     public function store(Request $request)
     {
+        // $request->validate([
+        //     'periode_id' => 'required|exists:ms_periode,id',
+        //     'job_role_id' => 'required|exists:tr_job_roles,id',
+        //     'user_code' => 'required|exists:tr_user_ussm_nik,user_code',
+        // ]);
+
+        // NIKJobRole::create([
+        //     'periode_id' => $request->input('periode_id'),
+        //     'job_role_id' => $request->input('job_role_id'),
+        //     'nik' => $request->input('user_code'),
+        // ]);
+
+        // return redirect()->route('nik-job.index')->with('success', 'NIK Job Role created successfully.');
         $request->validate([
             'periode_id' => 'required|exists:ms_periode,id',
             'job_role_id' => 'required|exists:tr_job_roles,id',
-            'user_code' => 'required|exists:tr_user_ussm_nik,user_code',
+            'user_code' => 'required|exists:ms_user_detail,nik',
         ]);
+
+        // Check for existing assignment in this period
+        $exists = NIKJobRole::where([
+            'periode_id' => $request->periode_id,
+            'nik' => $request->user_code,
+            'job_role_id' => $request->job_role_id,
+        ])->exists();
+
+        if ($exists) {
+            return back()->withErrors(['error' => 'This user already has this job role for the selected period']);
+        }
 
         NIKJobRole::create([
-            'periode_id' => $request->input('periode_id'),
-            'job_role_id' => $request->input('job_role_id'),
-            'nik' => $request->input('user_code'),
+            'periode_id' => $request->periode_id,
+            'nik' => $request->user_code,
+            'job_role_id' => $request->job_role_id,
+            'is_active' => true,
+            // 'last_update' => now(),
+            'created_by' => auth()->user()->name
         ]);
 
-        return redirect()->route('nik-job.index')->with('success', 'NIK Job Role created successfully.');
+        return redirect()->route('nik-job.index')
+            ->with('success', 'Job Role assigned successfully.');
     }
 
     /**
@@ -141,7 +170,7 @@ class NIKJobController extends Controller
 
         $nikJobRoles = NIKJobRole::select('id', 'nik', 'job_role_id', 'periode_id')
             ->with(['jobRole' => function ($query) {
-                $query->select('id', 'nama_jabatan');
+                $query->select('id', 'job_role_id', 'nama');
             }])
             ->with(['periode' => function ($query) {
                 $query->select('id', 'definisi');
@@ -157,7 +186,7 @@ class NIKJobController extends Controller
                 return $row->userDetail ? $row->userDetail->nama : '-';
             })
             ->addColumn('job_role', function ($row) {
-                return $row->jobRole ? $row->jobRole->nama_jabatan : '-';
+                return $row->jobRole ? $row->jobRole->nama : '-';
             })
             ->addColumn('periode', function ($row) {
                 return $row->periode ? $row->periode->definisi : '-';

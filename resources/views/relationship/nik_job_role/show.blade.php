@@ -19,7 +19,7 @@
                     </dd>
 
                     <dt>Job Role</dt>
-                    <dd>{{ $nikJobRole->jobRole->nama_jabatan ?? '-' }}</dd>
+                    <dd>{{ $nikJobRole->jobRole->nama ?? '-' }}</dd>
 
                     <dt>Company</dt>
                     <dd>{{ $nikJobRole->jobRole->company->nama ?? '-' }}</dd>

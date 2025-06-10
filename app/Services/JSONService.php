@@ -29,8 +29,10 @@ class JSONService
                                 'job_roles' => $departemen->jobRoles->map(function ($jobRole) {
                                     return [
                                         'id' => $jobRole->id,
+                                        'job_role_id' => $jobRole->job_role_id,
                                         'nama' => $jobRole->nama,
-                                        'description' => $jobRole->deskripsi ?? 'N/A',
+                                        'deskripsi' => $jobRole->deskripsi ?? 'N/A',
+                                        'status' => $jobRole->status ?? "Deactive",
                                     ];
                                 })
                             ];
@@ -40,8 +42,10 @@ class JSONService
                         })->map(function ($jobRole) {
                             return [
                                 'id' => $jobRole->id,
+                                'job_role_id' => $jobRole->job_role_id,
                                 'nama' => $jobRole->nama,
-                                'description' => $jobRole->deskripsi ?? 'N/A',
+                                'deskripsi' => $jobRole->deskripsi ?? 'N/A',
+                                'status' => $jobRole->status ?? "Deactive",
                             ];
                         }),
                     ];
@@ -53,8 +57,10 @@ class JSONService
                         'job_roles' => $departemen->jobRoles->map(function ($jobRole) {
                             return [
                                 'id' => $jobRole->id,
+                                'job_role_id' => $jobRole->job_role_id,
                                 'nama' => $jobRole->nama,
-                                'description' => $jobRole->deskripsi ?? 'N/A',
+                                'deskripsi' => $jobRole->deskripsi ?? 'N/A',
+                                'status' => $jobRole->status ?? "Deactive",
                             ];
                         })
                     ];
@@ -62,8 +68,10 @@ class JSONService
                 'job_roles_without_relations' => $company->jobRolesWithoutRelations->map(function ($jobRole) {
                     return [
                         'id' => $jobRole->id,
+                        'job_role_id' => $jobRole->job_role_id,
                         'nama' => $jobRole->nama,
-                        'description' => $jobRole->deskripsi ?? 'N/A',
+                        'deskripsi' => $jobRole->deskripsi ?? 'N/A',
+                        'status' => $jobRole->status ?? "Deactive",
                     ];
                 }),
             ];
