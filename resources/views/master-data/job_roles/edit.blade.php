@@ -41,6 +41,13 @@
                 </select>
             </div>
 
+            <!-- Job Role ID -->
+            <div class="mb-3">
+                <label for="job_role_id" class="form-label">Job Role ID</label>
+                <input type="text" class="form-control" name="job_role_id" id="job_role_id"
+                    value="{{ old('job_role_id', $jobRole->job_role_id) }}" required>
+            </div>
+
             <!-- Job Role Name -->
             <div class="mb-3">
                 <label for="nama" class="form-label">Job Role</label>

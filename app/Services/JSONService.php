@@ -33,6 +33,7 @@ class JSONService
                                         'nama' => $jobRole->nama,
                                         'deskripsi' => $jobRole->deskripsi ?? 'N/A',
                                         'status' => $jobRole->status ?? "Deactive",
+                                        'flagged' => $jobRole->flagged ?? false,
                                     ];
                                 })
                             ];
@@ -46,6 +47,7 @@ class JSONService
                                 'nama' => $jobRole->nama,
                                 'deskripsi' => $jobRole->deskripsi ?? 'N/A',
                                 'status' => $jobRole->status ?? "Deactive",
+                                'flagged' => $jobRole->flagged ?? false,
                             ];
                         }),
                     ];
@@ -61,6 +63,7 @@ class JSONService
                                 'nama' => $jobRole->nama,
                                 'deskripsi' => $jobRole->deskripsi ?? 'N/A',
                                 'status' => $jobRole->status ?? "Deactive",
+                                'flagged' => $jobRole->flagged ?? false,
                             ];
                         })
                     ];
@@ -72,6 +75,7 @@ class JSONService
                         'nama' => $jobRole->nama,
                         'deskripsi' => $jobRole->deskripsi ?? 'N/A',
                         'status' => $jobRole->status ?? "Deactive",
+                        'flagged' => $jobRole->flagged ?? false,
                     ];
                 }),
             ];

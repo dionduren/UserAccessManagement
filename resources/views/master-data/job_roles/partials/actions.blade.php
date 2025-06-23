@@ -15,3 +15,8 @@
         <i class="bi bi-trash"></i>
     </button>
 </form>
+
+<a href="{{ route('job-roles.edit-flagged', ['job_role' => $jobRole->id ?? '']) }}" class="btn btn-secondary btn-sm"
+    title="Edit Flagged Status" target="_blank">
+    <i class="bi bi-flag"></i>
+</a>

@@ -64,6 +64,10 @@ Route::resource('kompartemens', KompartemenController::class);
 Route::resource('departemens', DepartemenController::class);
 
 Route::get('/job-roles/{id}', [JobRoleController::class, 'show'])->where('id', '[0-9]+');
+Route::get('/job-roles/{job_role}/flagged', [JobRoleController::class, 'editFlagged'])->name('job-roles.edit-flagged');
+Route::post('/job-roles/{job_role}/flagged', [JobRoleController::class, 'updateFlagged'])->name('job-roles.update-flagged');
+Route::post('/job-roles/update-flagged-status', [JobRoleController::class, 'updateFlaggedStatus'])->name('job-roles.update-flagged-status');
+
 Route::resource('job-roles', JobRoleController::class);
 
 Route::get('/get-kompartemen', [KompartemenController::class, 'getKompartemenByCompany']);

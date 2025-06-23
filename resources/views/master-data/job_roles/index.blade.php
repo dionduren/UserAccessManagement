@@ -68,6 +68,44 @@
             </div>
         </div>
     </div>
+
+    <!-- Modal for Flagged Info and Change Flagged Status -->
+    <div class="modal fade" id="flaggedJobRoleModal" tabindex="-1" aria-labelledby="flaggedJobRoleModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="flaggedJobRoleModalLabel">Flagged Info</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body" id="modal-flagged-job-role-details">
+                    <!-- Flagged info will be loaded here -->
+                    <div class="text-center">
+                        <span class="spinner-border" role="status"></span>
+                    </div>
+                </div>
+                <div class="modal-footer d-none" id="flagged-job-role-actions">
+                    <form id="flaggedJobRoleForm" method="POST">
+                        @csrf
+                        <input type="hidden" name="job_role_id" id="flagged-job-role-id" value="">
+                        <div class="form-group">
+                            <label for="flagged-status">Flagged Status</label>
+                            <select class="form-control" name="flagged" id="flagged-status">
+                                <option value="1">Flagged</option>
+                                <option value="0">Not Flagged</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="flagged-keterangan">Keterangan</label>
+                            <textarea class="form-control" name="keterangan" id="flagged-keterangan" rows="2"></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Update Flagged Status</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
 @endsection
 
 @section('scripts')
@@ -87,13 +125,20 @@
                 columns: [{
                         data: 'company',
                         title: 'Perusahaan'
-                    }, {
+                    },
+                    {
                         data: 'kompartemen',
                         title: 'Kompartemen'
-                    }, {
+                    },
+                    {
                         data: 'departemen',
                         title: 'Departemen'
-                    }, {
+                    },
+                    {
+                        data: 'job_role_id',
+                        title: 'Kode Job Role'
+                    },
+                    {
                         data: 'job_role',
                         title: 'Nama Jabatan'
                     },
@@ -102,13 +147,71 @@
                         title: 'Deskripsi'
                     },
                     {
+                        data: 'status',
+                        title: 'Status',
+                        render: function(data) {
+                            if (data === 'Active') {
+                                return '<span style="color: #fff; background: #28a745; padding: 2px 8px; border-radius: 4px;">Active</span>';
+                            } else if (data === 'Not Active') {
+                                return '<span style="color: #fff; background: #dc3545; padding: 2px 8px; border-radius: 4px;">Not Active</span>';
+                            }
+                            return data;
+                        },
+                        createdCell: function(td, cellData) {
+                            if (cellData === 'Not Active') {
+                                $(td).css({
+                                    'background': '#dc3545',
+                                    'color': '#fff'
+                                });
+                            } else if (cellData === 'Active') {
+                                $(td).css({
+                                    'background': '#28a745',
+                                    'color': '#fff'
+                                });
+                            }
+                        }
+                    },
+                    {
+                        data: 'flagged',
+                        title: 'Flagged',
+                        render: function(data) {
+                            return data ? 'Yes' : 'No';
+                        },
+                        createdCell: function(td, cellData, rowData) {
+                            if (rowData.flagged) {
+                                if (!rowData.job_role_id || rowData.job_role_id ===
+                                    'Not Assigned') {
+                                    // Red if job_role_id does not exist or is "Not Assigned"
+                                    $(td).css('background-color', '#f02e3f');
+                                    $(td).css('color', '#fff');
+                                } else {
+                                    // Yellow if job_role_id exists and is not "Not Assigned"
+                                    $(td).css('background-color', '#fff3cd');
+                                    $(td).css('color', '#000');
+                                }
+                            }
+                        }
+                    },
+                    {
                         data: 'actions',
                         title: 'Actions',
                         width: '12.5%',
                         orderable: false,
                         searchable: false
                     }
-                ]
+                ],
+                // rowCallback: function(row, data) {
+                //     // Flagged coloring
+                //     if (data.flagged) {
+                //         if (!data.job_role_id || data.job_role_id === 'Not Assigned') {
+                //             // Red if job_role_id does not exist or is "Not Assigned"
+                //             $(row).css('background-color', '#f02e3f');
+                //         } else {
+                //             // Yellow if job_role_id exists and is not "Not Assigned"
+                //             $(row).css('background-color', '#fff3cd');
+                //         }
+                //     }
+                // }
             });
 
             // Fetch master data and initialize the page
@@ -242,6 +345,45 @@
             // Close modal event
             $(document).on('click', '.close', function() {
                 $('#showJobRoleModal').modal('hide');
+            });
+
+            $(document).on('click', '.flagged-job-role', function(e) {
+                e.preventDefault();
+                const jobRoleId = $(this).data('id');
+                if (!jobRoleId) return;
+
+                // Optionally, fetch flagged info via AJAX here if needed
+                $('#flagged-job-role-id').val(jobRoleId);
+                $('#flaggedJobRoleModal').modal('show');
+                $('#flagged-job-role-actions').removeClass('d-none');
+            });
+
+            $('#flaggedJobRoleForm').on('submit', function(e) {
+                e.preventDefault();
+                const form = $(this);
+                const btn = form.find('button[type="submit"]');
+                btn.prop('disabled', true);
+
+                $.ajax({
+                    url: "{{ route('job-roles.update-flagged-status') }}",
+                    method: 'POST',
+                    data: form.serialize(),
+                    success: function(response) {
+                        if (response.success) {
+                            $('#flaggedJobRoleModal').modal('hide');
+                            loadJobRoles(); // Refresh table
+                            alert(response.message);
+                        } else {
+                            alert(response.message || 'Failed to update flagged status.');
+                        }
+                    },
+                    error: function(xhr) {
+                        alert('Failed to update flagged status.');
+                    },
+                    complete: function() {
+                        btn.prop('disabled', false);
+                    }
+                });
             });
         });
     </script>

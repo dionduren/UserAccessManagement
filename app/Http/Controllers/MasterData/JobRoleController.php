@@ -14,6 +14,7 @@ use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Database\QueryException;
 use Illuminate\Validation\ValidationException;
+use App\Services\JSONService; // <-- Add this at the top
 
 class JobRoleController extends Controller
 {
@@ -34,6 +35,7 @@ class JobRoleController extends Controller
         return view('master-data.job_roles.create', compact('companies'));
     }
 
+    // TODO: add create job_role_id after storing the job role
     public function store(Request $request)
     {
         try {
@@ -84,7 +86,7 @@ class JobRoleController extends Controller
     {
         $company = Company::where('company_code', $jobRole->company_id)->first();
 
-        // Load kompartemens and departemens based on the current jobRole's selections
+        // Load kompartemens and departemen based on the current jobRole's selections
         $kompartemen = Kompartemen::where('company_id', $jobRole->company_id)->first();
         $departemen = Departemen::where('kompartemen_id', $jobRole->kompartemen_id)->first();
 
@@ -96,6 +98,13 @@ class JobRoleController extends Controller
         try {
             $request->validate([
                 'company_id' => 'required|exists:ms_company,company_code',
+                'job_role_id' => [
+                    'required',
+                    'string',
+                    Rule::unique('tr_job_roles', 'job_role_id')
+                        ->where('company_id', $request->company_id)
+                        ->ignore($jobRole->id, 'id')
+                ],
                 'nama' => [
                     'required',
                     'string',
@@ -176,11 +185,14 @@ class JobRoleController extends Controller
     {
         return [
             'id' => $jobRole['id'],
+            'job_role_id' => $jobRole['job_role_id'] ?? "Not Assigned",
             'company' => $companyName,
             'kompartemen' => $kompartemenName ?? '-',
             'departemen' => $departemenName ?? '-',
             'job_role' => $jobRole['nama'],
             'deskripsi' => $jobRole['description'] ?? 'N/A',
+            'status' => $jobRole['status'] ?? 'active',
+            'flagged' => $jobRole['flagged'] ?? false,
             'actions' => view('master-data.job_roles.partials.actions', ['jobRole' => (object) $jobRole])->render(),
         ];
     }
@@ -294,6 +306,71 @@ class JobRoleController extends Controller
                     $jobRole
                 );
             }
+        }
+    }
+
+    public function updateFlaggedStatus(Request $request)
+    {
+        $request->validate([
+            'job_role_id' => 'required|exists:tr_job_roles,job_role_id',
+            'flagged' => 'required|boolean',
+            'keterangan' => 'nullable|string|max:255',
+        ]);
+
+        try {
+            $jobRole = JobRole::where('job_role_id', $request->job_role_id)->firstOrFail();
+            $jobRole->flagged = $request->flagged;
+            $jobRole->flagged_keterangan = $request->keterangan;
+            $jobRole->flagged_updated_by = auth()->user()->name ?? 'system';
+            $jobRole->flagged_updated_at = now();
+            $jobRole->save();
+
+            // Regenerate the JSON file after updating flagged status
+            app(JSONService::class)->generateMasterDataJson();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Flagged status updated successfully and JSON regenerated.',
+                'flagged' => $jobRole->flagged,
+                'keterangan' => $jobRole->flagged_keterangan,
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Error updating flagged status: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to update flagged status.',
+            ], 500);
+        }
+    }
+
+    public function editFlagged($id)
+    {
+        $jobRole = JobRole::where('id', $id)->firstOrFail();
+        return view('master-data.job_roles.edit-flagged', compact('jobRole'));
+    }
+
+    public function updateFlagged(Request $request, $id)
+    {
+        $request->validate([
+            'flagged' => 'required|boolean',
+            'keterangan' => 'nullable|string|max:255',
+        ]);
+
+        try {
+            $jobRole = JobRole::where('id', $id)->firstOrFail();
+            $jobRole->flagged = $request->flagged;
+            $jobRole->flagged_keterangan = $request->keterangan;
+            $jobRole->flagged_updated_by = auth()->user()->name ?? 'system';
+            $jobRole->flagged_updated_at = now();
+            $jobRole->save();
+
+            // Regenerate the JSON file after updating flagged status
+            app(\App\Services\JSONService::class)->generateMasterDataJson();
+
+            return redirect()->route('job-roles.index')->with('success', 'Flagged status updated and JSON regenerated.');
+        } catch (\Exception $e) {
+            \Log::error('Error updating flagged status: ' . $e->getMessage());
+            return redirect()->back()->withErrors(['error' => 'Failed to update flagged status.']);
         }
     }
 }
