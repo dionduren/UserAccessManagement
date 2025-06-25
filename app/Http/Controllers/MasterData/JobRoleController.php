@@ -5,16 +5,19 @@ namespace App\Http\Controllers\MasterData;
 use App\Http\Controllers\Controller;
 
 use App\Models\Company;
-use App\Models\JobRole;
+use App\Models\CostCenter;
 use App\Models\Departemen;
+use App\Models\JobRole;
 use App\Models\Kompartemen;
-
-use Illuminate\Http\Request;
-use Illuminate\Validation\Rule;
-use Illuminate\Support\Facades\Log;
-use Illuminate\Database\QueryException;
-use Illuminate\Validation\ValidationException;
+use App\Models\PenomoranJobRole;
 use App\Services\JSONService; // <-- Add this at the top
+
+use Illuminate\Database\QueryException;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 
 class JobRoleController extends Controller
 {
@@ -52,9 +55,17 @@ class JobRoleController extends Controller
                 'departemen_id' => 'nullable|exists:ms_departemen,departemen_id',
             ]);
 
-            JobRole::create($request->all() + [
+            $jobRole = JobRole::create($request->all() + [
                 'created_by' => auth()->user()->name
             ]);
+
+            // Increment PenomoranJobRole if job_role_id is set
+            if ($request->job_role_id) {
+                PenomoranJobRole::updateOrCreate(
+                    ['company_id' => $request->company_id],
+                    ['last_number' => \DB::raw('last_number + 1')]
+                );
+            }
 
             return redirect()
                 ->route('job-roles.index')
@@ -117,9 +128,18 @@ class JobRoleController extends Controller
                 'departemen_id' => 'nullable|exists:ms_departemen,departemen_id',
             ]);
 
+            $oldJobRoleId = $jobRole->job_role_id;
             $jobRole->update($request->all() + [
                 'updated_by' => auth()->user()->name
             ]);
+
+            // Only increment if job_role_id is changed
+            if ($request->job_role_id && $request->job_role_id !== $oldJobRoleId) {
+                PenomoranJobRole::updateOrCreate(
+                    ['company_id' => $request->company_id],
+                    ['last_number' => \DB::raw('last_number + 1')]
+                );
+            }
 
             return redirect()->route('job-roles.index')->with('status', 'Job role updated successfully.');
         } catch (ValidationException $e) {
@@ -371,6 +391,59 @@ class JobRoleController extends Controller
         } catch (\Exception $e) {
             \Log::error('Error updating flagged status: ' . $e->getMessage());
             return redirect()->back()->withErrors(['error' => 'Failed to update flagged status.']);
+        }
+    }
+
+
+    public function generateJobRoleId(Request $request)
+    {
+        $request->validate([
+            'company_id' => 'required|exists:ms_company,company_code',
+            'kompartemen_id' => 'nullable|exists:ms_kompartemen,kompartemen_id',
+            'departemen_id' => 'nullable|exists:ms_departemen,departemen_id',
+        ]);
+
+        try {
+            $row = [
+                'company_code' => $request->company_id,
+                'kompartemen_id' => $request->kompartemen_id,
+                'departemen_id' => $request->departemen_id,
+            ];
+
+            // --- Copy logic from CompanyKompartemenService ---
+            $costCenter = null;
+            $cc_level = null;
+
+            if (!empty($row['departemen_id'])) {
+                $costCenter = \App\Models\CostCenter::where('level_id', $row['departemen_id'])
+                    ->where('level', 'Departemen')
+                    ->first();
+                if (!$costCenter) {
+                    return response()->json(['error' => "CostCenter tidak ditemukan untuk Departemen ID: {$row['departemen_id']}"], 422);
+                }
+                $cc_level = 'DEP';
+            } elseif (!empty($row['kompartemen_id'])) {
+                $costCenter = \App\Models\CostCenter::where('level_id', $row['kompartemen_id'])
+                    ->where('level', 'Kompartemen')
+                    ->first();
+                if (!$costCenter) {
+                    return response()->json(['error' => "CostCenter tidak ditemukan untuk Kompartemen ID: {$row['kompartemen_id']}"], 422);
+                }
+                $cc_level = 'KOM';
+            } else {
+                return response()->json(['error' => "Tidak ada departemen_id atau kompartemen_id yang valid ditemukan di CostCenter."], 422);
+            }
+
+            $penomoran = \App\Models\PenomoranJobRole::where('company_id', $row['company_code'])->first();
+            $nextNumber = $penomoran ? $penomoran->last_number + 1 : 1;
+
+            $costCode = $costCenter ? $costCenter->cost_code : '';
+            $formattedNumber = str_pad($nextNumber, 4, '0', STR_PAD_LEFT);
+            $job_role_id = $costCode . '_' . $cc_level . '_JR_' . $formattedNumber;
+
+            return response()->json(['job_role_id' => $job_role_id]);
+        } catch (\Exception $e) {
+            return response()->json(['error' => $e->getMessage()], 500);
         }
     }
 }

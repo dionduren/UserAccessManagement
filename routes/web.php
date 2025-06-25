@@ -67,7 +67,7 @@ Route::get('/job-roles/{id}', [JobRoleController::class, 'show'])->where('id', '
 Route::get('/job-roles/{job_role}/flagged', [JobRoleController::class, 'editFlagged'])->name('job-roles.edit-flagged');
 Route::post('/job-roles/{job_role}/flagged', [JobRoleController::class, 'updateFlagged'])->name('job-roles.update-flagged');
 Route::post('/job-roles/update-flagged-status', [JobRoleController::class, 'updateFlaggedStatus'])->name('job-roles.update-flagged-status');
-
+Route::get('/job-roles/generate-job-role-id', [JobRoleController::class, 'generateJobRoleId'])->name('job-roles.generate-job-role-id');
 Route::resource('job-roles', JobRoleController::class);
 
 Route::get('/get-kompartemen', [KompartemenController::class, 'getKompartemenByCompany']);
@@ -178,6 +178,8 @@ Route::get('user-nik/get-periodic', [UserNIKController::class, 'getPeriodicUserN
 Route::resource('user-nik', UserNIKController::class);
 
 Route::get('user-detail/data', [UserDetailController::class, 'getData'])->name('user-detail.getData');
+Route::get('user-detail/{userDetail}/flagged-edit', [UserDetailController::class, 'editFlagged'])->name('user-detail.flagged-edit');
+Route::post('user-detail/{userDetail}/flagged-edit', [UserDetailController::class, 'updateFlagged'])->name('user-detail.flagged-update');
 Route::resource('user-detail', UserDetailController::class);
 
 Route::get('terminated-employee/getData', [TerminatedEmployeeController::class, 'getData'])->name('terminated-employee.get-data');

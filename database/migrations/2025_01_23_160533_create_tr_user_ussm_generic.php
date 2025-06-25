@@ -19,6 +19,15 @@ return new class extends Migration
             $table->string('license_type');
             $table->string('group')->nullable(); // nempel ke shortname ms_company
             // new column start
+            $table->string('pic')->nullable();
+            $table->string('unit_kerja')->nullable();
+            $table->string('kompartemen_id')->nullable();
+            $table->string('departemen_id')->nullable();
+            $table->text('keterangan')->nullable();
+            $table->string('error_kompartemen_id')->nullable();
+            $table->string('error_departemen_id')->nullable();
+            $table->string('flagged')->nullable();
+            $table->string('keterangan_flagged')->nullable();
             $table->foreignId('periode_id')->nullable();
             $table->dateTime('last_login')->nullable();
             // new column end

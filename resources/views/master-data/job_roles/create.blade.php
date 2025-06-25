@@ -43,6 +43,19 @@
                 </select>
             </div>
 
+            <!-- Job Role ID -->
+            <div class="mb-3">
+                <label for="job_role_id" class="form-label">
+                    Job Role ID
+                    <button type="button" class="btn btn-sm btn-outline-secondary" id="generateJobRoleIdBtn"
+                        title="Generate Latest Job Role ID">
+                        Generate
+                    </button>
+                </label>
+                <input type="text" class="form-control" name="job_role_id" id="job_role_id"
+                    value="{{ old('job_role_id') }}" readonly>
+            </div>
+
             <!-- Job Role Name -->
             <div class="mb-3">
                 <label for="nama" class="form-label">Nama Job Role</label>
@@ -126,6 +139,50 @@
                         populateDropdown('#departemen_id', kompartemenData.departemen, 'id', 'nama');
                     }
                 }
+            });
+
+            // Handle Job Role ID generation
+            $('#generateJobRoleIdBtn').on('click', function() {
+                const companyId = $('#company_id').val();
+                const kompartemenId = $('#kompartemen_id').val();
+                const departemenId = $('#departemen_id').val();
+
+                if (!companyId) {
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Perhatian',
+                        text: 'Pilih perusahaan terlebih dahulu.'
+                    });
+                    return;
+                }
+
+                $.ajax({
+                    url: '{{ route('job-roles.generate-job-role-id') }}',
+                    data: {
+                        company_id: companyId,
+                        kompartemen_id: kompartemenId,
+                        departemen_id: departemenId
+                    },
+                    success: function(res) {
+                        if (res.job_role_id) {
+                            $('#job_role_id').val(res.job_role_id);
+                        } else if (res.error) {
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Gagal',
+                                text: res.error,
+                            });
+                        }
+                    },
+                    error: function(xhr) {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Gagal',
+                            text: xhr.responseJSON?.error ||
+                                'Gagal generate Job Role ID.',
+                        });
+                    }
+                });
             });
 
             // Helper function to populate dropdowns

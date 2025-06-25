@@ -177,28 +177,6 @@
             $modules = config('dynamic_uploads.modules');
         @endphp
 
-        <div class="dropdown">
-            <a class="nav-link dropdown-toggle {{ request()->routeIs('dynamic_upload.*') ? 'active' : 'text-white' }}"
-                href="#" data-bs-toggle="dropdown" role="button"
-                aria-expanded="{{ request()->routeIs('dynamic_upload.*') ? 'true' : 'false' }}">
-                <i class="bi bi-cloud-upload me-2"></i> <span class="me-auto">DYNAMIC UPLOAD</span>
-            </a>
-            <div class="dropdown-content {{ request()->routeIs('dynamic_upload.*') ? 'show' : '' }}">
-                <ul class="nav flex-column ms-3">
-                    @foreach ($modules as $key => $module)
-                        <li class="nav-item">
-                            <a class="nav-link {{ request()->routeIs('dynamic_upload.*') && request()->route('module') === $key ? 'active' : 'text-white' }}"
-                                href="{{ route('dynamic_upload.upload', ['module' => $key]) }}">
-                                {{ $module['name'] }}
-                            </a>
-                        </li>
-                    @endforeach
-                </ul>
-            </div>
-        </div>
-
-
-
         <div class="">
             <li class="nav-item">
                 <a href="{{ route('periode.index') }}"
@@ -239,6 +217,26 @@
                     </li>
                 </div>
             </div> --}}
+
+            <div class="dropdown">
+                <a class="nav-link dropdown-toggle {{ request()->routeIs('dynamic_upload.*') ? 'active' : 'text-white' }}"
+                    href="#" data-bs-toggle="dropdown" role="button"
+                    aria-expanded="{{ request()->routeIs('dynamic_upload.*') ? 'true' : 'false' }}">
+                    <i class="bi bi-cloud-upload me-2"></i> <span class="me-auto">DYNAMIC UPLOAD</span>
+                </a>
+                <div class="dropdown-content {{ request()->routeIs('dynamic_upload.*') ? 'show' : '' }}">
+                    <ul class="nav flex-column ms-3">
+                        @foreach ($modules as $key => $module)
+                            <li class="nav-item">
+                                <a class="nav-link {{ request()->routeIs('dynamic_upload.*') && request()->route('module') === $key ? 'active' : 'text-white' }}"
+                                    href="{{ route('dynamic_upload.upload', ['module' => $key]) }}">
+                                    {{ $module['name'] }}
+                                </a>
+                            </li>
+                        @endforeach
+                    </ul>
+                </div>
+            </div>
 
             <li class="nav-item">
                 <a href="{{ route('user-detail.index') }}"

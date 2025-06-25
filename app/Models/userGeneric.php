@@ -27,6 +27,16 @@ class userGeneric extends Model
         'group',
         'valid_from',
         'valid_to',
+        'pic',
+        'unit_kerja',
+        'kompartemen_id',
+        'departemen_id',
+        'keterangan',
+        'error_kompartemen_id',
+        'error_departemen_id',
+        'flagged',
+        'keterangan_flagged',
+        'last_login',
         'created_by',
         'updated_by',
         'deleted_by',
@@ -42,6 +52,16 @@ class userGeneric extends Model
     public function Company()
     {
         return $this->hasOne(Company::class, 'shortname', 'group');
+    }
+
+    public function kompartemen()
+    {
+        return $this->belongsTo(Kompartemen::class, 'kompartemen_id', 'kompartemen_id');
+    }
+
+    public function departemen()
+    {
+        return $this->belongsTo(Departemen::class, 'departemen_id', 'departemen_id');
     }
 
     public function currentUser()

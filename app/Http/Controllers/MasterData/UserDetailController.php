@@ -43,7 +43,8 @@ class UserDetailController extends Controller
                     'kompartemen_id',
                     'departemen_id',
                     'email',
-                    'created_at'
+                    'flagged',
+                    'keterangan'
                 )
                 ->get()
                 ->map(function ($user) {
@@ -56,7 +57,8 @@ class UserDetailController extends Controller
                         'kompartemen' => $user->kompartemen?->nama,
                         'departemen' => $user->departemen?->nama,
                         'email' => $user->email,
-                        'created_at' => $user->created_at->format('Y-m-d'),
+                        'flagged' => $user->flagged,
+                        'keterangan' => $user->keterangan,
                     ];
                 });
         });
@@ -158,5 +160,31 @@ class UserDetailController extends Controller
                 'message' => 'Error deleting user detail'
             ], 500);
         }
+    }
+
+
+    public function editFlagged(UserDetail $userDetail)
+    {
+        return view('master-data.user_detail.flagged_edit', compact('userDetail'));
+    }
+
+    public function updateFlagged(Request $request, UserDetail $userDetail)
+    {
+        $validated = $request->validate([
+            'error_kompartemen_id' => 'nullable|string|max:255',
+            'error_kompartemen_name' => 'nullable|string|max:255',
+            'error_departemen_id' => 'nullable|string|max:255',
+            'error_departemen_name' => 'nullable|string|max:255',
+            'flagged' => 'required|boolean',
+            'keterangan' => 'nullable|string|max:255',
+        ]);
+
+        $validated['updated_by'] = auth()->user()->name;
+        $userDetail->update($validated);
+
+        // Optionally clear cache if needed
+        \Cache::forget('user_details_data');
+
+        return redirect()->route('user-detail.index')->with('success', 'Flagged info updated.');
     }
 }

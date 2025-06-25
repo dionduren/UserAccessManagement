@@ -116,11 +116,25 @@
                     field: "departemen",
                     headerFilter: "input"
                 },
+                // {
+                //     title: "Email",
+                //     field: "email",
+                //     headerFilter: "input"
+                // },
                 {
-                    title: "Email",
-                    field: "email",
-                    headerFilter: "input"
+                    title: "Status",
+                    field: "flagged",
+                    formatter: function(cell) {
+                        return cell.getValue() == 1 ? '<span class="badge bg-danger">Flagged</span>' : '';
+                    },
+                    hozAlign: "center",
+                    width: 100
                 },
+                // {
+                //     title: "Keterangan",
+                //     field: "keterangan",
+                //     headerFilter: "input"
+                // },
                 {
                     title: "Actions",
                     formatter: function(cell) {
@@ -131,16 +145,20 @@
                     </button>
                     <a href="/user-detail/${data.id}/edit" class="btn btn-sm btn-warning">
                         <i class="bi bi-pencil"></i>
-                    </a>`;
+                    </a>
+                    <a href="/user-detail/${data.id}/flagged-edit" class="btn btn-sm btn-secondary" title="Edit Flagged">
+                        <i class="bi bi-flag"></i>
+                    </a>
+                    `;
                     },
                     hozAlign: "center",
-                    width: 100,
+                    width: 140,
                     headerSort: false
                 }
             ],
             initialSort: [{
-                column: "nama",
-                dir: "asc"
+                column: "flagged",
+                dir: "desc"
             }],
         });
 
