@@ -2,21 +2,22 @@
 
 namespace App\Http\Controllers\IOExcel;
 
-use App\Models\Company;
-
-use App\Models\Periode;
-use App\Models\UserNIK;
-use Illuminate\Http\Request;
-
-use App\Imports\UserNIKImport;
-use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
 
-use Maatwebsite\Excel\Facades\Excel;
+use \Maatwebsite\Excel\Exceptions\NoTypeDetectedException;
+use App\Imports\UserNIKImport;
 
-use Yajra\DataTables\Facades\DataTables;
+use \App\Models\UserDetail;
+use App\Models\Company;
+use App\Models\UserNIK;
+
+use Illuminate\Http\Request;
+
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
+use Maatwebsite\Excel\Facades\Excel;
 use Symfony\Component\HttpFoundation\StreamedResponse;
+use Yajra\DataTables\Facades\DataTables;
 
 class UserNIKImportController extends Controller
 {
@@ -49,7 +50,7 @@ class UserNIKImportController extends Controller
       ]);
 
       return redirect()->route('user-nik.upload.preview');
-    } catch (\Maatwebsite\Excel\Exceptions\NoTypeDetectedException $e) {
+    } catch (NoTypeDetectedException $e) {
       Log::error($e->getMessage());
       return redirect()->back()->with('error', 'No data available in the uploaded Excel file.');
     } catch (\Exception $e) {
@@ -106,6 +107,22 @@ class UserNIKImportController extends Controller
               $errors[$index + 1] = ["Company not found for group: {$row['group']}"];
             }
           } else {
+            $userNIKExists = UserDetail::where('nik', $row['user_code'])->exists();
+            if (!$userNIKExists) {
+              $previewData[] = [
+                'periode_id' => $periodeId,
+                'group' => $company->company_code,
+                'user_code' => $row['user_code'],
+                'user_type' => "NIK",
+                'license_type' => $row['license_type'],
+                'last_login' => $row['last_login'] ? date('Y-m-d', strtotime(str_replace('.', '-', $row['last_login']))) : null,
+                'valid_from' => $row['valid_from'] ? date('Y-m-d', strtotime(str_replace('.', '-', $row['valid_from']))) : null,
+                'valid_to' => $row['valid_to'] ? date('Y-m-d', strtotime(str_replace('.', '-', $row['valid_to']))) : null,
+                'flagged' => true,
+                'keterangan' => 'User NIK belum ada pada mapping User Detail',
+              ];
+              continue;
+            }
             $previewData[] = [
               'periode_id' => $periodeId,
               'group' => $company->company_code,
@@ -115,6 +132,8 @@ class UserNIKImportController extends Controller
               'last_login' => $row['last_login'] ? date('Y-m-d', strtotime(str_replace('.', '-', $row['last_login']))) : null,
               'valid_from' => $row['valid_from'] ? date('Y-m-d', strtotime(str_replace('.', '-', $row['valid_from']))) : null,
               'valid_to' => $row['valid_to'] ? date('Y-m-d', strtotime(str_replace('.', '-', $row['valid_to']))) : null,
+              'flagged' => false,
+              'keterangan' => null,
             ];
           }
         }
@@ -166,58 +185,58 @@ class UserNIKImportController extends Controller
     return DataTables::of($dataWithIds)->make(true);
   }
 
-  public function updateInlineSession(Request $request)
-  {
-    $rowIndex = (int) $request->input('row_index');
-    $column = $request->input('column');
-    $value = $request->input('value');
+  // public function updateInlineSession(Request $request)
+  // {
+  //   $rowIndex = (int) $request->input('row_index');
+  //   $column = $request->input('column');
+  //   $value = $request->input('value');
 
-    $parsedData = session('parsedData');
+  //   $parsedData = session('parsedData');
 
-    if (!isset($parsedData['data'][$rowIndex])) {
-      return response()->json(['error' => 'Invalid row index provided.'], 400);
-    }
+  //   if (!isset($parsedData['data'][$rowIndex])) {
+  //     return response()->json(['error' => 'Invalid row index provided.'], 400);
+  //   }
 
-    $parsedData['data'][$rowIndex][$column] = $value;
+  //   $parsedData['data'][$rowIndex][$column] = $value;
 
-    session(['parsedData' => $parsedData]);
+  //   session(['parsedData' => $parsedData]);
 
-    return response()->json(['success' => true]);
-  }
+  //   return response()->json(['success' => true]);
+  // }
 
-  public function submitSingle(Request $request)
-  {
-    $data = $request->all();
-    $parsedData = session('parsedData');
+  // public function submitSingle(Request $request)
+  // {
+  //   $data = $request->all();
+  //   $parsedData = session('parsedData');
 
-    // Find row index from _row_index
-    $rowIndex = $data['_row_index'] ?? null;
+  //   // Find row index from _row_index
+  //   $rowIndex = $data['_row_index'] ?? null;
 
-    if (is_null($rowIndex) || !isset($parsedData['data'][$rowIndex])) {
-      return response()->json(['message' => 'Row not found in session.'], 404);
-    }
+  //   if (is_null($rowIndex) || !isset($parsedData['data'][$rowIndex])) {
+  //     return response()->json(['message' => 'Row not found in session.'], 404);
+  //   }
 
-    // Process DB insert/update here...
-    UserNIK::updateOrCreate(
-      ['periode_id' => $parsedData['periode_id'], 'user_code' => $data['user_code']],
-      [
-        'group' => $data['group'],
-        'user_type' => "NIK",
-        'license_type' => $data['license_type'],
-        'last_login' => $data['last_login'],
-        'valid_from' => $data['valid_from'],
-        'valid_to' => $data['valid_to'],
-      ]
-    );
+  //   // Process DB insert/update here...
+  //   UserNIK::updateOrCreate(
+  //     ['periode_id' => $parsedData['periode_id'], 'user_code' => $data['user_code']],
+  //     [
+  //       'group' => $data['group'],
+  //       'user_type' => "NIK",
+  //       'license_type' => $data['license_type'],
+  //       'last_login' => $data['last_login'],
+  //       'valid_from' => $data['valid_from'],
+  //       'valid_to' => $data['valid_to'],
+  //     ]
+  //   );
 
-    // Remove this row from session data
-    unset($parsedData['data'][$rowIndex]);
-    $parsedData['data'] = array_values($parsedData['data']); // Reindex
+  //   // Remove this row from session data
+  //   unset($parsedData['data'][$rowIndex]);
+  //   $parsedData['data'] = array_values($parsedData['data']); // Reindex
 
-    session()->put('parsedData', $parsedData);
+  //   session()->put('parsedData', $parsedData);
 
-    return response()->json(['message' => 'Row submitted successfully']);
-  }
+  //   return response()->json(['message' => 'Row submitted successfully']);
+  // }
 
 
 
@@ -247,6 +266,18 @@ class UserNIKImportController extends Controller
 
     return new StreamedResponse(function () use ($dataArray, $periodeId, $totalRows) {
       foreach ($dataArray as $index => $row) {
+        // Check for errors in the row (assuming 'errors' and 'cell_errors' keys exist)
+        $flagged = false;
+        $keterangan = null;
+
+        $rowErrors = isset($row['row_errors']) ? $row['row_errors'] : [];
+        $cellErrors = isset($row['cell_errors']) ? $row['cell_errors'] : [];
+
+        if ((is_array($rowErrors) && count($rowErrors) > 0) || (is_array($cellErrors) && count($cellErrors) > 0)) {
+          $flagged = true;
+          $keterangan = 'Row errors: ' . json_encode($rowErrors) . '; Cell errors: ' . json_encode($cellErrors);
+        }
+
         UserNIK::updateOrCreate(
           ['periode_id' => $periodeId, 'user_code' => $row['user_code']],
           [
@@ -256,6 +287,8 @@ class UserNIKImportController extends Controller
             'last_login' => $row['last_login'],
             'valid_from' => $row['valid_from'],
             'valid_to' => $row['valid_to'],
+            'flagged' => $flagged,
+            'keterangan' => $keterangan,
           ]
         );
 

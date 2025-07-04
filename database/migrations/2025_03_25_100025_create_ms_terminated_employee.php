@@ -22,6 +22,7 @@ return new class extends Migration
             $table->date('valid_from')->nullable();
             $table->date('valid_to')->nullable();
             $table->timestamps();
+            $table->softDeletes();
             $table->string('created_by')->nullable();
             $table->string('updated_by')->nullable();
             $table->string('deleted_by')->nullable();

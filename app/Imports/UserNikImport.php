@@ -3,9 +3,10 @@
 namespace App\Imports;
 
 use App\Models\userNIK;
+use Illuminate\Support\Carbon;
 use Maatwebsite\Excel\Concerns\ToModel;
-use Maatwebsite\Excel\Concerns\WithHeadingRow;
 use Maatwebsite\Excel\Concerns\WithChunkReading;
+use Maatwebsite\Excel\Concerns\WithHeadingRow;
 
 class UserNikImport implements ToModel, WithHeadingRow, WithChunkReading
 {

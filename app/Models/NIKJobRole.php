@@ -45,4 +45,9 @@ class NIKJobRole extends Model
     {
         return $this->belongsTo(Periode::class, 'periode_id', 'id');
     }
+
+    public function userGeneric()
+    {
+        return $this->belongsTo(UserGeneric::class, 'user_code', 'nik');
+    }
 }

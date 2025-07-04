@@ -17,6 +17,7 @@ return new class extends Migration
             $table->unsignedBigInteger('periode_id')->nullable();
             $table->json('data');
             $table->timestamps();
+            $table->softDeletes();
         });
     }
 

@@ -2,18 +2,12 @@
 
 @section('content')
     <div class="container-fluid">
-        <h1>Dashboard User Generic</h1>
+        <h1>Relationship: User Generic &amp; Job Role</h1>
 
-        {{-- <a href="{{ route('user-generic.create') }}" target="_blank" class="btn btn-outline-secondary mb-3"> --}}
-        <a class="btn btn-outline-secondary mb-3" disabled>
-            <i class="bi bi-plus"></i> Buat User Generic Baru
+        <a href="{{ route('user-generic-job-role.create') }}" target="_blank" class="btn btn-outline-secondary mb-3">
+            <i class="bi bi-plus"></i> Tambah Relasi User Generic - Job Role
         </a>
 
-        @if (session('status'))
-            <div class="alert alert-success">{{ session('status') }}</div>
-        @endif
-
-        <!-- Success Message -->
         @if (session('success'))
             <div class="alert alert-success">
                 <h4>Success:</h4>
@@ -31,26 +25,16 @@
             </select>
         </div>
 
-        <table id="user_generic_table" class="table table-bordered table-striped table-hover cell-border mt-3">
+        <table id="user_generic_jobrole_table" class="table table-bordered table-striped table-hover cell-border mt-3">
             <thead>
                 <tr>
-                    <th>id</th>
-                    <th style="width: 5%;">Perusahaan</th>
-                    {{-- <th style="width: 9%;">Kompartemen ID</th> --}}
-                    <th style="width: 10%;">Kompartemen Name</th>
-                    {{-- <th style="width: 8%;">Departemen ID</th> --}}
-                    <th style="width: 10%;">Departemen Name</th>
-                    {{-- <th style="width: 12%;">Periode</th> --}}
-                    <th style="width: 8%;">User Code</th>
-                    {{-- <th style="width: 12%;">Cost Code</th> --}}
-                    {{-- <th>PIC</th>
-                    <th>Unit Kerja</th>
-                    <th>Job Role</th> --}}
-                    <th style="width: 7%;">Tipe Lisensi</th>
-                    <th style="width: 7%;">Valid From</th>
-                    <th style="width: 7%;">Valid To</th>
-                    <th style="width: 5%;">Flagged</th>
-                    <th style="width: 12%;">Action</th>
+                    <th>ID</th>
+                    <th width="10%">Perusahaan</th>
+                    <th>User Generic</th>
+                    <th>Job Role ID</th>
+                    <th>Job Role</th>
+
+                    <th width="10%">Action</th>
                 </tr>
             </thead>
         </table>
@@ -61,7 +45,7 @@
     <script>
         $(document).ready(function() {
             // Initialize DataTable with no ajax source
-            var userGenericTable = $('#user_generic_table').DataTable({
+            var table = $('#user_generic_jobrole_table').DataTable({
                 processing: true,
                 serverSide: true,
                 ajax: false, // Don't load data initially
@@ -73,47 +57,23 @@
                         data: 'group',
                         name: 'group'
                     },
-                    // {
-                    //     data: 'kompartemen_id',
-                    //     name: 'kompartemen_id'
-                    // },
-                    {
-                        data: 'kompartemen_name',
-                        name: 'kompartemen_name'
-                    },
-                    // {
-                    //     data: 'departemen_id',
-                    //     name: 'departemen_id'
-                    // },
-                    {
-                        data: 'departemen_name',
-                        name: 'departemen_name'
-                    },
                     {
                         data: 'user_code',
                         name: 'user_code'
                     },
                     {
-                        data: 'license_type',
-                        name: 'license_type'
+                        data: 'job_role_id',
+                        name: 'job_role_id',
+                        createdCell: function(td, cellData) {
+                            if (!cellData) $(td).css('background-color', '#f8d7da');
+                        }
                     },
                     {
-                        data: 'valid_from',
-                        name: 'valid_from'
-                    },
-                    {
-                        data: 'valid_to',
-                        name: 'valid_to'
-                    },
-                    {
-                        data: 'flagged',
-                        name: 'flagged',
-                        render: function(data, type, row) {
-                            return (data == 1) ? '<span class="badge bg-danger">Flagged</span>' :
-                                '';
-                        },
-                        orderable: true,
-                        searchable: false
+                        data: 'job_role_name',
+                        name: 'job_role_name',
+                        createdCell: function(td, cellData) {
+                            if (!cellData) $(td).css('background-color', '#f8d7da');
+                        }
                     },
                     {
                         data: 'action',
@@ -133,24 +93,23 @@
                     visible: false
                 }],
                 order: [
-                    [8, 'desc']
+                    [1, 'asc']
                 ]
             });
 
             // Only load data when periode is selected
             $('#periode').on('change', function() {
-                var periodeId = $(this).val();
-                if (periodeId) {
-                    userGenericTable.ajax.url("{{ route('user-generic.index') }}?periode=" + periodeId)
-                        .load();
+                var periode = $(this).val();
+                if (periode) {
+                    table.ajax.url("{{ route('user-generic-job-role.index') }}?periode=" + periode).load();
                 } else {
-                    userGenericTable.clear().draw(); // Clear table if no periode selected
+                    table.clear().draw(); // Clear table if no periode selected
                 }
             });
         });
 
-        // ✅ SweetAlert2 Delete Confirmation
-        function deleteUserGeneric(id) {
+        // Example delete function (unchanged)
+        function deleteRelationship(id) {
             Swal.fire({
                 title: "Apakah anda yakin?",
                 text: "Anda tidak bisa mengembalikan data yang dihapus!",
@@ -163,7 +122,7 @@
             }).then((result) => {
                 if (result.isConfirmed) {
                     $.ajax({
-                        url: '/cost-center/user-generic/' + id,
+                        url: '/relationship/user-generic-jobrole/' + id,
                         type: 'DELETE',
                         data: {
                             _token: '{{ csrf_token() }}'
@@ -176,13 +135,7 @@
                                 showConfirmButton: false,
                                 timer: 1500
                             });
-
-                            // Find the row to remove
-                            let row = $('#user_nik_table').DataTable().row($(
-                                `button[data-id="${id}"]`).parents('tr'));
-
-                            // Remove the row and redraw the table
-                            row.remove().draw();
+                            $('#user_generic_jobrole_table').DataTable().ajax.reload();
                         },
                         error: function(xhr) {
                             Swal.fire({

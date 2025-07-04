@@ -19,24 +19,17 @@ class userGeneric extends Model
     protected $primaryKey = 'id';
 
     protected $fillable = [
+        'periode_id',
+        'group',
         'user_code',
         'user_type',
         'cost_code',
-        'periode_id',
         'license_type',
-        'group',
+        'last_login',
         'valid_from',
         'valid_to',
-        'pic',
-        'unit_kerja',
-        'kompartemen_id',
-        'departemen_id',
-        'keterangan',
-        'error_kompartemen_id',
-        'error_departemen_id',
         'flagged',
         'keterangan_flagged',
-        'last_login',
         'created_by',
         'updated_by',
         'deleted_by',
@@ -64,6 +57,11 @@ class userGeneric extends Model
         return $this->belongsTo(Departemen::class, 'departemen_id', 'departemen_id');
     }
 
+    public function jobRole()
+    {
+        return $this->belongsTo(JobRole::class, 'job_role_id', 'job_role_id');
+    }
+
     public function currentUser()
     {
         return $this->hasOne(CostCurrentUser::class, 'user_code', 'user_code');
@@ -74,9 +72,18 @@ class userGeneric extends Model
         return $this->hasMany(CostPrevUser::class, 'user_code', 'user_code');
     }
 
-
     public function periode()
     {
         return $this->belongsTo(Periode::class, 'periode_id', 'id');
+    }
+
+    public function userGenericUnitKerja()
+    {
+        return $this->hasOne(UserGenericUnitKerja::class, 'user_cc', 'user_code');
+    }
+
+    public function NIKJobRole()
+    {
+        return $this->hasMany(NIKJobRole::class, 'nik', 'user_code');
     }
 }

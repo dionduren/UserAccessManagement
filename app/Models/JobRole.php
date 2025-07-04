@@ -65,6 +65,11 @@ class JobRole extends Model
     public function NIKJobRole()
     {
         // Change from job_role_id to id since that's the primary key
-        return $this->hasMany(NIKJobRole::class, 'job_role_id', 'id');
+        return $this->hasMany(NIKJobRole::class, 'job_role_id', 'job_role_id');
+    }
+
+    public function userGenerics()
+    {
+        return $this->hasMany(userGeneric::class, 'job_role_id', 'job_role_id');
     }
 }

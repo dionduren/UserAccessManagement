@@ -1,51 +1,57 @@
 <?php
 
-use App\Models\TerminatedEmployee;
-use Illuminate\Support\Facades\Auth;
-
-
-use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\JSONController;
-use App\Http\Controllers\UserController;
+use App\Http\Controllers\AccessMatrixController;
 use App\Http\Controllers\AdminController;
-use App\Http\Controllers\PeriodeController;
-use App\Http\Controllers\EmployeeController;
-use App\Http\Controllers\TcodeImportController;
 
+
+use App\Http\Controllers\DynamicUploadController;
+use App\Http\Controllers\EmployeeController;
+use App\Http\Controllers\HomeController;
+use App\Http\Controllers\IOExcel\CompanyKompartemenController;
+use App\Http\Controllers\IOExcel\CompanyMasterDataController;
+use App\Http\Controllers\IOExcel\CompositeRoleSingleRoleController;
+use App\Http\Controllers\IOExcel\NIKJobRoleImportController;
+use App\Http\Controllers\IOExcel\UserGenericUnitKerjaController;
 
 // use App\Http\Controllers\IOExcel\ExcelImportController;
-use App\Http\Controllers\AccessMatrixController;
-use App\Http\Controllers\DynamicUploadController;
-
-use App\Http\Controllers\MasterData\TcodeController;
-use App\Http\Controllers\MasterData\CompositeRoleController;
-use App\Http\Controllers\MasterData\CompanyController;
-use App\Http\Controllers\MasterData\JobRoleController;
-use App\Http\Controllers\MasterData\UserNIKController;
-use App\Http\Controllers\Report\JobRoleReportController;
-use App\Http\Controllers\IOExcel\UserNIKImportController;
-
-use App\Http\Controllers\MasterData\CostCenterController;
-use App\Http\Controllers\MasterData\CostPrevUserController;
-use App\Http\Controllers\MasterData\KompartemenController;
-use App\Http\Controllers\MasterData\DepartemenController;
-use App\Http\Controllers\MasterData\SingleRoleController;
-use App\Http\Controllers\MasterData\UserDetailController;
-
-use App\Http\Controllers\Report\WorkUnitReportController;
-use App\Http\Controllers\MasterData\UserGenericController;
 use App\Http\Controllers\IOExcel\SingleRoleTcodeController;
 use App\Http\Controllers\IOExcel\TcodeSingleRoleController;
-use App\Http\Controllers\Relationship\NIKJobController;
 
-use App\Http\Controllers\IOExcel\NIKJobRoleImportController;
-use App\Http\Controllers\Relationship\SingleTcodeController;
-use App\Http\Controllers\IOExcel\CompanyMasterDataController;
-use App\Http\Controllers\Relationship\JobCompositeController;
-use App\Http\Controllers\IOExcel\CompanyKompartemenController;
-use App\Http\Controllers\Relationship\CompositeSingleController;
+use App\Http\Controllers\IOExcel\UserGenericImportController;
+use App\Http\Controllers\IOExcel\UserNIKImportController;
+use App\Http\Controllers\JSONController;
+use App\Http\Controllers\MasterData\CompanyController;
+use App\Http\Controllers\MasterData\CompositeRoleController;
+use App\Http\Controllers\MasterData\CostCenterController;
+
+use App\Http\Controllers\MasterData\CostPrevUserController;
+use App\Http\Controllers\MasterData\DepartemenController;
+use App\Http\Controllers\MasterData\JobRoleController;
+use App\Http\Controllers\MasterData\KompartemenController;
+use App\Http\Controllers\MasterData\SingleRoleController;
+use App\Http\Controllers\MasterData\TcodeController;
 use App\Http\Controllers\MasterData\TerminatedEmployeeController;
-use App\Http\Controllers\IOExcel\CompositeRoleSingleRoleController;
+use App\Http\Controllers\MasterData\UserDetailController;
+
+use App\Http\Controllers\MasterData\UserGenericController;
+use App\Http\Controllers\MasterData\UserNIKController;
+use App\Http\Controllers\PeriodeController;
+
+use App\Http\Controllers\Relationship\CompositeSingleController;
+use App\Http\Controllers\Relationship\JobCompositeController;
+use App\Http\Controllers\Relationship\NIKJobController;
+use App\Http\Controllers\Relationship\SingleTcodeController;
+use App\Http\Controllers\Relationship\UserGenericJobRoleController;
+
+use App\Http\Controllers\Report\JobRoleReportController;
+use App\Http\Controllers\Report\WorkUnitReportController;
+use App\Http\Controllers\TcodeImportController;
+use App\Http\Controllers\UserController;
+use App\Models\TerminatedEmployee;
+
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Route;
+
 
 // Route::get('/', function () {
 //     return view('welcome');
@@ -126,6 +132,15 @@ Route::get('/relationship/single-tcode/data-set', [SingleTcodeController::class,
 Route::get('/relationship/single-tcode/data-filter-company', [SingleTcodeController::class, 'searchByCompany'])->name('single-tcode.filter-company');
 Route::resource('/relationship/single-tcode', SingleTcodeController::class);
 
+Route::prefix('/relationship/generic-job-role')->name('user-generic-job-role.')->group(function () {
+    Route::get('/', [UserGenericJobRoleController::class, 'index'])->name('index');
+    Route::get('/create', [UserGenericJobRoleController::class, 'create'])->name('create');
+    Route::post('/', [UserGenericJobRoleController::class, 'store'])->name('store');
+    Route::get('/{id}/edit', [UserGenericJobRoleController::class, 'edit'])->name('edit');
+    Route::put('/{id}', [UserGenericJobRoleController::class, 'update'])->name('update');
+    Route::delete('/{id}', [UserGenericJobRoleController::class, 'destroy'])->name('destroy');
+});
+
 // === import export excel
 // Route::get('/import', [ExcelImportController::class, 'showUploadForm'])->name('excel.upload');
 // Route::post('/import', [ExcelImportController::class, 'import'])->name('excel.import');
@@ -148,6 +163,7 @@ Route::post('/tcode-single-role/preview', [SingleRoleTcodeController::class, 'pr
 Route::get('/tcode-single-role/preview-data', [SingleRoleTcodeController::class, 'getPreviewData'])->name('tcode_single_role.preview_data');
 Route::post('/tcode-single-role/confirm', [SingleRoleTcodeController::class, 'confirmImport'])->name('tcode_single_role.confirm');
 
+
 // ------------------ NEW MASTER DATA ------------------
 Route::resource('periode', PeriodeController::class);
 
@@ -159,13 +175,18 @@ Route::resource('periode', PeriodeController::class);
 // Route::post('user-nik//upload/submit-single', [UserNIKImportController::class, 'submitSingle'])->name('user-nik.upload.submitSingle');
 // Route::post('user-nik//upload/confirm', [UserNIKImportController::class, 'submitAll'])->name('user-nik.upload.confirm');
 
+Route::get('user-detail/data', [UserDetailController::class, 'getData'])->name('user-detail.getData');
+Route::get('user-detail/{userDetail}/flagged-edit', [UserDetailController::class, 'editFlagged'])->name('user-detail.flagged-edit');
+Route::post('user-detail/{userDetail}/flagged-edit', [UserDetailController::class, 'updateFlagged'])->name('user-detail.flagged-update');
+Route::resource('user-detail', UserDetailController::class);
+
 Route::prefix('user-nik/upload')->name('user-nik.upload.')->group(function () {
     Route::get('/', [UserNIKImportController::class, 'uploadForm'])->name('form');
     Route::post('/', [UserNIKImportController::class, 'store'])->name('store');
     Route::get('/preview', [UserNIKImportController::class, 'preview'])->name('preview');
     Route::get('/preview-data', [UserNIKImportController::class, 'getPreviewData'])->name('preview_data');
-    Route::post('/update-inline-session', [UserNIKImportController::class, 'updateInlineSession'])->name('update-inline-session');
-    Route::post('/submit-single', [UserNIKImportController::class, 'submitSingle'])->name('submitSingle');
+    // Route::post('/update-inline-session', [UserNIKImportController::class, 'updateInlineSession'])->name('update-inline-session');
+    // Route::post('/submit-single', [UserNIKImportController::class, 'submitSingle'])->name('submitSingle');
     Route::post('/confirm', [UserNIKImportController::class, 'submitAll'])->name('confirm');
 });
 // Additional Routes
@@ -177,10 +198,22 @@ Route::get('user-nik/get-periodic', [UserNIKController::class, 'getPeriodicUserN
 // Resource Route
 Route::resource('user-nik', UserNIKController::class);
 
-Route::get('user-detail/data', [UserDetailController::class, 'getData'])->name('user-detail.getData');
-Route::get('user-detail/{userDetail}/flagged-edit', [UserDetailController::class, 'editFlagged'])->name('user-detail.flagged-edit');
-Route::post('user-detail/{userDetail}/flagged-edit', [UserDetailController::class, 'updateFlagged'])->name('user-detail.flagged-update');
-Route::resource('user-detail', UserDetailController::class);
+Route::prefix('user-generic-unit-kerja')->name('user-generic-unit-kerja.')->group(function () {
+    Route::get('upload', [UserGenericUnitKerjaController::class, 'uploadForm'])->name('upload');
+    Route::post('preview', [UserGenericUnitKerjaController::class, 'preview'])->name('preview');
+    Route::get('preview-page', [UserGenericUnitKerjaController::class, 'previewPage'])->name('previewPage');
+    Route::get('get-preview-data', [UserGenericUnitKerjaController::class, 'getPreviewData'])->name('getPreviewData');
+    Route::post('confirm-import', [UserGenericUnitKerjaController::class, 'confirmImport'])->name('confirmImport');
+});
+
+Route::prefix('user-generic')->name('user-generic.')->group(function () {
+    Route::get('upload', [UserGenericImportController::class, 'uploadForm'])->name('upload');
+    Route::post('preview', [UserGenericImportController::class, 'preview'])->name('preview');
+    // Route::get('download-template', [UserGenericImportController::class, 'downloadTemplate'])->name('downloadTemplate');
+    Route::get('preview', [UserGenericImportController::class, 'previewPage'])->name('previewPage');
+    Route::get('preview-data', [UserGenericImportController::class, 'getPreviewData'])->name('getPreviewData');
+    Route::post('import', [UserGenericImportController::class, 'confirmImport'])->name('confirmImport');
+});
 
 Route::get('terminated-employee/getData', [TerminatedEmployeeController::class, 'getData'])->name('terminated-employee.get-data');
 Route::resource('terminated-employee', TerminatedEmployeeController::class);
@@ -188,7 +221,10 @@ Route::resource('terminated-employee', TerminatedEmployeeController::class);
 Route::get('cost-center/user-generic/dashboard', [UserGenericController::class, 'index_dashboard'])->name('dashboard.user-generic');
 Route::get('cost-center/user-generic/compare', [UserGenericController::class, 'compare'])->name('user-generic.compare');
 Route::get('cost-center/user-generic/get-periodic', [UserGenericController::class, 'getPeriodicGenericUser'])->name('user-generic.get-periodic');
+Route::get('cost-center/user-generic/flagged-edit/{id}', [UserGenericController::class, 'editFlagged'])->name('user-generic.flagged-edit');
+Route::post('cost-center/user-generic/flagged-edit/{id}', [UserGenericController::class, 'updateFlagged'])->name('user-generic.flagged-update');
 Route::resource('cost-center/user-generic', UserGenericController::class)->name('index', 'user-generic.index');
+
 Route::get('cost-center/prev-user', [CostCenterController::class, 'index_prev_user'])->name('prev-user.index');
 Route::put('cost-center/prev-user/update', [CostCenterController::class, 'update_prev_user'])->name('prev-user.update');
 Route::get('cost-center/prev-user/{id}/edit', [CostCenterController::class, 'edit_prev_user'])->name('prev-user.edit');

@@ -166,26 +166,35 @@
                     </li>
                 </div>
             </div>
-        @endcan
-        <hr>
 
-        <div>
-            <h5>User & Cost Center</h5>
-        </div>
+            <hr>
 
-        @php
-            $modules = config('dynamic_uploads.modules');
-        @endphp
+            <div>
+                <h5>User & Cost Center</h5>
+            </div>
 
-        <div class="">
-            <li class="nav-item">
-                <a href="{{ route('periode.index') }}"
-                    class="nav-link {{ request()->routeIs('periode*') ? 'active' : 'text-white' }}">
-                    <i class="bi bi-calendar-event"></i> Periode
-                </a>
-            </li>
+            @php
+                $modules = config('dynamic_uploads.modules');
+            @endphp
 
-            {{-- <div class="dropdown">
+            <div class="">
+                <div class="dropdown">
+                    <a class="nav-link dropdown-toggle {{ request()->routeIs('periode*') ? 'active' : 'text-white' }}"
+                        data-bs-toggle="dropdown" href="#" role="button"
+                        aria-expanded="{{ request()->routeIs('periode*') ? 'true' : 'false' }}">
+                        <span class="me-auto">1. Buat Periode</span>
+                    </a>
+                    <div class="dropdown-content {{ request()->routeIs('periode*') ? 'show' : '' }}">
+                        <li class="nav-item">
+                            <a href="{{ route('periode.index') }}"
+                                class="nav-link {{ request()->routeIs('periode*') ? 'active' : 'text-white' }}">
+                                <i class="bi bi-calendar-event"></i> Periode
+                            </a>
+                        </li>
+                    </div>
+                </div>
+
+                {{-- <div class="dropdown">
                 <a class="nav-link text-white dropdown-toggle {{ request()->is('user-nik.upload*', 'master-data-nik.upload*', 'user-generic.upload*', 'nik_job_role.upload*') ? 'active' : 'text-white' }}"
                     data-bs-toggle="dropdown" href="#" role="button" aria-expanded="false">
                     <i class="bi bi-folder-fill me-2"></i><span class="me-auto"> UPLOAD DATA</span>
@@ -218,139 +227,251 @@
                 </div>
             </div> --}}
 
-            <div class="dropdown">
-                <a class="nav-link dropdown-toggle {{ request()->routeIs('dynamic_upload.*') ? 'active' : 'text-white' }}"
-                    href="#" data-bs-toggle="dropdown" role="button"
-                    aria-expanded="{{ request()->routeIs('dynamic_upload.*') ? 'true' : 'false' }}">
-                    <i class="bi bi-cloud-upload me-2"></i> <span class="me-auto">DYNAMIC UPLOAD</span>
-                </a>
-                <div class="dropdown-content {{ request()->routeIs('dynamic_upload.*') ? 'show' : '' }}">
-                    <ul class="nav flex-column ms-3">
-                        @foreach ($modules as $key => $module)
-                            <li class="nav-item">
-                                <a class="nav-link {{ request()->routeIs('dynamic_upload.*') && request()->route('module') === $key ? 'active' : 'text-white' }}"
-                                    href="{{ route('dynamic_upload.upload', ['module' => $key]) }}">
-                                    {{ $module['name'] }}
-                                </a>
-                            </li>
-                        @endforeach
-                    </ul>
+                {{-- <div class="dropdown">
+                    <a class="nav-link dropdown-toggle {{ request()->routeIs('dynamic_upload.*') ? 'active' : 'text-white' }}"
+                        href="#" data-bs-toggle="dropdown" role="button"
+                        aria-expanded="{{ request()->routeIs('dynamic_upload.*') ? 'true' : 'false' }}">
+                        <i class="bi bi-cloud-upload me-2"></i> <span class="me-auto">DYNAMIC UPLOAD</span>
+                    </a>
+                    <div class="dropdown-content {{ request()->routeIs('dynamic_upload.*') ? 'show' : '' }}">
+                        <ul class="nav flex-column ms-3">
+                            @foreach ($modules as $key => $module)
+                                <li class="nav-item">
+                                    <a class="nav-link {{ request()->routeIs('dynamic_upload.*') && request()->route('module') === $key ? 'active' : 'text-white' }}"
+                                        href="{{ route('dynamic_upload.upload', ['module' => $key]) }}">
+                                        {{ $module['name'] }}
+                                    </a>
+                                </li>
+                            @endforeach
+                        </ul>
+                    </div>
+                </div> --}}
+
+                @php
+                    $modules = config('dynamic_uploads.modules');
+
+                    // Get the 'master_nik' module
+                    $masterNikModule = $modules['master_nik'] ?? null;
+
+                    // Get the 'user_nik' module
+                    $userNikModule = $modules['user_nik'] ?? null;
+
+                    // Get the 'nik_job_role' module
+                    $nikJobRoleModule = $modules['nik_job_role'] ?? null;
+                @endphp
+
+                <div class="dropdown">
+                    <a class="nav-link dropdown-toggle {{ (request()->routeIs('dynamic_upload.upload') && request()->route('module') === 'master_nik') || request()->routeIs('user-detail*') ? 'active' : 'text-white' }}"
+                        data-bs-toggle="dropdown" href="#" role="button"
+                        aria-expanded="{{ (request()->routeIs('dynamic_upload.upload') && request()->route('module') === 'master_nik') || request()->routeIs('user-detail*') ? 'true' : 'false' }}">
+                        <span class="me-auto">2. Master Data User
+                            Detail</span>
+                    </a>
+                    <div
+                        class="dropdown-content {{ (request()->routeIs('dynamic_upload.upload') && request()->route('module') === 'master_nik') || request()->routeIs('user-detail*') ? 'show' : '' }}">
+                        <li class="nav-item">
+                            <a href="{{ route('dynamic_upload.upload', ['module' => 'master_nik']) }}"
+                                class="nav-link {{ request()->route('module') === 'master_nik' ? 'active' : 'text-white' }}">
+                                <i class="bi bi-cloud-upload"></i> Upload {{ $modules['master_nik']['name'] }}
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="{{ route('user-detail.index') }}"
+                                class="nav-link {{ request()->routeIs('user-detail*') ? 'active' : 'text-white' }}">
+                                <i class="bi bi-person-vcard"></i> User Detail
+                            </a>
+                        </li>
+                    </div>
                 </div>
-            </div>
 
-            <li class="nav-item">
-                <a href="{{ route('user-detail.index') }}"
-                    class="nav-link {{ request()->routeIs('user-detail*') ? 'active' : 'text-white' }}">
-                    <i class="bi bi-person-vcard"></i> User Detail
-                </a>
-            </li>
+                <div class="dropdown">
+                    <a class="nav-link dropdown-toggle {{ (request()->routeIs('dynamic_upload.upload') && request()->route('module') === 'user_nik') || request()->routeIs('user-nik.index') ? 'active' : 'text-white' }}"
+                        data-bs-toggle="dropdown" href="#" role="button"
+                        aria-expanded="{{ (request()->routeIs('dynamic_upload.upload') && request()->route('module') === 'user_nik') || request()->routeIs('user-nik.index') ? 'true' : 'false' }}">
+                        3. Master Data USSM NIK
+                    </a>
+                    <div
+                        class="dropdown-content {{ (request()->routeIs('dynamic_upload.upload') && request()->route('module') === 'user_nik') || request()->routeIs('user-nik.index') ? 'show' : '' }}">
+                        <li class="nav-item">
+                            <a href="{{ route('dynamic_upload.upload', ['module' => 'user_nik']) }}"
+                                class="nav-link {{ request()->route('module') === 'user_nik' ? 'active' : 'text-white' }}">
+                                <i class="bi bi-cloud-upload"></i> Upload {{ $modules['user_nik']['name'] }}
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="{{ route('user-nik.index') }}"
+                                class="nav-link {{ request()->routeIs('user-nik.index') ? 'active' : 'text-white' }}">
+                                <i class="bi bi-person-badge"></i> User NIK
+                            </a>
+                        </li>
+                        {{-- <li class="nav-item">
+                            <a href="{{ route('user-nik.index_mixed') }}"
+                                class="nav-link {{ request()->routeIs('user-nik.index_mixed*') ? 'active' : 'text-white' }}">
+                                <i class="bi bi-person-badge"></i> User NIK Mixed
+                            </a>
+                        </li> --}}
+                    </div>
+                </div>
 
-            <li class="nav-item">
-                <a href="{{ route('user-nik.index') }}"
-                    class="nav-link {{ request()->routeIs('user-nik.index') ? 'active' : 'text-white' }}">
-                    <i class="bi bi-person-badge"></i> User NIK
-                </a>
-            </li>
-            <li class="nav-item">
-                <a href="{{ route('user-nik.index_mixed') }}"
-                    class="nav-link {{ request()->routeIs('user-nik.index_mixed*') ? 'active' : 'text-white' }}">
-                    <i class="bi bi-person-badge"></i> User NIK Mixed
-                </a>
-            </li>
+                {{-- 4. Master Data USSM Generik --}}
+                <div class="dropdown">
+                    @php
+                        $isUserGenericActive =
+                            request()->routeIs('user-generic-unit-kerja.upload') ||
+                            request()->routeIs('user-generic-unit-kerja.previewPage') ||
+                            request()->routeIs('user-generic.upload') ||
+                            request()->routeIs('user-generic.previewPage') ||
+                            (request()->routeIs('user-generic.*') &&
+                                !request()->routeIs('user-generic.upload') &&
+                                !request()->routeIs('user-generic.previewPage') &&
+                                !request()->routeIs('user-generic-job-role.*'));
+                    @endphp
+                    <a class="nav-link dropdown-toggle {{ $isUserGenericActive ? 'active' : 'text-white' }}"
+                        data-bs-toggle="dropdown" href="#" role="button"
+                        aria-expanded="{{ $isUserGenericActive ? 'true' : 'false' }}">
+                        4. Master Data USSM Generik
+                    </a>
+                    <div class="dropdown-content {{ $isUserGenericActive ? 'show' : '' }}">
+                        <li class="nav-item">
+                            <a href="{{ route('user-generic-unit-kerja.upload') }}"
+                                class="nav-link {{ request()->routeIs('user-generic-unit-kerja.upload') || request()->routeIs('user-generic-unit-kerja.previewPage') ? 'active' : 'text-white' }}">
+                                <i class="bi bi-cloud-upload"></i> Upload User Generic - Unit Kerja
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="{{ route('user-generic.upload') }}"
+                                class="nav-link {{ request()->routeIs('user-generic.upload') || request()->routeIs('user-generic.previewPage') ? 'active' : 'text-white' }}">
+                                <i class="bi bi-cloud-upload"></i> Upload User Generic
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="{{ route('user-generic.index') }}"
+                                class="nav-link {{ request()->routeIs('user-generic.*') && !request()->routeIs('user-generic.upload') && !request()->routeIs('user-generic.previewPage') && !request()->routeIs('user-generic-job-role.*') ? 'active' : 'text-white' }}">
+                                <i class="bi bi-person-lines-fill"></i> User Generic
+                            </a>
+                        </li>
+                    </div>
+                </div>
 
-            <li class="nav-item">
-                <a href="{{ route('user-generic.index') }}"
-                    class="nav-link {{ request()->routeIs('user-generic*') ? 'active' : 'text-white' }}">
-                    <i class="bi bi-person-lines-fill"></i> User Generic
-                </a>
-            </li>
-            <li class="nav-item">
-                <a href="{{ route('prev-user.index') }}"
-                    class="nav-link {{ request()->routeIs('prev-user.index') ? 'active' : 'text-white' }}">
-                    <i class="bi bi-person-lines-fill"></i> Generic Previous User
-                </a>
-            </li>
-            {{-- 
-            <li class="nav-item">
-                <a href="{{ route('nik-job.index') }}"
-                    class="nav-link {{ request()->routeIs('nik-job*') ? 'active' : 'text-white' }}">
-                    <i class="bi bi-file-earmark-spreadsheet"></i> Relationship NIK - Job Role
-                </a>
-            </li> --}}
+                {{-- 5. Mapping USSM - Job Role --}}
+                <div class="dropdown">
+                    @php
+                        $isMappingActive =
+                            (request()->routeIs('dynamic_upload.upload') &&
+                                request()->route('module') === 'nik_job_role') ||
+                            request()->routeIs('user-generic-job-role.*') ||
+                            request()->routeIs('nik-job*');
+                    @endphp
+                    <a class="nav-link dropdown-toggle {{ $isMappingActive ? 'active' : 'text-white' }}"
+                        data-bs-toggle="dropdown" href="#" role="button"
+                        aria-expanded="{{ $isMappingActive ? 'true' : 'false' }}">
+                        5. Mapping USSM - Job Role
+                    </a>
+                    <div class="dropdown-content {{ $isMappingActive ? 'show' : '' }}">
+                        <li class="nav-item">
+                            <a href="{{ route('dynamic_upload.upload', ['module' => 'nik_job_role']) }}"
+                                class="nav-link {{ request()->routeIs('dynamic_upload.upload') && request()->route('module') === 'nik_job_role' ? 'active' : 'text-white' }}">
+                                <i class="bi bi-cloud-upload"></i> Upload USSM - Job Role
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="{{ route('user-generic-job-role.index') }}"
+                                class="nav-link {{ request()->routeIs('user-generic-job-role.*') ? 'active' : 'text-white' }}">
+                                <i class="bi bi-link-45deg"></i> User Generic - Job Role
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="{{ route('nik-job.index') }}"
+                                class="nav-link {{ request()->routeIs('nik-job*') ? 'active' : 'text-white' }}">
+                                <i class="bi bi-file-earmark-spreadsheet"></i> Relationship NIK - Job Role
+                            </a>
+                        </li>
+                    </div>
+                </div>
 
-            <li class="nav-item">
-                <a href="{{ route('terminated-employee.index') }}"
-                    class="nav-link {{ request()->routeIs('terminated-employee.index') ? 'active' : 'text-white' }}">
-                    <i class="bi bi-file-earmark-spreadsheet"></i> Terminated Employee
-                </a>
-            </li>
+                {{-- Others --}}
+                <hr>
 
-            <li class="nav-item">
-                <a href="{{ route('user-nik.compare') }}"
-                    class="nav-link {{ request()->routeIs('user-nik.compare*') ? 'active' : 'text-white' }}">
-                    <i class="bi bi-file-diff"></i> Compare User NIK Periode
-                </a>
-            </li>
-            <li class="nav-item">
-                <a href="{{ route('user-generic.compare') }}"
-                    class="nav-link {{ request()->routeIs('user-generic.compare*') ? 'active' : 'text-white' }}">
-                    <i class="bi bi-file-diff"></i> Compare User Generic Periode
-                </a>
-            </li>
-
-            <a class="nav-link dropdown-toggle {{ request()->is('cost-center*') ? 'active' : 'text-white' }}"
-                data-bs-toggle="dropdown" href="#" role="button" aria-expanded="false">
-                <i class="bi bi-folder-fill me-2"></i> <span class="me-auto">MASTER DATA COST CENTER</span>
-            </a>
-            <div class="dropdown-content {{ request()->is('cost-center*') ? 'show' : '' }}">
                 <li class="nav-item">
-                    <a href="{{ route('dashboard.user-generic') }}"
-                        class="nav-link {{ request()->is('cost-center/user-generic/dashboard') ? 'active' : 'text-white' }}">
-                        <i class="bi bi-file-bar-graph"></i> Dashboard Cost & User
+                    <a href="{{ route('prev-user.index') }}"
+                        class="nav-link {{ request()->routeIs('prev-user.index') ? 'active' : 'text-white' }}">
+                        <i class="bi bi-person-lines-fill"></i> Generic Previous User
+                    </a>
+                </li>
+
+                <li class="nav-item">
+                    <a href="{{ route('terminated-employee.index') }}"
+                        class="nav-link {{ request()->routeIs('terminated-employee.index') ? 'active' : 'text-white' }}">
+                        <i class="bi bi-file-earmark-spreadsheet"></i> Terminated Employee
+                    </a>
+                </li>
+
+                <li class="nav-item">
+                    <a href="{{ route('user-nik.compare') }}"
+                        class="nav-link {{ request()->routeIs('user-nik.compare*') ? 'active' : 'text-white' }}">
+                        <i class="bi bi-file-diff"></i> Compare User NIK Periode
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a href="{{ route('cost-center.index') }}"
-                        class="nav-link {{ request()->routeIs('cost-center*') ? 'active' : 'text-white' }}">
-                        <i class="bi bi-cash-stack"></i> Cost Center
+                    <a href="{{ route('user-generic.compare') }}"
+                        class="nav-link {{ request()->routeIs('user-generic.compare*') ? 'active' : 'text-white' }}">
+                        <i class="bi bi-file-diff"></i> Compare User Generic Periode
                     </a>
                 </li>
-            </div>
-            {{-- <li class="nav-item">
+
+                <a class="nav-link dropdown-toggle {{ request()->is('cost-center*') ? 'active' : 'text-white' }}"
+                    data-bs-toggle="dropdown" href="#" role="button" aria-expanded="false">
+                    <i class="bi bi-folder-fill me-2"></i> <span class="me-auto">MASTER DATA COST CENTER</span>
+                </a>
+                <div class="dropdown-content {{ request()->is('cost-center*') ? 'show' : '' }}">
+                    <li class="nav-item">
+                        <a href="{{ route('dashboard.user-generic') }}"
+                            class="nav-link {{ request()->is('cost-center/user-generic/dashboard') ? 'active' : 'text-white' }}">
+                            <i class="bi bi-file-bar-graph"></i> Dashboard Cost & User
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="{{ route('cost-center.index') }}"
+                            class="nav-link {{ request()->routeIs('cost-center*') ? 'active' : 'text-white' }}">
+                            <i class="bi bi-cash-stack"></i> Cost Center
+                        </a>
+                    </li>
+                </div>
+                {{-- <li class="nav-item">
                 <a href=""
                     class="nav-link {{ request()->routeIs('tcode_single_role*') ? 'active' : 'text-white' }}">
                     <i class="bi bi-vector-pen"></i> User License
                 </a>
             </li> --}}
-        </div>
+            </div>
 
-        <hr>
+            <hr>
 
-        <div>
-            <h5>Report</h5>
-        </div>
+            <div>
+                <h5 style="color: red">Report</h5>
+            </div>
 
-        <div>
-            <li class="nav-item">
-                <a href="{{ route('report.unit') }}"
-                    class="nav-link {{ request()->routeIs('report.unit') ? 'active' : 'text-white' }}">
-                    <i class="bi bi-clipboard-data me-2"></i> Report Unit Kerja
-                </a>
-            </li>
-            <li class="nav-item">
-                <a href="{{ route('report.filled-job-role.index') }}"
-                    class="nav-link {{ request()->routeIs('report.filled-job-role.index') ? 'active' : 'text-white' }}">
-                    <i class="bi bi-file-earmark-spreadsheet me-2"></i> Filled Job Role
-                </a>
-            </li>
-            <li class="nav-item">
-                <a href="{{ route('report.empty-job-role.index') }}"
-                    class="nav-link {{ request()->routeIs('report.empty-job-role.index') ? 'active' : 'text-white' }}">
-                    <i class="bi bi-file-earmark-spreadsheet me-2"></i> Empty Job Role
-                </a>
-            </li>
-        </div>
-
+            <div>
+                <li class="nav-item">
+                    <a href="{{ route('report.unit') }}"
+                        class="nav-link {{ request()->routeIs('report.unit') ? 'active' : 'text-white' }}">
+                        <i class="bi bi-clipboard-data me-2"></i> Report Unit Kerja
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="{{ route('report.filled-job-role.index') }}"
+                        class="nav-link {{ request()->routeIs('report.filled-job-role.index') ? 'active' : 'text-white' }}">
+                        <i class="bi bi-file-earmark-spreadsheet me-2"></i> Filled Job Role
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="{{ route('report.empty-job-role.index') }}"
+                        class="nav-link {{ request()->routeIs('report.empty-job-role.index') ? 'active' : 'text-white' }}">
+                        <i class="bi bi-file-earmark-spreadsheet me-2"></i> Empty Job Role
+                    </a>
+                </li>
+            </div>
+        @endcan
         <hr>
 
         @can('manage access-matrix')

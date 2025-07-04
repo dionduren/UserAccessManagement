@@ -24,6 +24,8 @@ class userNIK extends Model
         'valid_from',
         'valid_to',
         'group',
+        'flagged',
+        'keterangan',
         'created_by',
         'updated_by',
         'deleted_by',
