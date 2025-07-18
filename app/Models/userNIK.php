@@ -3,11 +3,12 @@
 namespace App\Models;
 
 use App\Models\Company;
+use App\Models\NIKJobRole;
 use App\Models\Periode;
 use App\Models\UserDetail;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class userNIK extends Model
 {
@@ -46,5 +47,10 @@ class userNIK extends Model
     public function periode()
     {
         return $this->belongsTo(Periode::class, 'periode_id', 'id');
+    }
+
+    public function jobRole()
+    {
+        return $this->hasMany(NIKJobRole::class, 'nik', 'user_code');
     }
 }

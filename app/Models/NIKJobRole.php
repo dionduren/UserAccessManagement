@@ -13,15 +13,18 @@ class NIKJobRole extends Model
 {
     use HasFactory, SoftDeletes;
 
-    protected $table = 'tr_nik_job_role';
+    protected $table = 'tr_ussm_job_role';
     protected $primaryKey = 'id';
 
     protected $fillable = [
         'periode_id',
         'nik',
         'job_role_id',
+        'definisi',
         'is_active',
         'last_update',
+        'flagged',
+        'keterangan_flagged',
         'created_by',
         'updated_by',
         'deleted_by',
@@ -49,5 +52,10 @@ class NIKJobRole extends Model
     public function userGeneric()
     {
         return $this->belongsTo(UserGeneric::class, 'user_code', 'nik');
+    }
+
+    public function userNIK()
+    {
+        return $this->belongsTo(userNIK::class, 'nik', 'user_code');
     }
 }

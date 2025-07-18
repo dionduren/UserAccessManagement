@@ -47,20 +47,20 @@ class userGeneric extends Model
         return $this->hasOne(Company::class, 'shortname', 'group');
     }
 
-    public function kompartemen()
-    {
-        return $this->belongsTo(Kompartemen::class, 'kompartemen_id', 'kompartemen_id');
-    }
+    // public function kompartemen()
+    // {
+    //     return $this->belongsTo(Kompartemen::class, 'kompartemen_id', 'kompartemen_id');
+    // }
 
-    public function departemen()
-    {
-        return $this->belongsTo(Departemen::class, 'departemen_id', 'departemen_id');
-    }
+    // public function departemen()
+    // {
+    //     return $this->belongsTo(Departemen::class, 'departemen_id', 'departemen_id');
+    // }
 
-    public function jobRole()
-    {
-        return $this->belongsTo(JobRole::class, 'job_role_id', 'job_role_id');
-    }
+    // public function jobRole()
+    // {
+    //     return $this->belongsTo(JobRole::class, 'job_role_id', 'job_role_id');
+    // }
 
     public function currentUser()
     {

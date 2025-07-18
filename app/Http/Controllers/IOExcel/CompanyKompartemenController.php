@@ -100,7 +100,8 @@ class CompanyKompartemenController extends Controller
         $data = session('parsedData');
 
         if (!$data) {
-            return response()->json(['error' => 'No preview data found'], 400);
+            // Optionally redirect instead of returning JSON error
+            return redirect()->route('company_kompartemen.upload')->with('error', 'No preview data found. Please upload a file first.');
         }
 
         return DataTables::of(collect($data))

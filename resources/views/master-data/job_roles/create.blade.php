@@ -76,9 +76,11 @@
 @section('scripts')
     <script>
         $(document).ready(function() {
+            let masterData = [];
+
+            // Initialize Select2
             $('.select2').select2();
 
-            let masterData = {};
             const oldCompanyId = '{{ old('company_id') }}';
             const oldKompartemenId = '{{ old('kompartemen_id') }}';
             const oldDepartemenId = '{{ old('departemen_id') }}';
@@ -93,13 +95,11 @@
                     // Populate company dropdown
                     populateDropdown('#company_id', data, 'company_id', 'company_name', oldCompanyId);
 
+                    // If old values exist (e.g. after validation error), pre-select them
                     if (oldCompanyId) {
-                        const selectedCompany = masterData.find(c => c.company_id == oldCompanyId);
-                        if (selectedCompany) {
-                            populateDropdown('#kompartemen_id', selectedCompany.kompartemen, 'id',
-                                'nama', oldKompartemenId);
-                            populateDropdown('#departemen_id', selectedCompany
-                                .departemen_without_kompartemen, 'id', 'nama', oldDepartemenId);
+                        handleCompanyChange(oldCompanyId, oldKompartemenId, oldDepartemenId);
+                        if (oldKompartemenId) {
+                            handleKompartemenChange(oldKompartemenId, oldDepartemenId);
                         }
                     }
                 },
@@ -108,38 +108,82 @@
                 }
             });
 
-            // Handle company dropdown change
+            // Handle Company dropdown change
             $('#company_id').on('change', function() {
                 const companyId = $(this).val();
+                handleCompanyChange(companyId);
+            });
 
+            // Handle Kompartemen dropdown change
+            $('#kompartemen_id').on('change', function() {
+                const kompartemenId = $(this).val();
+                handleKompartemenChange(kompartemenId);
+            });
+
+            // Populate dropdowns and set selected value
+            function populateDropdown(selector, items, valueField, textField, selectedValue = null) {
+                let dropdown = $(selector);
+                dropdown.empty().append('<option value="">-- Select --</option>');
+                if (items?.length) {
+                    dropdown.prop('disabled', false);
+                    items.forEach(item => {
+                        const isSelected = item[valueField] == selectedValue ? 'selected' : '';
+                        dropdown.append(
+                            `<option value="${item[valueField]}" ${isSelected}>${item[textField]}</option>`
+                        );
+                    });
+                } else {
+                    dropdown.prop('disabled', true);
+                }
+            }
+
+            // Reset and disable dropdowns
+            function resetDropdowns(selectors) {
+                selectors.forEach(selector => {
+                    $(selector).empty().append('<option value="">-- Select --</option>').prop('disabled',
+                        true);
+                });
+            }
+
+            // Handle company dropdown change logic
+            function handleCompanyChange(companyId, selectedKompartemen = null, selectedDepartemen = null) {
                 resetDropdowns(['#kompartemen_id', '#departemen_id']);
 
-                if (companyId) {
-                    let companyData = masterData.find(c => c.company_id == companyId);
-                    if (companyData) {
-                        populateDropdown('#kompartemen_id', companyData.kompartemen, 'id', 'nama');
-                        populateDropdown('#departemen_id', companyData.departemen_without_kompartemen, 'id',
-                            'nama');
+                if (!companyId) return;
+
+                let companyData = masterData.find(c => c.company_id == companyId);
+                if (companyData) {
+                    populateDropdown('#kompartemen_id', companyData.kompartemen, 'kompartemen_id', 'nama',
+                        selectedKompartemen);
+
+                    // Populate departemen without kompartemen
+                    if (!selectedKompartemen) {
+                        populateDropdown(
+                            '#departemen_id',
+                            companyData.departemen_without_kompartemen,
+                            'departemen_id',
+                            'nama',
+                            selectedDepartemen
+                        );
                     }
                 }
-            });
+            }
 
-            // Handle kompartemen dropdown change
-            $('#kompartemen_id').on('change', function() {
-                const companyId = $('#company_id').val();
-                const kompartemenId = $(this).val();
-
+            // Handle kompartemen dropdown change logic
+            function handleKompartemenChange(kompartemenId, selectedDepartemen = null) {
                 resetDropdowns(['#departemen_id']);
 
-                if (companyId && kompartemenId) {
-                    let companyData = masterData.find(c => c.company_id == companyId);
-                    let kompartemenData = companyData?.kompartemen.find(k => k.id == kompartemenId);
+                if (!kompartemenId) return;
 
-                    if (kompartemenData?.departemen.length) {
-                        populateDropdown('#departemen_id', kompartemenData.departemen, 'id', 'nama');
-                    }
+                const companyId = $('#company_id').val();
+                const companyData = masterData.find(c => c.company_id == companyId);
+                const kompartemenData = companyData?.kompartemen.find(k => k.kompartemen_id == kompartemenId);
+
+                if (kompartemenData?.departemen?.length) {
+                    populateDropdown('#departemen_id', kompartemenData.departemen, 'departemen_id', 'nama',
+                        selectedDepartemen);
                 }
-            });
+            }
 
             // Handle Job Role ID generation
             $('#generateJobRoleIdBtn').on('click', function() {
@@ -184,30 +228,6 @@
                     }
                 });
             });
-
-            // Helper function to populate dropdowns
-            function populateDropdown(selector, items, valueField, textField, selectedValue = '') {
-                let dropdown = $(selector);
-                dropdown.empty().append('<option value="">-- Select --</option>');
-                if (items?.length) {
-                    dropdown.prop('disabled', false);
-                    items.forEach(item => {
-                        dropdown.append(
-                            `<option value="${item[valueField]}" ${item[valueField] == selectedValue ? 'selected' : ''}>${item[textField]}</option>`
-                        );
-                    });
-                } else {
-                    dropdown.prop('disabled', true);
-                }
-            }
-
-            // Helper function to reset dropdowns
-            function resetDropdowns(selectors) {
-                selectors.forEach(selector => {
-                    $(selector).empty().append('<option value="">-- Select --</option>').prop('disabled',
-                        true);
-                });
-            }
         });
     </script>
 @endsection

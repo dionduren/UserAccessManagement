@@ -1,9 +1,10 @@
 <?php
 
+use \App\Http\Controllers\IOExcel\USSMJobRoleController;
 use App\Http\Controllers\AccessMatrixController;
+
+
 use App\Http\Controllers\AdminController;
-
-
 use App\Http\Controllers\DynamicUploadController;
 use App\Http\Controllers\EmployeeController;
 use App\Http\Controllers\HomeController;
@@ -11,19 +12,19 @@ use App\Http\Controllers\IOExcel\CompanyKompartemenController;
 use App\Http\Controllers\IOExcel\CompanyMasterDataController;
 use App\Http\Controllers\IOExcel\CompositeRoleSingleRoleController;
 use App\Http\Controllers\IOExcel\NIKJobRoleImportController;
-use App\Http\Controllers\IOExcel\UserGenericUnitKerjaController;
 
 // use App\Http\Controllers\IOExcel\ExcelImportController;
 use App\Http\Controllers\IOExcel\SingleRoleTcodeController;
 use App\Http\Controllers\IOExcel\TcodeSingleRoleController;
 
 use App\Http\Controllers\IOExcel\UserGenericImportController;
+use App\Http\Controllers\IOExcel\UserGenericUnitKerjaController;
 use App\Http\Controllers\IOExcel\UserNIKImportController;
 use App\Http\Controllers\JSONController;
 use App\Http\Controllers\MasterData\CompanyController;
 use App\Http\Controllers\MasterData\CompositeRoleController;
-use App\Http\Controllers\MasterData\CostCenterController;
 
+use App\Http\Controllers\MasterData\CostCenterController;
 use App\Http\Controllers\MasterData\CostPrevUserController;
 use App\Http\Controllers\MasterData\DepartemenController;
 use App\Http\Controllers\MasterData\JobRoleController;
@@ -31,26 +32,28 @@ use App\Http\Controllers\MasterData\KompartemenController;
 use App\Http\Controllers\MasterData\SingleRoleController;
 use App\Http\Controllers\MasterData\TcodeController;
 use App\Http\Controllers\MasterData\TerminatedEmployeeController;
-use App\Http\Controllers\MasterData\UserDetailController;
 
+use App\Http\Controllers\MasterData\UserDetailController;
 use App\Http\Controllers\MasterData\UserGenericController;
 use App\Http\Controllers\MasterData\UserNIKController;
-use App\Http\Controllers\PeriodeController;
 
+use App\Http\Controllers\PeriodeController;
 use App\Http\Controllers\Relationship\CompositeSingleController;
 use App\Http\Controllers\Relationship\JobCompositeController;
 use App\Http\Controllers\Relationship\NIKJobController;
 use App\Http\Controllers\Relationship\SingleTcodeController;
-use App\Http\Controllers\Relationship\UserGenericJobRoleController;
 
+use App\Http\Controllers\Relationship\UserGenericJobRoleController;
+use App\Http\Controllers\Report\UARReportController;
 use App\Http\Controllers\Report\JobRoleReportController;
 use App\Http\Controllers\Report\WorkUnitReportController;
 use App\Http\Controllers\TcodeImportController;
 use App\Http\Controllers\UserController;
-use App\Models\TerminatedEmployee;
 
+use App\Models\TerminatedEmployee;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
+
 
 
 // Route::get('/', function () {
@@ -136,7 +139,10 @@ Route::prefix('/relationship/generic-job-role')->name('user-generic-job-role.')-
     Route::get('/', [UserGenericJobRoleController::class, 'index'])->name('index');
     Route::get('/create', [UserGenericJobRoleController::class, 'create'])->name('create');
     Route::post('/', [UserGenericJobRoleController::class, 'store'])->name('store');
+    Route::get('/without-job-role', [UserGenericJobRoleController::class, 'indexWithoutJobRole'])->name('null-relationship');
+    Route::get('/{id}', [UserGenericJobRoleController::class, 'show'])->name('show');
     Route::get('/{id}/edit', [UserGenericJobRoleController::class, 'edit'])->name('edit');
+    Route::post('/{id}/flagged', [UserGenericJobRoleController::class, 'updateFlagged']);
     Route::put('/{id}', [UserGenericJobRoleController::class, 'update'])->name('update');
     Route::delete('/{id}', [UserGenericJobRoleController::class, 'destroy'])->name('destroy');
 });
@@ -232,6 +238,7 @@ Route::put('cost-center/prev-user/full-update', [CostCenterController::class, 'f
 Route::resource('cost-center', CostCenterController::class);
 
 Route::get('relationship/nik-job/get-by-periode-id', [NIKJobController::class, 'getNIKJobRolesByPeriodeId'])->name('nik-job.get-by-periode');
+Route::get('relationship/nik-job/without-job-role', [NIKJobController::class, 'indexWithoutJobRole'])->name('nik-job.null-relationship');
 Route::resource('relationship/nik-job', NIKJobController::class);
 
 // ------------------ UPLOAD DATA ------------------
@@ -258,6 +265,14 @@ Route::prefix('dynamic-upload')->name('dynamic_upload.')->group(function () {
     Route::post('/{module}/submit-all', [DynamicUploadController::class, 'submitAll'])->name('submitAll');
 });
 
+Route::prefix('ussm-job-role')->name('ussm-job-role.')->group(function () {
+    Route::get('/upload', [USSMJobRoleController::class, 'uploadForm'])->name('upload');
+    Route::post('/preview', [USSMJobRoleController::class, 'preview'])->name('preview');
+    Route::get('/preview-page', [USSMJobRoleController::class, 'previewPage'])->name('previewPage');
+    Route::get('/preview-data', [USSMJobRoleController::class, 'getPreviewData'])->name('previewData');
+    Route::post('/confirm-import', [USSMJobRoleController::class, 'confirmImport'])->name('confirmImport');
+});
+
 // ------------------ REPORT ------------------
 
 Route::prefix('report')->name('report.')->group(function () {
@@ -266,6 +281,15 @@ Route::prefix('report')->name('report.')->group(function () {
     // Route::get('/unit/nested-data', [WorkUnitReportController::class, 'groupedJson'])->name('unit.nestedData');
     Route::get('/filled-job-role', [JobRoleReportController::class, 'index'])->name('filled-job-role.index');
     Route::get('/empty-job-role', [JobRoleReportController::class, 'index_empty'])->name('empty-job-role.index');
+});
+
+Route::prefix('report/uar')->name('report.uar.')->group(function () {
+    Route::get('/', [UARReportController::class, 'index'])->name('index');
+    Route::get('/get-kompartemen', [UARReportController::class, 'getKompartemen'])->name('get-kompartemen');
+    Route::get('/get-departemen', [UARReportController::class, 'getDepartemen'])->name('get-departemen');
+    Route::get('/job-roles', [UARReportController::class, 'jobRolesData'])->name('job-roles');
+    Route::get('/export-word', [UARReportController::class, 'exportWord'])->name('export-word');
+    // Route::get('/download', [UARReportController::class, 'download'])->name('download');
 });
 
 // ------------------ ACCESS MATRIX ------------------

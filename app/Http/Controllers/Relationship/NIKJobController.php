@@ -169,16 +169,19 @@ class NIKJobController extends Controller
         $periodeId = $request->input('periode_id');
 
         $nikJobRoles = NIKJobRole::select('id', 'nik', 'job_role_id', 'periode_id')
-            ->with(['jobRole' => function ($query) {
-                $query->select('id', 'job_role_id', 'nama');
-            }])
-            ->with(['periode' => function ($query) {
-                $query->select('id', 'definisi');
-            }])
-            ->with(['userDetail' => function ($query) {
-                $query->select('nik', 'nama');
-            }])
+            ->with([
+                'jobRole' => function ($query) {
+                    $query->select('id', 'job_role_id', 'nama');
+                },
+                'periode' => function ($query) {
+                    $query->select('id', 'definisi');
+                },
+                'userDetail' => function ($query) {
+                    $query->select('nik', 'nama');
+                }
+            ])
             ->where('periode_id', $periodeId)
+            ->whereHas('userDetail') // Only records with related userDetail
             ->get();
 
         return DataTables::of($nikJobRoles)
@@ -193,17 +196,52 @@ class NIKJobController extends Controller
             })
             ->addColumn('action', function ($row) {
                 return '
-                    <a href="' . route('nik-job.show', $row->id) . '" target="_blank" class="btn btn-sm btn-primary me-1">
-                        <i class="bi bi-info-circle-fill"></i> Detail
-                    </a>
-                    <a href="' . route('nik-job.edit', $row->id) . '" target="_blank" class="btn btn-sm btn-warning me-1">
-                        <i class="bi bi-pencil-fill"></i> Edit
-                    </a>';
-                // <button onclick="deleteNIKJob(' . $row->id . ')" class="btn btn-sm btn-danger disabled">
-                //     <i class="bi bi-trash-fill"></i> Delete
-                // </button>';
+                <a href="' . route('nik-job.show', $row->id) . '" target="_blank" class="btn btn-sm btn-primary me-1">
+                <i class="bi bi-info-circle-fill"></i> Detail
+                </a>
+                <a href="' . route('nik-job.edit', $row->id) . '" target="_blank" class="btn btn-sm btn-warning me-1">
+                <i class="bi bi-pencil-fill"></i> Edit
+                </a>';
             })
             ->rawColumns(['action'])
             ->make(true);
+    }
+
+    /**
+     * Display a listing of the resource without job roles.
+     */
+    public function indexWithoutJobRole(Request $request)
+    {
+        $periodes = Periode::select('id', 'definisi')->get();
+
+        if ($request->ajax()) {
+            if (!$request->filled('periode')) {
+                return DataTables::of(collect([]))->make(true);
+            }
+
+            $query = userNIK::query()
+                ->select([
+                    'tr_user_ussm_nik.id',
+                    'tr_user_ussm_nik.group',
+                    'tr_user_ussm_nik.user_code',
+                    'user_details.nama as nama',
+                    'kompartemen.nama as kompartemen',
+                    'departemen.nama as departemen'
+                ])
+                ->leftJoin('ms_user_detail as user_details', 'tr_user_ussm_nik.user_code', '=', 'user_details.nik')
+                ->leftJoin('ms_kompartemen as kompartemen', 'user_details.kompartemen_id', '=', 'kompartemen.kompartemen_id')
+                ->leftJoin('ms_departemen as departemen', 'user_details.departemen_id', '=', 'departemen.departemen_id')
+                ->where('tr_user_ussm_nik.periode_id', $request->input('periode'))
+                ->whereNotExists(function ($q) use ($request) {
+                    $q->selectRaw(1)
+                        ->from('tr_ussm_job_role')
+                        ->whereRaw('tr_ussm_job_role.nik = tr_user_ussm_nik.user_code')
+                        ->where('tr_ussm_job_role.periode_id', $request->input('periode'));
+                });
+
+            return DataTables::of($query)->make(true);
+        }
+
+        return view('relationship.nik_job_role.no-relationship', compact('periodes'));
     }
 }

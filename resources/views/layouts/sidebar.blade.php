@@ -264,8 +264,7 @@
                     <a class="nav-link dropdown-toggle {{ (request()->routeIs('dynamic_upload.upload') && request()->route('module') === 'master_nik') || request()->routeIs('user-detail*') ? 'active' : 'text-white' }}"
                         data-bs-toggle="dropdown" href="#" role="button"
                         aria-expanded="{{ (request()->routeIs('dynamic_upload.upload') && request()->route('module') === 'master_nik') || request()->routeIs('user-detail*') ? 'true' : 'false' }}">
-                        <span class="me-auto">2. Master Data User
-                            Detail</span>
+                        <span class="me-auto">2. Master Data Karyawan</span>
                     </a>
                     <div
                         class="dropdown-content {{ (request()->routeIs('dynamic_upload.upload') && request()->route('module') === 'master_nik') || request()->routeIs('user-detail*') ? 'show' : '' }}">
@@ -368,22 +367,40 @@
                         5. Mapping USSM - Job Role
                     </a>
                     <div class="dropdown-content {{ $isMappingActive ? 'show' : '' }}">
-                        <li class="nav-item">
+                        {{-- <li class="nav-item">
                             <a href="{{ route('dynamic_upload.upload', ['module' => 'nik_job_role']) }}"
                                 class="nav-link {{ request()->routeIs('dynamic_upload.upload') && request()->route('module') === 'nik_job_role' ? 'active' : 'text-white' }}">
+                                <i class="bi bi-cloud-upload"></i> Upload USSM - Job Role
+                            </a>
+                        </li> --}}
+                        <li class="nav-item">
+                            <a href="{{ route('ussm-job-role.upload') }}"
+                                class="nav-link {{ request()->routeIs('ussm-job-role.*') ? 'active' : 'text-white' }}">
                                 <i class="bi bi-cloud-upload"></i> Upload USSM - Job Role
                             </a>
                         </li>
                         <li class="nav-item">
                             <a href="{{ route('user-generic-job-role.index') }}"
-                                class="nav-link {{ request()->routeIs('user-generic-job-role.*') ? 'active' : 'text-white' }}">
+                                class="nav-link {{ request()->routeIs('user-generic-job-role.*') && !request()->routeIs('user-generic-job-role.null-relationship') ? 'active' : 'text-white' }}">
                                 <i class="bi bi-link-45deg"></i> User Generic - Job Role
                             </a>
                         </li>
                         <li class="nav-item">
+                            <a href="{{ route('user-generic-job-role.null-relationship') }}"
+                                class="nav-link {{ request()->routeIs('user-generic-job-role.null-relationship') ? 'active' : 'text-white' }}">
+                                <i class="bi bi-exclamation-circle"></i> User Generic Non Job
+                            </a>
+                        </li>
+                        <li class="nav-item">
                             <a href="{{ route('nik-job.index') }}"
-                                class="nav-link {{ request()->routeIs('nik-job*') ? 'active' : 'text-white' }}">
-                                <i class="bi bi-file-earmark-spreadsheet"></i> Relationship NIK - Job Role
+                                class="nav-link {{ request()->routeIs('nik-job*') && !request()->routeIs('nik-job.null-relationship') ? 'active' : 'text-white' }}">
+                                <i class="bi bi-link-45deg"></i> Relationship NIK - Job Role
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="{{ route('nik-job.null-relationship') }}"
+                                class="nav-link {{ request()->routeIs('nik-job.null-relationship') ? 'active' : 'text-white' }}">
+                                <i class="bi bi-exclamation-circle"></i> User NIK Non Job
                             </a>
                         </li>
                     </div>
@@ -443,6 +460,18 @@
                     <i class="bi bi-vector-pen"></i> User License
                 </a>
             </li> --}}
+            </div>
+
+            <hr>
+
+            <div>
+                <h5>Report</h5>
+                <li class="nav-item">
+                    <a href="{{ route('report.uar.index') }}"
+                        class="nav-link {{ request()->routeIs('report.uar.index') ? 'active' : 'text-white' }}">
+                        <i class="bi bi-file-earmark-text me-2"></i> Report UAR
+                    </a>
+                </li>
             </div>
 
             <hr>

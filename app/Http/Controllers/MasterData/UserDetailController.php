@@ -2,12 +2,13 @@
 
 namespace App\Http\Controllers\MasterData;
 
-use App\Http\Controllers\Controller;
 
-use App\Models\UserDetail;
+use App\Http\Controllers\Controller;
 use App\Models\Company;
-use App\Models\Kompartemen;
 use App\Models\Departemen;
+use App\Models\Kompartemen;
+use App\Models\Periode;
+use App\Models\UserDetail;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
@@ -19,7 +20,8 @@ class UserDetailController extends Controller
      */
     public function index()
     {
-        return view('master-data.user_detail.index');
+        $periodes = Periode::all();
+        return view('master-data.user_detail.index', compact('periodes'));
     }
 
     /**

@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Relationship;
 use App\Http\Controllers\Controller;
 
 use App\Models\JobRole;
+use \App\Models\NIKJobRole;
 use App\Models\Periode;
 use App\Models\UserGeneric;
 
@@ -33,7 +34,7 @@ class UserGenericJobRoleController extends Controller
                 ->with(['periode', 'NIKJobRole'])
                 ->where('periode_id', $request->input('periode'));
 
-            return DataTables::of($query)
+            return DataTables::eloquent($query)
                 ->addColumn('periode', function ($row) {
                     return $row->periode ? $row->periode->definisi : '-';
                 })
@@ -45,14 +46,24 @@ class UserGenericJobRoleController extends Controller
                         return $nikJobRole->jobRole ? $nikJobRole->jobRole->nama : '-';
                     })->implode(', ');
                 })
-                ->addColumn('action', function ($row) {
-                    return '<a href="' . route('user-generic-job-role.edit', $row->id) . '" class="btn btn-sm btn-outline-warning">
-                <i class="fas fa-edit"></i> Edit
-                </a>
-                <button onclick="deleteRelationship(' . $row->id . ')" class="btn btn-sm btn-outline-danger">
-                <i class="fas fa-trash"></i> Delete
-                </button>';
+                ->addColumn('definisi', function ($row) {
+                    return $row->NIKJobRole->map(function ($nikJobRole) {
+                        return $nikJobRole->definisi ?? '-';
+                    })->implode(', ');
                 })
+                ->addColumn('flagged', function ($row) {
+                    return $row->NIKJobRole->map(function ($nikJobRole) {
+                        return $nikJobRole->flagged ?? false;
+                    })->implode(', ');
+                })
+                // ->addColumn('action', function ($row) {
+                //     return '<a href="' . route('user-generic-job-role.edit', $row->id) . '" class="btn btn-sm btn-outline-warning">
+                // <i class="fas fa-edit"></i> Edit
+                // </a>
+                // <button onclick="deleteRelationship(' . $row->id . ')" class="btn btn-sm btn-outline-danger">
+                // <i class="fas fa-trash"></i> Delete
+                // </button>';
+                // })
                 ->rawColumns(['action'])
                 ->make(true);
         }
@@ -100,5 +111,84 @@ class UserGenericJobRoleController extends Controller
     public function destroy($id)
     {
         // Remove the specified resource from storage.
+        $nikJobRole = NIKJobRole::findOrFail($id);
+        $nikJobRole->delete();
     }
+
+    public function show($id)
+    {
+        $userGeneric = UserGeneric::with([
+            'NIKJobRole.jobRole',
+            'kompartemen', // adjust if you have this relationship
+            'departemen'   // adjust if you have this relationship
+        ])->findOrFail($id);
+
+        // Assuming only one job role per user generic for simplicity
+        $nikJobRole = $userGeneric->NIKJobRole->first();
+
+        return response()->json([
+            'user_code' => $userGeneric->user_code,
+            'job_role_id' => $nikJobRole?->job_role_id,
+            'job_role_name' => $nikJobRole?->jobRole?->nama,
+            'kompartemen_id' => $userGeneric->kompartemen_id,
+            'kompartemen_nama' => $userGeneric->kompartemen?->nama,
+            'departemen_id' => $userGeneric->departemen_id,
+            'departemen_nama' => $userGeneric->departemen?->nama,
+            'flagged' => $nikJobRole?->flagged,
+            'keterangan_flagged' => $nikJobRole?->keterangan_flagged,
+        ]);
+    }
+
+    public function updateFlagged(Request $request, $id)
+    {
+        $jobRole = NIKJobRole::findOrFail($id);
+        $jobRole->flagged = $request->input('flagged', 0);
+        $jobRole->keterangan_flagged = $request->input('keterangan_flagged');
+        $jobRole->save();
+
+        return response()->json(['success' => true]);
+    }
+
+    /**
+     * Display a listing of the resource without job roles.
+     */
+    public function indexWithoutJobRole(Request $request)
+    {
+        $periodes = Periode::select('id', 'definisi')->get();
+
+        if ($request->ajax()) {
+            // Only load data if periode is selected
+            if (!$request->filled('periode')) {
+                return DataTables::of(collect([]))->make(true);
+            }
+
+            $query = UserGeneric::query()
+                ->select([
+                    'id',
+                    'group',
+                    'user_code',
+                    'last_login'
+                ])
+                ->with(['periode', 'userGenericUnitKerja.kompartemen', 'userGenericUnitKerja.departemen'])
+                ->where('periode_id', $request->input('periode'))
+                ->whereDoesntHave('NIKJobRole');
+
+            return DataTables::eloquent($query)
+                ->addColumn('kompartemen', function ($row) {
+                    // Assuming userGenericUnitKerja is a hasOne or belongsTo relationship
+                    return $row->userGenericUnitKerja && $row->userGenericUnitKerja->kompartemen
+                        ? $row->userGenericUnitKerja->kompartemen->nama
+                        : '-';
+                })
+                ->addColumn('departemen', function ($row) {
+                    return $row->userGenericUnitKerja && $row->userGenericUnitKerja->departemen
+                        ? $row->userGenericUnitKerja->departemen->nama
+                        : '-';
+                })
+                ->make(true);
+        }
+
+        return view('relationship.generic-job_role.no-relationship', compact('periodes'));
+    }
+    // ...existing code...
 }

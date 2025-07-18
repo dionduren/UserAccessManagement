@@ -11,19 +11,10 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('tr_nik_job_role', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('periode_id')->nullable();
-            $table->string('nik')->nullable();
-            $table->string('job_role_id')->nullable();
-            $table->boolean('is_active')->default(true);
-            $table->dateTime('last_update')->nullable();
-            $table->timestamps();
-            $table->softDeletes();
-            $table->string('created_by')->nullable();
-            $table->string('updated_by')->nullable();
-            $table->string('deleted_by')->nullable();
-        });
+        // Schema::create('tr_nik_job_role', function (Blueprint $table) {
+        //     $table->id();
+
+        // });
     }
 
     /**

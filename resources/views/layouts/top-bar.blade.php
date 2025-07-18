@@ -52,8 +52,10 @@
             <!-- Profile Dropdown -->
             <div class="dropdown">
                 <button class="btn image-fit w-32 h-32 d-flex align-items-center" data-bs-toggle="dropdown">
-                    <img src="{{ Auth::user()->profile_photo_url ?? 'https://randomuser.me/api/portraits/men/64.jpg' }}"
+                    <img src="{{ Auth::user()->profile_photo_url ?? 'https://xsgames.co/randomusers/assets/avatars/male/49.jpg' }}"
                         class="profile-pic me-2">
+                    {{-- <img src="{{ Auth::user()->profile_photo_url ?? 'https://randomuser.me/api/portraits/men/64.jpg' }}"
+                        class="profile-pic me-2"> --}}
                 </button>
                 <ul class="dropdown-menu dropdown-menu-end">
                     <li class="dropdown-header">

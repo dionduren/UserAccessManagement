@@ -5,8 +5,18 @@
         <div class="d-flex justify-content-between mb-3">
             <h4>Dashboard User Detail</h4>
             <a href="{{ route('user-detail.create') }}" class="btn btn-primary">
-                <i class="bi bi-plus-circle"></i> Add New
+                <i class="bi bi-plus-circle"></i> Buat User Detail Baru
             </a>
+        </div>
+
+        <div class="mb-3">
+            <label for="periode_id" class="form-label">Periode</label>
+            <select id="periode_id" class="form-select" style="width:auto;display:inline-block;">
+                <option value="">-- Pilih Periode --</option>
+                @foreach ($periodes as $periode)
+                    <option value="{{ $periode->id }}">{{ $periode->definisi }}</option>
+                @endforeach
+            </select>
         </div>
 
         <div id="user-table"></div>
@@ -80,66 +90,70 @@
 
 @section('scripts')
     <script>
-        let table = new Tabulator("#user-table", {
-            ajaxURL: "{{ route('user-detail.getData') }}",
-            layout: "fitColumns",
-            pagination: "local",
-            paginationSize: 10,
-            paginationSizeSelector: [10, 15, 20, 30, 50],
-            columns: [{
-                    title: "Name",
-                    field: "nama",
-                    headerFilter: "input"
-                },
-                {
-                    title: "NIK",
-                    field: "nik",
-                    headerFilter: "input"
-                },
-                {
-                    title: "Company",
-                    field: "company",
-                    headerFilter: "input"
-                },
-                {
-                    title: "Direktorat",
-                    field: "direktorat",
-                    headerFilter: "input"
-                },
-                {
-                    title: "Kompartemen",
-                    field: "kompartemen",
-                    headerFilter: "input"
-                },
-                {
-                    title: "Departemen",
-                    field: "departemen",
-                    headerFilter: "input"
-                },
-                // {
-                //     title: "Email",
-                //     field: "email",
-                //     headerFilter: "input"
-                // },
-                {
-                    title: "Status",
-                    field: "flagged",
-                    formatter: function(cell) {
-                        return cell.getValue() == 1 ? '<span class="badge bg-danger">Flagged</span>' : '';
+        let table;
+        $(document).ready(function() {
+            // Initialize table with no data
+            table = new Tabulator("#user-table", {
+                ajaxURL: "", // No data initially
+                layout: "fitColumns",
+                pagination: "local",
+                paginationSize: 10,
+                paginationSizeSelector: [10, 15, 20, 30, 50],
+                columns: [{
+                        title: "Name",
+                        field: "nama",
+                        headerFilter: "input"
                     },
-                    hozAlign: "center",
-                    width: 100
-                },
-                // {
-                //     title: "Keterangan",
-                //     field: "keterangan",
-                //     headerFilter: "input"
-                // },
-                {
-                    title: "Actions",
-                    formatter: function(cell) {
-                        const data = cell.getRow().getData();
-                        return `
+                    {
+                        title: "NIK",
+                        field: "nik",
+                        headerFilter: "input"
+                    },
+                    {
+                        title: "Company",
+                        field: "company",
+                        headerFilter: "input"
+                    },
+                    {
+                        title: "Direktorat",
+                        field: "direktorat",
+                        headerFilter: "input"
+                    },
+                    {
+                        title: "Kompartemen",
+                        field: "kompartemen",
+                        headerFilter: "input"
+                    },
+                    {
+                        title: "Departemen",
+                        field: "departemen",
+                        headerFilter: "input"
+                    },
+                    // {
+                    //     title: "Email",
+                    //     field: "email",
+                    //     headerFilter: "input"
+                    // },
+                    {
+                        title: "Status",
+                        field: "flagged",
+                        formatter: function(cell) {
+                            return cell.getValue() == 1 ?
+                                '<span class="badge bg-danger">Flagged</span>' : '';
+                        },
+                        hozAlign: "center",
+                        width: 100
+                    },
+                    // {
+                    //     title: "Keterangan",
+                    //     field: "keterangan",
+                    //     headerFilter: "input"
+                    // },
+                    {
+                        title: "Actions",
+                        formatter: function(cell) {
+                            const data = cell.getRow().getData();
+                            return `
                     <button class="btn btn-sm btn-info show-detail" data-id="${data.id}">
                         <i class="bi bi-eye"></i>
                     </button>
@@ -150,92 +164,103 @@
                         <i class="bi bi-flag"></i>
                     </a>
                     `;
-                    },
-                    hozAlign: "center",
-                    width: 140,
-                    headerSort: false
-                }
-            ],
-            initialSort: [{
-                column: "flagged",
-                dir: "desc"
-            }],
-        });
+                        },
+                        hozAlign: "center",
+                        width: 140,
+                        headerSort: false
+                    }
+                ],
+                initialSort: [{
+                    column: "flagged",
+                    dir: "desc"
+                }],
+            });
 
-        // Show Modal Handler
-        $(document).on('click', '.show-detail', function() {
-            const id = $(this).data('id');
-
-            $.ajax({
-                url: `/user-detail/${id}`,
-                method: 'GET',
-                success: function(response) {
-                    $('#show-nik').text(response.nik);
-                    $('#show-nama').text(response.nama);
-                    $('#show-email').text(response.email);
-                    $('#show-company').text(response.company_data?.nama || '-');
-                    $('#show-direktorat').text(response.direktorat || '-');
-                    $('#show-kompartemen').text(response.kompartemen?.nama || '-');
-                    $('#show-departemen').text(response.departemen?.nama || '-');
-
-                    // Set up edit and delete buttons
-                    $('.edit-btn').attr('href', `/user-detail/${id}/edit`);
-                    $('.delete-btn').data('id', id);
-
-                    $('#showModal').modal('show');
-                },
-                error: function() {
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Error',
-                        text: 'Failed to load user details'
-                    });
+            // Load data only after periode is selected
+            $('#periode_id').on('change', function() {
+                let periodeId = $(this).val();
+                if (periodeId) {
+                    table.setData("{{ route('user-detail.getData') }}?periode_id=" + periodeId);
+                } else {
+                    table.clearData();
                 }
             });
-        });
 
-        // Delete Handler
-        $(document).on('click', '.delete-btn', function() {
-            const id = $(this).data('id');
+            // Show Modal Handler
+            $(document).on('click', '.show-detail', function() {
+                const id = $(this).data('id');
 
-            Swal.fire({
-                title: 'Are you sure?',
-                text: "This action cannot be undone",
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonColor: '#d33',
-                cancelButtonColor: '#3085d6',
-                confirmButtonText: 'Yes, delete it!'
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    $.ajax({
-                        url: `/user-detail/${id}`,
-                        method: 'DELETE',
-                        headers: {
-                            'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                        },
-                        success: function(response) {
-                            if (response.success) {
-                                $('#showModal').modal('hide');
-                                table.replaceData();
+                $.ajax({
+                    url: `/user-detail/${id}`,
+                    method: 'GET',
+                    success: function(response) {
+                        $('#show-nik').text(response.nik);
+                        $('#show-nama').text(response.nama);
+                        $('#show-email').text(response.email);
+                        $('#show-company').text(response.company_data?.nama || '-');
+                        $('#show-direktorat').text(response.direktorat || '-');
+                        $('#show-kompartemen').text(response.kompartemen?.nama || '-');
+                        $('#show-departemen').text(response.departemen?.nama || '-');
+
+                        // Set up edit and delete buttons
+                        $('.edit-btn').attr('href', `/user-detail/${id}/edit`);
+                        $('.delete-btn').data('id', id);
+
+                        $('#showModal').modal('show');
+                    },
+                    error: function() {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: 'Failed to load user details'
+                        });
+                    }
+                });
+            });
+
+            // Delete Handler
+            $(document).on('click', '.delete-btn', function() {
+                const id = $(this).data('id');
+
+                Swal.fire({
+                    title: 'Are you sure?',
+                    text: "This action cannot be undone",
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#d33',
+                    cancelButtonColor: '#3085d6',
+                    confirmButtonText: 'Yes, delete it!'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        $.ajax({
+                            url: `/user-detail/${id}`,
+                            method: 'DELETE',
+                            headers: {
+                                'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                            },
+                            success: function(response) {
+                                if (response.success) {
+                                    $('#showModal').modal('hide');
+                                    table.replaceData();
+                                    Swal.fire({
+                                        icon: 'success',
+                                        title: 'Success',
+                                        text: response.message,
+                                        showConfirmButton: false,
+                                        timer: 1500
+                                    });
+                                }
+                            },
+                            error: function() {
                                 Swal.fire({
-                                    icon: 'success',
-                                    title: 'Success',
-                                    text: response.message,
-                                    showConfirmButton: false,
-                                    timer: 1500
+                                    icon: 'error',
+                                    title: 'Error',
+                                    text: 'Failed to delete user detail'
                                 });
                             }
-                        },
-                        error: function() {
-                            Swal.fire({
-                                icon: 'error',
-                                title: 'Error',
-                                text: 'Failed to delete user detail'
-                            });
-                        }
-                    });
-                }
+                        });
+                    }
+                });
             });
         });
     </script>

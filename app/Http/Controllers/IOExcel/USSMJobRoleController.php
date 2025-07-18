@@ -3,13 +3,12 @@
 namespace App\Http\Controllers\IOExcel;
 
 use App\Http\Controllers\Controller;
-use App\Models\Departemen;
-use App\Models\Kompartemen;
+
 use App\Models\Periode;
 use App\Models\TempUploadSession;
 
-use App\Services\UserGenericUnitKerjaService;
-use App\Imports\UserGenericUnitKerjaPreviewImport;
+use App\Services\USSMJobRoleService;
+use App\Imports\USSMJobRolePreviewImport;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
@@ -17,12 +16,12 @@ use Maatwebsite\Excel\Facades\Excel;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 use Yajra\DataTables\Facades\DataTables;
 
-class UserGenericUnitKerjaController extends Controller
+class USSMJobRoleController extends Controller
 {
     public function uploadForm()
     {
         $periodes = Periode::orderBy('id')->get();
-        return view('imports.upload.user_generic_unit_kerja', compact('periodes'));
+        return view('imports.upload.ussm_job_role', compact('periodes'));
     }
 
     public function preview(Request $request)
@@ -33,26 +32,30 @@ class UserGenericUnitKerjaController extends Controller
         ]);
 
         try {
-            $import = new UserGenericUnitKerjaPreviewImport();
+            $import = new USSMJobRolePreviewImport();
             Excel::import($import, $request->file('excel_file'));
             $data = $import->rows->map(fn($row) => $row->toArray())->toArray();
 
             $parsedData = [];
             $periodeId = $request->input('periode_id');
 
+            $seenDefinisi = [];
             foreach ($data as $row) {
                 $row['periode_id'] = $periodeId;
                 $row['_row_errors'] = [];
                 $row['_row_warnings'] = [];
 
-                if (empty($row['user_cc'])) {
-                    $row['_row_errors'][] = 'User CC wajib diisi.';
+                if (empty($row['nik'])) {
+                    $row['_row_errors'][] = 'NIK wajib diisi.';
                 }
-                if (empty($row['kompartemen_id'])) {
-                    $row['_row_warnings'][] = 'Kompartemen ID kosong.';
+                if (empty($row['job_role_id'])) {
+                    $row['_row_errors'][] = 'Job Role ID kosong.';
                 }
-                if (empty($row['departemen_id'])) {
-                    $row['_row_warnings'][] = 'Departemen ID kosong.';
+
+                // Definisi validation
+                $definisiError = $this->validateName($row['definisi'] ?? '', $seenDefinisi);
+                if ($definisiError) {
+                    $row['_row_warnings'][] = $definisiError;
                 }
 
                 $row['_row_issues_count'] = count($row['_row_errors']) + count($row['_row_warnings']);
@@ -62,12 +65,12 @@ class UserGenericUnitKerjaController extends Controller
             usort($parsedData, fn($a, $b) => ($b['_row_issues_count'] ?? 0) <=> ($a['_row_issues_count'] ?? 0));
 
             TempUploadSession::create([
-                'module' => 'user_generic_unit_kerja_import',
+                'module' => 'ussm_job_role_import',
                 'data' => $parsedData,
                 'periode_id' => $periodeId,
             ]);
 
-            return redirect()->route('user-generic-unit-kerja.previewPage');
+            return redirect()->route('ussm-job-role.previewPage');
         } catch (\Exception $e) {
             Log::error('Excel Preview Failed', [
                 'message' => $e->getMessage(),
@@ -79,44 +82,62 @@ class UserGenericUnitKerjaController extends Controller
 
     public function previewPage()
     {
-        return view('imports.preview.user_generic_unit_kerja');
+        return view('imports.preview.ussm_job_role');
     }
 
     public function getPreviewData()
     {
-        $session = TempUploadSession::where('module', 'user_generic_unit_kerja_import')->latest()->first();
+        $session = TempUploadSession::where('module', 'ussm_job_role_import')->latest()->first();
         $data = $session ? $session->data : [];
-
-        $kompartemenIds = collect($data)->pluck('kompartemen_id')->filter()->unique()->toArray();
-        $departemenIds = collect($data)->pluck('departemen_id')->filter()->unique()->toArray();
-
-        $kompartemenMap = Kompartemen::whereIn('kompartemen_id', $kompartemenIds)->pluck('nama', 'kompartemen_id');
-        $departemenMap = Departemen::whereIn('departemen_id', $departemenIds)->pluck('nama', 'departemen_id');
-
-        foreach ($data as &$row) {
-            $row['kompartemen_nama'] = $row['kompartemen_id'] ? ($kompartemenMap[$row['kompartemen_id']] ?? null) : null;
-            $row['departemen_nama'] = $row['departemen_id'] ? ($departemenMap[$row['departemen_id']] ?? null) : null;
-        }
-        unset($row);
 
         if (!$data) {
             return response()->json(['error' => 'No preview data found'], 400);
         }
-        return DataTables::of(collect($data))->make(true);
+
+        return DataTables::of(collect($data))
+            ->addColumn('validation_message', function ($row) {
+                $msg = '';
+                if (!empty($row['_row_warnings'])) {
+                    $msg .= "Warnings:<br>- " . implode("<br>- ", $row['_row_warnings']) . "<br>";
+                }
+                if (!empty($row['_row_errors'])) {
+                    $msg .= "Errors:<br>- " . implode("<br>- ", $row['_row_errors']);
+                }
+                return $msg ?: '';
+            })
+            ->addColumn('status_sort', function ($row) {
+                $hasError = !empty($row['_row_errors']);
+                $hasWarning = !empty($row['_row_warnings']);
+                // 2 = both, 1 = error only, 0 = warning only, -1 = none
+                if ($hasError && $hasWarning) return 3;
+                if ($hasError) return 2;
+                if ($hasWarning) return 1;
+                return 0;
+            })
+            ->addColumn('row_class', function ($row) {
+                $hasError = !empty($row['_row_errors']);
+                $hasWarning = !empty($row['_row_warnings']);
+                if ($hasError && $hasWarning) return 'row-orange';
+                if ($hasError) return 'row-red';
+                if ($hasWarning) return 'row-yellow';
+                return '';
+            })
+            ->rawColumns(['validation_message'])
+            ->make(true);
     }
 
     public function confirmImport(Request $request)
     {
-        $session = TempUploadSession::where('module', 'user_generic_unit_kerja_import')->latest()->first();
+        $session = TempUploadSession::where('module', 'ussm_job_role_import')->latest()->first();
         $data = $session ? $session->data : [];
 
         if (!$data) {
-            return redirect()->route('user-generic-unit-kerja.upload')->with('error', 'No data available to import.');
+            return redirect()->route('ussm-job-role.upload')->with('error', 'No data available to import.');
         }
 
         try {
             $response = new StreamedResponse(function () use ($data, $session) {
-                $service = new UserGenericUnitKerjaService();
+                $service = new USSMJobRoleService();
                 $processed = 0;
                 $total = count($data);
                 $lastUpdate = microtime(true);
@@ -141,11 +162,10 @@ class UserGenericUnitKerjaController extends Controller
                     }
                 }
 
-                // After complete, send API-style response for blade view to handle
                 echo json_encode([
                     'success' => true,
                     'message' => 'Data imported successfully',
-                    'redirect' => route('user-generic-unit-kerja.upload')
+                    'redirect' => route('ussm-job-role.upload')
                 ]) . "\n";
                 ob_flush();
                 flush();
@@ -170,5 +190,26 @@ class UserGenericUnitKerjaController extends Controller
                 ],
             ], 500);
         }
+    }
+
+    private function validateName($name, &$seenSet = [])
+    {
+        $trimmed = trim($name);
+        if (!$trimmed) return "Definisi kosong";
+
+        if (mb_strlen($trimmed) > 100) return "Definisi terlalu panjang";
+
+        $words = preg_split('/\s+/', $trimmed);
+        if (count($words) < 2) return "Definisi harus terdiri dari minimal 2 kata";
+        if (count($words) > 4) return "Definisi terlalu panjang (maksimal 4 kata)";
+
+        $dupKey = mb_strtolower($trimmed);
+        if (in_array($dupKey, $seenSet)) return "Definisi duplikat: $trimmed";
+        $seenSet[] = $dupKey;
+
+        $blacklist = ["function", "null", "undefined"];
+        if (in_array($dupKey, $blacklist)) return "Definisi \"$trimmed\" tidak valid";
+
+        return null; // valid
     }
 }

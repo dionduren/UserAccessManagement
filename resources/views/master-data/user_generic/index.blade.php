@@ -49,6 +49,7 @@
                     <th style="width: 7%;">Tipe Lisensi</th>
                     <th style="width: 7%;">Valid From</th>
                     <th style="width: 7%;">Valid To</th>
+                    <th style="width: 10%;">Last Login</th>
                     <th style="width: 5%;">Flagged</th>
                     <th style="width: 12%;">Action</th>
                 </tr>
@@ -106,6 +107,10 @@
                         name: 'valid_to'
                     },
                     {
+                        data: 'last_login',
+                        name: 'last_login',
+                    },
+                    {
                         data: 'flagged',
                         name: 'flagged',
                         render: function(data, type, row) {
@@ -132,9 +137,9 @@
                     targets: [0],
                     visible: false
                 }],
-                order: [
-                    [8, 'desc']
-                ]
+                // order: [
+                //     [8, 'desc']
+                // ]
             });
 
             // Only load data when periode is selected

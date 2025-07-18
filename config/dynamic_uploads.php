@@ -66,9 +66,9 @@ return [
         //     ],
         // ],
         'nik_job_role' => [
-            'name' => 'NIK - Job Role Upload',
+            'name' => 'USSM - Job Role Upload',
             'user_type' => null, // Optional to make controller logic consistent
-            'table' => 'tr_nik_job_role',
+            'table' => 'tr_ussm_job_role',
             'model' => NIKJobRole::class,
             'uses_periode' => true,
             'where_fields' => ['nik'],
