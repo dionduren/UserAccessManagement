@@ -340,9 +340,9 @@ class JobRoleController extends Controller
         try {
             $jobRole = JobRole::where('job_role_id', $request->job_role_id)->firstOrFail();
             $jobRole->flagged = $request->flagged;
-            $jobRole->flagged_keterangan = $request->keterangan;
-            $jobRole->flagged_updated_by = auth()->user()->name ?? 'system';
-            $jobRole->flagged_updated_at = now();
+            $jobRole->keterangan = $request->keterangan;
+            $jobRole->updated_by = auth()->user()->name ?? 'system';
+            $jobRole->updated_at = now();
             $jobRole->save();
 
             // Regenerate the JSON file after updating flagged status
@@ -352,7 +352,7 @@ class JobRoleController extends Controller
                 'success' => true,
                 'message' => 'Flagged status updated successfully and JSON regenerated.',
                 'flagged' => $jobRole->flagged,
-                'keterangan' => $jobRole->flagged_keterangan,
+                'keterangan' => $jobRole->keterangan,
             ]);
         } catch (\Exception $e) {
             Log::error('Error updating flagged status: ' . $e->getMessage());
@@ -379,18 +379,18 @@ class JobRoleController extends Controller
         try {
             $jobRole = JobRole::where('id', $id)->firstOrFail();
             $jobRole->flagged = $request->flagged;
-            $jobRole->flagged_keterangan = $request->keterangan;
-            $jobRole->flagged_updated_by = auth()->user()->name ?? 'system';
-            $jobRole->flagged_updated_at = now();
+            $jobRole->keterangan = $request->keterangan;
+            $jobRole->supdated_by = auth()->user()->name ?? 'system';
+            $jobRole->supdated_at = now();
             $jobRole->save();
 
             // Regenerate the JSON file after updating flagged status
-            app(\App\Services\JSONService::class)->generateMasterDataJson();
+            app(JSONService::class)->generateMasterDataJson();
 
             return redirect()->route('job-roles.index')->with('success', 'Flagged status updated and JSON regenerated.');
         } catch (\Exception $e) {
             \Log::error('Error updating flagged status: ' . $e->getMessage());
-            return redirect()->back()->withErrors(['error' => 'Failed to update flagged status.']);
+            return redirect()->back()->withErrors(['error' => 'Failed to update flagged status: ' . $e->getMessage()]);
         }
     }
 

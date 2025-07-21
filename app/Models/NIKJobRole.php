@@ -20,7 +20,7 @@ class NIKJobRole extends Model
         'periode_id',
         'nik',
         'job_role_id',
-        'definisi',
+        // 'definisi',
         'is_active',
         'last_update',
         'flagged',
@@ -51,7 +51,7 @@ class NIKJobRole extends Model
 
     public function userGeneric()
     {
-        return $this->belongsTo(UserGeneric::class, 'user_code', 'nik');
+        return $this->belongsTo(UserGeneric::class, 'nik', 'user_code');
     }
 
     public function userNIK()

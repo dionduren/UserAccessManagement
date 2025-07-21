@@ -224,12 +224,12 @@ Route::prefix('user-generic')->name('user-generic.')->group(function () {
 Route::get('terminated-employee/getData', [TerminatedEmployeeController::class, 'getData'])->name('terminated-employee.get-data');
 Route::resource('terminated-employee', TerminatedEmployeeController::class);
 
-Route::get('cost-center/user-generic/dashboard', [UserGenericController::class, 'index_dashboard'])->name('dashboard.user-generic');
-Route::get('cost-center/user-generic/compare', [UserGenericController::class, 'compare'])->name('user-generic.compare');
-Route::get('cost-center/user-generic/get-periodic', [UserGenericController::class, 'getPeriodicGenericUser'])->name('user-generic.get-periodic');
-Route::get('cost-center/user-generic/flagged-edit/{id}', [UserGenericController::class, 'editFlagged'])->name('user-generic.flagged-edit');
-Route::post('cost-center/user-generic/flagged-edit/{id}', [UserGenericController::class, 'updateFlagged'])->name('user-generic.flagged-update');
-Route::resource('cost-center/user-generic', UserGenericController::class)->name('index', 'user-generic.index');
+Route::get('user-generic/dashboard', [UserGenericController::class, 'index_dashboard'])->name('dashboard.user-generic');
+Route::get('user-generic/compare', [UserGenericController::class, 'compare'])->name('user-generic.compare');
+Route::get('user-generic/get-periodic', [UserGenericController::class, 'getPeriodicGenericUser'])->name('user-generic.get-periodic');
+Route::get('user-generic/flagged-edit/{id}', [UserGenericController::class, 'editFlagged'])->name('user-generic.flagged-edit');
+Route::post('user-generic/flagged-edit/{id}', [UserGenericController::class, 'updateFlagged'])->name('user-generic.flagged-update');
+Route::resource('user-generic', UserGenericController::class)->name('index', 'user-generic.index');
 
 Route::get('cost-center/prev-user', [CostCenterController::class, 'index_prev_user'])->name('prev-user.index');
 Route::put('cost-center/prev-user/update', [CostCenterController::class, 'update_prev_user'])->name('prev-user.update');

@@ -27,10 +27,10 @@
             </div>
         </div>
         <div class="row mb-3">
-            <div class="col-3">
+            <div class="col-auto">
                 <button id="load" class="btn btn-primary mb-3">Load Data</button>
             </div>
-            <div class="col-3">
+            <div class="col-auto">
                 <button id="export-word" class="btn btn-success mb-3" style="display: none">Export to Word</button>
             </div>
         </div>
@@ -81,6 +81,8 @@
                         <th>User ID</th>
                         <th width="20%">Nama</th>
                         <th width="20%">Job Role</th>
+                        <th width="20%" style="background-color: #d4edda;">Kompartemen</th>
+                        <th width="20%" style="background-color: #d4edda;">Departemen</th>
                         <th width="15%">NIK PIC</th>
                         <th>Tetap</th>
                         <th>Berubah</th>
@@ -174,6 +176,14 @@
                     {
                         data: 'job_role',
                         name: 'job_role'
+                    },
+                    {
+                        data: 'kompartemen',
+                        name: 'kompartemen'
+                    },
+                    {
+                        data: 'departemen',
+                        name: 'departemen'
                     },
                     {
                         data: null,

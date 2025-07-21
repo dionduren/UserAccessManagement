@@ -66,59 +66,80 @@ class CompanyKompartemenService
                 throw new \Exception("Tidak ada departemen_id atau kompartemen_id yang valid ditemukan di CostCenter.");
             }
 
-            // Get next number from PenomoranJobRole
-            $penomoran = PenomoranJobRole::where('company_id', $row['company_code'])->first();
-            $nextNumber = $penomoran ? $penomoran->last_number + 1 : 1;
+            // Find existing JobRole first
+            $existingJobRole = JobRole::where([
+                'company_id'     => $company->company_code,
+                'nama'           => $row['job_function'],
+                'kompartemen_id' => $row['kompartemen_id'],
+                'departemen_id'  => $row['departemen_id'],
+            ])->first();
 
-            // Update the number in PenomoranJobRole
-            PenomoranJobRole::updateOrCreate(
-                [
-                    'company_id' => $row['company_code']
-                ],
-                ['last_number' => $nextNumber]
-            );
-
-
-            // Format job_role_id
-            $costCode = $costCenter ? $costCenter->cost_code : '';
-            // Log::info('Try - $costCenter = ' . $costCenter);
-            $formattedNumber = str_pad($nextNumber, 4, '0', STR_PAD_LEFT);
-            $job_role_id = $costCode . '_' . $cc_level . '_JR_' . $formattedNumber;
-
-            // Create/Update JobRole
-            if ($flag_status) {
-                $jobRole = JobRole::updateOrCreate(
-                    [
-                        'company_id' => $company->company_code,
-                        'nama' => $row['job_function'],
-                        'kompartemen_id' => $row['kompartemen_id'],
-                        'departemen_id' => $row['departemen_id'],
-                    ],
-                    [
-                        'error_departemen_name' => $row['departemen'],
-                        'job_role_id' => $job_role_id,
-                        'created_by' => $user,
-                        'updated_by' => $user,
-                        'flagged' => $flag_status,
-                        'keterangan' => $keterangan_flag
-                    ]
-                );
+            if ($existingJobRole) {
+                // Only update fields, do not generate new number
+                $job_role_id = $existingJobRole->job_role_id;
+                $jobRole = $existingJobRole->fill([
+                    'flagged'    => $flag_status,
+                    'keterangan' => $keterangan_flag,
+                    // Add other fields you want to update here
+                    'updated_by' => $user,
+                ]);
+                if ($flag_status) {
+                    $jobRole->error_departemen_name = $row['departemen'];
+                }
+                $jobRole->save();
             } else {
-                $jobRole = JobRole::updateOrCreate(
+                // Generate new number and create JobRole as before
+                // Get next number from PenomoranJobRole
+                $penomoran = PenomoranJobRole::where('company_id', $row['company_code'])->first();
+                $nextNumber = $penomoran ? $penomoran->last_number + 1 : 1;
+
+                // Update the number in PenomoranJobRole
+                PenomoranJobRole::updateOrCreate(
                     [
-                        'company_id' => $company->company_code,
-                        'nama' => $row['job_function'],
-                        'kompartemen_id' => $row['kompartemen_id'],
-                        'departemen_id' => $row['departemen_id'],
+                        'company_id' => $row['company_code']
                     ],
-                    [
-                        'job_role_id' => $job_role_id,
-                        'created_by' => $user,
-                        'updated_by' => $user,
-                        'flagged' => $flag_status,
-                        'keterangan' => $keterangan_flag
-                    ]
+                    ['last_number' => $nextNumber]
                 );
+
+                // Format job_role_id
+                $costCode = $costCenter ? $costCenter->cost_code : '';
+                $formattedNumber = str_pad($nextNumber, 4, '0', STR_PAD_LEFT);
+                $job_role_id = $costCode . '_' . $cc_level . '_JR_' . $formattedNumber;
+
+                if ($flag_status) {
+                    $jobRole = JobRole::updateOrCreate(
+                        [
+                            'company_id' => $company->company_code,
+                            'nama' => $row['job_function'],
+                            'kompartemen_id' => $row['kompartemen_id'],
+                            'departemen_id' => $row['departemen_id'],
+                        ],
+                        [
+                            'error_departemen_name' => $row['departemen'],
+                            'job_role_id' => $job_role_id,
+                            'created_by' => $user,
+                            'updated_by' => $user,
+                            'flagged' => $flag_status,
+                            'keterangan' => $keterangan_flag
+                        ]
+                    );
+                } else {
+                    $jobRole = JobRole::updateOrCreate(
+                        [
+                            'company_id' => $company->company_code,
+                            'nama' => $row['job_function'],
+                            'kompartemen_id' => $row['kompartemen_id'],
+                            'departemen_id' => $row['departemen_id'],
+                        ],
+                        [
+                            'job_role_id' => $job_role_id,
+                            'created_by' => $user,
+                            'updated_by' => $user,
+                            'flagged' => false,
+                            'keterangan' => null
+                        ]
+                    );
+                }
             }
 
 

@@ -31,7 +31,7 @@ class UserGenericController extends Controller
                 'userGenericUnitKerja.kompartemen',
                 'userGenericUnitKerja.departemen'
             ])
-                ->select('id', 'group', 'periode_id', 'user_code', 'user_type', 'cost_code', 'license_type', 'last_login', 'valid_from', 'valid_to', 'flagged')
+                ->select('id', 'group', 'periode_id', 'user_code', 'user_type', 'user_profile', 'cost_code', 'license_type', 'last_login', 'valid_from', 'valid_to', 'flagged')
                 ->when($request->filled('periode'), function ($query) use ($request) {
                     return $query->where('periode_id', $request->input('periode'));
                 });
@@ -166,8 +166,8 @@ class UserGenericController extends Controller
         $userGeneric = UserGeneric::findOrFail($id);
         $periodes = Periode::select('id', 'definisi')->get();
         $companies = Company::select('shortname', 'company_code', 'nama')->get();
-        $licenseTypes = UserLicenseManagement::select('id', 'license_type')->get();
-        return view('master-data.user_generic.edit', compact('userGeneric', 'periodes', 'companies'));
+        $licenseTypes = UserLicenseManagement::select('id', 'license_type', 'contract_license_type')->get();
+        return view('master-data.user_generic.edit', compact('userGeneric', 'periodes', 'companies', 'licenseTypes'));
     }
 
     /**

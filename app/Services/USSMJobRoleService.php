@@ -29,10 +29,9 @@ class USSMJobRoleService
             [
                 'periode_id'   => $row['periode_id'],
                 'nik'          => $row['nik'],
-                'job_role_id'  => $row['job_role_id'],
             ],
             [
-                'definisi'           => $row['definisi'] ?? null,
+                'job_role_id'        => $row['job_role_id'],
                 'is_active'          => $row['is_active'] ?? 1,
                 'last_update'        => now(),
                 'flagged'            => $flagged,

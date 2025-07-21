@@ -63,7 +63,7 @@
                         @foreach ($licenseTypes as $type)
                             <option value="{{ $type->license_type }}"
                                 {{ old('license_type', $userGeneric->license_type) == $type->license_type ? 'selected' : '' }}>
-                                {{ $type->license_type }}
+                                {{ $type->license_type }} - {{ $type->contract_license_type }}
                             </option>
                         @endforeach
                     </select>

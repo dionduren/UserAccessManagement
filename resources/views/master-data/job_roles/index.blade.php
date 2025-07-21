@@ -1,7 +1,7 @@
 @extends('layouts.app')
 
 @section('content')
-    <div class="container">
+    <div class="container-fluid">
         <h2>Master Data Job Roles</h2>
 
         <a href="{{ route('job-roles.create') }}" class="btn btn-primary mb-3">Buat Job Role</a>
@@ -70,7 +70,8 @@
     </div>
 
     <!-- Modal for Flagged Info and Change Flagged Status -->
-    <div class="modal fade" id="flaggedJobRoleModal" tabindex="-1" aria-labelledby="flaggedJobRoleModalLabel" aria-hidden="true">
+    <div class="modal fade" id="flaggedJobRoleModal" tabindex="-1" aria-labelledby="flaggedJobRoleModalLabel"
+        aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header">

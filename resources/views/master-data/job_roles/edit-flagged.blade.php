@@ -1,7 +1,13 @@
 @extends('layouts.app')
 
 @section('content')
-    <div class="container">
+    <div class="container-fluid">
+        @if ($errors->has('error'))
+            <div class="alert alert-danger">
+                {{ $errors->first('error') }}
+            </div>
+        @endif
+
         <h2>Edit Flagged Status for Job Role: {{ $jobRole->nama }}</h2>
         <form method="POST" action="{{ route('job-roles.update-flagged', $jobRole->id) }}">
             @csrf
@@ -39,8 +45,8 @@
             </div>
 
             <div class="form-group">
-                <label for="flagged-keterangan">Keterangan</label>
-                <textarea class="form-control" name="keterangan" id="flagged-keterangan" rows="2">{{ old('keterangan', $jobRole->keterangan) }}</textarea>
+                <label for="keterangan">Keterangan</label>
+                <textarea class="form-control" name="keterangan" id="keterangan" rows="2">{{ old('keterangan', $jobRole->keterangan) }}</textarea>
             </div>
 
             <div class="mt-3">

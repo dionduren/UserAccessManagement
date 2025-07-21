@@ -141,13 +141,20 @@ class UARReportController extends Controller
 
         foreach ($jobRoles as $jobRole) {
             foreach ($jobRole->NIKJobRole as $nikJobRole) {
+                // dd($nikJobRole->userGeneric, $nikJobRole->userNIK);
                 $data[] = [
                     // Uncomment and adjust these if you want to show company/kompartemen/departemen columns
                     'company' => $jobRole->company->nama ?? '-',
-                    'kompartemen' => $jobRole->kompartemen->nama ?? '-',
-                    'departemen' => $jobRole->departemen->nama ?? '-',
+                    'kompartemen' => $nikJobRole->userGeneric && $nikJobRole->userGeneric->UserGenericUnitKerja
+                        ? ($nikJobRole->userGeneric->UserGenericUnitKerja->kompartemen->nama ?? '-')
+                        : ($jobRole->kompartemen->nama ?? '-'),
+                    'departemen' => $nikJobRole->userGeneric && $nikJobRole->userGeneric->UserGenericUnitKerja
+                        ? ($nikJobRole->userGeneric->UserGenericUnitKerja->departemen->nama ?? '-')
+                        : ($jobRole->departemen->nama ?? '-'),
                     'user_nik' => $nikJobRole->nik ?? '-',
-                    'user_definisi' => $nikJobRole->definisi ?? '-',
+                    'user_definisi' => $nikJobRole->userGeneric
+                        ? $nikJobRole->userGeneric->user_profile
+                        : ($nikJobRole->userNIK->userDetail->nama ?? '-'),
                     'job_role' => $jobRole->nama ?? '-',
                 ];
             }
@@ -247,30 +254,50 @@ class UARReportController extends Controller
             ['alignment' => Jc::CENTER, 'space' => ['after' => 0]]
         );
         // Add a single row with a cell that spans 2 columns, containing a nested table for the 3 rows (Nomor, Periode, Hal. ke)
-        $nestedTable = $headerTable->addCell(2000, ['gridSpan' => 2, 'valign' => 'center'])->addTable([
-            'insideHBorderSize' => 6,
-            'insideHBorderColor' => '000000',
-            'insideVBorderSize' => 6,
-            'insideVBorderColor' => '000000',
-            'insideHBorder' => 'single',
-            'insideVBorder' => 'single',
+        $nestedTable = $headerTable->addCell(2000, ['gridSpan' => 2, 'valign' => 'center',])->addTable([
             'borderSize' => 0,
             'borderColor' => 'FFFFFF',
         ]);
         // Row 1: Nomor
         $nestedTable->addRow();
-        $nestedTable->addCell(1000, ['valign' => 'center'])->addText('Nomor', ['size' => 8]);
-        $nestedTable->addCell(2250, ['valign' => 'center'])->addText('PI-TIN-UAR-' . $nomorSurat, ['size' => 8]);
+        $nestedTable->addCell(1000, [
+            'valign' => 'center',
+            'borderBottomSize' => 6,
+            'borderBottomColor' => '000000',
+            'borderRightSize' => 6,
+            'borderRightColor' => '000000',
+        ])->addText('Nomor', ['size' => 8]);
+        $nestedTable->addCell(2250, [
+            'valign' => 'center',
+            'borderBottomSize' => 6,
+            'borderBottomColor' => '000000',
+        ])->addText('PI-TIN-UAR-' . $nomorSurat, ['size' => 8]);
 
         // Row 2: Periode
         $nestedTable->addRow();
-        $nestedTable->addCell(1000, ['valign' => 'center'])->addText('Periode', ['size' => 8]);
-        $nestedTable->addCell(2250, ['valign' => 'center'])->addText($latestPeriode, ['size' => 8]);
+        $nestedTable->addCell(1000, [
+            'valign' => 'center',
+            'borderBottomSize' => 6,
+            'borderBottomColor' => '000000',
+            'borderRightSize' => 6,
+            'borderRightColor' => '000000',
+        ])->addText('Periode', ['size' => 8]);
+        $nestedTable->addCell(2250, [
+            'valign' => 'center',
+            'borderBottomSize' => 6,
+            'borderBottomColor' => '000000',
+        ])->addText($latestPeriode, ['size' => 8]);
 
         // Row 3: Hal. ke
         $nestedTable->addRow();
-        $nestedTable->addCell(1000, ['valign' => 'center'])->addText('Hal. ke', ['size' => 8]);
-        $nestedTable->addCell(2250, ['valign' => 'center'])->addPreserveText('{PAGE} dari {NUMPAGES}', ['size' => 8], ['alignment' => Jc::START]);
+        $nestedTable->addCell(1000, [
+            'valign' => 'center',
+            'borderRightSize' => 6,
+            'borderRightColor' => '000000',
+        ])->addText('Hal. ke', ['size' => 8]);
+        $nestedTable->addCell(2250, [
+            'valign' => 'center',
+        ])->addPreserveText('{PAGE} dari {NUMPAGES}', ['size' => 8], ['alignment' => Jc::START]);
 
         // (No need to add the header table to the section body)
         $header->addTextBreak(1);
@@ -343,8 +370,14 @@ class UARReportController extends Controller
                     ['space' => ['after' => 0], 'alignment' => Jc::CENTER]
                 );
                 $table->addCell(3000, ['valign' => 'center'])->addText($nikJobRole->nik ?? '-', ['size' => 8], ['space' => ['after' => 0]]);
-                $table->addCell(3000, ['valign' => 'center'])->addText($nikJobRole->definisi ?? '-', ['size' => 8], ['space' => ['after' => 0]]);
-                $table->addCell(3000, ['valign' => 'center'])->addText($jobRole->nama ?? '-', ['size' => 8], ['space' => ['after' => 0]]);
+                $table->addCell(3000, ['valign' => 'center'])->addText(
+                    $nikJobRole->userGeneric
+                        ? $nikJobRole->userGeneric->user_profile
+                        : ($nikJobRole->userNIK->userDetail->nama ?? '-'),
+                    ['size' => 8],
+                    ['space' => ['after' => 0]]
+                );
+                $table->addCell(3000, ['valign' => 'center'])->addText($this->sanitizeForDocx($jobRole->nama ?? '-'), ['size' => 8], ['space' => ['after' => 0]]);
                 $table->addCell(1500, ['valign' => 'center'])->addText('', ['size' => 8], ['space' => ['after' => 0]]);
                 $table->addCell(1500, ['valign' => 'center'])->addText('X', ['size' => 12, 'color' => 'A6A6A6'], ['space' => ['after' => 0], 'alignment' => Jc::CENTER]);
                 $table->addCell(1500, ['valign' => 'center'])->addText('-', ['size' => 8, 'color' => 'A6A6A6'], ['space' => ['after' => 0], 'alignment' => Jc::CENTER]);
@@ -434,143 +467,6 @@ class UARReportController extends Controller
         readfile($filePath);
         unlink($filePath);
         exit;
-    }
-
-    public function exportWordFailed(Request $request)
-    {
-        // 1. Prepare data as in exportWordDone
-        $companyId = $request->company_id;
-        $kompartemenId = $request->kompartemen_id;
-        $departemenId = $request->departemen_id;
-
-        // $departemenName = Departemen::where('departemen_id', $departemenId)->first()->nama;
-        // $unitKerja = $departemenName;
-        $unitKerja = '';
-        $jabatanUnitKerja = '';
-        $unitKerjaName = '';
-        $periode = Periode::latest()->first()->definisi ?? '-';
-        $noSurat = '001'; // Example, replace with your logic
-
-        // if ($departemenId) {
-        //     $departemen = Departemen::find($departemenId);
-        //     $displayName = $departemen ? $departemen->nama : '';
-        //     $displayName = mb_convert_encoding($displayName, 'UTF-8', 'UTF-8');
-        //     $displayName = preg_replace('/[^\P{C}\n]+/u', '', $displayName); // Remove control chars
-        //     if (preg_match('/^Dept\.\s*/', $displayName)) {
-        //         $displayName = preg_replace('/^Dept\.\s*/', '', $displayName);
-        //         $unitKerja = 'Departemen ' . $displayName;
-        //     } elseif (preg_match('/^Dep\.\s*/', $displayName)) {
-        //         $displayName = preg_replace('/^Dep\.\s*/', '', $displayName);
-        //         $unitKerja = 'Departemen ' . $displayName;
-        //     } else {
-        //         $unitKerja = $displayName;
-        //     }
-        //     $unitKerja = $this->sanitizeForDocx($unitKerja);
-        //     $unitKerjaName = $this->sanitizeForDocx($displayName);
-        //     $jabatanUnitKerja = 'VP';
-        // } elseif ($kompartemenId) {
-        //     $kompartemen = Kompartemen::find($kompartemenId);
-        //     $displayName = $kompartemen ? $kompartemen->nama : '';
-        //     $displayName = mb_convert_encoding($displayName, 'UTF-8', 'UTF-8');
-        //     $displayName = preg_replace('/[^\P{C}\n]+/u', '', $displayName); // Remove control chars
-        //     if (preg_match('/^Komp\.\s*/', $displayName)) {
-        //         $displayName = preg_replace('/^Komp\.\s*/', '', $displayName);
-        //         $unitKerja = 'Kompartemen ' . $displayName;
-        //     } elseif (preg_match('/^Fungs\.\s*/', $displayName)) {
-        //         $displayName = preg_replace('/^Fungs\.\s*/', '', $displayName);
-        //         $unitKerja = 'Fungsional ' . $displayName;
-        //     } else {
-        //         $unitKerja = $displayName;
-        //     }
-        //     $unitKerja = $this->sanitizeForDocx($unitKerja);
-        //     $unitKerjaName = $this->sanitizeForDocx($displayName);
-        //     $jabatanUnitKerja = 'SVP';
-        // } elseif ($companyId) {
-        //     $company = Company::where('company_code', $companyId)->first();
-        //     $displayName = $company ? $company->nama : '-';
-        //     $displayName = mb_convert_encoding($displayName, 'UTF-8', 'UTF-8');
-        //     $displayName = preg_replace('/[^\P{C}\n]+/u', '', $displayName); // Remove control chars
-        //     $unitKerja = $this->sanitizeForDocx($displayName);
-        //     $unitKerjaName = $this->sanitizeForDocx($displayName);
-        //     $jabatanUnitKerja = 'Direktur';
-        // }
-
-        // dd($unitKerja, $unitKerjaName, $jabatanUnitKerja, $periode, $noSurat);
-
-        // $query = JobRole::query()
-        //     ->with(['NIKJobRole' => function ($q) {
-        //         $q->whereNull('deleted_at')->where('is_active', true);
-        //     }]);
-        // if ($companyId) $query->where('company_id', $companyId);
-        // if ($kompartemenId) $query->where('kompartemen_id', $kompartemenId);
-        // if ($departemenId) $query->where('departemen_id', $departemenId);
-
-        // $jobRoles = $query->get();
-        // $jumlahAwalUser = $jobRoles->reduce(function ($carry, $jobRole) {
-        //     return $carry + $jobRole->NIKJobRole->count();
-        // }, 0);
-
-        // // 2. Prepare rows for SUMMARY USER ACCESS REVIEW
-        // $rows = [];
-        // $no = 1;
-        // foreach ($jobRoles as $jobRole) {
-        //     foreach ($jobRole->NIKJobRole as $nikJobRole) {
-        //         $rows[] = [
-        //             'no' => $no++,
-        //             'user_id' => $nikJobRole->nik ?? '-',
-        //             'nama' => $nikJobRole->definisi ?? '-',
-        //             'job_role' => $jobRole->nama ?? '-',
-        //             'nik_pic' => '', // Fill as needed
-        //             'tetap' => 'X',
-        //             'berubah' => '-',
-        //             'keterangan' => 'Apabila ada (perubahan job function/nama/nik/Penonaktifan)',
-        //         ];
-        //     }
-        // }
-
-        // 3. Load template
-        $templatePath = base_path('resources/templates/template-uar.docx');
-        $templateProcessor = new TemplateProcessor($templatePath);
-
-        // 4. Set single values
-        $templateProcessor->setValue('unit_kerja', $unitKerja);
-        // $templateProcessor->setValue('jumlah_awal_user', $jumlahAwalUser);
-        $templateProcessor->setValue('periode', $periode);
-        $templateProcessor->setValue('jabatan_unit_kerja', $jabatanUnitKerja);
-        $templateProcessor->setValue('nama_unit_kerja', $unitKerjaName);
-        $templateProcessor->setValue('no_surat', $noSurat);
-
-        // 5. Clone table rows for SUMMARY USER ACCESS REVIEW
-        // if (count($rows) > 0) {
-        //     $templateProcessor->cloneRowAndSetValues('no', $rows);
-        // } else {
-        //     // If no data, clear the row
-        // $templateProcessor->setValue('no', '');
-        // $templateProcessor->setValue('user_id', '');
-        // $templateProcessor->setValue('nama', '');
-        // $templateProcessor->setValue('job_role', '');
-        // $templateProcessor->setValue('nik_pic', '');
-        // $templateProcessor->setValue('tetap', '');
-        // $templateProcessor->setValue('berubah', '');
-        // $templateProcessor->setValue('keterangan', '');
-        // }
-
-        // 6. Save and download
-        $fileName = 'uar_report_' . date('Ymd_His') . '.docx';
-        $tempPath = storage_path('app/tmp');
-        if (!file_exists($tempPath)) {
-            mkdir($tempPath, 0777, true);
-        }
-        $fullPath = $tempPath . '/' . $fileName;
-        $templateProcessor->saveAs($fullPath);
-
-        // return response()->download($fullPath, $fileName, [
-        //     'Content-Type' => 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-        //     'Content-Disposition' => 'attachment; filename="' . $fileName . '"',
-        // ])->deleteFileAfterSend(true);
-        return response()->download($fullPath, $fileName, [
-            'Content-Type' => 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-        ])->deleteFileAfterSend(true);
     }
 
     private function sanitizeForDocx($string)

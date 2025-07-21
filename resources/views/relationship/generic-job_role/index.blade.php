@@ -146,8 +146,18 @@
                         data: 'flagged',
                         name: 'flagged',
                         render: function(data, type, row) {
-                            return (data == 1) ? '<span class="badge bg-danger">Flagged</span>' :
-                                '';
+                            if (data === 'true' || data === true || data == 1) {
+                                var tooltip = row.keterangan_flagged ? row.keterangan_flagged
+                                    .replace(/"/g, '&quot;') : '';
+                                return `<span class="badge bg-danger">Terdapat Error Data <i class="bi bi-info-circle" title="${tooltip}"></i></span>`;
+                            } else if (data === 'false' || data === false || data == 0) {
+                                if (!row.job_role_id) {
+                                    return '<span class="badge bg-warning text-dark">Job Role Belum Diisi</span>';
+                                }
+                                return '<span class="badge bg-success">Data Valid</span>';
+                            } else {
+                                return '<span class="badge bg-secondary">Unknown</span>';
+                            }
                         },
                         orderable: true,
                         searchable: false
@@ -158,17 +168,6 @@
                         orderable: false,
                         searchable: false,
                         render: function(data, type, row) {
-                            // return `
-                        //     <button class="btn btn-info btn-sm show-detail" data-id="${row.id}">
-                        //         <i class="bi bi-eye"></i> Detail
-                        //     </button>
-                        //     <a href="/relationship/generic-job-role/${row.id}/edit" class="btn btn-sm btn-outline-warning">
-                        //         <i class="fas fa-edit"></i> Edit
-                        //     </a>
-                        //     <button onclick="deleteRelationship(${row.id})" class="btn btn-sm btn-outline-danger">
-                        //         <i class="fas fa-trash"></i> Delete
-                        //     </button>
-                        // `;
                             return `
                                 <button class="btn btn-info btn-sm show-detail" data-id="${row.id}">
                                     <i class="bi bi-eye"></i> Detail

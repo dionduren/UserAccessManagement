@@ -52,11 +52,11 @@ class USSMJobRoleController extends Controller
                     $row['_row_errors'][] = 'Job Role ID kosong.';
                 }
 
-                // Definisi validation
-                $definisiError = $this->validateName($row['definisi'] ?? '', $seenDefinisi);
-                if ($definisiError) {
-                    $row['_row_warnings'][] = $definisiError;
-                }
+                // // Definisi validation
+                // $definisiError = $this->validateName($row['definisi'] ?? '', $seenDefinisi);
+                // if ($definisiError) {
+                //     $row['_row_warnings'][] = $definisiError;
+                // }
 
                 $row['_row_issues_count'] = count($row['_row_errors']) + count($row['_row_warnings']);
                 $parsedData[] = $row;
@@ -192,24 +192,24 @@ class USSMJobRoleController extends Controller
         }
     }
 
-    private function validateName($name, &$seenSet = [])
-    {
-        $trimmed = trim($name);
-        if (!$trimmed) return "Definisi kosong";
+    // private function validateName($name, &$seenSet = [])
+    // {
+    //     $trimmed = trim($name);
+    //     if (!$trimmed) return "Definisi kosong";
 
-        if (mb_strlen($trimmed) > 100) return "Definisi terlalu panjang";
+    //     if (mb_strlen($trimmed) > 100) return "Definisi terlalu panjang";
 
-        $words = preg_split('/\s+/', $trimmed);
-        if (count($words) < 2) return "Definisi harus terdiri dari minimal 2 kata";
-        if (count($words) > 4) return "Definisi terlalu panjang (maksimal 4 kata)";
+    //     $words = preg_split('/\s+/', $trimmed);
+    //     if (count($words) < 2) return "Definisi harus terdiri dari minimal 2 kata";
+    //     if (count($words) > 4) return "Definisi terlalu panjang (maksimal 4 kata)";
 
-        $dupKey = mb_strtolower($trimmed);
-        if (in_array($dupKey, $seenSet)) return "Definisi duplikat: $trimmed";
-        $seenSet[] = $dupKey;
+    //     $dupKey = mb_strtolower($trimmed);
+    //     if (in_array($dupKey, $seenSet)) return "Definisi duplikat: $trimmed";
+    //     $seenSet[] = $dupKey;
 
-        $blacklist = ["function", "null", "undefined"];
-        if (in_array($dupKey, $blacklist)) return "Definisi \"$trimmed\" tidak valid";
+    //     $blacklist = ["function", "null", "undefined"];
+    //     if (in_array($dupKey, $blacklist)) return "Definisi \"$trimmed\" tidak valid";
 
-        return null; // valid
-    }
+    //     return null; // valid
+    // }
 }

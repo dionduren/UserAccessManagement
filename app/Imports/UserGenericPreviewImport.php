@@ -24,11 +24,15 @@ class UserGenericPreviewImport implements ToCollection, WithHeadingRow, WithChun
                 'group' => $row['group'] ?? null,
                 'user_code' => $row['user_code'] ?? null,
                 'user_type' => $row['user_type'] ?? null,
+                'user_profile' => $row['user_profile'] ?? null,
                 'cost_code' => $row['cost_code'] ?? null,
                 'license_type' => $row['license_type'] ?? null,
                 'last_login' => $row['last_login'] ?? null,
                 'valid_from' => $row['valid_from'] ?? null,
                 'valid_to' => $row['valid_to'] ?? null,
+                'keterangan' => $row['keterangan'] ?? null,
+                'uar_listed' => $row['uar_listed'] ?? null,
+                'created_by' => auth()->id(), // Assuming the user is authenticated
             ];
 
             $this->rows->push(collect($mappedRow));

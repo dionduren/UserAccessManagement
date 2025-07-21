@@ -2,14 +2,15 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\SoftDeletes;
-use Illuminate\Database\Eloquent\Model;
-
-use App\Models\Periode;
-use App\Models\Kompartemen;
 use App\Models\Departemen;
+use App\Models\Kompartemen;
+use App\Models\NIKJobRole;
+use App\Models\Periode;
 use App\Models\UserGeneric;
+
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class UserGenericUnitKerja extends Model
 {
@@ -37,7 +38,7 @@ class UserGenericUnitKerja extends Model
 
     public function userGeneric()
     {
-        return $this->belongsTo(UserGeneric::class, 'unit_kerja', 'user_cc');
+        return $this->belongsTo(UserGeneric::class, 'user_cc', 'user_code');
     }
 
     public function periode()
@@ -47,11 +48,16 @@ class UserGenericUnitKerja extends Model
 
     public function kompartemen()
     {
-        return $this->belongsTo(Kompartemen::class, 'kompartemen_id');
+        return $this->belongsTo(Kompartemen::class, 'kompartemen_id', 'kompartemen_id');
     }
 
     public function departemen()
     {
-        return $this->belongsTo(Departemen::class, 'departemen_id');
+        return $this->belongsTo(Departemen::class, 'departemen_id', 'departemen_id');
+    }
+
+    public function NIKJobRole()
+    {
+        return $this->hasMany(NIKJobRole::class, 'user_cc', 'nik');
     }
 }

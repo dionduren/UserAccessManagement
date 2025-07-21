@@ -29,7 +29,10 @@ class UserGenericJobRoleController extends Controller
                     'id',
                     'periode_id',
                     'group',
-                    'user_code'
+                    'user_code',
+                    'flagged',
+                    'keterangan_flagged',
+                    'user_profile as definisi'
                 ])
                 ->with(['periode', 'NIKJobRole'])
                 ->where('periode_id', $request->input('periode'));
@@ -46,15 +49,15 @@ class UserGenericJobRoleController extends Controller
                         return $nikJobRole->jobRole ? $nikJobRole->jobRole->nama : '-';
                     })->implode(', ');
                 })
-                ->addColumn('definisi', function ($row) {
-                    return $row->NIKJobRole->map(function ($nikJobRole) {
-                        return $nikJobRole->definisi ?? '-';
-                    })->implode(', ');
-                })
                 ->addColumn('flagged', function ($row) {
-                    return $row->NIKJobRole->map(function ($nikJobRole) {
+                    $flaggedValues = $row->NIKJobRole->map(function ($nikJobRole) {
                         return $nikJobRole->flagged ?? false;
-                    })->implode(', ');
+                    });
+
+                    // If all flagged values are false, check $row->flagged
+                    if ($flaggedValues->every(fn($value) => !$value)) {
+                        return $row->flagged ? 'true' : 'false';
+                    }
                 })
                 // ->addColumn('action', function ($row) {
                 //     return '<a href="' . route('user-generic-job-role.edit', $row->id) . '" class="btn btn-sm btn-outline-warning">
@@ -84,8 +87,8 @@ class UserGenericJobRoleController extends Controller
     {
         $request->validate([
             'user_generic_id' => 'required|exists:tr_user_generic,id',
-            'job_role_id' => 'required|string|max:50',
-            'job_role_name' => 'required|string|max:100',
+            'job_role_id' => 'required|string',
+            'job_role_name' => 'required|string',
             'periode_id' => 'required|exists:ms_periode,id',
         ]);
 
@@ -118,9 +121,7 @@ class UserGenericJobRoleController extends Controller
     public function show($id)
     {
         $userGeneric = UserGeneric::with([
-            'NIKJobRole.jobRole',
-            'kompartemen', // adjust if you have this relationship
-            'departemen'   // adjust if you have this relationship
+            'NIKJobRole.jobRole'
         ])->findOrFail($id);
 
         // Assuming only one job role per user generic for simplicity
@@ -130,10 +131,10 @@ class UserGenericJobRoleController extends Controller
             'user_code' => $userGeneric->user_code,
             'job_role_id' => $nikJobRole?->job_role_id,
             'job_role_name' => $nikJobRole?->jobRole?->nama,
-            'kompartemen_id' => $userGeneric->kompartemen_id,
-            'kompartemen_nama' => $userGeneric->kompartemen?->nama,
-            'departemen_id' => $userGeneric->departemen_id,
-            'departemen_nama' => $userGeneric->departemen?->nama,
+            'kompartemen_id' => $userGeneric->userGenericUnitKerja?->kompartemen_id,
+            'kompartemen_nama' => $userGeneric->userGenericUnitKerja?->kompartemen?->nama,
+            'departemen_id' => $userGeneric->userGenericUnitKerja?->departemen_id,
+            'departemen_nama' => $userGeneric->userGenericUnitKerja?->departemen?->nama,
             'flagged' => $nikJobRole?->flagged,
             'keterangan_flagged' => $nikJobRole?->keterangan_flagged,
         ]);

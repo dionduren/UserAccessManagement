@@ -8,15 +8,18 @@
                 <tr>
                     <th>Group</th>
                     <th>User Code</th>
-                    <th>User Type</th>
+                    {{-- <th>User Type</th> --}}
+                    <th style="display:none;">User Profile</th>
                     <th>License Type</th>
-                    <th style="background-color:greenyellow">Kompartemen ID</th>
+                    {{-- <th style="background-color:greenyellow">Kompartemen ID</th> --}}
                     <th style="background-color:greenyellow">Kompartemen Name</th>
-                    <th style="background-color:greenyellow">Departemen ID</th>
+                    {{-- <th style="background-color:greenyellow">Departemen ID</th> --}}
                     <th style="background-color:greenyellow">Departemen Name</th>
                     <th>Last Login</th>
                     <th>Valid From</th>
                     <th>Valid To</th>
+                    <th style="display:none;">Keterangan</th>
+                    <th><span style="white-space: wrap;">Ada di UAR</span></th>
                 </tr>
             </thead>
             <tbody>
@@ -56,20 +59,20 @@
                         data: 'user_code'
                     },
                     {
-                        data: 'user_type'
+                        data: 'user_profile',
                     },
                     {
                         data: 'license_type'
                     },
-                    {
-                        data: 'kompartemen_id'
-                    },
+                    // {
+                    //     data: 'kompartemen_id'
+                    // },
                     {
                         data: 'kompartemen_name'
                     },
-                    {
-                        data: 'departemen_id'
-                    },
+                    // {
+                    //     data: 'departemen_id'
+                    // },
                     {
                         data: 'departemen_name'
                     },
@@ -81,6 +84,32 @@
                     },
                     {
                         data: 'valid_to'
+                    },
+                    {
+                        data: 'keterangan',
+                        render: function(data, type, row) {
+                            if (type === 'display' && data) {
+                                // Replace & with "dan"
+                                let replaced = data.replace(/&amp;/g, 'dan');
+                                return '<div style="white-space: pre-wrap;">' + $('<div>').text(
+                                    replaced).html() + '</div>';
+                            }
+                            return data;
+                        }
+                    },
+                    {
+                        data: 'uar_listed',
+                        render: function(data, type, row) {
+                            if (type === 'display') {
+                                if (data === true || data === 'true' || data === 1 || data ===
+                                    '1') {
+                                    return '<span style="color:green;font-weight:bold;font-size:1.75em;">&#10003;</span>';
+                                } else {
+                                    return '<span style="color:red;font-weight:bold;font-size:1.75em;">&#9447;</span>';
+                                }
+                            }
+                            return data;
+                        }
                     }
                 ],
                 responsive: true,
@@ -102,7 +131,8 @@
                             'background-color': '#ff9800',
                             'color': '#000000'
                         }); // orange
-                        tooltip = (data._row_errors.join('\n') + '\n' + data._row_warnings.join('\n'))
+                        tooltip = (data._row_errors.join('\n') + '\n' + data._row_warnings.join(
+                                '\n'))
                             .trim();
                     } else if (hasError) {
                         $(row).css({
@@ -126,6 +156,11 @@
 
                     // Set tooltip for the whole row
                     $(row).attr('title', tooltip);
+
+                    // Change background color for kompartemen_name cell if null
+                    if (data.kompartemen_name === null || data.kompartemen_name === '') {
+                        $('td:eq(4)', row).css('background-color', 'yellow');
+                    }
                 }
             });
 
@@ -161,7 +196,8 @@
                                 .text(progress + '%');
                         }
                         if (data.success) {
-                            progressBar.css('width', '100%').attr('aria-valuenow', 100).text('100%');
+                            progressBar.css('width', '100%').attr('aria-valuenow', 100).text(
+                                '100%');
                             importSuccess.text(data.success).show();
                             importForm.find('button[type="submit"]').prop('disabled', false);
                         }

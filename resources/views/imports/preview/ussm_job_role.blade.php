@@ -20,7 +20,6 @@
                 <tr>
                     <th>NIK</th>
                     <th>Job Role ID</th>
-                    <th>Definisi</th>
                     <th>Status</th>
                 </tr>
             </thead>
@@ -42,10 +41,6 @@
                     {
                         data: 'job_role_id',
                         name: 'job_role_id'
-                    },
-                    {
-                        data: 'definisi',
-                        name: 'definisi'
                     },
                     {
                         data: 'validation_message',

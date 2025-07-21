@@ -43,6 +43,8 @@
                     {{-- <th style="width: 12%;">Periode</th> --}}
                     <th style="width: 8%;">User Code</th>
                     {{-- <th style="width: 12%;">Cost Code</th> --}}
+                    <th style="width: 8%;">User Profile</th>
+                    {{-- <th style="width: 10%;">User Profile</th> --}}
                     {{-- <th>PIC</th>
                     <th>Unit Kerja</th>
                     <th>Job Role</th> --}}
@@ -93,6 +95,10 @@
                     {
                         data: 'user_code',
                         name: 'user_code'
+                    },
+                    {
+                        data: 'user_profile',
+                        name: 'user_profile'
                     },
                     {
                         data: 'license_type',

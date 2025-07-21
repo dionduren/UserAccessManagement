@@ -53,4 +53,8 @@ class userNIK extends Model
     {
         return $this->hasMany(NIKJobRole::class, 'nik', 'user_code');
     }
+    public function NIKJobRole()
+    {
+        return $this->hasMany(NIKJobRole::class, 'nik', 'user_code');
+    }
 }
