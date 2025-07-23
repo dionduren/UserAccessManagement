@@ -38,9 +38,11 @@
                         <table class="table table-bordered mt-3" id="nik_job_role_table">
                             <thead>
                                 <tr>
-                                    <th>Periode</th>
+                                    <th style="background-color: red;color:white">Periode (TO BE DELETED)</th>
+                                    <th style="background-color: greenyellow">Perusahaan</th>
                                     <th>NIK</th>
                                     <th>Nama</th>
+                                    <th style="background-color: greenyellow">Unit Kerja</th>
                                     <th>Job Role</th>
                                     <th>Action</th>
                                 </tr>
@@ -71,12 +73,20 @@
                             name: 'periode'
                         },
                         {
+                            data: 'company',
+                            name: 'company'
+                        },
+                        {
                             data: 'nik',
                             name: 'nik'
                         },
                         {
                             data: 'nama',
                             name: 'nama'
+                        },
+                        {
+                            data: 'kompartemen',
+                            name: 'kompartemen'
                         },
                         {
                             data: 'job_role',

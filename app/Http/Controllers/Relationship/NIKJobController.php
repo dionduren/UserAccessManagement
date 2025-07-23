@@ -171,7 +171,13 @@ class NIKJobController extends Controller
         $nikJobRoles = NIKJobRole::select('id', 'nik', 'job_role_id', 'periode_id')
             ->with([
                 'jobRole' => function ($query) {
-                    $query->select('id', 'job_role_id', 'nama');
+                    $query->select('id', 'job_role_id', 'nama', 'company_id', 'kompartemen_id');
+                },
+                'jobRole.company' => function ($query) {
+                    $query->select('company_code', 'nama');
+                },
+                'jobRole.kompartemen' => function ($query) {
+                    $query->select('kompartemen_id', 'nama');
                 },
                 'periode' => function ($query) {
                     $query->select('id', 'definisi');
@@ -191,17 +197,23 @@ class NIKJobController extends Controller
             ->addColumn('job_role', function ($row) {
                 return $row->jobRole ? $row->jobRole->nama : '-';
             })
+            ->addColumn('company', function ($row) {
+                return ($row->jobRole && $row->jobRole->company) ? $row->jobRole->company->nama : '-';
+            })
+            ->addColumn('kompartemen', function ($row) {
+                return ($row->jobRole && $row->jobRole->kompartemen) ? $row->jobRole->kompartemen->nama : '-';
+            })
             ->addColumn('periode', function ($row) {
                 return $row->periode ? $row->periode->definisi : '-';
             })
             ->addColumn('action', function ($row) {
                 return '
-                <a href="' . route('nik-job.show', $row->id) . '" target="_blank" class="btn btn-sm btn-primary me-1">
-                <i class="bi bi-info-circle-fill"></i> Detail
-                </a>
-                <a href="' . route('nik-job.edit', $row->id) . '" target="_blank" class="btn btn-sm btn-warning me-1">
-                <i class="bi bi-pencil-fill"></i> Edit
-                </a>';
+            <a href="' . route('nik-job.show', $row->id) . '" target="_blank" class="btn btn-sm btn-primary me-1">
+            <i class="bi bi-info-circle-fill"></i> Detail
+            </a>
+            <a href="' . route('nik-job.edit', $row->id) . '" target="_blank" class="btn btn-sm btn-warning me-1">
+            <i class="bi bi-pencil-fill"></i> Edit
+            </a>';
             })
             ->rawColumns(['action'])
             ->make(true);

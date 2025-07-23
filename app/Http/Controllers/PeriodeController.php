@@ -2,13 +2,17 @@
 
 namespace App\Http\Controllers;
 
+use \App\Models\NIKJobRole;
+
+use \App\Models\UserGenericUnitKerja;
+use App\Http\Controllers\Controller;
+
 use App\Models\Periode;
-
-use Yajra\DataTables\DataTables;
-
+use App\Models\UserGeneric;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Validation\Rule;
+use Yajra\DataTables\DataTables;
 
 class PeriodeController extends Controller
 {
@@ -57,20 +61,47 @@ class PeriodeController extends Controller
 
         Periode::create($request->all());
 
-        // Duplikat Data User Generic dari Periode sebelumnya
+        $message = 'Periode dengan definisi ' . $request->definisi . ' berhasil dibuat.';
+
+        // Duplikat Data User Generic dari Periode sebelumnya (n-1 dari latest)
+        $previousPeriode = Periode::orderByDesc('id')->skip(1)->first();
         $latestPeriode = Periode::latest()->first();
 
-        if ($latestPeriode) {
-            $periodeId = $latestPeriode->id;
-            $userGenerics = \App\Models\UserGeneric::all();
-            foreach ($userGenerics as $userGeneric) {
-                $newUserGeneric = $userGeneric->replicate();
-                $newUserGeneric->periode_id = $periodeId;
-                $newUserGeneric->save();
+        if ($previousPeriode) {
+            // Duplikat Mapping User Generic - Unit Kerja dari periode sebelumnya
+            $userGenericUnitKerja = UserGenericUnitKerja::where('periode_id', $previousPeriode->id)->get();
+
+            foreach ($userGenericUnitKerja as $UserGenericUnitKerja) {
+                $newuserGenericUnitKerja = $UserGenericUnitKerja->replicate();
+                $newuserGenericUnitKerja->periode_id = $latestPeriode->id;
+                $newuserGenericUnitKerja->save();
             }
+
+            if ($userGenericUnitKerja->isEmpty()) {
+                $message .= '<br><ul><li>Tidak ada data Mapping User Generic - Unit Kerja sebelumnya untuk diduplikat.</li>';
+            } else {
+                $message .= '<br><ul><li>Mapping User Generic - Unit Kerja berhasil diduplikat dari ' . $previousPeriode->definisi . '</li>';
+            }
+
+            // Duplikat Data User Generic - Job Role dari periode sebelumnya
+            $USSMJobRoles = NIKJobRole::where('periode_id', $previousPeriode->id)->get();
+
+            foreach ($USSMJobRoles as $USSMJobRole) {
+                $newUSSMJobRole = $USSMJobRole->replicate();
+                $newUSSMJobRole->periode_id = $latestPeriode->id;
+                $newUSSMJobRole->save();
+            }
+
+            if ($USSMJobRoles->isEmpty()) {
+                $message .= '<li>Tidak ada data Mapping User Cost Center - Job Role sebelumnya untuk diduplikat.</li></ul>';
+            } else if ($USSMJobRoles->count() > 0) {
+                $message .= '<li>Mapping User Cost Center - Job Role berhasil diduplikat dari ' . $previousPeriode->definisi . '</li></ul>';
+            }
+        } else {
+            $message .= '<br><ul><li>Tidak ada data UAR sebelumnya untuk diduplikat.</li></ul>';
         }
 
-        return redirect()->route('periode.index')->with('success', 'Periode  dengan definisi ' . $request->definisi . ' berhasil dibuat.');
+        return redirect()->route('periode.index')->with('success', $message);
     }
 
     /**

@@ -49,12 +49,6 @@
                             <i class="bi bi-layers me-2"></i> Departemen
                         </a>
                     </li>
-                    <li>
-                        <a href="{{ route('unit-kerja.upload-form') }}"
-                            class="nav-link {{ request()->routeIs('unit-kerja.upload-form') ? 'active' : 'text-white' }}">
-                            <i class="bi bi-cloud-upload me-2"></i> Upload Unit Kerja
-                        </a>
-                    </li>
 
                 </div>
             </div>
@@ -142,10 +136,17 @@
             <div class="dropdown">
                 <a class="nav-link dropdown-toggle {{ request()->is('company-kompartemen*', 'composite-single*', 'tcode-single-role*') ? 'active' : 'text-white' }}"
                     data-bs-toggle="dropdown" href="#" role="button" aria-expanded="false">
-                    <i class="bi bi-file-earmark-spreadsheet me-2"></i> <span class="me-auto">IMPORT DATA</span>
+                    <i class="bi bi-file-earmark-spreadsheet me-2"></i> <span class="me-auto">UPLOAD DATA MASTER</span>
                 </a>
                 <div
                     class="dropdown-content {{ request()->is('company_kompartemen*', 'composite_single*', 'tcode_single_role*') ? 'show' : '' }}">
+
+                    <li>
+                        <a href="{{ route('unit-kerja.upload-form') }}"
+                            class="nav-link {{ request()->routeIs('unit-kerja.upload-form') ? 'active' : 'text-white' }}">
+                            <i class="bi bi-cloud-upload me-2"></i> Upload Unit Kerja
+                        </a>
+                    </li>
                     <li class="nav-item">
                         <a href="{{ route('company_kompartemen.upload') }}"
                             class="nav-link {{ request()->routeIs('company_kompartemen*') ? 'active' : 'text-white' }}">
@@ -406,24 +407,54 @@
                     </div>
                 </div>
 
-                {{-- Others --}}
+
                 <hr>
 
+                <div>
+                    <h5>Report</h5>
+                    <li class="nav-item">
+                        <a href="{{ route('report.uar.index') }}"
+                            class="nav-link {{ request()->routeIs('report.uar.index') ? 'active' : 'text-white' }}">
+                            <i class="bi bi-file-earmark-text me-2"></i> Report UAR
+                        </a>
+                    </li>
+                </div>
+
+
+                <hr>
+
+                <div>
+                    <h5>Master Data Parameter</h5>
+                </div>
+                <div>
+                    <li class="nav-item">
+                        <a href="{{ route('penomoran-uar.index') }}"
+                            class="nav-link {{ request()->routeIs('penomoran-uar*') ? 'active' : 'text-white' }}">
+                            <i class="bi bi-list-ol me-2"></i> Penomoran UAR
+                        </a>
+                    </li>
+                </div>
+
+                {{-- Others --}}
+
+
+                {{-- 
+                    <hr>
                 <li class="nav-item">
                     <a href="{{ route('prev-user.index') }}"
                         class="nav-link {{ request()->routeIs('prev-user.index') ? 'active' : 'text-white' }}">
                         <i class="bi bi-person-lines-fill"></i> Generic Previous User
                     </a>
-                </li>
+                </li> --}}
 
-                <li class="nav-item">
+                {{-- <li class="nav-item">
                     <a href="{{ route('terminated-employee.index') }}"
                         class="nav-link {{ request()->routeIs('terminated-employee.index') ? 'active' : 'text-white' }}">
                         <i class="bi bi-file-earmark-spreadsheet"></i> Terminated Employee
                     </a>
-                </li>
+                </li> --}}
 
-                <li class="nav-item">
+                {{-- <li class="nav-item">
                     <a href="{{ route('user-nik.compare') }}"
                         class="nav-link {{ request()->routeIs('user-nik.compare*') ? 'active' : 'text-white' }}">
                         <i class="bi bi-file-diff"></i> Compare User NIK Periode
@@ -453,27 +484,15 @@
                             <i class="bi bi-cash-stack"></i> Cost Center
                         </a>
                     </li>
-                </div>
+                </div> --}}
                 {{-- <li class="nav-item">
                 <a href=""
                     class="nav-link {{ request()->routeIs('tcode_single_role*') ? 'active' : 'text-white' }}">
                     <i class="bi bi-vector-pen"></i> User License
                 </a>
-            </li> --}}
+            </li>
             </div>
-
-            <hr>
-
-            <div>
-                <h5>Report</h5>
-                <li class="nav-item">
-                    <a href="{{ route('report.uar.index') }}"
-                        class="nav-link {{ request()->routeIs('report.uar.index') ? 'active' : 'text-white' }}">
-                        <i class="bi bi-file-earmark-text me-2"></i> Report UAR
-                    </a>
-                </li>
-            </div>
-
+            {{-- 
             <hr>
 
             <div>
@@ -499,40 +518,43 @@
                         <i class="bi bi-file-earmark-spreadsheet me-2"></i> Empty Job Role
                     </a>
                 </li>
-            </div>
-        @endcan
-        <hr>
+            </div> --}}
 
-        @can('manage access-matrix')
-            <div>
-                <h5>Admin Menu</h5>
-            </div>
 
-            <li>
-                <a href="{{ route('access-matrix') }}"
-                    class="nav-link {{ request()->routeIs('access-matrix') ? 'active' : 'text-white' }}">
-                    <i class="bi bi-table me-2"></i> Access Matrix
-                </a>
-            </li>
-        @endcan
 
-        @role('Admin')
-            <li>
-                <a href="{{ route('admin.dashboard') }}"
-                    class="nav-link {{ request()->routeIs('admin.dashboard') ? 'active' : 'text-white' }}">
-                    <i class="bi bi-person-lock me-2"></i> Admin Page
-                </a>
-            </li>
-        @endrole
+            @endcan
+            <hr>
 
-        @can('manage users')
-            <li>
-                <a href="{{ route('users.index') }}"
-                    class="nav-link {{ request()->routeIs('users.index') ? 'active' : 'text-white' }}">
-                    <i class="bi bi-person-lines-fill me-2"></i> Manage Users
-                </a>
-            </li>
-        @endcan
+            @can('manage access-matrix')
+                <div>
+                    <h5>Admin Menu</h5>
+                </div>
+
+                <li>
+                    <a href="{{ route('access-matrix') }}"
+                        class="nav-link {{ request()->routeIs('access-matrix') ? 'active' : 'text-white' }}">
+                        <i class="bi bi-table me-2"></i> Access Matrix
+                    </a>
+                </li>
+            @endcan
+
+            @role('Admin')
+                <li>
+                    <a href="{{ route('admin.dashboard') }}"
+                        class="nav-link {{ request()->routeIs('admin.dashboard') ? 'active' : 'text-white' }}">
+                        <i class="bi bi-person-lock me-2"></i> Admin Page
+                    </a>
+                </li>
+            @endrole
+
+            @can('manage users')
+                <li>
+                    <a href="{{ route('users.index') }}"
+                        class="nav-link {{ request()->routeIs('users.index') ? 'active' : 'text-white' }}">
+                        <i class="bi bi-person-lines-fill me-2"></i> Manage Users
+                    </a>
+                </li>
+            @endcan
     </ul>
 </div>
 

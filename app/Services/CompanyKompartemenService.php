@@ -82,10 +82,12 @@ class CompanyKompartemenService
                     'keterangan' => $keterangan_flag,
                     // Add other fields you want to update here
                     'updated_by' => $user,
+                    'updated_at' => now(),
                 ]);
                 if ($flag_status) {
                     $jobRole->error_departemen_name = $row['departemen'];
                 }
+                // dd($jobRole);
                 $jobRole->save();
             } else {
                 // Generate new number and create JobRole as before

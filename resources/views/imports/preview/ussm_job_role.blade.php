@@ -19,7 +19,10 @@
             <thead>
                 <tr>
                     <th>NIK</th>
+                    <th style="background-color: greenyellow">Nama User</th>
+                    <th style="background-color: greenyellow">Unit Kerja</th>
                     <th>Job Role ID</th>
+                    <th style="background-color: greenyellow">Nama Job Role</th>
                     <th>Status</th>
                 </tr>
             </thead>
@@ -39,8 +42,20 @@
                         name: 'nik'
                     },
                     {
+                        data: 'nik_owner',
+                        name: 'nik_owner'
+                    },
+                    {
+                        data: 'unit_kerja',
+                        name: 'unit_kerja'
+                    },
+                    {
                         data: 'job_role_id',
                         name: 'job_role_id'
+                    },
+                    {
+                        data: 'job_role_name',
+                        name: 'job_role_name'
                     },
                     {
                         data: 'validation_message',

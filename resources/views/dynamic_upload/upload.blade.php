@@ -20,6 +20,7 @@
             @if ($moduleConfig['uses_periode'] ?? false)
                 <div class="mb-3">
                     <label>Periode:</label>
+                    <span style="color: red;">=> soon to be deleted for UserDetail / Master Data Karyawan</span>
 
                     <select name="periode_id" class="form-control" required>
                         @foreach ($periodes as $periode)

@@ -44,6 +44,10 @@
                         <th colspan="2" style="background:#bcd;">DOKUMEN REVIEW USER ID DAN OTORISASI</th>
                     </tr>
                     <tr>
+                        <td width="30%">Nomor Surat</td>
+                        <td id="nomor-surat-cell"></td>
+                    </tr>
+                    <tr>
                         <td width="30%">Aset Informasi</td>
                         <td>User ID SAP</td>
                     </tr>
@@ -217,11 +221,38 @@
                             return '';
                         }
                     }
-                ]
+                ],
+                tooltips: true,
+                responsive: true,
+                searching: true,
+                paging: true,
+                ordering: true,
+                pageLength: 15,
+                lengthMenu: [10, 15, 25, 50, 100],
+                order: [
+                    [1, 'asc']
+                ],
+                rowCallback: function(row, data) {
+                    if (!data.user_definisi || data.user_definisi == "-") {
+                        $(row).css('background-color', '#f8d7da');
+                        $(row).attr('title',
+                            'Tidak ada user NIK / user Cost Center pada Periode terakhir');
+                    }
+                }
             });
 
             // Load data on button click
             $('#load').on('click', function() {
+                // Check if latestPeriode is null before proceeding
+                @if (is_null($latestPeriode))
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Gagal',
+                        text: 'Periode belum dibuat, Laporan tidak bisa digenerate',
+                    });
+                    return;
+                @endif
+
                 // Show tables
                 $('#review-table-container').show();
                 $('#job-role-table-container').show();
@@ -263,6 +294,7 @@
 
                 $('#unit-kerja-cell').text(unitKerja);
 
+
                 // Load job roles and count users
                 $.ajax({
                     url: "{{ route('report.uar.job-roles') }}",
@@ -278,6 +310,12 @@
                             jobRoleTable.rows.add(response.data).draw();
                             // Sum user count from response
                             totalUser = response.data.length;
+                            // Update nomor surat cell
+                            if (response.nomorSurat) {
+                                $('#nomor-surat-cell').text(response.nomorSurat);
+                            } else {
+                                $('#nomor-surat-cell').text('XXX - Belum terdaftar');
+                            }
                         } else {
                             jobRoleTable.draw();
                         }

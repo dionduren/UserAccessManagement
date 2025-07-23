@@ -8,6 +8,8 @@ use App\Http\Controllers\AdminController;
 use App\Http\Controllers\DynamicUploadController;
 use App\Http\Controllers\EmployeeController;
 use App\Http\Controllers\HomeController;
+use App\Http\Controllers\PeriodeController;
+
 use App\Http\Controllers\IOExcel\CompanyKompartemenController;
 use App\Http\Controllers\IOExcel\CompanyMasterDataController;
 use App\Http\Controllers\IOExcel\CompositeRoleSingleRoleController;
@@ -32,12 +34,10 @@ use App\Http\Controllers\MasterData\KompartemenController;
 use App\Http\Controllers\MasterData\SingleRoleController;
 use App\Http\Controllers\MasterData\TcodeController;
 use App\Http\Controllers\MasterData\TerminatedEmployeeController;
-
+use App\Http\Controllers\MasterData\PenomoranUARController;
 use App\Http\Controllers\MasterData\UserDetailController;
 use App\Http\Controllers\MasterData\UserGenericController;
 use App\Http\Controllers\MasterData\UserNIKController;
-
-use App\Http\Controllers\PeriodeController;
 use App\Http\Controllers\Relationship\CompositeSingleController;
 use App\Http\Controllers\Relationship\JobCompositeController;
 use App\Http\Controllers\Relationship\NIKJobController;
@@ -291,6 +291,10 @@ Route::prefix('report/uar')->name('report.uar.')->group(function () {
     Route::get('/export-word', [UARReportController::class, 'exportWord'])->name('export-word');
     // Route::get('/download', [UARReportController::class, 'download'])->name('download');
 });
+
+// ------------------ PENOMORAN UAR ------------------
+Route::get('penomoran-uar/check-number', [PenomoranUARController::class, 'checkNumber'])->name('penomoran-uar.checkNumber');
+Route::resource('penomoran-uar', PenomoranUARController::class);
 
 // ------------------ ACCESS MATRIX ------------------
 

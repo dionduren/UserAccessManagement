@@ -3,7 +3,7 @@
 @section('content')
     <div class="container-fluid">
         <h2>Preview User Generic Data</h2>
-        <table class="table table-bordered display responsive nowrap" id="preview-table">
+        <table class="table table-bordered display responsive" id="preview-table">
             <thead>
                 <tr>
                     <th>Group</th>
