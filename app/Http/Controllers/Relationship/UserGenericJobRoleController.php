@@ -78,7 +78,7 @@ class UserGenericJobRoleController extends Controller
     {
         // TODO: filter berdasarkan periode aktif?
         $periodes = Periode::select('id', 'definisi')->get();
-        $userGenerics = UserGeneric::whereNull('job_role_id')->get();
+        $userGenerics = UserGeneric::whereDoesntHave('NIKJobRole')->get();
         $jobRoles = JobRole::select('job_role_id', 'nama')->get();
         return view('relationship.generic-job_role.create', compact('periodes', 'userGenerics', 'jobRoles'));
     }
@@ -104,11 +104,51 @@ class UserGenericJobRoleController extends Controller
     public function edit($id)
     {
         // Show the form for editing the specified resource.
+        // Get UserGeneric records that do not have any related NIKJobRole
+        $userGenerics = UserGeneric::orderBy('user_code')->get();
+        $periodes = Periode::select('id', 'definisi')->get();
+
+        $userGeneric = UserGeneric::with(['NIKJobRole.jobRole'])->findOrFail($id);
+        $jobRoles = JobRole::select('job_role_id', 'nama')->get();
+        $nikJobRole = $userGeneric->NIKJobRole->first();
+        if (!$nikJobRole) {
+            return redirect()->route('user-generic-job-role.index')->with('error', 'Tidak ada Job Role yang terkait dengan User Generic ini.');
+        }
+        return view('relationship.generic-job_role.edit', compact('userGeneric', 'jobRoles', 'nikJobRole', 'userGenerics', 'periodes'));
     }
 
     public function update(Request $request, $id)
     {
-        // Update the specified resource in storage.
+        try {
+            $request->validate([
+                'user_generic_id' => 'required|exists:tr_user_generic,user_code',
+                'job_role_id' => 'required|string',
+                'job_role_name' => 'required|string',
+                'periode_id' => 'required|exists:ms_periode,id',
+            ]);
+
+
+            $userGeneric = UserGeneric::with(['NIKJobRole.jobRole'])->where('user_code', $request->user_generic_id)->first();
+            $NIKJobRole = $userGeneric->NIKJobRole->first();
+
+            if ($NIKJobRole && $NIKJobRole->nik === $request->user_generic_id) {
+                // Update existing
+                $NIKJobRole->job_role_id = $request->job_role_id;
+                $NIKJobRole->periode_id = $request->periode_id;
+                $NIKJobRole->save();
+            } else {
+                // Create new
+                NIKJobRole::create([
+                    'nik' => $request->user_generic_id,
+                    'job_role_id' => $request->job_role_id,
+                    'periode_id' => $request->periode_id,
+                ]);
+            }
+
+            return redirect()->route('user-generic-job-role.index')->with('success', 'Relasi User Generic - Job Role berhasil diperbarui.');
+        } catch (\Exception $e) {
+            return redirect()->back()->withInput()->with('error', 'Terjadi kesalahan: ' . $e->getMessage());
+        }
     }
 
     public function destroy($id)

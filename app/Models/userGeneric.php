@@ -24,6 +24,7 @@ class userGeneric extends Model
         'user_code',
         'user_type',
         'user_profile',
+        'nik',
         'cost_code',
         'keterangan',
         'uar_listed',
@@ -48,6 +49,10 @@ class userGeneric extends Model
     public function Company()
     {
         return $this->hasOne(Company::class, 'shortname', 'group');
+    }
+    public function userDetail()
+    {
+        return $this->hasOne(UserDetail::class, 'nik', 'nik');
     }
 
     // public function kompartemen()

@@ -66,7 +66,7 @@
 
             let userNikTable = $('#user_nik_table').DataTable({
                 processing: true,
-                serverSide: true,
+                serverSide: false,
                 ajax: "{{ route('user-nik.index_mixed') }}",
                 columns: [{
                         data: 'id',

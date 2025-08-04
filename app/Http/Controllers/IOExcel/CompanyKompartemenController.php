@@ -46,7 +46,7 @@ class CompanyKompartemenController extends Controller
                     'departemen_id' => 'nullable',
                     'departemen' => 'nullable|string',
                     'job_function' => 'required|string',
-                    'composite_role' => 'required|string',
+                    'composite_role' => 'nullable|string',
                 ]);
 
                 if ($validator->fails()) {

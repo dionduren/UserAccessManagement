@@ -78,7 +78,7 @@
 
             let userGenericTable = $('#prev_user_table').DataTable({
                 processing: true,
-                serverSide: true,
+                serverSide: false,
                 ajax: "{{ route('prev-user.index') }}",
                 columns: [{
                         data: 'id',

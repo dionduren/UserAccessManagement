@@ -89,6 +89,7 @@ class UserGenericService
                 'user_type' => $data['user_type'] ?? null,
                 'cost_code' => $data['cost_code'] ?? null,
                 'user_profile' => $data['user_profile'] ?? null,
+                'nik' => $data['nik'] ?? null,
                 'license_type' => $data['license_type'] ?? null,
                 'keterangan' => $data['keterangan'] ?? null,
                 'user_listed' => $data['user_listed'] ?? null,

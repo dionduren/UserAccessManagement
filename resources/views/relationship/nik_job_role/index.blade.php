@@ -61,7 +61,7 @@
             if (!nikJobRoleTable) {
                 nikJobRoleTable = $('#nik_job_role_table').DataTable({
                     processing: true,
-                    serverSide: true,
+                    serverSide: false,
                     ajax: {
                         url: '{{ route('nik-job.get-by-periode') }}',
                         data: function(d) {

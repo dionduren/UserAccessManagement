@@ -52,7 +52,7 @@
             // Initialize DataTable with server-side processing
             $('#tcodes_table').DataTable({
                 processing: true,
-                serverSide: true,
+                serverSide: false,
                 ajax: '{{ route('tcodes.data') }}',
                 columns: [{
                         data: 'code',

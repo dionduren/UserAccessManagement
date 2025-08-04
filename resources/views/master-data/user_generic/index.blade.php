@@ -66,7 +66,7 @@
             // Initialize DataTable with no ajax source
             var userGenericTable = $('#user_generic_table').DataTable({
                 processing: true,
-                serverSide: true,
+                serverSide: false,
                 ajax: false, // Don't load data initially
                 columns: [{
                         data: 'id',

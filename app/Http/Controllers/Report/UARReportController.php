@@ -12,20 +12,9 @@ use App\Models\PenomoranUAR;
 use App\Models\Periode;
 
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
-use PhpOffice\PhpWord\Element\Container;
-use PhpOffice\PhpWord\IOFactory;
-use PhpOffice\PhpWord\PhpWord;
-use PhpOffice\PhpWord\Settings;
-use PhpOffice\PhpWord\Shared\Html;
-use PhpOffice\PhpWord\Shared\XMLWriter;
-use PhpOffice\PhpWord\SimpleType\Jc;
-use PhpOffice\PhpWord\Style\Table;
-use PhpOffice\PhpWord\Style\TblWidth;
-use PhpOffice\PhpWord\TemplateProcessor;
 
-use PhpOffice\PhpWord\Writer\Word2007;
-use Yajra\DataTables\DataTables;
+use PhpOffice\PhpWord\PhpWord;
+use PhpOffice\PhpWord\SimpleType\Jc;
 
 class UARReportController extends Controller
 {
@@ -44,15 +33,18 @@ class UARReportController extends Controller
 
         $unitKerja = '';
         $unitKerjaName = '';
+        $cost_center = '';
 
         if ($departemenId) {
             $departemen = Departemen::find($departemenId);
             $unitKerja = 'Departemen';
             $unitKerjaName = $departemen ? $departemen->nama : '';
+            $cost_center = $departemen ? $departemen->cost_center : '';
         } elseif ($kompartemenId) {
             $kompartemen = Kompartemen::find($kompartemenId);
             $unitKerja = 'Kompartemen';
             $unitKerjaName = $kompartemen ? $kompartemen->nama : '';
+            $cost_center = $kompartemen ? $kompartemen->cost_center : '';
         } elseif ($companyId) {
             $company = Company::where('company_code', $companyId)->first();
             $unitKerja = 'Company';
@@ -129,23 +121,8 @@ class UARReportController extends Controller
         $latestPeriodeYear = $latestPeriode ? date('Y', strtotime($latestPeriode->created_at)) : null;
         $nomorSurat = 'XXX - Belum terdaftar';
 
-        // $query = JobRole::query()
-        //     ->with(['company', 'kompartemen', 'departemen', 'NIKJobRole.userGeneric'])
-        //     ->whereHas('NIKJobRole', function ($q) use ($latestPeriode) {
-        //         $q->whereNull('deleted_at')
-        //             ->where('is_active', true)
-        //             ->where('periode_id', $latestPeriode->id);
-        //     });
-
-        // if ($companyId) {
-        //     $query->where('company_id', $companyId);
-        // }
-        // if ($kompartemenId) {
-        //     $query->where('kompartemen_id', $kompartemenId);
-        // }
-        // if ($departemenId) {
-        //     $query->where('departemen_id', $departemenId);
-        // }
+        $cost_center = '';
+        $nik = '';
 
         $query = NIKJobRole::query()
             ->with([
@@ -182,17 +159,19 @@ class UARReportController extends Controller
         }
 
         if ($departemenId) {
-            $nomorSurat = PenomoranUAR::where('unit_kerja_id', $departemenId)
+            $penomoranUAR = PenomoranUAR::where('unit_kerja_id', $departemenId)
                 ->whereNull('deleted_at')
                 ->latest()
-                ->first()
-                ->number ?? 'XXX (Belum terdaftar)';
+                ->first();
+            $nomorSurat = $penomoranUAR->number ?? 'XXX (Belum terdaftar)';
+            $cost_center = $penomoranUAR->departemen->cost_center;
         } elseif ($kompartemenId) {
-            $nomorSurat = PenomoranUAR::where('unit_kerja_id', $kompartemenId)
+            $penomoranUAR = PenomoranUAR::where('unit_kerja_id', $kompartemenId)
                 ->whereNull('deleted_at')
                 ->latest()
-                ->first()
-                ->number ?? 'XXX (Belum terdaftar)';
+                ->first();
+            $nomorSurat = $penomoranUAR->number ?? 'XXX (Belum terdaftar)';
+            $cost_center = $penomoranUAR->kompartemen->cost_center;
         }
 
         $nikJobRoles = $query->get();
@@ -233,6 +212,7 @@ class UARReportController extends Controller
                         ? ($nikJobRole->userGeneric->UserGenericUnitKerja->departemen->nama ?? '-')
                         : ($jobRole && $jobRole->departemen ? $jobRole->departemen->nama : '-'),
                     'user_nik' => $nikJobRole->nik ?? '-',
+                    'karyawan_nik' => $nikJobRole->userNIK ? $nikJobRole->userNIK->user_code : ($nikJobRole->userGeneric ? $nikJobRole->userGeneric->nik : '-'),
                     'user_definisi' => $nikJobRole->userGeneric
                         ? $nikJobRole->userGeneric->user_profile
                         : ($nikJobRole->userNIK && $nikJobRole->userNIK->userDetail ? $nikJobRole->userNIK->userDetail->nama : '-'),
@@ -245,6 +225,7 @@ class UARReportController extends Controller
         return response()->json([
             'data' => $data,
             'nomorSurat' => $nomorSurat,
+            'cost_center' => $cost_center
         ]);
     }
 
@@ -260,6 +241,7 @@ class UARReportController extends Controller
         $unitKerjaName = '';
         $latestPeriodeObj = Periode::latest()->first();
         $latestPeriode = $latestPeriodeObj ? $latestPeriodeObj->definisi : '-';
+        $cost_center = '';
         $latestPeriodeYear = $latestPeriodeObj ? date('Y', strtotime($latestPeriodeObj->created_at)) : null;
         $nomorSurat = 'XXX'; // Example, replace with your logic
 
@@ -279,11 +261,12 @@ class UARReportController extends Controller
             $unitKerja = $this->sanitizeForDocx($unitKerja);
             $unitKerjaName = $this->sanitizeForDocx($displayName);
             $jabatanUnitKerja = 'VP';
-            $nomorSurat = PenomoranUAR::where('unit_kerja_id', $departemenId)
+            $penomoranUAR = PenomoranUAR::where('unit_kerja_id', $departemenId)
                 ->whereNull('deleted_at')
                 ->latest()
-                ->first()
-                ->number ?? 'XXX';
+                ->first();
+            $nomorSurat = $penomoranUAR->number ?? 'XXX (Belum terdaftar)';
+            $cost_center = $penomoranUAR->departemen->cost_center;
         } elseif ($kompartemenId) {
             $kompartemen = Kompartemen::find($kompartemenId);
             $displayName = $kompartemen ? $kompartemen->nama : '';
@@ -300,11 +283,12 @@ class UARReportController extends Controller
             $unitKerja = $this->sanitizeForDocx($unitKerja);
             $unitKerjaName = $this->sanitizeForDocx($displayName);
             $jabatanUnitKerja = 'SVP';
-            $nomorSurat = PenomoranUAR::where('unit_kerja_id', $kompartemenId)
+            $penomoranUAR = PenomoranUAR::where('unit_kerja_id', $kompartemenId)
                 ->whereNull('deleted_at')
                 ->latest()
-                ->first()
-                ->number ?? 'XXX';
+                ->first();
+            $nomorSurat = $penomoranUAR->number ?? 'XXX (Belum terdaftar)';
+            $cost_center = $penomoranUAR->kompartemen->cost_center;
         } elseif ($companyId) {
             $company = Company::where('company_code', $companyId)->first();
             $displayName = $company ? $company->nama : '-';
@@ -312,6 +296,7 @@ class UARReportController extends Controller
             $unitKerja = $this->sanitizeForDocx($displayName);
             $unitKerjaName = $this->sanitizeForDocx($displayName);
             $jabatanUnitKerja = 'Direktur';
+            $cost_center = 'Tidak ada Cost Center untuk Level Perusahaan';
         }
 
         // dd($unitKerja, $unitKerjaName, $jabatanUnitKerja, $latestPeriode, $nomorSurat);
@@ -359,19 +344,19 @@ class UARReportController extends Controller
             });
         }
 
-        if ($departemenId) {
-            $nomorSurat = PenomoranUAR::where('unit_kerja_id', $departemenId)
-                ->whereNull('deleted_at')
-                ->latest()
-                ->first()
-                ->number ?? 'XXX (Belum terdaftar)';
-        } elseif ($kompartemenId) {
-            $nomorSurat = PenomoranUAR::where('unit_kerja_id', $kompartemenId)
-                ->whereNull('deleted_at')
-                ->latest()
-                ->first()
-                ->number ?? 'XXX (Belum terdaftar)';
-        }
+        // if ($departemenId) {
+        //     $nomorSurat = PenomoranUAR::where('unit_kerja_id', $departemenId)
+        //         ->whereNull('deleted_at')
+        //         ->latest()
+        //         ->first()
+        //         ->number ?? 'XXX (Belum terdaftar)';
+        // } elseif ($kompartemenId) {
+        //     $nomorSurat = PenomoranUAR::where('unit_kerja_id', $kompartemenId)
+        //         ->whereNull('deleted_at')
+        //         ->latest()
+        //         ->first()
+        //         ->number ?? 'XXX (Belum terdaftar)';
+        // }
 
         $nikJobRoles = $query->get();
 
@@ -471,6 +456,9 @@ class UARReportController extends Controller
         $reviewTable->addCell(4000)->addText('Unit Kerja', ['size' => 8], ['space' => ['after' => 0]]);
         $reviewTable->addCell(8000)->addText($unitKerja ? "$unitKerja" : '-', ['size' => 8], ['space' => ['after' => 0]]);
         $reviewTable->addRow();
+        $reviewTable->addCell(4000)->addText('Cost Center', ['size' => 8], ['space' => ['after' => 0]]);
+        $reviewTable->addCell(8000)->addText($cost_center ? $cost_center : '-', ['size' => 8], ['space' => ['after' => 0]]);
+        $reviewTable->addRow();
         $reviewTable->addCell(4000)->addText('Jumlah Awal User', ['size' => 8], ['space' => ['after' => 0]]);
         $reviewTable->addCell(8000)->addText($jumlahAwalUser, ['italic' => true, 'size' => 8], ['space' => ['after' => 0]]);
         $reviewTable->addRow();
@@ -502,9 +490,9 @@ class UARReportController extends Controller
         $table->addCell(3000, ['bgColor' => 'D9E1F2'])->addText('User ID', ['bold' => true, 'color' => '000000', 'size' => 8], ['alignment' => Jc::CENTER, 'space' => ['after' => 0]]);
         $table->addCell(3000, ['bgColor' => 'D9E1F2'])->addText('Nama', ['bold' => true, 'color' => '000000', 'size' => 8], ['alignment' => Jc::CENTER, 'space' => ['after' => 0]]);
         $table->addCell(3000, ['bgColor' => 'D9E1F2'])->addText('Job Role', ['bold' => true, 'color' => '000000', 'size' => 8], ['alignment' => Jc::CENTER, 'space' => ['after' => 0]]);
-        $table->addCell(1500, ['bgColor' => 'D9E1F2'])->addText('NIK PIC', ['bold' => true, 'color' => '000000', 'size' => 8], ['alignment' => Jc::CENTER, 'space' => ['after' => 0]]);
-        $table->addCell(1500, ['bgColor' => 'D9E1F2'])->addText('Tetap', ['bold' => true, 'color' => '000000', 'size' => 8], ['alignment' => Jc::CENTER, 'space' => ['after' => 0]]);
-        $table->addCell(1500, ['bgColor' => 'D9E1F2'])->addText('Berubah', ['bold' => true, 'color' => '000000', 'size' => 8], ['alignment' => Jc::CENTER, 'space' => ['after' => 0]]);
+        $table->addCell(1000, ['bgColor' => 'D9E1F2'])->addText('NIK', ['bold' => true, 'color' => '000000', 'size' => 8], ['alignment' => Jc::CENTER, 'space' => ['after' => 0]]);
+        $table->addCell(1750, ['bgColor' => 'D9E1F2'])->addText('Tetap', ['bold' => true, 'color' => '000000', 'size' => 8], ['alignment' => Jc::CENTER, 'space' => ['after' => 0]]);
+        $table->addCell(1750, ['bgColor' => 'D9E1F2'])->addText('Berubah', ['bold' => true, 'color' => '000000', 'size' => 8], ['alignment' => Jc::CENTER, 'space' => ['after' => 0]]);
         $table->addCell(2000, ['bgColor' => 'D9E1F2'])->addText('Keterangan', ['bold' => true, 'color' => '000000', 'size' => 8], ['alignment' => Jc::CENTER, 'space' => ['after' => 0]]);
 
         $no = 1;
@@ -558,9 +546,15 @@ class UARReportController extends Controller
                     ['space' => ['after' => 0]]
                 );
                 $table->addCell(3000, ['valign' => 'center'])->addText($this->sanitizeForDocx($jobRole->nama ?? '-'), ['size' => 8], ['space' => ['after' => 0]]);
+                $table->addCell(3000, ['valign' => 'center'])->addText(
+                    $nikJobRole->userGeneric
+                        ? $nikJobRole->userGeneric->nik
+                        : ($nikJobRole->userNIK ? $nikJobRole->userNIK->user_code : '-'),
+                    ['size' => 8],
+                    ['space' => ['after' => 0]]
+                );
                 $table->addCell(1500, ['valign' => 'center'])->addText('', ['size' => 8], ['space' => ['after' => 0]]);
-                $table->addCell(1500, ['valign' => 'center'])->addText('X', ['size' => 12, 'color' => 'A6A6A6'], ['space' => ['after' => 0], 'alignment' => Jc::CENTER]);
-                $table->addCell(1500, ['valign' => 'center'])->addText('-', ['size' => 8, 'color' => 'A6A6A6'], ['space' => ['after' => 0], 'alignment' => Jc::CENTER]);
+                $table->addCell(1500, ['valign' => 'center'])->addText('', ['size' => 8], ['space' => ['after' => 0]]);
                 $table->addCell(2000, ['valign' => 'center'])->addText(
                     'Apabila ada (perubahan job function/nama/nik/Penonaktifan)',
                     ['size' => 8, 'color' => 'A6A6A6'],
@@ -579,9 +573,9 @@ class UARReportController extends Controller
             $table->addCell(3000, ['valign' => 'center'])->addText('-', ['size' => 8]);
             $table->addCell(3000, ['valign' => 'center'])->addText('-', ['size' => 8]);
             $table->addCell(3000, ['valign' => 'center'])->addText('-', ['size' => 8]);
-            $table->addCell(1500, ['valign' => 'center'])->addText('-', ['size' => 8]);
-            $table->addCell(1500, ['valign' => 'center'])->addText('-', ['size' => 8]);
-            $table->addCell(1500, ['valign' => 'center'])->addText('-', ['size' => 8]);
+            $table->addCell(1000, ['valign' => 'center'])->addText('-', ['size' => 8], ['alignment' => Jc::CENTER]);
+            $table->addCell(1750, ['valign' => 'center'])->addText('-', ['size' => 8]);
+            $table->addCell(1750, ['valign' => 'center'])->addText('-', ['size' => 8]);
             $table->addCell(2000, ['valign' => 'center'])->addText('-', ['size' => 8]);
         }
 

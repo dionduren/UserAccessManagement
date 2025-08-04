@@ -20,7 +20,7 @@
             @method('PUT')
             <div class="mb-3">
                 <label>Group</label>
-                <select name="group" class="form-control">
+                <select name="group" class="form-control" required>
                     <option value="">Pilih Perusahaan</option>
                     @foreach ($shortName as $group)
                         <option value="{{ $group->shortname }}"
@@ -30,6 +30,11 @@
                             {{ $group->nama }}</option>
                     @endforeach
                 </select>
+            </div>
+
+            <div class="mb-3">
+                <label>Parent ID</label>
+                <input type="text" name="parent_id" value="{{ $costCenter->parent_id }}" class="form-control" required>
             </div>
 
             <div class="mb-3">
@@ -62,7 +67,7 @@
             </div>
             <div class="mb-3">
                 <label>Cost Code</label>
-                <input type="text" name="cost_code" value="{{ $costCenter->cost_code }}" class="form-control" required>
+                <input type="text" name="cost_code" value="{{ $costCenter->cost_code }}" class="form-control">
             </div>
             <div class="mb-3">
                 <label>Description</label>

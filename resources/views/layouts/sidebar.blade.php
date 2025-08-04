@@ -103,12 +103,12 @@
                 </a>
 
                 <div class="dropdown-content {{ request()->is('relationship*') ? 'show' : '' }}">
-                    <li class="nav-item">
+                    {{-- <li class="nav-item">
                         <a href="{{ route('nik-job.index') }}"
                             class="nav-link {{ request()->routeIs('nik-job*') ? 'active' : 'text-white' }}">
                             <i class="bi bi-file-earmark-spreadsheet"></i> NIK - Job Role
                         </a>
-                    </li>
+                    </li> --}}
                     <li>
                         <a href="{{ route('job-composite.index') }}"
                             class="nav-link {{ request()->routeIs('job-composite*') ? 'active' : 'text-white' }}">
@@ -288,7 +288,7 @@
                     <a class="nav-link dropdown-toggle {{ (request()->routeIs('dynamic_upload.upload') && request()->route('module') === 'user_nik') || request()->routeIs('user-nik.index') ? 'active' : 'text-white' }}"
                         data-bs-toggle="dropdown" href="#" role="button"
                         aria-expanded="{{ (request()->routeIs('dynamic_upload.upload') && request()->route('module') === 'user_nik') || request()->routeIs('user-nik.index') ? 'true' : 'false' }}">
-                        3. Master Data USSM NIK
+                        3. Master Data USMM NIK
                     </a>
                     <div
                         class="dropdown-content {{ (request()->routeIs('dynamic_upload.upload') && request()->route('module') === 'user_nik') || request()->routeIs('user-nik.index') ? 'show' : '' }}">
@@ -313,7 +313,7 @@
                     </div>
                 </div>
 
-                {{-- 4. Master Data USSM Generik --}}
+                {{-- 4. Master Data USMM Generik --}}
                 <div class="dropdown">
                     @php
                         $isUserGenericActive =
@@ -329,7 +329,7 @@
                     <a class="nav-link dropdown-toggle {{ $isUserGenericActive ? 'active' : 'text-white' }}"
                         data-bs-toggle="dropdown" href="#" role="button"
                         aria-expanded="{{ $isUserGenericActive ? 'true' : 'false' }}">
-                        4. Master Data USSM Generik
+                        4. Master Data USMM Generik
                     </a>
                     <div class="dropdown-content {{ $isUserGenericActive ? 'show' : '' }}">
                         <li class="nav-item">
@@ -353,7 +353,7 @@
                     </div>
                 </div>
 
-                {{-- 5. Mapping USSM - Job Role --}}
+                {{-- 5. Mapping USMM - Job Role --}}
                 <div class="dropdown">
                     @php
                         $isMappingActive =
@@ -365,19 +365,19 @@
                     <a class="nav-link dropdown-toggle {{ $isMappingActive ? 'active' : 'text-white' }}"
                         data-bs-toggle="dropdown" href="#" role="button"
                         aria-expanded="{{ $isMappingActive ? 'true' : 'false' }}">
-                        5. Mapping USSM - Job Role
+                        5. Mapping USMM - Job Role
                     </a>
                     <div class="dropdown-content {{ $isMappingActive ? 'show' : '' }}">
                         {{-- <li class="nav-item">
                             <a href="{{ route('dynamic_upload.upload', ['module' => 'nik_job_role']) }}"
                                 class="nav-link {{ request()->routeIs('dynamic_upload.upload') && request()->route('module') === 'nik_job_role' ? 'active' : 'text-white' }}">
-                                <i class="bi bi-cloud-upload"></i> Upload USSM - Job Role
+                                <i class="bi bi-cloud-upload"></i> Upload USMM - Job Role
                             </a>
                         </li> --}}
                         <li class="nav-item">
                             <a href="{{ route('ussm-job-role.upload') }}"
                                 class="nav-link {{ request()->routeIs('ussm-job-role.*') ? 'active' : 'text-white' }}">
-                                <i class="bi bi-cloud-upload"></i> Upload USSM - Job Role
+                                <i class="bi bi-cloud-upload"></i> Upload USMM - Job Role
                             </a>
                         </li>
                         <li class="nav-item">
@@ -418,6 +418,12 @@
                             <i class="bi bi-file-earmark-text me-2"></i> Report UAR
                         </a>
                     </li>
+                    <li class="nav-item">
+                        <a href="{{ route('report.uam.index') }}"
+                            class="nav-link {{ request()->routeIs('report.uam.index') ? 'active' : 'text-white' }}">
+                            <i class="bi bi-file-earmark-text me-2"></i> Report UAM
+                        </a>
+                    </li>
                 </div>
 
 
@@ -435,7 +441,18 @@
                     </li>
                 </div>
 
-                {{-- Others --}}
+                <div>
+                    <li class="nav-item">
+                        <a href="{{ route('penomoran-uam.index') }}"
+                            class="nav-link {{ request()->routeIs('penomoran-uam*') ? 'active' : 'text-white' }}">
+                            <i class="bi bi-list-ol me-2"></i> Penomoran UAM
+                        </a>
+                    </li>
+                </div>
+
+                <hr>
+
+                Others
 
 
                 {{-- 
@@ -465,9 +482,17 @@
                         class="nav-link {{ request()->routeIs('user-generic.compare*') ? 'active' : 'text-white' }}">
                         <i class="bi bi-file-diff"></i> Compare User Generic Periode
                     </a>
+                </li> --}}
+
+
+                <li class="nav-item">
+                    <a href="{{ route('cost-center.index') }}"
+                        class="nav-link {{ request()->routeIs('cost-center*') ? 'active' : 'text-white' }}">
+                        <i class="bi bi-cash-stack"></i> Master Data Cost Center
+                    </a>
                 </li>
 
-                <a class="nav-link dropdown-toggle {{ request()->is('cost-center*') ? 'active' : 'text-white' }}"
+                {{-- <a class="nav-link dropdown-toggle {{ request()->is('cost-center*') ? 'active' : 'text-white' }}"
                     data-bs-toggle="dropdown" href="#" role="button" aria-expanded="false">
                     <i class="bi bi-folder-fill me-2"></i> <span class="me-auto">MASTER DATA COST CENTER</span>
                 </a>

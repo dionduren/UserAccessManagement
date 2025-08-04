@@ -22,10 +22,12 @@ class JSONService
                     return [
                         'kompartemen_id' => $kompartemen->kompartemen_id,
                         'nama' => $kompartemen->nama,
+                        'cost_center' => $kompartemen->cost_center ?? 'N/A',
                         'departemen' => $kompartemen->departemen->map(function ($departemen) {
                             return [
                                 'departemen_id' => $departemen->departemen_id,
                                 'nama' => $departemen->nama,
+                                'cost_center' => $departemen->cost_center ?? 'N/A',
                                 'job_roles' => $departemen->jobRoles->map(function ($jobRole) {
                                     return [
                                         'id' => $jobRole->id,
@@ -56,6 +58,7 @@ class JSONService
                     return [
                         'departemen_id' => $departemen->departemen_id,
                         'nama' => $departemen->nama,
+                        'cost_center' => $departemen->cost_center ?? 'N/A',
                         'job_roles' => $departemen->jobRoles->map(function ($jobRole) {
                             return [
                                 'id' => $jobRole->id,

@@ -20,6 +20,18 @@
             </div>
         @endif
 
+        <div class="row">
+            <div class="col">
+                <label for="company_id">Pilih Perusahaan:</label>
+                <select name="company_id" id="company_id" class="form-control mb-3">
+                    <option value="">-- Pilih Perusahaan --</option>
+                    @foreach ($companies as $company)
+                        <option value="{{ $company->company_code }}">{{ $company->nama }}</option>
+                    @endforeach
+                </select>
+            </div>
+        </div>
+
         <table id="cost_center_table" class="table table-bordered table-striped table-hover cell-border mt-3">
             <thead>
                 <tr>
@@ -58,12 +70,19 @@
 @section('scripts')
     <script>
         $(document).ready(function() {
-            let masterData = {}; // Store parsed JSON for efficient lookups
-
             let costCenterTable = $('#cost_center_table').DataTable({
                 processing: true,
                 serverSide: false,
-                ajax: "{{ route('cost-center.index') }}",
+                ajax: function(data, callback, settings) {
+                    let companyId = $('#company_id').val();
+                    let url = "{{ route('cost-center.index') }}";
+                    if (companyId) {
+                        url += '?company_id=' + encodeURIComponent(companyId);
+                    }
+                    $.get(url, function(json) {
+                        callback(json);
+                    });
+                },
                 columns: [{
                         data: 'id',
                         name: 'id'
@@ -125,6 +144,11 @@
                     text: '<i class="bi bi-file-earmark-excel"></i> Export to Excel',
                     className: 'btn btn-success'
                 }]
+            });
+
+            // Reload table when company_id changes
+            $('#company_id').on('change', function() {
+                costCenterTable.ajax.reload();
             });
         });
 

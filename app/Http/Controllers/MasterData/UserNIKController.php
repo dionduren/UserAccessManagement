@@ -30,6 +30,9 @@ class UserNIKController extends Controller
                 });
 
             return DataTables::of($userNik)
+                ->addColumn('user_detail_exists', function ($row) {
+                    return $row->userDetail ? true : false;
+                })
                 ->editColumn('last_login', function ($row) {
                     return $row->last_login ? Carbon::createFromFormat('Y-m-d H:i:s', $row->last_login)->format('d M Y - H:i') : '-';
                 })

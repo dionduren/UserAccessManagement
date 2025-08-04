@@ -32,6 +32,7 @@ class USSMJobRoleService
             ],
             [
                 'job_role_id'        => $row['job_role_id'],
+                'user_type'          => $row['user_type'] ?? null,
                 'is_active'          => $row['is_active'] ?? 1,
                 'last_update'        => now(),
                 'flagged'            => $flagged,

@@ -15,6 +15,13 @@
             </div>
         @endif
 
+        @if (session('error'))
+            <div class="alert alert-danger">
+                <h4>Error:</h4>
+                {{ session('error') }}
+            </div>
+        @endif
+
         <div class="form-group">
             <label for="periode">Periode</label>
             <select name="periode" id="periode" class="form-control">
@@ -171,6 +178,12 @@
                             return `
                                 <button class="btn btn-info btn-sm show-detail" data-id="${row.id}">
                                     <i class="bi bi-eye"></i> Detail
+                                </button>
+                                <a href="/relationship/generic-job-role/${row.id}/edit" target="_blank" class="btn btn-sm btn-warning">
+                                    <i class="bi bi-pencil-square"></i> Edit
+                                </a>
+                                <button onclick="deleteRelationship(${row.id})" class="btn btn-sm btn-danger">
+                                    <i class="bi bi-trash"></i> Delete
                                 </button>
                             `;
                         }

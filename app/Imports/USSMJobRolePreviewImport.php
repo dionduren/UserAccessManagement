@@ -22,6 +22,7 @@ class USSMJobRolePreviewImport implements ToCollection, WithHeadingRow, WithChun
             $mappedRow = [
                 'nik'           => $row['nik'] ?? null,
                 'job_role_id'   => $row['job_role_id'] ?? null,
+                'user_type'     => $row['user_type'] ?? null,
                 'is_active'     => $row['is_active'] ?? 1,
             ];
             $this->rows->push(collect($mappedRow));

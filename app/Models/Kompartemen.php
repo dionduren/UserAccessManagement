@@ -19,6 +19,7 @@ class Kompartemen extends Model
         'kompartemen_id',
         'company_id',
         'nama',
+        'cost_center',
         'deskripsi',
         'created_by',
         'updated_by',
@@ -39,5 +40,10 @@ class Kompartemen extends Model
     public function jobRoles()
     {
         return $this->hasMany(JobRole::class, 'kompartemen_id', 'kompartemen_id');
+    }
+
+    public function costCenter()
+    {
+        return $this->hasOne(CostCenter::class, 'cost_center', 'cost_center');
     }
 }

@@ -61,7 +61,7 @@
         $(document).ready(function() {
             $('#single-tcode-datatable').DataTable({
                 processing: true,
-                serverSide: true,
+                serverSide: false,
                 ajax: '{{ route('single-tcode.jsonIndex') }}',
                 columns: [{
                         data: 'single_role_name',

@@ -83,7 +83,7 @@
 
             let userGenericTable = $('#user_generic_table').DataTable({
                 processing: true,
-                serverSide: true,
+                serverSide: false,
                 // ajax: "{{ route('dashboard.user-generic') }}",
                 ajax: {
                     url: "{{ route('dashboard.user-generic') }}",

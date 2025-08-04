@@ -170,19 +170,23 @@ class CompanyKompartemenService
         }
 
         // Composite Role
-        $compositeRole = CompositeRole::updateOrCreate(
-            [
-                'company_id'      => trim($company->company_code),
-                'nama'            => trim($row['composite_role']),
-                'kompartemen_id'  => $row['kompartemen_id'] ?: null,
-                'departemen_id'   => $row['departemen_id'] ?: null,
-                'jabatan_id'      => $jobRole->id,
-            ],
-            [
-                'created_by'      => $user,
-                'updated_by'      => $user,
-            ]
-        );
+        if (!empty($row['composite_role'])) {
+            $compositeRole = CompositeRole::updateOrCreate(
+                [
+                    'company_id'      => trim($company->company_code),
+                    'nama'            => trim($row['composite_role']),
+                    'kompartemen_id'  => $row['kompartemen_id'] ?: null,
+                    'departemen_id'   => $row['departemen_id'] ?: null,
+                    'jabatan_id'      => $jobRole->id,
+                ],
+                [
+                    'created_by'      => $user,
+                    'updated_by'      => $user,
+                ]
+            );
+        } else {
+            $compositeRole = null;
+        }
 
         // Properly associate it to the JobRole if not already linked
         if ($compositeRole->jabatan_id !== $jobRole->id) {

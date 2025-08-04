@@ -21,6 +21,7 @@ class DatabaseSeeder extends Seeder
             MasterDataSeeder::class,
             MsSapLicenseTypeSeeder::class,
             MsPenomoranUARSeeder::class,
+            MsPenomoranUAMSeeder::class,
             // CostCenterSeeder::class,
             // UserNIKSeeder::class,
             // UserGenericSeeder::class,

@@ -58,7 +58,7 @@
         {{-- <div class="flex-grow-1 px-0 py-4" style="border-radius: 25px; background-color: white"> --}}
         <div class="flex-grow-1 content-padding no-scrollbar">
             {{-- Content Area --}}
-            <main class="container-fluid content-card pt-1">
+            <main class="container-fluid content-card pt-1 pb-2">
 
                 <!-- Top Bar -->
                 @include('layouts.top-bar')

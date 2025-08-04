@@ -16,6 +16,7 @@ return new class extends Migration
             $table->string('user_code');
             $table->string('user_type')->nullable();
             $table->string('user_profile')->nullable();
+            $table->string('nik')->nullable();
             $table->string('cost_code')->nullable(); //mungkin perlu dihapus
             $table->string('license_type')->nullable();
             $table->string('group')->nullable(); // nempel ke shortname ms_company

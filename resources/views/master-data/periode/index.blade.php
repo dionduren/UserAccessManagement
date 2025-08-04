@@ -41,7 +41,7 @@
 
             let periodeTable = $('#periode_table').DataTable({
                 processing: true,
-                serverSide: true,
+                serverSide: false,
                 ajax: "{{ route('periode.index') }}",
                 columns: [{
                         data: 'id',

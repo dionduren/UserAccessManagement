@@ -69,7 +69,7 @@
             // Initialize DataTable
             const table = $('#single_roles_table').DataTable({
                 processing: true,
-                serverSide: true,
+                serverSide: false,
                 ajax: {
                     url: '/single-roles/data',
                     data: function(d) {

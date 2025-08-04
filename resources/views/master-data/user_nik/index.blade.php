@@ -5,7 +5,8 @@
         <h1>Dashboard User NIK</h1>
 
         {{-- <a href="{{ route('user-nik.create') }}" target="_blank" class="btn btn-outline-secondary mb-3"> --}}
-        <a href="{{ route('user-nik.upload.form') }}" class="btn btn-outline-primary mb-3">
+        {{-- <a href="{{ route('user-nik.upload.form') }}" class="btn btn-outline-primary mb-3"> --}}
+        <a href="{{ route('dynamic_upload.upload', ['module' => 'user_nik']) }}" class="btn btn-outline-primary mb-3">
             <i class="bi bi-upload"></i> Upload User NIK
         </a>
 
@@ -35,8 +36,8 @@
             <thead style="vertical-align: middle;">
                 <tr>
                     <th>id</th>
-                    <th>Perusahaan</th>
-                    <th>Periode</th>
+                    <th width="10%">Perusahaan</th>
+                    <th width="10%">User Detail</th>
                     <th>NIK</th>
                     <th>Tipe Lisensi</th>
                     <th>Login Terakhir</th>
@@ -72,7 +73,7 @@
 
             let userNikTable = $('#user_nik_table').DataTable({
                 processing: true,
-                serverSide: true,
+                serverSide: false,
                 ajax: "{{ route('user-nik.index') }}",
                 columns: [{
                         data: 'id',
@@ -83,10 +84,23 @@
                         name: 'group'
                     },
                     {
-                        data: 'periode',
-                        name: 'periode',
-                        width: '7.5%'
+                        data: 'user_detail_exists',
+                        name: 'user_detail_exists',
+                        render: function(data, type, row) {
+                            return data ?
+                                `<span class="badge bg-success text-white" style="font-size:1em;">
+                                        <i class="bi bi-check-lg"></i> Exist
+                                   </span>` :
+                                `<span class="badge bg-danger text-white" style="font-size:1em;">
+                                        <span style="font-weight:bold;">&#10005;</span> Not-Exist
+                                   </span>`;
+                        }
                     },
+                    // {
+                    //     data: 'periode',
+                    //     name: 'periode',
+                    //     width: '7.5%'
+                    // },
 
                     {
                         data: 'user_code',

@@ -26,6 +26,13 @@
                     @endforeach
                 </select>
             </div>
+
+
+            <div class="mb-3">
+                <label>Parent ID</label>
+                <input type="text" name="parent_id" class="form-control" required>
+            </div>
+
             <div class="mb-3">
                 <label>Level</label>
                 <select name="level" class="form-control" required>
@@ -49,7 +56,7 @@
             </div>
             <div class="mb-3">
                 <label>Cost Code</label>
-                <input type="text" name="cost_code" class="form-control" required>
+                <input type="text" name="cost_code" class="form-control">
             </div>
             <div class="mb-3">
                 <label>Description</label>

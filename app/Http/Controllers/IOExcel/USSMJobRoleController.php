@@ -2,16 +2,17 @@
 
 namespace App\Http\Controllers\IOExcel;
 
-use \App\Models\UserDetail;
-
-use \App\Models\UserGeneric;
 use App\Http\Controllers\Controller;
 
-use App\Imports\USSMJobRolePreviewImport;
+use \App\Models\UserDetail;
+use \App\Models\UserGeneric;
+use App\Models\JobRole;
 use App\Models\Periode;
-
 use App\Models\TempUploadSession;
+
+use App\Imports\USSMJobRolePreviewImport;
 use App\Services\USSMJobRoleService;
+
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Maatwebsite\Excel\Facades\Excel;
@@ -110,17 +111,17 @@ class USSMJobRoleController extends Controller
                 return $userProfile ?: '-';
             })
             ->addColumn('job_role_name', function ($row) {
-                $jobRole = \App\Models\JobRole::where('job_role_id', $row['job_role_id'] ?? null)->first();
+                $jobRole = JobRole::where('job_role_id', $row['job_role_id'] ?? null)->first();
                 return $jobRole ? $jobRole->nama : '-';
             })
             ->addColumn('unit_kerja', function ($row) {
                 // 1. If nik exists in userNIK, get userDetail->kompartemen->nama
-                $userNIK = \App\Models\UserDetail::where('nik', $row['nik'] ?? null)->first();
+                $userNIK = UserDetail::where('nik', $row['nik'] ?? null)->first();
                 if ($userNIK && $userNIK->kompartemen && !empty($userNIK->kompartemen->nama)) {
                     return $userNIK->kompartemen->nama;
                 }
                 // 2. Else, search in userGeneric into userGenericUnitKerja to get kompartemen->nama
-                $userGeneric = \App\Models\UserGeneric::where('user_code', $row['nik'] ?? null)->first();
+                $userGeneric = UserGeneric::where('user_code', $row['nik'] ?? null)->first();
                 if ($userGeneric && $userGeneric->userGenericUnitKerja && $userGeneric->userGenericUnitKerja->kompartemen && !empty($userGeneric->userGenericUnitKerja->kompartemen->nama)) {
                     return $userGeneric->userGenericUnitKerja->kompartemen->nama;
                 }

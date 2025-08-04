@@ -105,7 +105,7 @@
 
             $('#previewTable').DataTable({
                 processing: true,
-                serverSide: true,
+                serverSide: false,
                 ajax: "{{ route('company_kompartemen.preview_data') }}",
                 order: [
                     [8, 'desc']

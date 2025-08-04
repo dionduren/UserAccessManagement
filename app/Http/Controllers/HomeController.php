@@ -61,15 +61,99 @@ class HomeController extends Controller
     private function getGroupedData()
     {
         $models = ['Kompartemen', 'Departemen', 'JobRole', 'CompositeRole', 'SingleRole'];
+        $companies = Company::select('company_code', 'nama')->get();
         $groupedData = [];
 
         foreach ($models as $model) {
-            $groupedData[strtolower($model)] = app("App\\Models\\$model")::selectRaw('company_id, COUNT(*) as total')
+            $data = $groupedData[strtolower($model)] = app("App\\Models\\$model")::selectRaw('company_id, COUNT(*) as total')
                 ->with('company:company_code,nama') // Load company relationship with selected fields
                 ->groupBy('company_id')
-                ->get();
+                ->get()
+                ->pluck('total', 'company_id')
+                ->toArray();
+
+            $groupedData[strtolower($model)] = $data;
         }
 
-        return $groupedData;
+        // Group "empty" metrics per company
+        $emptyMetrics = [
+            'JobCompEmpty' => JobRole::doesntHave('compositeRole')->selectRaw('company_id, COUNT(*) as total')->groupBy('company_id')->get()->pluck('total', 'company_id')->toArray(),
+            'compJobEmpty' => CompositeRole::doesntHave('jobRole')->selectRaw('company_id, COUNT(*) as total')->groupBy('company_id')->get()->pluck('total', 'company_id')->toArray(),
+            'compSingleEmpty' => CompositeRole::doesntHave('singleRoles')->selectRaw('company_id, COUNT(*) as total')->groupBy('company_id')->get()->pluck('total', 'company_id')->toArray(),
+            'singleCompEmpty' => SingleRole::doesntHave('compositeRoles')->selectRaw('company_id, COUNT(*) as total')->groupBy('company_id')->get()->pluck('total', 'company_id')->toArray(),
+            'singleTcodeEmpty' => SingleRole::doesntHave('tcodes')->selectRaw('company_id, COUNT(*) as total')->groupBy('company_id')->get()->pluck('total', 'company_id')->toArray(),
+        ];
+
+        return [
+            'companies' => $companies,
+            'data' => $groupedData,
+            'emptyMetrics' => $emptyMetrics
+        ];
+    }
+
+    public function getJobRolesCompositeEmpty()
+    {
+        $jobRoles = JobRole::doesntHave('compositeRole')
+            ->with('company:company_code,nama')
+            ->get(['id', 'nama', 'company_id']);
+
+        return response()->json($jobRoles);
+    }
+
+    public function getCompositeRolesJobEmpty()
+    {
+        $compositeRoles = CompositeRole::doesntHave('jobRole')
+            ->with('company:company_code,nama')
+            ->get(['id', 'nama', 'company_id']);
+
+        return response()->json($compositeRoles);
+    }
+
+    public function getCompositeRolesSingleEmpty()
+    {
+        $compositeRoles = CompositeRole::doesntHave('singleRoles')
+            ->with('company:company_code,nama')
+            ->get(['id', 'nama', 'company_id']);
+
+        return response()->json($compositeRoles);
+    }
+
+    public function getSingleRolesCompositeEmpty()
+    {
+        $singleRoles = SingleRole::doesntHave('compositeRoles')
+            ->with('company:company_code,nama')
+            ->get(['id', 'nama', 'company_id']);
+
+        return response()->json($singleRoles);
+    }
+
+    public function getSingleRolesTcodeEmpty()
+    {
+        $singleRoles = SingleRole::doesntHave('tcodes')
+            ->with('company:company_code,nama')
+            ->get(['id', 'nama', 'company_id']);
+
+        return response()->json($singleRoles);
+    }
+
+    public function getTcodesSingleEmpty()
+    {
+        $tcodes = Tcode::doesntHave('singleRoles')
+            ->get(['id', 'code']);
+
+        $company = Company::where('company_code', 'A000')->first(['company_code', 'nama']);
+
+        $tcodes->transform(function ($item) use ($company) {
+            $item = (object)[
+                'id' => $item->id,
+                'nama' => $item->code,
+                'company_id' => 'A000',
+                'company' => $company
+            ];
+
+            return $item;
+        });
+
+        return response()->json($tcodes);
     }
 }

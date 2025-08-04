@@ -34,7 +34,7 @@
         $(document).ready(function() {
             var table = $('#nik_no_jobrole_table').DataTable({
                 processing: true,
-                serverSide: true,
+                serverSide: false,
                 ajax: false, // Don't load data initially
                 columns: [{
                         data: 'id',

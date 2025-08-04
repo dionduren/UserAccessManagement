@@ -61,7 +61,7 @@
         $(document).ready(function() {
             $('#composite-single-datatable').DataTable({
                 processing: true,
-                serverSide: true,
+                serverSide: false,
                 ajax: '{{ route('composite-single.jsonIndex') }}',
                 columns: [{
                         data: 'nama',

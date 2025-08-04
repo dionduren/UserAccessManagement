@@ -2,16 +2,16 @@
 
 namespace App\Http\Controllers\IOExcel;
 
-use \App\Models\UserGenericUnitKerja;
-
 use App\Http\Controllers\Controller;
-use App\Imports\UserGenericPreviewImport;
-use App\Models\Periode;
 
+use \App\Models\UserGenericUnitKerja;
+use App\Models\Periode;
 use App\Models\TempUploadSession;
 use App\Models\UserGeneric;
 
+use App\Imports\UserGenericPreviewImport;
 use App\Services\UserGenericService;
+
 use Illuminate\Http\Request;
 // use Illuminate\Support\Facades\Validator;
 // use Illuminate\Support\Str;
@@ -32,14 +32,14 @@ class UserGenericImportController extends Controller
     public function preview(Request $request)
     {
 
-        // Get all existing PIC names from the database (UserGeneric model)
-        // $seenPicNames = UserGeneric::query()
-        //     ->whereNotNull('pic')
-        //     ->pluck('pic')
-        //     ->map(fn($name) => mb_strtolower(trim($name)))
-        //     ->unique()
-        //     ->values()
-        //     ->toArray();
+        // Get all existing user_profile names from the database (UserGeneric model)
+        $seenUserProfileNames = UserGeneric::query()
+            ->whereNotNull('user_profile')
+            ->pluck('user_profile')
+            ->map(fn($name) => mb_strtolower(trim($name)))
+            ->unique()
+            ->values()
+            ->toArray();
 
         $request->validate([
             'excel_file' => 'required|file|mimes:xlsx,xls|max:20480',
@@ -93,15 +93,15 @@ class UserGenericImportController extends Controller
                     $row['_row_errors'][] = 'Group Company tidak boleh kosong.';
                 }
 
-                // Validate pic
-                // if (!empty($row['pic'])) {
-                //     $picWarning = $this->validateName($row['pic'], $seenPicNames);
-                //     if ($picWarning) {
-                //         $row['_row_warnings'][] = $picWarning;
-                //     }
-                // } else {
-                //     $row['_row_warnings'][] = 'Tidak ada PIC yang terdaftar.';
-                // }
+                // Validate user_profile
+                if (!empty($row['user_profile'])) {
+                    $userProfileWarning = $this->validateName($row['user_profile'], $seenUserProfileNames);
+                    if ($userProfileWarning) {
+                        $row['_row_warnings'][] = $userProfileWarning;
+                    }
+                } else {
+                    $row['_row_warnings'][] = 'Tidak ada User Profile yang terdaftar.';
+                }
 
                 // Validate unit_kerja
                 // if (empty($row['unit_kerja'])) {
@@ -300,28 +300,28 @@ class UserGenericImportController extends Controller
         }
     }
 
-    // private function validateName($name, &$seenSet = [])
-    // {
-    //     $trimmed = trim($name);
-    //     if (!$trimmed) return "Nama PIC kosong";
+    private function validateName($name, &$seenSet = [])
+    {
+        $trimmed = trim($name);
+        // if (!$trimmed) return "Nama PIC kosong";
 
-    //     if (mb_strlen($trimmed) > 100) return "Nama terlalu panjang";
+        // if (mb_strlen($trimmed) > 100) return "Nama terlalu panjang";
 
-    //     $words = preg_split('/\s+/', $trimmed);
-    //     if (count($words) < 2) return "Nama lengkap (depan + belakang) diperlukan";
-    //     if (count($words) > 4) return "Kemungkinan bukan nama PIC";
+        // $words = preg_split('/\s+/', $trimmed);
+        // if (count($words) < 2) return "Nama lengkap (depan + belakang) diperlukan";
+        // if (count($words) > 4) return "Kemungkinan bukan nama PIC";
 
-    //     // if (preg_match('/[^A-Za-zÀ-ž\'’-]/', $trimmed)) return "Invalid characters in name";
+        // if (preg_match('/[^A-Za-zÀ-ž\'’-]/', $trimmed)) return "Invalid characters in name";
 
-    //     $dupKey = mb_strtolower($trimmed);
-    //     if (in_array($dupKey, $seenSet)) return "Nama duplikat: $trimmed";
-    //     $seenSet[] = $dupKey;
+        $dupKey = mb_strtolower($trimmed);
+        if (in_array($dupKey, $seenSet)) return "Nama duplikat: $trimmed";
+        $seenSet[] = $dupKey;
 
-    //     $blacklist = ["function", "null", "undefined"];
-    //     if (in_array($dupKey, $blacklist)) return "Nama \"$trimmed\" tidak valid";
+        // $blacklist = ["function", "null", "undefined"];
+        // if (in_array($dupKey, $blacklist)) return "Nama \"$trimmed\" tidak valid";
 
-    //     return null; // valid
-    // }
+        return null; // valid
+    }
 
     /**
      * Reformat date from dd.mm.yyyy to Y-m-d (PostgreSQL date format).

@@ -62,7 +62,7 @@
             function loadTable(tableId, periodeId) {
                 $('#' + tableId).DataTable({
                     processing: true,
-                    serverSide: true,
+                    serverSide: false,
                     destroy: true,
                     ajax: {
                         url: "{{ route('user-generic.get-periodic') }}",

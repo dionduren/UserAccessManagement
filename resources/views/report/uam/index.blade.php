@@ -1,5 +1,19 @@
 @extends('layouts.app')
 
+@section('header-scripts')
+    <style>
+        .collapse:not(.show) {
+            display: none;
+        }
+
+        .collapsing {
+            height: 0;
+            overflow: hidden;
+            transition: height 0.35s ease;
+        }
+    </style>
+@endsection
+
 @section('content')
     @if (session('success'))
         <div class="alert alert-success alert-dismissible fade show" role="alert">
@@ -18,8 +32,8 @@
         </div>
     @endif
 
-    <div class="container-fluid">
-        <h3>User Access Review Report</h3>
+    <div class="container-fluid mb-5">
+        <h3>User Access Management Report</h3>
         <div class="row mb-3">
             <div class="col">
                 <label>Company</label>
@@ -43,14 +57,28 @@
                 </select>
             </div>
         </div>
+
+        {{-- BUTTONS --}}
         <div class="row mb-3">
             <div class="col-auto">
                 <button id="load" class="btn btn-primary mb-3">Load Data</button>
             </div>
             <div class="col-auto">
-                <button id="export-word" class="btn btn-success mb-3" style="display: none">Export to Word</button>
+                <button id="export-word" class="btn btn-info mb-3 text-white" style="display: none"><i
+                        class="bi bi-file-earmark-word"></i>Export
+                    to Word</button>
+            </div>
+            {{-- <div class="col-auto">
+                <button id="export-composite-excel" class="btn btn-success mb-3" style="display: none"><i
+                        class="bi bi-file-earmark-x"></i> Export Composite-Single to Excel</button>
+            </div> --}}
+            <div class="col-auto">
+                <button id="export-single-excel" class="btn btn-success mb-3" style="display: none"><i
+                        class="bi bi-file-earmark-x"></i> Export Single-Tcode to Excel</button>
             </div>
         </div>
+
+        {{-- RESULT 1: DOKUMEN REVIEW USER ID DAN OTORISASI --}}
 
         <div class="row mb-3" id="review-table-container" style="display:none;">
             <div class="col-md-2"></div>
@@ -65,32 +93,16 @@
                         <td id="nomor-surat-cell"></td>
                     </tr>
                     <tr>
-                        <td width="30%">Aset Informasi</td>
-                        <td>User ID SAP</td>
-                    </tr>
-                    <tr>
                         <td>Unit Kerja</td>
                         <td id="unit-kerja-cell">-</td>
                     </tr>
                     <tr>
-                        <td>Cost Center</td>
-                        <td id="cost-center-cell">-</td>
+                        <td>Jumlah Unique Single Role</td>
+                        <td id="unique-single-role-cell">-</td>
                     </tr>
                     <tr>
-                        <td>Jumlah Awal User</td>
-                        <td id="jumlah-awal-user-cell"><strong>0</strong></td>
-                    </tr>
-                    <tr>
-                        <td>Jumlah User Dihapus</td>
-                        <td></td>
-                    </tr>
-                    <tr>
-                        <td>Jumlah User Baru</td>
-                        <td></td>
-                    </tr>
-                    <tr>
-                        <td>Jumlah Akhir User</td>
-                        <td></td>
+                        <td>Jumlah Unique Tcode</td>
+                        <td id="unique-tcode-cell">-</td>
                     </tr>
                 </table>
             </div>
@@ -99,22 +111,67 @@
         </div>
 
         <div id="job-role-table-container" class="mt-4" style="display:none;">
+            <h3>1. Table Mapping Job Function & Composite Role</h3>
             <table id="job-role-table" class="table table-bordered table-striped" style="width:100%">
                 <thead>
                     <tr>
                         <th width="5%">No</th>
-                        <th>User ID</th>
-                        <th width="20%">Nama</th>
-                        <th width="20%">Job Role</th>
-                        {{-- <th width="20%" style="background-color: #d4edda;">Kompartemen</th> --}}
-                        {{-- <th width="20%" style="background-color: #d4edda;">Departemen</th> --}}
-                        <th width="7,5%">NIK</th>
-                        <th>Tetap</th>
-                        <th>Berubah</th>
-                        <th>Keterangan</th>
+                        <th>Job Role</th>
+                        <th>Composite Role</th>
+                        <th>Deskripsi</th>
                     </tr>
                 </thead>
             </table>
+        </div>
+
+        <div id="composite-role-table-container" class="mt-4" style="display:none;">
+
+            <h3>2. Table Composite Role - Single Role</h3>
+            <!-- Composite Role Table Collapse -->
+            <button class="btn btn-info my-2" id="hideCompositeRoleSingle" type="button" data-bs-toggle="collapse"
+                data-bs-target="#compositeRoleCollapse" aria-expanded="false" aria-controls="compositeRoleCollapse">
+                Show/Hide Table Composite Role - Single Role
+            </button>
+            {{-- Composite Role - Single Role Table --}}
+            <div class="collapse" id="compositeRoleCollapse">
+                <table id="composite-role-table" class="table table-bordered table-sm" style="width:100%">
+                    <thead>
+                        <tr>
+                            <th width="5%">No</th>
+                            <th>Composite Role</th>
+                            <th>Single Roles</th>
+                            <th>Deskripsi</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div id="single-role-table-container" class="mt-4" style="display:none;">
+
+            <h3>3. Table Single Role - Tcode</h3>
+            <!-- Single Role Table Collapse -->
+            <button class="btn btn-info my-2" id="hideSingleRoleTcode" type="button" data-bs-toggle="collapse"
+                data-bs-target="#singleRoleCollapse" aria-expanded="false" aria-controls="singleRoleCollapse">
+                Show/Hide Table Single Role - Tcode
+            </button>
+            {{-- Single Role - Tcode Table --}}
+            <div class="collapse" id="singleRoleCollapse">
+                <table id="single-role-table" class="table table-bordered table-sm" style="width:100%">
+                    <thead>
+                        <tr>
+                            <th width="5%">No</th>
+                            <th>Single Role</th>
+                            <th>Tcode</th>
+                            <th>Deskripsi Tcode</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    </tbody>
+                </table>
+            </div>
         </div>
     </div>
 @endsection
@@ -174,9 +231,9 @@
                 }
             });
 
-            $('#departemen').on('change', function() {
-                console.log($(this).val());
-            });
+            // $('#departemen').on('change', function() {
+            //     // console.log($(this).val());
+            // });
 
             // Initialize DataTable without ajax
             var jobRoleTable = $('#job-role-table').DataTable({
@@ -191,53 +248,17 @@
                         }
                     },
                     {
-                        data: 'user_nik',
-                        name: 'user_nik'
-                    },
-                    {
-                        data: 'user_definisi',
-                        name: 'user_definisi'
-                    },
-                    {
                         data: 'job_role',
                         name: 'job_role'
                     },
-                    // {
-                    //     data: 'kompartemen',
-                    //     name: 'kompartemen'
-                    // },
-                    // {
-                    //     data: 'departemen',
-                    //     name: 'departemen'
-                    // },
                     {
-                        data: 'karyawan_nik',
-                        name: 'karyawan_nik'
+                        data: 'composite_role',
+                        name: 'composite_role'
                     },
                     {
-                        data: null,
-                        name: 'tetap',
-                        defaultContent: '',
-                        render: function() {
-                            return '';
-                        }
+                        data: 'composite_role_description',
+                        name: 'composite_role_description'
                     },
-                    {
-                        data: null,
-                        name: 'berubah',
-                        defaultContent: '',
-                        render: function() {
-                            return '';
-                        }
-                    },
-                    {
-                        data: null,
-                        name: 'keterangan',
-                        defaultContent: '',
-                        render: function() {
-                            return '';
-                        }
-                    }
                 ],
                 tooltips: true,
                 responsive: true,
@@ -247,15 +268,8 @@
                 pageLength: 15,
                 lengthMenu: [10, 15, 25, 50, 100],
                 order: [
-                    [1, 'asc']
-                ],
-                rowCallback: function(row, data) {
-                    if (!data.user_definisi || data.user_definisi == "-") {
-                        $(row).css('background-color', '#f8d7da');
-                        $(row).attr('title',
-                            'Tidak ada user NIK / user Cost Center pada Periode terakhir');
-                    }
-                }
+                    [0, 'asc']
+                ]
             });
 
             // Load data on button click
@@ -274,6 +288,9 @@
                 $('#review-table-container').show();
                 $('#job-role-table-container').show();
                 $('#export-word').show();
+                // $('#export-composite-excel').show();
+                $('#export-single-excel').show();
+
 
                 // Get selected values
                 let companyId = $('#company').val();
@@ -313,7 +330,7 @@
 
                 // Load job roles and count users
                 $.ajax({
-                    url: "{{ route('report.uar.job-roles') }}",
+                    url: "{{ route('report.uam.job-roles') }}",
                     data: {
                         company_id: companyId,
                         kompartemen_id: kompartemenId,
@@ -324,10 +341,8 @@
                         let totalUser = 0;
                         if (response.data) {
                             jobRoleTable.rows.add(response.data).draw();
-                            // Sum user count from response
                             totalUser = response.data.length;
                             cost_center = response.cost_center;
-                            // Update nomor surat cell
                             if (response.nomorSurat) {
                                 $('#nomor-surat-cell').text(response.nomorSurat);
                             } else {
@@ -336,9 +351,75 @@
                         } else {
                             jobRoleTable.draw();
                         }
-                        $('#jumlah-awal-user-cell').html('<strong>' + totalUser +
-                            '</strong>');
+                        $('#jumlah-awal-user-cell').html('<strong>' + totalUser + '</strong>');
                         $('#cost-center-cell').text(cost_center);
+
+                        // Fill composite role - single role table
+                        if (response.composite_roles && response.composite_roles.length > 0) {
+                            let tbody = '';
+                            response.composite_roles.forEach(function(cr, idx) {
+                                let singleRoles = cr.single_roles;
+                                singleRoles.forEach(function(sr, srIdx) {
+                                    tbody += '<tr>';
+                                    // Only show composite role cell for the first single role, with rowspan
+                                    if (srIdx === 0) {
+                                        tbody +=
+                                            `<td rowspan="${singleRoles.length}">${idx + 1}</td>`;
+                                        tbody +=
+                                            `<td rowspan="${singleRoles.length}">${cr.nama}</td>`;
+                                    }
+                                    tbody += `<td>${sr.nama}</td>`;
+                                    tbody += `<td>${sr.deskripsi}</td>`;
+                                    tbody += '</tr>';
+                                });
+                            });
+                            $('#composite-role-table tbody').html(tbody);
+                            $('#composite-role-table-container').show();
+                        } else {
+                            $('#composite-role-table tbody').html('');
+                            $('#composite-role-table-container').hide();
+                        }
+
+                        // Fill single role - tcode table
+                        if (response.single_roles && response.single_roles.length > 0) {
+                            let tbody = '';
+                            let idx = 1;
+                            let tcodeSet = new Set();
+                            response.single_roles.forEach(function(sr) {
+                                if (sr.tcodes.length > 0) {
+                                    sr.tcodes.forEach(function(tc, tcIdx) {
+                                        tbody += '<tr>';
+                                        if (tcIdx === 0) {
+                                            tbody +=
+                                                `<td rowspan="${sr.tcodes.length}">${idx}</td>`;
+                                            tbody +=
+                                                `<td rowspan="${sr.tcodes.length}">${sr.nama}</td>`;
+                                        }
+                                        tbody += `<td>${tc.tcode}</td>`;
+                                        tbody +=
+                                            `<td>${tc.deskripsi || '-'}</td>`;
+                                        tbody += '</tr>';
+                                        if (tc.tcode) tcodeSet.add(tc.tcode);
+                                    });
+                                } else {
+                                    tbody += `<tr>
+                <td>${idx}</td>
+                <td>${sr.nama}</td>
+                <td>-</td>
+                <td>-</td>
+            </tr>`;
+                                }
+                                idx++;
+                            });
+                            $('#single-role-table tbody').html(tbody);
+                            $('#single-role-table-container').show();
+                            // Show counts
+                            $('#unique-single-role-cell').text(response.single_roles.length);
+                            $('#unique-tcode-cell').text(tcodeSet.size);
+                        } else {
+                            $('#single-role-table tbody').html('');
+                            $('#single-role-table-container').hide();
+                        }
                     }
                 });
             });
@@ -351,7 +432,17 @@
                     kompartemen_id: $('#kompartemen').val(),
                     departemen_id: $('#departemen').val()
                 });
-                window.open("{{ route('report.uar.export-word') }}?" + params, '_blank');
+                window.open("{{ route('report.uam.export-word') }}?" + params, '_blank');
+            });
+
+            $('#export-single-excel').on('click', function(e) {
+                e.preventDefault();
+                let params = $.param({
+                    company_id: $('#company').val(),
+                    kompartemen_id: $('#kompartemen').val(),
+                    departemen_id: $('#departemen').val()
+                });
+                window.open("{{ route('report.uam.export-single-excel') }}?" + params, '_blank');
             });
         });
     </script>

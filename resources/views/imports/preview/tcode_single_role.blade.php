@@ -76,7 +76,7 @@
 
             $('#singleTcodeTable').DataTable({
                 processing: true,
-                serverSide: true,
+                serverSide: false,
                 ajax: {
                     url: "{{ route('tcode_single_role.preview_data') }}",
                     type: "GET",

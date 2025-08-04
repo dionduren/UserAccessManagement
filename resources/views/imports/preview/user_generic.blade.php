@@ -9,16 +9,16 @@
                     <th>Group</th>
                     <th>User Code</th>
                     {{-- <th>User Type</th> --}}
-                    <th style="display:none;">User Profile</th>
+                    <th width="15%">User Profile</th>
                     <th>License Type</th>
                     {{-- <th style="background-color:greenyellow">Kompartemen ID</th> --}}
                     <th style="background-color:greenyellow">Kompartemen Name</th>
                     {{-- <th style="background-color:greenyellow">Departemen ID</th> --}}
                     <th style="background-color:greenyellow">Departemen Name</th>
-                    <th>Last Login</th>
-                    <th>Valid From</th>
-                    <th>Valid To</th>
-                    <th style="display:none;">Keterangan</th>
+                    <th style="width: 7.5%">Last Login</th>
+                    <th style="width: 7.5%">Valid From</th>
+                    <th style="width: 7.5%">Valid To</th>
+                    <th width="15%">Keterangan</th>
                     <th><span style="white-space: wrap;">Ada di UAR</span></th>
                 </tr>
             </thead>

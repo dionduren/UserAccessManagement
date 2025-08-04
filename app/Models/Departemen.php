@@ -19,6 +19,7 @@ class Departemen extends Model
         'departemen_id',
         'company_id',
         'kompartemen_id',
+        'cost_center',
         'nama',
         'deskripsi',
         'created_by',
@@ -41,5 +42,10 @@ class Departemen extends Model
     public function jobRoles()
     {
         return $this->hasMany(JobRole::class, 'departemen_id', 'departemen_id');
+    }
+
+    public function costCenter()
+    {
+        return $this->hasOne(CostCenter::class, 'cost_center', 'cost_center');
     }
 }

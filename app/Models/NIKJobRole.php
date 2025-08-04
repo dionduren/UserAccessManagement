@@ -19,6 +19,7 @@ class NIKJobRole extends Model
     protected $fillable = [
         'periode_id',
         'nik',
+        'user_type',
         'job_role_id',
         // 'definisi',
         'is_active',

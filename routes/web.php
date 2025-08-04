@@ -1,31 +1,30 @@
 <?php
 
-use \App\Http\Controllers\IOExcel\USSMJobRoleController;
+use App\Http\Controllers\IOExcel\USSMJobRoleController;
 use App\Http\Controllers\AccessMatrixController;
-
 
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\DynamicUploadController;
 use App\Http\Controllers\EmployeeController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\PeriodeController;
+use App\Http\Controllers\JSONController;
+use App\Http\Controllers\TcodeImportController;
+use App\Http\Controllers\UserController;
 
 use App\Http\Controllers\IOExcel\CompanyKompartemenController;
 use App\Http\Controllers\IOExcel\CompanyMasterDataController;
 use App\Http\Controllers\IOExcel\CompositeRoleSingleRoleController;
 use App\Http\Controllers\IOExcel\NIKJobRoleImportController;
-
 // use App\Http\Controllers\IOExcel\ExcelImportController;
 use App\Http\Controllers\IOExcel\SingleRoleTcodeController;
 use App\Http\Controllers\IOExcel\TcodeSingleRoleController;
-
 use App\Http\Controllers\IOExcel\UserGenericImportController;
 use App\Http\Controllers\IOExcel\UserGenericUnitKerjaController;
 use App\Http\Controllers\IOExcel\UserNIKImportController;
-use App\Http\Controllers\JSONController;
+
 use App\Http\Controllers\MasterData\CompanyController;
 use App\Http\Controllers\MasterData\CompositeRoleController;
-
 use App\Http\Controllers\MasterData\CostCenterController;
 use App\Http\Controllers\MasterData\CostPrevUserController;
 use App\Http\Controllers\MasterData\DepartemenController;
@@ -35,20 +34,21 @@ use App\Http\Controllers\MasterData\SingleRoleController;
 use App\Http\Controllers\MasterData\TcodeController;
 use App\Http\Controllers\MasterData\TerminatedEmployeeController;
 use App\Http\Controllers\MasterData\PenomoranUARController;
+use App\Http\Controllers\MasterData\PenomoranUAMController;
 use App\Http\Controllers\MasterData\UserDetailController;
 use App\Http\Controllers\MasterData\UserGenericController;
 use App\Http\Controllers\MasterData\UserNIKController;
+
 use App\Http\Controllers\Relationship\CompositeSingleController;
 use App\Http\Controllers\Relationship\JobCompositeController;
 use App\Http\Controllers\Relationship\NIKJobController;
 use App\Http\Controllers\Relationship\SingleTcodeController;
-
 use App\Http\Controllers\Relationship\UserGenericJobRoleController;
+
 use App\Http\Controllers\Report\UARReportController;
+use App\Http\Controllers\Report\UAMReportController;
 use App\Http\Controllers\Report\JobRoleReportController;
 use App\Http\Controllers\Report\WorkUnitReportController;
-use App\Http\Controllers\TcodeImportController;
-use App\Http\Controllers\UserController;
 
 use App\Models\TerminatedEmployee;
 use Illuminate\Support\Facades\Auth;
@@ -64,6 +64,13 @@ Auth::routes();
 
 Route::get('/', [App\Http\Controllers\HomeController::class, 'index'])->name('home');
 Route::get('/home', [App\Http\Controllers\HomeController::class, 'index'])->name('home');
+Route::get('/home/empty/jobRolesComposite', [HomeController::class, 'getJobRolesCompositeEmpty'])->name('home.empty.jobRolesComposite');
+Route::get('/home/empty/compositeRolesJob', [HomeController::class, 'getCompositeRolesJobEmpty'])->name('home.empty.compositeRolesJob');
+Route::get('/home/empty/compositeRolesSingle', [HomeController::class, 'getCompositeRolesSingleEmpty'])->name('home.empty.compositeRolesSingle');
+Route::get('/home/empty/singleRolesComposite', [HomeController::class, 'getSingleRolesCompositeEmpty'])->name('home.empty.singleRolesComposite');
+Route::get('/home/empty/singleRolesTcode', [HomeController::class, 'getSingleRolesTcodeEmpty'])->name('home.empty.singleRolesTcode');
+Route::get('/home/empty/tcodesSingle', [HomeController::class, 'getTcodesSingleEmpty'])->name('home.empty.tcodesSingle');
+
 
 // ======= MASTER DATA COMPANY ======= 
 Route::resource('companies', CompanyController::class);
@@ -292,9 +299,25 @@ Route::prefix('report/uar')->name('report.uar.')->group(function () {
     // Route::get('/download', [UARReportController::class, 'download'])->name('download');
 });
 
-// ------------------ PENOMORAN UAR ------------------
+
+Route::prefix('report/uam')->name('report.uam.')->group(function () {
+    Route::get('/', [UAMReportController::class, 'index'])->name('index');
+    Route::get('/get-kompartemen', [UAMReportController::class, 'getKompartemen'])->name('get-kompartemen');
+    Route::get('/get-departemen', [UAMReportController::class, 'getDepartemen'])->name('get-departemen');
+    Route::get('/job-roles', [UAMReportController::class, 'jobRolesData'])->name('job-roles');
+    Route::get('/single-roles', [UAMReportController::class, 'getSingleRoles'])->name('single-roles');
+
+    Route::get('/export-word', [UAMReportController::class, 'exportWord'])->name('export-word');
+    Route::get('/export-single-excel', [UAMReportController::class, 'exportSingleExcel'])->name('export-single-excel');
+    // Route::get('/download', [UARReportController::class, 'download'])->name('download');
+});
+
+// ------------------ PENOMORAN UAR & UAM ------------------
 Route::get('penomoran-uar/check-number', [PenomoranUARController::class, 'checkNumber'])->name('penomoran-uar.checkNumber');
 Route::resource('penomoran-uar', PenomoranUARController::class);
+
+Route::get('penomoran-uam/check-number', [PenomoranUAMController::class, 'checkNumber'])->name('penomoran-uam.checkNumber');
+Route::resource('penomoran-uam', PenomoranUAMController::class);
 
 // ------------------ ACCESS MATRIX ------------------
 

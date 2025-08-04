@@ -25,6 +25,7 @@ class UserGenericPreviewImport implements ToCollection, WithHeadingRow, WithChun
                 'user_code' => $row['user_code'] ?? null,
                 'user_type' => $row['user_type'] ?? null,
                 'user_profile' => $row['user_profile'] ?? null,
+                'nik' => $row['nik'] ?? null,
                 'cost_code' => $row['cost_code'] ?? null,
                 'license_type' => $row['license_type'] ?? null,
                 'last_login' => $row['last_login'] ?? null,

@@ -76,12 +76,14 @@ class CompanyMasterDataController extends Controller
                     // $currentCompany = $company;
                     $processed++;
                     CostCenter::updateOrCreate(
-                        ['cost_center' => $cost_center],
+                        [
+                            'cost_center' => $cost_center,
+                            'level_id' => $dir_id,
+                        ],
                         [
                             'company_id' => $company,
                             'parent_id' => $company,
                             'level' => 'Direktorat',
-                            'level_id' => $dir_id,
                             'level_name' => $dir_title,
                             'cost_center' => $cost_center,
                             'cost_code' => $cost_code,
@@ -97,6 +99,7 @@ class CompanyMasterDataController extends Controller
                         [
                             'nama' => $komp_title,
                             'company_id' => $company,
+                            'cost_center' => $cost_center ?? 'N/A',
                             'created_by' => $user,
                         ]
                     );
@@ -105,11 +108,11 @@ class CompanyMasterDataController extends Controller
                         [
                             'cost_center' => $cost_center,
                             'level' => 'Kompartemen',
+                            'level_id' => $komp_id,
                         ],
                         [
                             'company_id' => $company,
                             'parent_id' => $dir_id,
-                            'level_id' => $komp_id,
                             'level_name' => $komp_title,
                             'cost_center' => $cost_center,
                             'cost_code' => $cost_code,
@@ -123,6 +126,7 @@ class CompanyMasterDataController extends Controller
                         ['kompartemen_id' => $komp_id],
                         [
                             'nama' => $komp_title,
+                            'cost_center' => $cost_center ?? 'N/A',
                             'company_id' => $company,
                             'created_by' => $user,
                         ]
@@ -134,6 +138,7 @@ class CompanyMasterDataController extends Controller
                             'nama' => $dept_title,
                             'company_id' => $company,
                             'kompartemen_id' => $komp_id,
+                            'cost_center' => $cost_center ?? 'N/A',
                             'created_by' => $user,
                         ]
                     );
@@ -142,11 +147,11 @@ class CompanyMasterDataController extends Controller
                         [
                             'cost_center' => $cost_center,
                             'level' => 'Departemen',
+                            'level_id' => $dept_id,
                         ],
                         [
                             'company_id' => $company,
                             'parent_id' => $komp_id,
-                            'level_id' => $dept_id,
                             'level_name' => $dept_title,
                             'cost_center' => $cost_center,
                             'cost_code' => $cost_code,
@@ -162,12 +167,17 @@ class CompanyMasterDataController extends Controller
                             'nama' => $dept_title,
                             'company_id' => $company,
                             'kompartemen_id' => null,
+                            'cost_center' => $cost_center ?? 'N/A',
                             'created_by' => $user,
                         ]
                     );
 
                     CostCenter::updateOrCreate(
-                        ['cost_center' => $cost_center],
+                        [
+                            'cost_center' => $cost_center,
+                            'level' => 'Departemen',
+                            'level_id' => $dept_id,
+                        ],
                         [
                             'company_id' => $company,
                             'parent_id' => $company,

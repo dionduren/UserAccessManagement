@@ -1,7 +1,14 @@
 @extends('layouts.app')
 
 @section('content')
-    <div class="container">
+    @if (session('error'))
+        <div class="alert alert-danger">
+            <h4>Error:</h4>
+            {{ session('error') }}
+        </div>
+    @endif
+
+    <div class="container-fluid">
         <h2>Tambah Relasi User Generic - Job Role</h2>
         <form action="{{ route('user-generic-job-role.store') }}" method="POST">
             @csrf

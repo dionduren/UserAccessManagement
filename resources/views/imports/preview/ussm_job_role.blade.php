@@ -2,7 +2,7 @@
 
 @section('content')
     <div class="container-fluid">
-        <h2>Preview Import USSM Job Role</h2>
+        <h2>Preview Import USMM Job Role</h2>
         <form id="confirm-form" action="{{ route('ussm-job-role.confirmImport') }}" method="POST">
             @csrf
             <button type="submit" class="btn btn-success mb-3">Confirm Import</button>
@@ -35,7 +35,7 @@
         $(document).ready(function() {
             $('#previewTable').DataTable({
                 processing: true,
-                serverSide: true,
+                serverSide: false,
                 ajax: "{{ route('ussm-job-role.previewData') }}",
                 columns: [{
                         data: 'nik',

@@ -39,7 +39,6 @@ class CostCenter extends Model
         return $this->belongsTo(Company::class, 'company_code', 'company_id');
     }
 
-
     public function userNIK()
     {
         return $this->hasMany(userNIK::class, 'cost_code', 'cost_code');
@@ -48,5 +47,15 @@ class CostCenter extends Model
     public function userGeneric()
     {
         return $this->hasMany(userGeneric::class, 'cost_code', 'cost_code');
+    }
+
+    public function kompartemen()
+    {
+        return $this->belongsTo(Kompartemen::class, 'cost_center', 'cost_center');
+    }
+
+    public function departemen()
+    {
+        return $this->belongsTo(Departemen::class, 'cost_center', 'cost_center');
     }
 }

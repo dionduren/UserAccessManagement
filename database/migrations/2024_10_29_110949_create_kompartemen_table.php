@@ -13,6 +13,7 @@ class CreateKompartemenTable extends Migration
             $table->string('company_id'); // foreign key
             $table->string('nama'); // Name of the compartment
             $table->text('deskripsi')->nullable(); // Optional description
+            $table->string('cost_center')->nullable(); // Cost center associated with the compartment
             $table->timestamps(); // Created at and updated at timestamps
             $table->softDeletes(); // Soft delete for safe record deletion
             $table->text('created_by')->nullable();

@@ -70,7 +70,7 @@
         document.addEventListener('DOMContentLoaded', function() {
             const table = $('#NIKJobRoleTable').DataTable({
                 processing: true,
-                serverSide: true,
+                serverSide: false,
                 ajax: "{{ route('nik_job_role.upload.preview_data') }}",
                 columns: [{
                         data: 'nik',

@@ -70,7 +70,7 @@
         document.addEventListener('DOMContentLoaded', function() {
             const table = $('#userNIKTable').DataTable({
                 processing: true,
-                serverSide: true,
+                serverSide: false,
                 ajax: "{{ route('user-nik.upload.preview_data') }}",
                 columns: [{
                         data: 'group',

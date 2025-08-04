@@ -109,7 +109,7 @@
 
             let compositeRolesTable = $('#composite_roles_table').DataTable({
                 processing: true,
-                serverSide: true,
+                serverSide: false,
                 ajax: {
                     url: '/composite-roles/data',
                     data: function(d) {

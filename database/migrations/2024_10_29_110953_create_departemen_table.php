@@ -14,6 +14,7 @@ class CreateDepartemenTable extends Migration
             $table->string('kompartemen_id')->nullable(); // Link to kompartemen
             $table->string('nama'); // Name of the department
             $table->text('deskripsi')->nullable(); // Optional description
+            $table->string('cost_center')->nullable(); // Cost center associated with the department
             $table->timestamps(); // Created at and updated at timestamps
             $table->softDeletes(); // Soft delete for safe record deletion
             $table->text('created_by')->nullable();

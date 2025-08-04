@@ -17,18 +17,24 @@ class CostCenterController extends Controller
      */
     public function index(Request $request)
     {
+        $companies = Company::all();
         if ($request->ajax()) {
-            $costCenters = CostCenter::select('id', 'company_id', 'parent_id', 'level', 'level_id', 'level_name', 'cost_center', 'cost_code', 'deskripsi');
-            return DataTables::of($costCenters)
+            $query = CostCenter::select('id', 'company_id', 'parent_id', 'level', 'level_id', 'level_name', 'cost_center', 'cost_code', 'deskripsi');
+
+            if ($request->has('company_id') && !empty($request->company_id)) {
+                $query->where('company_id', $request->company_id);
+            }
+
+            return DataTables::of($query)
                 ->addColumn('action', function ($row) {
                     return '<a href="' . route('cost-center.edit', $row->id) . '" target="_blank" class="btn btn-sm btn-warning">Edit</a> 
-                        <button onclick="deleteCostCenter(' . $row->id . ')" class="btn btn-sm btn-danger">Delete</button>';
+                <button onclick="deleteCostCenter(' . $row->id . ')" class="btn btn-sm btn-danger">Delete</button>';
                 })
                 ->rawColumns(['action'])
                 ->make(true);
         }
 
-        return view('master-data.cost_center.index');
+        return view('master-data.cost_center.index', compact('companies'));
     }
 
     public function index_prev_user(Request $request)
@@ -115,14 +121,36 @@ class CostCenterController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'company_id' => 'nullable|string',
+            'group' => 'required|string',
+            'parent_id' => 'required|string',
+            'level' => 'required|string',
+            'level_id' => 'required|string',
+            'level_name' => 'required|string|max:255',
             'cost_center' => 'required|string|max:255',
-            'cost_code' => 'required|string|max:255',
+            'cost_code' => 'nullable|string|max:255',
             'deskripsi' => 'nullable|string',
         ]);
 
+        $data = [];
+
         try {
-            CostCenter::create($request->all());
+            // Prepare data for insertion
+            $data = [
+                'company_id' => $request->input('group'),
+                'parent_id' => $request->input('parent_id'),
+                'level' => $request->input('level'),
+                'level_id' => $request->input('level_id'),
+                'level_name' => $request->input('level_name'),
+                'cost_center' => $request->input('cost_center'),
+                'cost_code' => $request->input('cost_code'),
+                'deskripsi' => $request->input('deskripsi'),
+                'created_by' => auth()->user()->name,
+                'updated_by' => auth()->user()->name,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ];
+
+            CostCenter::create($data);
 
             return redirect()->route('cost-center.index')->with('success', 'Cost Center created successfully!');
         } catch (\Exception $e) {
@@ -160,15 +188,36 @@ class CostCenterController extends Controller
     public function update(Request $request, $id)
     {
         $request->validate([
-            'company_id' => 'required|string',
+            'group' => 'required|string',
+            'parent_id' => 'required|string',
+            'level' => 'required|string',
+            'level_id' => 'required|string',
+            'level_name' => 'required|string|max:255',
             'cost_center' => 'required|unique:ms_cost_center,cost_center,' . $id,
-            'cost_code' => 'required|string|max:255',
+            'cost_code' => 'nullable|string|max:255',
             'deskripsi' => 'nullable|string',
         ]);
 
+        $data = [];
+
         try {
+            // Prepare data for insertion
+            $data = [
+                'company_id' => $request->input('group'),
+                'parent_id' => $request->input('parent_id'),
+                'level' => $request->input('level'),
+                'level_id' => $request->input('level_id'),
+                'level_name' => $request->input('level_name'),
+                'cost_center' => $request->input('cost_center'),
+                'cost_code' => $request->input('cost_code'),
+                'deskripsi' => $request->input('deskripsi'),
+                'updated_by' => auth()->user()->name,
+                'updated_at' => now(),
+            ];
+
+            // Update the cost center
             $costCenter = CostCenter::findOrFail($id);
-            $costCenter->update($request->all());
+            $costCenter->update($data);
 
             return redirect()->route('cost-center.index')->with('success', 'Cost Center updated successfully!');
         } catch (\Exception $e) {
