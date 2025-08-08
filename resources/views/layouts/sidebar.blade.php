@@ -1,10 +1,10 @@
 <div class="sidebar-heading mt-2">
     <a href="/" class="d-flex align-items-center mb-3 mb-md-0 me-md-auto text-white text-decoration-none">
-        <span class="fs-4"><i class="bi bi-h-square"></i> Hak Akses</span>
+        <span class="fs-4"><i class="bi bi-p-square"></i> UAM & UAR Tools</span>
     </a>
 </div>
 <hr>
-<div class="list-group list-group-flush overflow-auto h-100 no-scrollbar">
+<div class="sidebar-scroll">
     <ul class="nav nav-pills flex-column mb-auto">
         <li class="nav-item">
             <a href="{{ route('home') }}" class="nav-link {{ request()->routeIs('home') ? 'active' : 'text-white' }}">
@@ -14,7 +14,7 @@
 
 
         <!-- Other Sidebar Links -->
-        @can('manage company info')
+        @can('data.view')
             {{-- <div class="mx-1">
                 <li>
                     <a href="{{ route('cost-center.index') }}"
@@ -26,7 +26,7 @@
 
             <div class="dropdown">
                 <a href="javascript:void(0)"
-                    class="nav-link text-white dropdown-toggle {{ request()->is('companies*', 'kompartemens*', 'departemens*') ? 'active' : 'text-white' }}">
+                    class="nav-link text-white dropdown-toggle {{ request()->is('companies*', 'kompartemens*', 'departemens*', 'cost-center*') ? 'active' : 'text-white' }}">
                     <i class="bi bi-building me-2"></i> <span class="me-auto">MASTER DATA COMPANY</span>
                 </a>
                 <div
@@ -50,6 +50,13 @@
                         </a>
                     </li>
 
+                    <li>
+                        <a href="{{ route('cost-center.index') }}"
+                            class="nav-link {{ request()->routeIs('cost-center*') ? 'active' : 'text-white' }}">
+                            <i class="bi bi-cash-stack"></i> Cost Center
+                        </a>
+                    </li>
+
                 </div>
             </div>
         @endcan
@@ -57,7 +64,7 @@
 
         <!-- Additional Items... -->
 
-        @can('manage roles')
+        @can('data.view')
             <!-- MASTER DATA USER ACCESS -->
             <div class="dropdown">
                 <a class="nav-link dropdown-toggle {{ request()->is('job-roles*', 'composite-roles*', 'single-roles*', 'tcodes*') ? 'active' : 'text-white' }}"
@@ -133,40 +140,42 @@
 
 
             <!-- IMPORT DATA -->
-            <div class="dropdown">
-                <a class="nav-link dropdown-toggle {{ request()->is('company-kompartemen*', 'composite-single*', 'tcode-single-role*') ? 'active' : 'text-white' }}"
-                    data-bs-toggle="dropdown" href="#" role="button" aria-expanded="false">
-                    <i class="bi bi-file-earmark-spreadsheet me-2"></i> <span class="me-auto">UPLOAD DATA MASTER</span>
-                </a>
-                <div
-                    class="dropdown-content {{ request()->is('company_kompartemen*', 'composite_single*', 'tcode_single_role*') ? 'show' : '' }}">
+            @can('data.create')
+                <div class="dropdown">
+                    <a class="nav-link dropdown-toggle {{ request()->is('company-kompartemen*', 'composite-single*', 'tcode-single-role*') ? 'active' : 'text-white' }}"
+                        data-bs-toggle="dropdown" href="#" role="button" aria-expanded="false">
+                        <i class="bi bi-file-earmark-spreadsheet me-2"></i> <span class="me-auto">UPLOAD DATA MASTER</span>
+                    </a>
+                    <div
+                        class="dropdown-content {{ request()->is('company_kompartemen*', 'composite_single*', 'tcode_single_role*') ? 'show' : '' }}">
 
-                    <li>
-                        <a href="{{ route('unit-kerja.upload-form') }}"
-                            class="nav-link {{ request()->routeIs('unit-kerja.upload-form') ? 'active' : 'text-white' }}">
-                            <i class="bi bi-cloud-upload me-2"></i> Upload Unit Kerja
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a href="{{ route('company_kompartemen.upload') }}"
-                            class="nav-link {{ request()->routeIs('company_kompartemen*') ? 'active' : 'text-white' }}">
-                            <i class="bi bi-file-earmark-spreadsheet"></i> Job Role - Composite Role
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a href="{{ route('composite_single.upload') }}"
-                            class="nav-link {{ request()->routeIs('composite_single*') ? 'active' : 'text-white' }}">
-                            <i class="bi bi-file-earmark-spreadsheet"></i> Composite - Single Role
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a href="{{ route('tcode_single_role.upload') }}"
-                            class="nav-link {{ request()->routeIs('tcode_single_role*') ? 'active' : 'text-white' }}">
-                            <i class="bi bi-file-earmark-spreadsheet"></i> Single Role - Tcode
-                        </a>
-                    </li>
+                        <li>
+                            <a href="{{ route('unit-kerja.upload-form') }}"
+                                class="nav-link {{ request()->routeIs('unit-kerja.upload-form') ? 'active' : 'text-white' }}">
+                                <i class="bi bi-cloud-upload me-2"></i> Upload Unit Kerja
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="{{ route('company_kompartemen.upload') }}"
+                                class="nav-link {{ request()->routeIs('company_kompartemen*') ? 'active' : 'text-white' }}">
+                                <i class="bi bi-file-earmark-spreadsheet"></i> Job Role - Composite Role
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="{{ route('composite_single.upload') }}"
+                                class="nav-link {{ request()->routeIs('composite_single*') ? 'active' : 'text-white' }}">
+                                <i class="bi bi-file-earmark-spreadsheet"></i> Composite - Single Role
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="{{ route('tcode_single_role.upload') }}"
+                                class="nav-link {{ request()->routeIs('tcode_single_role*') ? 'active' : 'text-white' }}">
+                                <i class="bi bi-file-earmark-spreadsheet"></i> Single Role - Tcode
+                            </a>
+                        </li>
+                    </div>
                 </div>
-            </div>
+            @endcan
 
             <hr>
 
@@ -429,6 +438,9 @@
 
                 <hr>
 
+            @endcan
+
+            @can('manage company info')
                 <div>
                     <h5>Master Data Parameter</h5>
                 </div>
@@ -451,11 +463,12 @@
                 </div>
 
                 <hr>
+            @endcan
 
-                Others
+            {{-- Others --}}
 
 
-                {{-- 
+            {{-- 
                     <hr>
                 <li class="nav-item">
                     <a href="{{ route('prev-user.index') }}"
@@ -464,14 +477,14 @@
                     </a>
                 </li> --}}
 
-                {{-- <li class="nav-item">
+            {{-- <li class="nav-item">
                     <a href="{{ route('terminated-employee.index') }}"
                         class="nav-link {{ request()->routeIs('terminated-employee.index') ? 'active' : 'text-white' }}">
                         <i class="bi bi-file-earmark-spreadsheet"></i> Terminated Employee
                     </a>
                 </li> --}}
 
-                {{-- <li class="nav-item">
+            {{-- <li class="nav-item">
                     <a href="{{ route('user-nik.compare') }}"
                         class="nav-link {{ request()->routeIs('user-nik.compare*') ? 'active' : 'text-white' }}">
                         <i class="bi bi-file-diff"></i> Compare User NIK Periode
@@ -485,14 +498,9 @@
                 </li> --}}
 
 
-                <li class="nav-item">
-                    <a href="{{ route('cost-center.index') }}"
-                        class="nav-link {{ request()->routeIs('cost-center*') ? 'active' : 'text-white' }}">
-                        <i class="bi bi-cash-stack"></i> Master Data Cost Center
-                    </a>
-                </li>
 
-                {{-- <a class="nav-link dropdown-toggle {{ request()->is('cost-center*') ? 'active' : 'text-white' }}"
+
+            {{-- <a class="nav-link dropdown-toggle {{ request()->is('cost-center*') ? 'active' : 'text-white' }}"
                     data-bs-toggle="dropdown" href="#" role="button" aria-expanded="false">
                     <i class="bi bi-folder-fill me-2"></i> <span class="me-auto">MASTER DATA COST CENTER</span>
                 </a>
@@ -510,7 +518,7 @@
                         </a>
                     </li>
                 </div> --}}
-                {{-- <li class="nav-item">
+            {{-- <li class="nav-item">
                 <a href=""
                     class="nav-link {{ request()->routeIs('tcode_single_role*') ? 'active' : 'text-white' }}">
                     <i class="bi bi-vector-pen"></i> User License
@@ -542,35 +550,65 @@
                         class="nav-link {{ request()->routeIs('report.empty-job-role.index') ? 'active' : 'text-white' }}">
                         <i class="bi bi-file-earmark-spreadsheet me-2"></i> Empty Job Role
                     </a>
-                </li>
-            </div> --}}
-
-
-
-            @endcan
-            <hr>
+                </div> --}}
 
             @can('manage access-matrix')
                 <div>
                     <h5>Admin Menu</h5>
                 </div>
 
-                <li>
-                    <a href="{{ route('access-matrix') }}"
-                        class="nav-link {{ request()->routeIs('access-matrix') ? 'active' : 'text-white' }}">
-                        <i class="bi bi-table me-2"></i> Access Matrix
+                <div class="dropdown">
+                    @php
+                        $isAccessMatrixActive =
+                            request()->routeIs('admin.access-matrix.roles.*') ||
+                            request()->routeIs('admin.access-matrix.permissions.*') ||
+                            request()->routeIs('adamin.access-matrix.index');
+                    @endphp
+                    <a class="nav-link dropdown-toggle {{ $isAccessMatrixActive ? 'active' : 'text-white' }}"
+                        data-bs-toggle="dropdown" href="#" role="button"
+                        aria-expanded="{{ $isAccessMatrixActive ? 'true' : 'false' }}">
+                        <i class="bi bi-folder-fill me-2"></i> <span class="me-auto">Access Matrix</span>
                     </a>
-                </li>
+                    <div class="dropdown-content {{ $isAccessMatrixActive ? 'show' : '' }}">
+                        <li>
+                            <a href="{{ route('admin.access-matrix.roles.index') }}"
+                                class="nav-link {{ request()->routeIs('admin.access-matrix.roles.*') ? 'active' : 'text-white' }}">
+                                <i class="bi bi-people me-2"></i> Assign Roles
+                            </a>
+                        </li>
+                        <li>
+                            <a href="{{ route('admin.access-matrix.permissions.index') }}"
+                                class="nav-link {{ request()->routeIs('admin.access-matrix.permissions.*') ? 'active' : 'text-white' }}">
+                                <i class="bi bi-shield-check me-2"></i> Assign Permissions
+                            </a>
+                        </li>
+                        <li>
+                            <a href="{{ route('admin.access-matrix.index') }}"
+                                class="nav-link {{ request()->routeIs('admin.access-matrix.index') ? 'active' : 'text-white' }}">
+                                <i class="bi bi-table me-2"></i> Access Matrix (Legacy)
+                            </a>
+                        </li>
+                    </div>
+                </div>
+
+                @role('Super Admin')
+                    <li>
+                        <a href="{{ route('admin.email-change-requests.index') }}"
+                            class="nav-link {{ request()->routeIs('admin.email-change-requests.*') ? 'active' : 'text-white' }}">
+                            <i class="bi bi-envelope-check me-2"></i> Email Change Requests
+                        </a>
+                    </li>
+                @endrole
             @endcan
 
-            @role('Admin')
+            {{-- @role('Super Admin')
                 <li>
                     <a href="{{ route('admin.dashboard') }}"
                         class="nav-link {{ request()->routeIs('admin.dashboard') ? 'active' : 'text-white' }}">
                         <i class="bi bi-person-lock me-2"></i> Admin Page
                     </a>
                 </li>
-            @endrole
+            @endrole --}}
 
             @can('manage users')
                 <li>
@@ -580,33 +618,8 @@
                     </a>
                 </li>
             @endcan
+
+            {{-- Dynamic spacer: pushes the bottom of the list up only when it overflows --}}
+            <li class="sidebar-spacer" aria-hidden="true"></li>
     </ul>
 </div>
-
-{{-- <hr> --}}
-
-<!-- Profile Section -->
-{{-- <div class="dropdown mb-1" style="margin-left: 10px;margin-right:10px">
-    @auth
-        <a href="#" class="d-flex align-items-center text-white text-decoration-none dropdown-toggle"
-            id="dropdownUser" data-bs-toggle="dropdown" aria-expanded="false">
-            <img src="{{ Auth::user()->profile_photo_url ?? 'https://randomuser.me/api/portraits/men/64.jpg' }}"
-                alt="" width="32" height="32" class="rounded-circle me-2">
-            <strong>{{ Auth::user()->name }}</strong>
-        </a>
-        <ul class="dropdown-menu dropdown-menu-dark text-small shadow" aria-labelledby="dropdownUser">
-            <li><a class="dropdown-item">Profile</a></li>
-            <li><a class="dropdown-item">Settings</a></li>
-            <li>
-                <hr class="dropdown-divider">
-            </li>
-            <li><a class="dropdown-item" href="{{ route('logout') }}"
-                    onclick="event.preventDefault(); document.getElementById('logout-form').submit();">Sign out</a></li>
-        </ul>
-        <form id="logout-form" action="{{ route('logout') }}" method="POST" class="d-none">
-            @csrf
-        </form>
-    @else
-        <a href="{{ route('login') }}" class="btn btn-primary w-100">Login</a>
-    @endauth
-</div> --}}

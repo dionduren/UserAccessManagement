@@ -2,8 +2,10 @@
 #app {
     display: flex;
     flex-direction: row;
-    height: 100vh;
-    /* Ensure full viewport height */
+    height: 100dvh;
+    /* modern browsers */
+    height: calc(var(--vh, 1vh) * 100);
+    /* fallback via JS already in app.blade */
 }
 
 /* Main Content Area */
@@ -11,7 +13,7 @@
     padding: 20px;
     flex-grow: 1;
     overflow-y: auto;
-    /* Ensure the main content can scroll */
+    /* keep visible scroll for content */
 }
 
 #notification {
@@ -38,119 +40,97 @@
 /* Sidebar styling */
 #sidebar {
     width: 300px;
-    min-height: 100vh;
-    height: calc(var(--vh, 1vh) * 100);
-    background-color: #343a40;
-    /* Background color for visibility */
-    color: white;
-    transition: transform 0.3s ease;
-}
-
-/* Hide sidebar toggle button by default */
-#sidebarToggle {
-    display: none;
-}
-
-.no-scrollbar::-webkit-scrollbar {
-    display: none;
-}
-
-.no-scrollbar {
-    -ms-overflow-style: none;
-    /* IE and Edge */
-    scrollbar-width: none;
-    /* Firefox */
-}
-
-.dropdown-toggle {
+    height: 100%;
+    /* take full #app height */
     display: flex;
-    align-items: center;
-    margin-bottom: 5px;
-    /* justify-content: space-between; */
-    color: white !important;
-    /* Ensures content is spaced properly */
+    flex-direction: column;
+    overflow: hidden;
+    background-color: #343a40;
+    color: #fff;
+    transition: transform .3s ease;
 }
 
-.dropdown-toggle::after {
-    font-family: "Bootstrap Icons";
-    font-weight: bold;
-    float: right;
-    rotate: -90deg;
-    transition: transform 0.3s ease-in-out;
-    margin-left: auto;
-
+/* Scrollable area inside the sidebar */
+.sidebar-scroll {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+    overflow-x: hidden;
+    position: relative;
+    padding-right: 0;
+    /* no gutter since we hide scrollbar */
+    scrollbar-gutter: auto;
+    /* don’t reserve space */
 }
 
-/* Rotate arrow when dropdown is open */
-.dropdown-toggle.active::after {
-    -webkit-transform: rotate(90deg);
-    -moz-transform: rotate(90deg);
-    -ms-transform: rotate(90deg);
-    -o-transform: rotate(90deg);
-    transform: rotate(90deg);
+/* Hide scrollbar but keep scroll functionality */
+.sidebar-scroll::-webkit-scrollbar {
+    width: 0;
+    height: 0;
 }
 
-/* Dropdown content */
-.dropdown-content {
-    list-style: none;
+.sidebar-scroll {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+}
+
+/* Make the UL a flex column so the spacer can live at the bottom naturally */
+.sidebar-scroll>ul {
+    display: flex;
+    flex-direction: column;
+    min-height: 100%;
     margin: 0;
-    padding: 0;
-    display: none;
-    /* Hidden by default */
+    padding: 0 0 0 0;
+    /* keep your existing padding if any */
 }
 
-/* Expanded state for dropdown content */
-.dropdown-content.expanded {
-    display: block;
-    /* Ensure it's visible when expanded */
+/* Spacer: when content is short, it stays at the bottom (margin-top:auto).
+   When content overflows, it becomes a fixed-height bumper at the end of the scroll,
+   so the last item stops above the bottom by this height. */
+.sidebar-spacer {
+    margin-top: auto;
+    height: var(--sidebar-spacer, 96px);
+    /* adjust to taste */
+    flex: 0 0 auto;
+    pointer-events: none;
 }
 
-/* Individual dropdown items */
-.dropdown-content li {
-    padding-left: 20px;
-    /* Indentation for child items */
-}
+/* Sidebar and Toggle Button Behavior on Mobile */
+@media (max-width: 768px) {
+    #sidebar {
+        position: fixed;
+        top: 0;
+        left: 0;
+        transform: translateX(-100%);
+        z-index: 1000;
+        height: 100vh;
+    }
 
-.nav-link.active {
-    background: rgb(241 245 249) !important;
-    color: black !important;
-    border-radius: 0;
-    border-top-left-radius: 80px 80px;
-    border-bottom-left-radius: 80px 80px;
-    font-weight: bold;
-}
+    #sidebar.show {
+        transform: translateX(0);
+        /* Slide in when the "show" class is added */
+    }
 
-.nav-item {
-    margin-bottom: 5px;
-}
+    /* Display the toggle button on mobile screens */
+    #sidebarToggle {
+        display: inline-block;
+        position: fixed;
+        top: 10px;
+        left: 10px;
+        z-index: 1100;
+    }
 
-.nav-link {
-    transition: all 0.3s ease;
-    padding-right: 10px;
-}
+    .content-padding {
+        padding: 1em;
+        min-height: 100vh;
+    }
 
-.nav-link:hover,
-.nav-link.active:hover {
-    background-color: rgba(0, 132, 255, 0.96) !important;
-    /* Optional hover effect */
-    color: white !important;
-    border-radius: 0;
-    border-top-left-radius: 80px 80px;
-    border-bottom-left-radius: 80px 80px;
-    /* Ensure text is visible on hover */
-}
-
-.content-padding {
-    padding-top: 1em;
-    padding-inline-start: 0;
-    padding-bottom: 0;
-    min-height: 100vh;
-}
-
-.content-card {
-    background: rgb(241 245 249);
-    border-radius: 30px;
-    min-height: 92vh;
+    .content-card {
+        background-color: white;
+        border-radius: 15px;
+        min-height: 92vh;
+        padding-top: 0.75em;
+    }
 }
 
 /* NEW CSS TESTING */
@@ -215,43 +195,65 @@
     color: black !important;
 }
 
-/* Sidebar and Toggle Button Behavior on Mobile */
-@media (max-width: 768px) {
-    #sidebar {
-        position: fixed;
-        top: 0;
-        left: 0;
-        transform: translateX(-100%);
-        /* Initially hidden on mobile */
-        z-index: 1000;
-        height: calc(var(--vh, 1vh) * 100);
-        /* height: 100vh; */
-        /* Explicit height helps inner 100% height calculations */
-    }
+/* Dropdown content */
+.dropdown-content {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: none;
+    /* Hidden by default */
+}
 
-    #sidebar.show {
-        transform: translateX(0);
-        /* Slide in when the "show" class is added */
-    }
+/* Expanded state for dropdown content */
+.dropdown-content.expanded {
+    display: block;
+    /* Ensure it's visible when expanded */
+}
 
-    /* Display the toggle button on mobile screens */
-    #sidebarToggle {
-        display: inline-block;
-        position: fixed;
-        top: 10px;
-        left: 10px;
-        z-index: 1100;
-    }
+/* Individual dropdown items */
+.dropdown-content li {
+    padding-left: 20px;
+    /* Indentation for child items */
+}
 
-    .content-padding {
-        padding: 1em;
-        min-height: 100vh;
-    }
+.nav-link.active {
+    background: rgb(241 245 249) !important;
+    color: black !important;
+    border-radius: 0;
+    border-top-left-radius: 80px 80px;
+    border-bottom-left-radius: 80px 80px;
+    font-weight: bold;
+}
 
-    .content-card {
-        background-color: white;
-        border-radius: 15px;
-        min-height: 92vh;
-        padding-top: 0.75em;
-    }
+.nav-item {
+    margin-bottom: 5px;
+}
+
+.nav-link {
+    transition: all 0.3s ease;
+    padding-right: 10px;
+}
+
+.nav-link:hover,
+.nav-link.active:hover {
+    background-color: rgba(0, 132, 255, 0.96) !important;
+    /* Optional hover effect */
+    color: white !important;
+    border-radius: 0;
+    border-top-left-radius: 80px 80px;
+    border-bottom-left-radius: 80px 80px;
+    /* Ensure text is visible on hover */
+}
+
+.content-padding {
+    padding-top: 1em;
+    padding-inline-start: 0;
+    padding-bottom: 0;
+    min-height: 100vh;
+}
+
+.content-card {
+    background: rgb(241 245 249);
+    border-radius: 30px;
+    min-height: 92vh;
 }

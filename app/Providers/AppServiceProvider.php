@@ -8,6 +8,7 @@ use App\Models\JobRole;
 use App\Models\Departemen;
 use App\Models\Kompartemen;
 use App\Observers\MasterDataObserver;
+use Illuminate\Support\Facades\URL;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -30,5 +31,9 @@ class AppServiceProvider extends ServiceProvider
         Departemen::observe(MasterDataObserver::class);
         JobRole::observe(MasterDataObserver::class);
         Carbon::setLocale('id');
+
+        if ($appUrl = config('app.url')) {
+            URL::forceRootUrl($appUrl);
+        }
     }
 }

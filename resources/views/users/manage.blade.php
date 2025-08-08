@@ -17,9 +17,15 @@
             </div>
 
             <div class="mb-3">
-                <label for="email" class="form-label">Email</label>
+                <label for="username" class="form-label">Username</label>
+                <input type="text" id="username" name="username" class="form-control"
+                    value="{{ $user->username ?? old('username') }}" required>
+            </div>
+
+            <div class="mb-3">
+                <label for="email" class="form-label">Email (optional)</label>
                 <input type="email" id="email" name="email" class="form-control"
-                    value="{{ $user->email ?? old('email') }}" required>
+                    value="{{ $user->email ?? old('email') }}">
             </div>
 
             @if (!isset($user))

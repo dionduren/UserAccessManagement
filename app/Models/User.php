@@ -8,12 +8,15 @@ namespace App\Models;
  * @method bool hasPermissionTo(string $permission)
  */
 
-// use Illuminate\Contracts\Auth\MustVerifyEmail;
+use App\Models\UserLoginDetail;
+use App\Notifications\CustomResetPassword;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Facades\Log;
 use Laravel\Sanctum\HasApiTokens;
-use Spatie\Permission\Traits\HasRoles; // Import HasRoles trait
+use Spatie\Permission\Traits\HasRoles;
 
 class User extends Authenticatable
 {
@@ -27,6 +30,7 @@ class User extends Authenticatable
     protected $fillable = [
         'name',
         'email',
+        'username',
         'password',
     ];
 
@@ -49,4 +53,16 @@ class User extends Authenticatable
         'email_verified_at' => 'datetime',
         'password' => 'hashed',
     ];
+
+    // This makes the broker use your custom notification
+    public function sendPasswordResetNotification($token)
+    {
+        // Log::info("message=Sending password reset notification to user: {$this->email}");
+        $this->notify(new CustomResetPassword($token));
+    }
+
+    public function loginDetail(): HasOne
+    {
+        return $this->hasOne(UserLoginDetail::class, 'user_id', 'id')->withDefault();
+    }
 }

@@ -56,13 +56,12 @@
 
         <!-- Main Content Area -->
         {{-- <div class="flex-grow-1 px-0 py-4" style="border-radius: 25px; background-color: white"> --}}
-        <div class="flex-grow-1 content-padding no-scrollbar">
-            {{-- Content Area --}}
+        <div class="flex-grow-1 content-padding">
             <main class="container-fluid content-card pt-1 pb-2">
-
-                <!-- Top Bar -->
+                {{-- TOP BAR MENU --}}
                 @include('layouts.top-bar')
 
+                {{-- CONTENT MENU --}}
                 @yield('content')
             </main>
         </div>
@@ -85,6 +84,17 @@
 
     <!-- Custom JS -->
     <script src="{{ asset('js/app.js') }}"></script>
+
+    <script>
+        (function setVh() {
+            const vh = window.innerHeight * 0.01;
+            document.documentElement.style.setProperty('--vh', `${vh}px`);
+        })();
+        window.addEventListener('resize', () => {
+            const vh = window.innerHeight * 0.01;
+            document.documentElement.style.setProperty('--vh', `${vh}px`);
+        });
+    </script>
 
     @yield('scripts')
 

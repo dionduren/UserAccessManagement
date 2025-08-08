@@ -27,7 +27,15 @@ class JobRoleController extends Controller
         // return view('job_roles.index', compact('job_roles'));
 
         // Fetch all companies to populate the initial dropdown
-        $companies = Company::all();
+        $user = auth()->user();
+        $userCompanyCode = $user->loginDetail->company_code ?? null;
+        $companies = 'zzz';
+
+        if ($userCompanyCode === 'A000') {
+            $companies = Company::all();
+        } else {
+            $companies = Company::where('company_code', $userCompanyCode)->get();
+        }
 
         return view('master-data.job_roles.index', compact('companies'));
     }

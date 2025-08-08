@@ -63,16 +63,17 @@
                         <br>
                         <small class="text-muted">Frontend Engineer</small>
                     </li>
-                    <li><a class="dropdown-item" href="#"><i class="bi bi-person"></i> Profile</a>
+                    <li>
+                        <a href="{{ route('profile.show') }}" class="dropdown-item">
+                            <i class="bi bi-person-circle me-2"></i> Profile
+                        </a>
                     </li>
-                    <li><a class="dropdown-item" href="#"><i class="bi bi-person-plus"></i> Add
+                    {{-- <li><a class="dropdown-item" href="#"><i class="bi bi-person-plus"></i> Add
                             Account</a>
-                    </li>
-                    <li><a class="dropdown-item" href="#"><i class="bi bi-key"></i> Reset Password</a>
                     </li>
                     <li><a class="dropdown-item" href="#"><i class="bi bi-question-circle"></i>
                             Help</a>
-                    </li>
+                    </li> --}}
                     <li class="divider"></li>
                     <li><a class="dropdown-item text-danger" href="{{ route('logout') }}"
                             onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
