@@ -17,10 +17,14 @@ class UserLoginDetail extends Model
     protected $fillable = [
         'user_id',
         'company_code',
-        'department_code',
+        'kompartemen_id',
+        'department_id',
         'attributes',
         'last_login_at',
         'last_login_ip',
+        'created_by',
+        'updated_by',
+        'deleted_by'
     ];
 
     protected $casts = [

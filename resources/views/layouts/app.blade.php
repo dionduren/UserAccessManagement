@@ -38,10 +38,12 @@
 </head>
 
 <body>
-    <div id="backdrop px-4" style="background-color: #343a40">
+    <div id="backdrop px-4" style="background-color: #135029">
+        {{-- <div id="backdrop px-4" style="background-color: #343a40"> --}}
 
     </div>
-    <div id="app" style="background-color: #343a40; padding: 10;">
+    <div id="app" style="background-color: #135029; padding: 10;">
+        {{-- <div id="app" style="background-color: #343a40; padding: 10;"> --}}
         <!-- Sidebar Toggle Button for Mobile -->
         <button class="btn btn-primary d-md-none" id="sidebarToggle">
             <i class="bi bi-list"></i> Menu
@@ -58,6 +60,8 @@
         {{-- <div class="flex-grow-1 px-0 py-4" style="border-radius: 25px; background-color: white"> --}}
         <div class="flex-grow-1 content-padding">
             <main class="container-fluid content-card pt-1 pb-2">
+                {{-- <main class="container-fluid content-card pt-1 pb-2"
+                style="border-top-left-radius: 30px; border-top-right-radius: 30px; border-bottom-right-radius: 30px; border-bottom-left-radius: 0;"> --}}
                 {{-- TOP BAR MENU --}}
                 @include('layouts.top-bar')
 

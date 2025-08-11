@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
+use App\Models\UserLoginDetail;
+use App\Models\Company;
 use Illuminate\Http\Request;
 use Spatie\Permission\Models\Role;
 use Illuminate\Support\Facades\Hash;
@@ -15,7 +17,7 @@ class UserController extends Controller
      */
     public function index()
     {
-        $users = User::with('roles')->get();
+        $users = User::with('roles')->orderBy('id')->get();
         return view('users.index', compact('users'));
     }
 
@@ -25,7 +27,8 @@ class UserController extends Controller
     public function create()
     {
         $roles = Role::all();
-        return view('users.manage', compact('roles'));
+        $companies = Company::all();
+        return view('users.manage', compact('roles', 'companies'));
     }
 
     /**
@@ -38,6 +41,7 @@ class UserController extends Controller
             'username' => 'required|string|max:255|unique:users,username',
             'email'    => 'nullable|string|email|max:255|unique:users,email',
             'password' => 'required|string|min:8',
+            'company_code' => 'required|string'
         ]);
 
         $user = User::create([
@@ -45,6 +49,11 @@ class UserController extends Controller
             'username' => $request->username,
             'email'    => $request->email, // optional
             'password' => Hash::make($request->password),
+        ]);
+
+        UserLoginDetail::create([
+            'user_id' => $user->id,
+            'company_code' => $request->company_code
         ]);
 
         if ($request->roles) {
@@ -61,7 +70,8 @@ class UserController extends Controller
     {
         $user = User::findOrFail($id);
         $roles = Role::all();
-        return view('users.manage', compact('user', 'roles'));
+        $companies = Company::all();
+        return view('users.manage', compact('user', 'roles', 'companies'));
     }
 
     /**
@@ -75,12 +85,17 @@ class UserController extends Controller
             'name'     => 'required|string|max:255',
             'username' => ['required', 'string', 'max:255', Rule::unique('users', 'username')->ignore($user->id)],
             'email'    => ['nullable', 'string', 'email', 'max:255', Rule::unique('users', 'email')->ignore($user->id)],
+            'company_code' => 'required|string'
         ]);
 
         $user->update([
             'name'     => $request->name,
             'username' => $request->username,
             'email'    => $request->email,
+        ]);
+
+        $user->loginDetail()->update([
+            'company_code' => $request->company_code
         ]);
 
         if ($request->roles) {

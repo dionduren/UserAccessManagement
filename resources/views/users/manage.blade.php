@@ -36,6 +36,21 @@
             @endif
 
             <div class="mb-3">
+                <label for="company_code" class="form-label">Perusahaan</label>
+                <select id="company_code" name="company_code" class="form-select" required>
+                    <option value="">--- Pilih Perusahaan ---</option>
+                    @foreach ($companies as $company)
+                        <option value="{{ $company->company_code }}"
+                            {{ old('company_code', isset($user) ? optional($user->loginDetail)->company_code : optional(auth()->user()->loginDetail)->company_code) == $company->company_code ? 'selected' : '' }}>
+                            {{ $company->company_code }} - {{ $company->nama }}
+                        </option>
+                    @endforeach
+                </select>
+            </div>
+
+            {{-- @dd($user->loginDetail ? $user->loginDetail->company_code : '') --}}
+
+            <div class="mb-3">
                 <label for="roles" class="form-label">Assign Roles</label>
                 <select name="roles[]" id="roles" class="form-select" multiple>
                     @foreach ($roles as $role)

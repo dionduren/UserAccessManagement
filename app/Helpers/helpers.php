@@ -52,9 +52,42 @@ if (!function_exists('getBreadcrumbs')) {
       'user-generic.index' => 'User & Cost Center > User Generic',
       'user-generic.dashboard' => 'User & Cost Center > Cost Center > Dashboard',
 
-      'access-matrix' => 'Access Matrix',
-      'admin.dashboard' => 'Admin Page',
-      'users.index' => 'Manage Users',
+      // PERIODE
+
+      'periode.index' => 'User & Cost Center > Periode - Index',
+      'periode.create' => 'User & Cost Center > Periode - Create',
+      'periode.edit' => 'User & Cost Center > Periode - Edit',
+
+      // PROFILE
+
+      'profile.show' => 'User Profile',
+
+      // ADMIN
+
+      // 'access-matrix' => 'Access Matrix',
+      // 'admin.dashboard' => 'Admin Page',
+
+      'penomoran-uar.index' => 'Admin Page > Penomoran UAR - Index',
+      'penomoran-uar.create' => 'Admin Page > Penomoran UAR - Create',
+      'penomoran-uar.edit' => 'Admin Page > Penomoran UAR - Edit',
+
+      'penomoran-uam.index' => 'Admin Page > Penomoran UAM - Index',
+      'penomoran-uam.create' => 'Admin Page > Penomoran UAM - Create',
+      'penomoran-uam.edit' => 'Admin Page > Penomoran UAM - Edit',
+
+      'admin.access-matrix.roles.index' => 'Admin Page > Access Matrix > Role Management',
+      // 'admin.access-matrix.role.create' => 'Admin Page > Access Matrix > Role Management > Create',
+      // 'admin.access-matrix.role.edit' => 'Admin Page > Access Matrix > Role Management > Edit',
+
+      'admin.access-matrix.permissions.index' => 'Admin Page > Access Matrix > Permission Management',
+      'admin.access-matrix.permissions.create' => 'Admin Page > Access Matrix > Permission Management > Create',
+      'admin.access-matrix.permissions.edit' => 'Admin Page > Access Matrix > Permission Management > Edit',
+
+      'admin.email-change-requests.index' => 'Admin Page > Email Change Request',
+
+      'admin.users.index' => 'Admin Page > Manage Users',
+      'admin.users.create' => 'Admin Page > Manage Users > Create',
+      'admin.users.edit' => 'Admin Page > Manage Users > Edit',
 
       // 'job-roles.getData' => 'Master Data > Job Roles - Data',
       // 'unit-kerja.upload-form' => 'Import Data > Unit Kerja - Form',

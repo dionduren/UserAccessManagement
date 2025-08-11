@@ -49,6 +49,14 @@ class CompanyController extends Controller
 
     public function edit(Company $company)
     {
+        $user = auth()->user();
+        $userCompanyCode = $user->loginDetail->company_code ?? null;
+
+        if ($userCompanyCode !== 'A000') {
+            return redirect()
+                ->route('companies.index')
+                ->withErrors(['error' => 'You are not authorized to edit this company.']);
+        }
         return view('master-data.companies.edit', compact('company'));
     }
 
@@ -68,7 +76,7 @@ class CompanyController extends Controller
             $company->update($request->all() + [
                 'updated_by' => auth()->user()->name
             ]);
-            
+
             return redirect()->route('companies.index')->with('success', 'Company updated successfully.');
         } catch (\Exception $e) {
             return back()->withErrors(['error' => $e->getMessage()])->withInput();
@@ -79,6 +87,15 @@ class CompanyController extends Controller
      */
     public function destroy(Company $company)
     {
+        $user = auth()->user();
+        $userCompanyCode = $user->loginDetail->company_code ?? null;
+
+        if ($userCompanyCode !== 'A000') {
+            return redirect()
+                ->route('companies.index')
+                ->withErrors(['error' => 'You are not authorized to delete this company.']);
+        }
+
         $company->delete();
         return redirect()->route('companies.index')->with('success', 'Company deleted successfully.');
     }

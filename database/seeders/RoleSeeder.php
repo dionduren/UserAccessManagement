@@ -32,24 +32,22 @@ class RoleSeeder extends Seeder
 
         // Global roles
         $superAdmin = Role::firstOrCreate(['name' => 'Super Admin']);
+        $admin = Role::firstOrCreate(['name' => 'Admin']);
         $helpdesk   = Role::firstOrCreate(['name' => 'Helpdesk']);
 
         // Super Admin: all permissions
         $superAdmin->syncPermissions($permissions);
+        $admin->syncPermissions($permissions);
 
         // Helpdesk: everything except managing users
         $helpdesk->syncPermissions(array_diff($permissions, ['manage users']));
 
-        // Company-specific roles
-        $companies = ['A000', 'B000', 'C000', 'D000'];
         $editorPerms = ['data.view', 'data.create', 'data.update', 'data.delete', 'report.generate'];
         $viewerPerms = ['data.view', 'report.generate'];
 
-        foreach ($companies as $code) {
-            $editor  = Role::firstOrCreate(['name' => "{$code} Editor"]);
-            $viewer  = Role::firstOrCreate(['name' => "{$code} Viewer"]);
-            $editor->syncPermissions($editorPerms);
-            $viewer->syncPermissions($viewerPerms);
-        }
+        $editor  = Role::firstOrCreate(['name' => "Editor"]);
+        $viewer  = Role::firstOrCreate(['name' => "Viewer"]);
+        $editor->syncPermissions($editorPerms);
+        $viewer->syncPermissions($viewerPerms);
     }
 }

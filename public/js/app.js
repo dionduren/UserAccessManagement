@@ -33,32 +33,39 @@ $.ajaxSetup({
     }
 });
 
-// Toggle dropdowns on click
+// Toggle dropdowns on click (sync rotation via aria-expanded)
 $('.dropdown-toggle').on('click', function (e) {
     e.preventDefault();
 
-    const content = $(this).next(".dropdown-content");
+    const $trigger = $(this);
+    const $content = $trigger.next('.dropdown-content');
+    const isOpen = $trigger.attr('aria-expanded') === 'true';
 
-    // Close any other open dropdowns
-    $(".dropdown-content").not(content).slideUp();
-    $(".dropdown-toggle").not(this).removeClass("active");
+    // Close other dropdowns
+    $('.dropdown-content').not($content).slideUp(150).removeClass('expanded');
+    $('.dropdown-toggle').not($trigger).attr('aria-expanded', 'false').removeClass('active');
 
-    // Toggle the current dropdown and arrow
-    content.slideToggle();
-    $(this).toggleClass("active");
-});
-
-// Ensure the dropdown is open if any child route is active
-$(".dropdown-toggle").each(function () {
-    if ($(this).find(".active").length > 0) {
-        $(this).slideDown();
+    // Toggle current
+    if (isOpen) {
+        $content.slideUp(150).removeClass('expanded');
+        $trigger.attr('aria-expanded', 'false').removeClass('active');
+    } else {
+        $content.slideDown(150).addClass('expanded').css('display', 'block');
+        $trigger.attr('aria-expanded', 'true').addClass('active');
     }
 });
 
-// Automatically expand dropdowns with active routes
+// Remove the earlier .each() that tried to slideDown() the toggle itself.
+// Ensure initial state matches server-rendered routes (.show) and rotate caret
 $('.dropdown-content').each(function () {
-    if ($(this).find('.active').length > 0) {
-        $(this).slideDown();
-        $(this).addClass('expanded').css('display', 'block'); // Ensure it's visible and expanded
+    const $panel = $(this);
+    const $trigger = $panel.prev('.dropdown-toggle');
+
+    if ($panel.hasClass('show') || $panel.find('.active').length > 0) {
+        $panel.show().addClass('expanded');
+        $trigger.attr('aria-expanded', 'true').addClass('active');
+    } else {
+        $panel.hide().removeClass('expanded');
+        $trigger.attr('aria-expanded', 'false').removeClass('active');
     }
 });

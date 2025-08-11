@@ -1,7 +1,12 @@
 <div class="sidebar-heading mt-2">
-    <a href="/" class="d-flex align-items-center mb-3 mb-md-0 me-md-auto text-white text-decoration-none">
-        <span class="fs-4"><i class="bi bi-p-square"></i> UAM & UAR Tools</span>
-    </a>
+    <div class="row">
+        <span class="fs-4">
+            <a href="/" class="d-flex align-items-center mb-3 mb-md-0 me-md-auto text-white text-decoration-none">
+                <img src="{{ asset('images/logo-perusahaan/icon-a000-transparent.png') }}" alt="Company Logo"
+                    style="height: 48px;"> <b>UAM & UAR TOOLS</b>
+            </a>
+        </span>
+    </div>
 </div>
 <hr>
 <div class="sidebar-scroll">
@@ -26,11 +31,13 @@
 
             <div class="dropdown">
                 <a href="javascript:void(0)"
-                    class="nav-link text-white dropdown-toggle {{ request()->is('companies*', 'kompartemens*', 'departemens*', 'cost-center*') ? 'active' : 'text-white' }}">
-                    <i class="bi bi-building me-2"></i> <span class="me-auto">MASTER DATA COMPANY</span>
+                    class="mb-1 nav-link text-white dropdown-toggle {{ request()->is('companies*', 'kompartemens*', 'departemens*', 'cost-center*') ? 'active' : 'text-white' }}"
+                    aria-expanded="{{ request()->is('companies*', 'kompartemens*', 'departemens*', 'cost-center*') ? 'true' : 'false' }}">
+                    <i class="bi bi-building me-2"></i>
+                    <span class="me-auto">MASTER DATA COMPANY</span>
                 </a>
                 <div
-                    class="dropdown-content {{ request()->is('companies*', 'kompartemens*', 'departemens*') ? 'show' : '' }}">
+                    class="dropdown-content {{ request()->is('companies*', 'kompartemens*', 'departemens*', 'cost-center*') ? 'show' : '' }}">
                     <li>
                         <a href="{{ route('companies.index') }}"
                             class="nav-link {{ request()->routeIs('companies.index') ? 'active' : 'text-white' }}">
@@ -67,7 +74,7 @@
         @can('data.view')
             <!-- MASTER DATA USER ACCESS -->
             <div class="dropdown">
-                <a class="nav-link dropdown-toggle {{ request()->is('job-roles*', 'composite-roles*', 'single-roles*', 'tcodes*') ? 'active' : 'text-white' }}"
+                <a class="mb-1 nav-link dropdown-toggle {{ request()->is('job-roles*', 'composite-roles*', 'single-roles*', 'tcodes*') ? 'active' : 'text-white' }}"
                     data-bs-toggle="dropdown" href="#" role="button" aria-expanded="false">
                     <i class="bi bi-folder-fill me-2"></i> <span class="me-auto">MASTER DATA USER ACCESS</span>
                 </a>
@@ -104,7 +111,7 @@
 
             <!-- MASTER DATA RELATIONSHIP -->
             <div class="dropdown">
-                <a class="nav-link dropdown-toggle {{ request()->is('relationship/job-composite*', 'relationship/composite-single*', 'relationship/single-tcode*') ? 'active' : 'text-white' }}"
+                <a class="mb-1 nav-link dropdown-toggle {{ request()->is('relationship/job-composite*', 'relationship/composite-single*', 'relationship/single-tcode*') ? 'active' : 'text-white' }}"
                     data-bs-toggle="dropdown" href="#" role="button" aria-expanded="false">
                     <i class="bi bi-folder-fill me-2"></i> <span class="me-auto">MASTER DATA RELATIONSHIP</span>
                 </a>
@@ -142,7 +149,7 @@
             <!-- IMPORT DATA -->
             @can('data.create')
                 <div class="dropdown">
-                    <a class="nav-link dropdown-toggle {{ request()->is('company-kompartemen*', 'composite-single*', 'tcode-single-role*') ? 'active' : 'text-white' }}"
+                    <a class="mb-1 nav-link dropdown-toggle {{ request()->is('company-kompartemen*', 'composite-single*', 'tcode-single-role*') ? 'active' : 'text-white' }}"
                         data-bs-toggle="dropdown" href="#" role="button" aria-expanded="false">
                         <i class="bi bi-file-earmark-spreadsheet me-2"></i> <span class="me-auto">UPLOAD DATA MASTER</span>
                     </a>
@@ -189,7 +196,7 @@
 
             <div class="">
                 <div class="dropdown">
-                    <a class="nav-link dropdown-toggle {{ request()->routeIs('periode*') ? 'active' : 'text-white' }}"
+                    <a class="mb-1 nav-link dropdown-toggle {{ request()->routeIs('periode*') ? 'active' : 'text-white' }}"
                         data-bs-toggle="dropdown" href="#" role="button"
                         aria-expanded="{{ request()->routeIs('periode*') ? 'true' : 'false' }}">
                         <span class="me-auto">1. Buat Periode</span>
@@ -271,7 +278,7 @@
                 @endphp
 
                 <div class="dropdown">
-                    <a class="nav-link dropdown-toggle {{ (request()->routeIs('dynamic_upload.upload') && request()->route('module') === 'master_nik') || request()->routeIs('user-detail*') ? 'active' : 'text-white' }}"
+                    <a class="mb-1 nav-link dropdown-toggle {{ (request()->routeIs('dynamic_upload.upload') && request()->route('module') === 'master_nik') || request()->routeIs('user-detail*') ? 'active' : 'text-white' }}"
                         data-bs-toggle="dropdown" href="#" role="button"
                         aria-expanded="{{ (request()->routeIs('dynamic_upload.upload') && request()->route('module') === 'master_nik') || request()->routeIs('user-detail*') ? 'true' : 'false' }}">
                         <span class="me-auto">2. Master Data Karyawan</span>
@@ -294,7 +301,7 @@
                 </div>
 
                 <div class="dropdown">
-                    <a class="nav-link dropdown-toggle {{ (request()->routeIs('dynamic_upload.upload') && request()->route('module') === 'user_nik') || request()->routeIs('user-nik.index') ? 'active' : 'text-white' }}"
+                    <a class="mb-1 nav-link dropdown-toggle {{ (request()->routeIs('dynamic_upload.upload') && request()->route('module') === 'user_nik') || request()->routeIs('user-nik.index') ? 'active' : 'text-white' }}"
                         data-bs-toggle="dropdown" href="#" role="button"
                         aria-expanded="{{ (request()->routeIs('dynamic_upload.upload') && request()->route('module') === 'user_nik') || request()->routeIs('user-nik.index') ? 'true' : 'false' }}">
                         3. Master Data USMM NIK
@@ -335,7 +342,7 @@
                                 !request()->routeIs('user-generic.previewPage') &&
                                 !request()->routeIs('user-generic-job-role.*'));
                     @endphp
-                    <a class="nav-link dropdown-toggle {{ $isUserGenericActive ? 'active' : 'text-white' }}"
+                    <a class="mb-1 nav-link dropdown-toggle {{ $isUserGenericActive ? 'active' : 'text-white' }}"
                         data-bs-toggle="dropdown" href="#" role="button"
                         aria-expanded="{{ $isUserGenericActive ? 'true' : 'false' }}">
                         4. Master Data USMM Generik
@@ -371,7 +378,7 @@
                             request()->routeIs('user-generic-job-role.*') ||
                             request()->routeIs('nik-job*');
                     @endphp
-                    <a class="nav-link dropdown-toggle {{ $isMappingActive ? 'active' : 'text-white' }}"
+                    <a class="mb-1 nav-link dropdown-toggle {{ $isMappingActive ? 'active' : 'text-white' }}"
                         data-bs-toggle="dropdown" href="#" role="button"
                         aria-expanded="{{ $isMappingActive ? 'true' : 'false' }}">
                         5. Mapping USMM - Job Role
@@ -423,13 +430,13 @@
                     <h5>Report</h5>
                     <li class="nav-item">
                         <a href="{{ route('report.uar.index') }}"
-                            class="nav-link {{ request()->routeIs('report.uar.index') ? 'active' : 'text-white' }}">
+                            class="mb-1 nav-link {{ request()->routeIs('report.uar.index') ? 'active' : 'text-white' }}">
                             <i class="bi bi-file-earmark-text me-2"></i> Report UAR
                         </a>
                     </li>
                     <li class="nav-item">
                         <a href="{{ route('report.uam.index') }}"
-                            class="nav-link {{ request()->routeIs('report.uam.index') ? 'active' : 'text-white' }}">
+                            class="mb-1 nav-link {{ request()->routeIs('report.uam.index') ? 'active' : 'text-white' }}">
                             <i class="bi bi-file-earmark-text me-2"></i> Report UAM
                         </a>
                     </li>
@@ -447,7 +454,7 @@
                 <div>
                     <li class="nav-item">
                         <a href="{{ route('penomoran-uar.index') }}"
-                            class="nav-link {{ request()->routeIs('penomoran-uar*') ? 'active' : 'text-white' }}">
+                            class="mb-1 nav-link {{ request()->routeIs('penomoran-uar*') ? 'active' : 'text-white' }}">
                             <i class="bi bi-list-ol me-2"></i> Penomoran UAR
                         </a>
                     </li>
@@ -456,7 +463,7 @@
                 <div>
                     <li class="nav-item">
                         <a href="{{ route('penomoran-uam.index') }}"
-                            class="nav-link {{ request()->routeIs('penomoran-uam*') ? 'active' : 'text-white' }}">
+                            class="mb-1 nav-link {{ request()->routeIs('penomoran-uam*') ? 'active' : 'text-white' }}">
                             <i class="bi bi-list-ol me-2"></i> Penomoran UAM
                         </a>
                     </li>
@@ -564,7 +571,7 @@
                             request()->routeIs('admin.access-matrix.permissions.*') ||
                             request()->routeIs('adamin.access-matrix.index');
                     @endphp
-                    <a class="nav-link dropdown-toggle {{ $isAccessMatrixActive ? 'active' : 'text-white' }}"
+                    <a class="mb-1 nav-link dropdown-toggle {{ $isAccessMatrixActive ? 'active' : 'text-white' }}"
                         data-bs-toggle="dropdown" href="#" role="button"
                         aria-expanded="{{ $isAccessMatrixActive ? 'true' : 'false' }}">
                         <i class="bi bi-folder-fill me-2"></i> <span class="me-auto">Access Matrix</span>
@@ -594,7 +601,7 @@
                 @role('Super Admin')
                     <li>
                         <a href="{{ route('admin.email-change-requests.index') }}"
-                            class="nav-link {{ request()->routeIs('admin.email-change-requests.*') ? 'active' : 'text-white' }}">
+                            class="mb-1 nav-link {{ request()->routeIs('admin.email-change-requests.*') ? 'active' : 'text-white' }}">
                             <i class="bi bi-envelope-check me-2"></i> Email Change Requests
                         </a>
                     </li>
@@ -613,7 +620,7 @@
             @can('manage users')
                 <li>
                     <a href="{{ route('users.index') }}"
-                        class="nav-link {{ request()->routeIs('users.index') ? 'active' : 'text-white' }}">
+                        class="mb-1 nav-link {{ request()->routeIs('users.index') ? 'active' : 'text-white' }}">
                         <i class="bi bi-person-lines-fill me-2"></i> Manage Users
                     </a>
                 </li>

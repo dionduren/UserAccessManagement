@@ -39,13 +39,15 @@
 
 /* Sidebar styling */
 #sidebar {
-    width: 300px;
+    /* LEBAR SIDEBAR */
+    width: 350px;
     height: 100%;
     /* take full #app height */
     display: flex;
     flex-direction: column;
     overflow: hidden;
-    background-color: #343a40;
+    background-color: #135029;
+    /* background-color: #343a40; */
     color: #fff;
     transition: transform .3s ease;
 }
@@ -236,7 +238,8 @@
 
 .nav-link:hover,
 .nav-link.active:hover {
-    background-color: rgba(0, 132, 255, 0.96) !important;
+    background-color: #0067C0 !important;
+    /* background-color: rgba(0, 132, 255, 0.96) !important; */
     /* Optional hover effect */
     color: white !important;
     border-radius: 0;
@@ -256,4 +259,35 @@
     background: rgb(241 245 249);
     border-radius: 30px;
     min-height: 92vh;
+}
+
+/* Sidebar dropdown caret: align right and rotate when open */
+#sidebar .nav-link.dropdown-toggle {
+    display: flex;
+    /* row layout */
+    align-items: center;
+    width: 100%;
+}
+
+#sidebar .nav-link.dropdown-toggle .me-auto {
+    margin-inline-end: auto !important;
+    /* pushes caret to the far right */
+}
+
+/* Use Bootstrap's built-in caret (::after) */
+#sidebar .nav-link.dropdown-toggle::after {
+    margin-inline-start: auto;
+    /* keep on the far right */
+    transition: transform .2s ease;
+    border-top-color: currentColor;
+    /* caret color follows text color */
+    opacity: .9;
+    transform: rotate(-90deg);
+    /* default closed: -90deg */
+}
+
+/* Rotate when open; works for SSR (.show) and runtime ([aria-expanded=true]) */
+#sidebar .dropdown:has(.dropdown-content.show)>.nav-link.dropdown-toggle::after,
+#sidebar .nav-link.dropdown-toggle[aria-expanded="true"]::after {
+    transform: rotate(0deg);
 }

@@ -15,8 +15,20 @@ class KompartemenController extends Controller
 {
     public function index()
     {
-        $companies = Company::all();
-        $kompartemens = Kompartemen::all();
+        $user = auth()->user();
+        $userCompanyCode = $user->loginDetail->company_code ?? null;
+        $companies = 'zzz';
+        $kompartemens = 'zzz';
+
+        if ($userCompanyCode === 'A000') {
+            $companies = Company::all();
+            $kompartemens = Kompartemen::all();
+        } else {
+            $companies = Company::where('company_code', $userCompanyCode)->get();
+            $kompartemens = Kompartemen::where('company_id', $userCompanyCode)->get();
+        }
+
+        $kompartemens = Kompartemen::where('company_id', $userCompanyCode)->get();
         return view('master-data.kompartemen.index', compact('companies', 'kompartemens'));
     }
 
@@ -51,7 +63,19 @@ class KompartemenController extends Controller
 
     public function edit(Kompartemen $kompartemen)
     {
-        $companies = Company::all();
+        $user = auth()->user();
+        $userCompanyCode = $user->loginDetail->company_code ?? null;
+
+        if ($userCompanyCode !== 'A000' && $kompartemen->company_id !== $userCompanyCode) {
+            return redirect()
+                ->route('kompartemens.index')
+                ->withErrors(['error' => 'You are not authorized to edit this kompartemen.']);
+        }
+
+        $companies = $userCompanyCode === 'A000'
+            ? Company::all()
+            : Company::where('company_code', $userCompanyCode)->get();
+
         return view('master-data.kompartemen.edit', compact('kompartemen', 'companies'));
     }
 
@@ -80,6 +104,15 @@ class KompartemenController extends Controller
 
     public function destroy(Kompartemen $kompartemen)
     {
+        $user = auth()->user();
+        $userCompanyCode = $user->loginDetail->company_code ?? null;
+
+        if ($userCompanyCode !== 'A000' && $kompartemen->company_id !== $userCompanyCode) {
+            return redirect()
+                ->route('kompartemens.index')
+                ->withErrors(['error' => 'You are not authorized to delete this kompartemen.']);
+        }
+
         $kompartemen->delete();
         return redirect()->route('kompartemens.index')->with('success', 'Kompartemen deleted successfully.');
     }

@@ -22,17 +22,21 @@ class UserSeeder extends Seeder
             ['name' => 'Super Admin', 'email' => 'superadmin@example.com', 'role' => 'Super Admin'],
             ['name' => 'Helpdesk', 'email' => 'helpdesk@example.com', 'role' => 'Helpdesk'],
 
-            ['name' => 'A000 Editor', 'email' => 'a.editor@example.com', 'role' => 'A000 Editor'],
-            ['name' => 'A000 Viewer', 'email' => 'a.viewer@example.com', 'role' => 'A000 Viewer'],
+            ['name' => 'A000 Admin', 'email' => 'a.admin@example.com', 'role' => 'Admin'],
+            ['name' => 'A000 Editor', 'email' => 'a.editor@example.com', 'role' => 'Editor'],
+            ['name' => 'A000 Viewer', 'email' => 'a.viewer@example.com', 'role' => 'Viewer'],
 
-            ['name' => 'B000 Editor', 'email' => 'b.editor@example.com', 'role' => 'B000 Editor'],
-            ['name' => 'B000 Viewer', 'email' => 'b.viewer@example.com', 'role' => 'B000 Viewer'],
+            ['name' => 'B000 Admin', 'email' => 'b.admin@example.com', 'role' => 'Admin'],
+            ['name' => 'B000 Editor', 'email' => 'b.editor@example.com', 'role' => 'Editor'],
+            ['name' => 'B000 Viewer', 'email' => 'b.viewer@example.com', 'role' => 'Viewer'],
 
-            ['name' => 'C000 Editor', 'email' => 'c.editor@example.com', 'role' => 'C000 Editor'],
-            ['name' => 'C000 Viewer', 'email' => 'c.viewer@example.com', 'role' => 'C000 Viewer'],
+            ['name' => 'C000 Admin', 'email' => 'c.admin@example.com', 'role' => 'Admin'],
+            ['name' => 'C000 Editor', 'email' => 'c.editor@example.com', 'role' => 'Editor'],
+            ['name' => 'C000 Viewer', 'email' => 'c.viewer@example.com', 'role' => 'Viewer'],
 
-            ['name' => 'D000 Editor', 'email' => 'd.editor@example.com', 'role' => 'D000 Editor'],
-            ['name' => 'D000 Viewer', 'email' => 'd.viewer@example.com', 'role' => 'D000 Viewer'],
+            ['name' => 'D000 Admin', 'email' => 'd.admin@example.com', 'role' => 'Admin'],
+            ['name' => 'D000 Editor', 'email' => 'd.editor@example.com', 'role' => 'Editor'],
+            ['name' => 'D000 Viewer', 'email' => 'd.viewer@example.com', 'role' => 'Viewer'],
         ];
 
         foreach ($users as $u) {
@@ -64,11 +68,11 @@ class UserSeeder extends Seeder
                 'a.viewer@example.com',
             ])) {
                 $companyCode = 'A000';
-            } elseif ($u['name'] === 'B000 Editor' || $u['name'] === 'B000 Viewer') {
+            } elseif ($u['name'] === 'B000 Editor' || $u['name'] === 'B000 Viewer' || $u['name'] === 'B000 Admin') {
                 $companyCode = 'B000';
-            } elseif ($u['name'] === 'C000 Editor' || $u['name'] === 'C000 Viewer') {
+            } elseif ($u['name'] === 'C000 Editor' || $u['name'] === 'C000 Viewer' || $u['name'] === 'C000 Admin') {
                 $companyCode = 'C000';
-            } elseif ($u['name'] === 'D000 Editor' || $u['name'] === 'D000 Viewer') {
+            } elseif ($u['name'] === 'D000 Editor' || $u['name'] === 'D000 Viewer' || $u['name'] === 'D000 Admin') {
                 $companyCode = 'D000';
             } else {
                 $companyCode = 'A000';
