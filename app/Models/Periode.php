@@ -35,6 +35,6 @@ class Periode extends Model
 
     public function userGeneric()
     {
-        return $this->hasMany(UserGeneric::class, 'periode_id', 'id');
+        return $this->hasMany(userGeneric::class, 'periode_id', 'id');
     }
 }

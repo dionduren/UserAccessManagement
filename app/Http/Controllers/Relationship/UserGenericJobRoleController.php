@@ -7,7 +7,7 @@ use App\Http\Controllers\Controller;
 use App\Models\JobRole;
 use \App\Models\NIKJobRole;
 use App\Models\Periode;
-use App\Models\UserGeneric;
+use App\Models\userGeneric;
 
 use Illuminate\Http\Request;
 use Yajra\DataTables\Facades\DataTables;
@@ -24,7 +24,7 @@ class UserGenericJobRoleController extends Controller
                 return DataTables::of(collect([]))->make(true);
             }
 
-            $query = UserGeneric::query()
+            $query = userGeneric::query()
                 ->select([
                     'id',
                     'periode_id',
@@ -78,7 +78,7 @@ class UserGenericJobRoleController extends Controller
     {
         // TODO: filter berdasarkan periode aktif?
         $periodes = Periode::select('id', 'definisi')->get();
-        $userGenerics = UserGeneric::whereDoesntHave('NIKJobRole')->get();
+        $userGenerics = userGeneric::whereDoesntHave('NIKJobRole')->get();
         $jobRoles = JobRole::select('job_role_id', 'nama')->get();
         return view('relationship.generic-job_role.create', compact('periodes', 'userGenerics', 'jobRoles'));
     }
@@ -92,7 +92,7 @@ class UserGenericJobRoleController extends Controller
             'periode_id' => 'required|exists:ms_periode,id',
         ]);
 
-        $userGeneric = UserGeneric::findOrFail($request->user_generic_id);
+        $userGeneric = userGeneric::findOrFail($request->user_generic_id);
         $userGeneric->job_role_id = $request->job_role_id;
         $userGeneric->job_role_name = $request->job_role_name;
         $userGeneric->periode_id = $request->periode_id;
@@ -104,11 +104,11 @@ class UserGenericJobRoleController extends Controller
     public function edit($id)
     {
         // Show the form for editing the specified resource.
-        // Get UserGeneric records that do not have any related NIKJobRole
-        $userGenerics = UserGeneric::orderBy('user_code')->get();
+        // Get userGeneric records that do not have any related NIKJobRole
+        $userGenerics = userGeneric::orderBy('user_code')->get();
         $periodes = Periode::select('id', 'definisi')->get();
 
-        $userGeneric = UserGeneric::with(['NIKJobRole.jobRole'])->findOrFail($id);
+        $userGeneric = userGeneric::with(['NIKJobRole.jobRole'])->findOrFail($id);
         $jobRoles = JobRole::select('job_role_id', 'nama')->get();
         $nikJobRole = $userGeneric->NIKJobRole->first();
         if (!$nikJobRole) {
@@ -128,7 +128,7 @@ class UserGenericJobRoleController extends Controller
             ]);
 
 
-            $userGeneric = UserGeneric::with(['NIKJobRole.jobRole'])->where('user_code', $request->user_generic_id)->first();
+            $userGeneric = userGeneric::with(['NIKJobRole.jobRole'])->where('user_code', $request->user_generic_id)->first();
             $NIKJobRole = $userGeneric->NIKJobRole->first();
 
             if ($NIKJobRole && $NIKJobRole->nik === $request->user_generic_id) {
@@ -160,7 +160,7 @@ class UserGenericJobRoleController extends Controller
 
     public function show($id)
     {
-        $userGeneric = UserGeneric::with([
+        $userGeneric = userGeneric::with([
             'NIKJobRole.jobRole'
         ])->findOrFail($id);
 
@@ -203,7 +203,7 @@ class UserGenericJobRoleController extends Controller
                 return DataTables::of(collect([]))->make(true);
             }
 
-            $query = UserGeneric::query()
+            $query = userGeneric::query()
                 ->select([
                     'id',
                     'group',

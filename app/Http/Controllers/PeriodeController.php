@@ -8,7 +8,6 @@ use \App\Models\UserGenericUnitKerja;
 use App\Http\Controllers\Controller;
 
 use App\Models\Periode;
-use App\Models\UserGeneric;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Validation\Rule;

@@ -52,7 +52,7 @@ class NIKJobRole extends Model
 
     public function userGeneric()
     {
-        return $this->belongsTo(UserGeneric::class, 'nik', 'user_code');
+        return $this->belongsTo(userGeneric::class, 'nik', 'user_code');
     }
 
     public function userNIK()

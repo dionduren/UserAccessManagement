@@ -26,7 +26,7 @@ class UserGenericController extends Controller
             }
 
             // Load user generics with relationships
-            $userGenerics = UserGeneric::with([
+            $userGenerics = userGeneric::with([
                 'periode',
                 'userGenericUnitKerja.kompartemen',
                 'userGenericUnitKerja.departemen'
@@ -85,12 +85,12 @@ class UserGenericController extends Controller
     {
         if ($request->ajax()) {
             // Load relationships: costCenter, currentUser, and prevUser
-            // $userGenerics = UserGeneric::with(['costCenter', 'currentUser', 'prevUser'])
+            // $userGenerics = userGeneric::with(['costCenter', 'currentUser', 'prevUser'])
             //     ->select('id', 'group', 'user_code', 'user_type', 'cost_code', 'license_type', 'valid_from', 'valid_to');
 
             $periodeId = $request->input('periode_id');
 
-            $userGenerics = UserGeneric::with(['costCenter', 'currentUser', 'prevUser'])
+            $userGenerics = userGeneric::with(['costCenter', 'currentUser', 'prevUser'])
                 ->select('id', 'group', 'user_code', 'user_type', 'cost_code', 'license_type', 'valid_from', 'valid_to');
 
             if ($periodeId) {
@@ -153,7 +153,7 @@ class UserGenericController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(UserGeneric $userGeneric)
+    public function show(userGeneric $userGeneric)
     {
         //
     }
@@ -163,7 +163,7 @@ class UserGenericController extends Controller
      */
     public function edit($id)
     {
-        $userGeneric = UserGeneric::findOrFail($id);
+        $userGeneric = userGeneric::findOrFail($id);
         $periodes = Periode::select('id', 'definisi')->get();
         $companies = Company::select('shortname', 'company_code', 'nama')->get();
         $licenseTypes = UserLicenseManagement::select('id', 'license_type', 'contract_license_type')->get();
@@ -175,7 +175,7 @@ class UserGenericController extends Controller
      */
     public function update(Request $request, $id)
     {
-        $userGeneric = UserGeneric::findOrFail($id);
+        $userGeneric = userGeneric::findOrFail($id);
 
         $validated = $request->validate([
             'periode_id' => 'required|exists:ms_periode,id',
@@ -207,7 +207,7 @@ class UserGenericController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(UserGeneric $userGeneric)
+    public function destroy(userGeneric $userGeneric)
     {
         // Soft delete the userGeneric
         $userGeneric->delete();
@@ -225,7 +225,7 @@ class UserGenericController extends Controller
     public function getPeriodicGenericUser(Request $request)
     {
         if ($request->ajax()) {
-            $userGenerics = UserGeneric::with(['periode'])
+            $userGenerics = userGeneric::with(['periode'])
                 ->select('id', 'group', 'periode_id', 'user_code', 'user_type', 'cost_code', 'license_type', 'valid_from', 'valid_to')
                 ->when($request->filled('periode'), function ($query) use ($request) {
                     return $query->where('periode_id', $request->input('periode'));
@@ -246,7 +246,7 @@ class UserGenericController extends Controller
 
     public function editFlagged($id)
     {
-        $userGeneric = UserGeneric::findOrFail($id);
+        $userGeneric = userGeneric::findOrFail($id);
         $periodes = Periode::select('id', 'definisi')->get();
         return view('master-data.user_generic.edit-flagged', compact('userGeneric', 'periodes'));
     }
@@ -257,7 +257,7 @@ class UserGenericController extends Controller
             'flagged' => 'required|boolean',
         ]);
 
-        $userGeneric = UserGeneric::findOrFail($id);
+        $userGeneric = userGeneric::findOrFail($id);
         $userGeneric->flagged = $request->input('flagged');
         $userGeneric->save();
 

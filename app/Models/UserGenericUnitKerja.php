@@ -6,7 +6,7 @@ use App\Models\Departemen;
 use App\Models\Kompartemen;
 use App\Models\NIKJobRole;
 use App\Models\Periode;
-use App\Models\UserGeneric;
+use App\Models\userGeneric;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -38,7 +38,7 @@ class UserGenericUnitKerja extends Model
 
     public function userGeneric()
     {
-        return $this->belongsTo(UserGeneric::class, 'user_cc', 'user_code');
+        return $this->belongsTo(userGeneric::class, 'user_cc', 'user_code');
     }
 
     public function periode()

@@ -47,7 +47,7 @@ class UserGenericSeeder extends Seeder
                 $userGeneric['valid_to'] = null;
             }
 
-            UserGeneric::updateOrCreate(
+            userGeneric::updateOrCreate(
                 ['user_code' => $userGeneric['user_code']],
                 $userGeneric
             );

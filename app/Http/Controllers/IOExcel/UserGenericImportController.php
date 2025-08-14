@@ -32,7 +32,7 @@ class UserGenericImportController extends Controller
     public function preview(Request $request)
     {
 
-        // Get all existing user_profile names from the database (UserGeneric model)
+        // Get all existing user_profile names from the database (userGeneric model)
         $seenUserProfileNames = userGeneric::query()
             ->whereNotNull('user_profile')
             ->pluck('user_profile')

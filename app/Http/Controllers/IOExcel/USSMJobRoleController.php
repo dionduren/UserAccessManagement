@@ -5,7 +5,7 @@ namespace App\Http\Controllers\IOExcel;
 use App\Http\Controllers\Controller;
 
 use \App\Models\UserDetail;
-use \App\Models\UserGeneric;
+use \App\Models\userGeneric;
 use App\Models\JobRole;
 use App\Models\Periode;
 use App\Models\TempUploadSession;
@@ -101,7 +101,7 @@ class USSMJobRoleController extends Controller
             ->addColumn('nik_owner', function ($row) {
                 // Try to get userGeneric->user_profile or userNIK->nama
                 $userProfile = null;
-                $userGeneric = UserGeneric::where('user_code', $row['nik'] ?? null)->first();
+                $userGeneric = userGeneric::where('user_code', $row['nik'] ?? null)->first();
                 if ($userGeneric && !empty($userGeneric->user_profile)) {
                     $userProfile = $userGeneric->user_profile;
                 } else {
@@ -121,7 +121,7 @@ class USSMJobRoleController extends Controller
                     return $userNIK->kompartemen->nama;
                 }
                 // 2. Else, search in userGeneric into userGenericUnitKerja to get kompartemen->nama
-                $userGeneric = UserGeneric::where('user_code', $row['nik'] ?? null)->first();
+                $userGeneric = userGeneric::where('user_code', $row['nik'] ?? null)->first();
                 if ($userGeneric && $userGeneric->userGenericUnitKerja && $userGeneric->userGenericUnitKerja->kompartemen && !empty($userGeneric->userGenericUnitKerja->kompartemen->nama)) {
                     return $userGeneric->userGenericUnitKerja->kompartemen->nama;
                 }
