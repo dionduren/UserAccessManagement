@@ -2,42 +2,58 @@
 
 @section('content')
     <div class="container-fluid">
-        <h1>Edit Composite Role</h1>
-
-        <form action="{{ route('job-composite.update', $relationship->id) }}" method="POST">
-            @csrf
-            @method('PUT')
-
-            <!-- Company Dropdown -->
-            <div class="mb-3">
-                <label for="company_id" class="form-label">Perusahaan</label>
-                <select name="company_id" id="company_id" class="form-control" required>
-                    <option value="">Pilih Perusahaan</option>
-                    @foreach ($companies as $company)
-                        <option value="{{ $company->company_code }}"
-                            {{ $company->company_code == $relationship->company_id ? 'selected' : '' }}>
-                            {{ $company->nama }}
-                        </option>
+        @if ($errors->any())
+            <div class="alert alert-danger">
+                <ul class="mb-0">
+                    @foreach ($errors->all() as $message)
+                        <li>{{ $message }}</li>
                     @endforeach
-                </select>
+                </ul>
             </div>
+        @endif
 
-            <!-- Job Role Dropdown -->
-            <div class="mb-3">
-                <label for="jabatan_id" class="form-label">Job Role</label>
-                <select name="jabatan_id" id="jabatan_id" class="form-control select2" required>
-                </select>
+        <div class="card shadow-sm">
+            <div class="card-header">
+                <h1>Edit Composite Role</h1>
             </div>
+            <div class="card-body">
 
-            <!-- Composite Role Dropdown -->
-            <div class="mb-3">
-                <label for="composite_role_id" class="form-label">Composite Role</label>
-                <select name="composite_role_id" id="composite_role_id" class="form-control select2" required>
-                </select>
+                <form action="{{ route('job-composite.update', $relationship->id) }}" method="POST">
+                    @csrf
+                    @method('PUT')
+
+                    <!-- Company Dropdown -->
+                    <div class="mb-3">
+                        <label for="company_id" class="form-label">Perusahaan</label>
+                        <select name="company_id" id="company_id" class="form-control" required>
+                            <option value="">Pilih Perusahaan</option>
+                            @foreach ($companies as $company)
+                                <option value="{{ $company->company_code }}"
+                                    {{ $company->company_code == $relationship->company_id ? 'selected' : '' }}>
+                                    {{ $company->nama }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
+
+                    <!-- Job Role Dropdown -->
+                    <div class="mb-3">
+                        <label for="jabatan_id" class="form-label">Job Role</label>
+                        <select name="jabatan_id" id="jabatan_id" class="form-control select2" required>
+                        </select>
+                    </div>
+
+                    <!-- Composite Role Dropdown -->
+                    <div class="mb-3">
+                        <label for="composite_role_id" class="form-label">Composite Role</label>
+                        <select name="composite_role_id" id="composite_role_id" class="form-control select2" required>
+                        </select>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary">Update Relationship</button>
+                </form>
             </div>
-
-            <button type="submit" class="btn btn-primary">Update Relationship</button>
-        </form>
+        </div>
     </div>
 @endsection
 

@@ -33,6 +33,8 @@ if (!function_exists('getBreadcrumbs')) {
 
       'tcodes.index' => 'Master Data > Tcodes',
 
+      'job-composite.index' => 'Relationship > Job Roles - Composite Roles Index',
+
       'company_kompartemen.upload' => 'Import Data > Company & Job Roles > Upload',
       'company_kompartemen.preview_data' => 'Import Data > Company & Job Roles > Preview',
 

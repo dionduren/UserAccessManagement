@@ -60,7 +60,7 @@
                     <li>
                         <a href="{{ route('cost-center.index') }}"
                             class="nav-link {{ request()->routeIs('cost-center*') ? 'active' : 'text-white' }}">
-                            <i class="bi bi-cash-stack"></i> Cost Center
+                            <i class="bi bi-cash-stack me-2"></i> Cost Center
                         </a>
                     </li>
 

@@ -1,61 +1,78 @@
 @extends('layouts.app')
 
 @section('content')
-    <div class="container">
-        <h1>Create Departemen</h1>
-
-        <!-- Error Messages -->
+    <div class="container-fluid">
+        <!-- General Error -->
         @if ($errors->any())
             <div class="alert alert-danger">
-                <h4>Error(s) occurred:</h4>
-                <ul>
-                    @foreach ($errors->all() as $error)
-                        <li>{{ $error }}</li>
+                <ul class="mb-0">
+                    @foreach ($errors->all() as $message)
+                        <li>{{ $message }}</li>
                     @endforeach
                 </ul>
             </div>
         @endif
 
-        <form action="{{ route('departemens.store') }}" method="POST">
-            @csrf
-
-            <!-- Company Dropdown -->
-            <div class="mb-3">
-                <label for="company_id" class="form-label">Perusahaan</label>
-                <select name="company_id" id="company_id" class="form-control select2" required>
-                    <option value="">Pilih Perusahaan</option>
-                    @foreach ($companies as $company)
-                        <option value="{{ $company->company_code }}">{{ $company->nama }}</option>
-                    @endforeach
-                </select>
+        <div class="card shadow-sm">
+            <div class="card-header">
+                <h1>Create Departemen</h1>
             </div>
+            <div class="card-body">
 
-            <!-- Kompartemen Dropdown -->
-            <div class="mb-3">
-                <label for="kompartemen_id" class="form-label">Kompartemen</label>
-                <select name="kompartemen_id" id="kompartemen_id" class="form-control select2">
-                    <option value="">Pilih Kompartemen</option>
-                </select>
+                <!-- Error Messages -->
+                @if ($errors->any())
+                    <div class="alert alert-danger">
+                        <h4>Error(s) occurred:</h4>
+                        <ul>
+                            @foreach ($errors->all() as $error)
+                                <li>{{ $error }}</li>
+                            @endforeach
+                        </ul>
+                    </div>
+                @endif
+
+                <form action="{{ route('departemens.store') }}" method="POST">
+                    @csrf
+
+                    <!-- Company Dropdown -->
+                    <div class="mb-3">
+                        <label for="company_id" class="form-label">Perusahaan</label>
+                        <select name="company_id" id="company_id" class="form-control select2" required>
+                            <option value="">Pilih Perusahaan</option>
+                            @foreach ($companies as $company)
+                                <option value="{{ $company->company_code }}">{{ $company->nama }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+
+                    <!-- Kompartemen Dropdown -->
+                    <div class="mb-3">
+                        <label for="kompartemen_id" class="form-label">Kompartemen</label>
+                        <select name="kompartemen_id" id="kompartemen_id" class="form-control select2">
+                            <option value="">Pilih Kompartemen</option>
+                        </select>
+                    </div>
+
+                    <!-- Departemen ID -->
+                    <div class="mb-3">
+                        <label for="departemen_id" class="form-label">Departemen ID</label>
+                        <input type="text" class="form-control" name="departemen_id" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="nama" class="form-label">Nama Departemen</label>
+                        <input type="text" class="form-control" name="nama" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="deskripsi" class="form-label">Deskripsi</label>
+                        <textarea class="form-control" name="deskripsi"></textarea>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary">Buat Departemen</button>
+                </form>
             </div>
-
-            <!-- Departemen ID -->
-            <div class="mb-3">
-                <label for="departemen_id" class="form-label">Departemen ID</label>
-                <input type="text" class="form-control" name="departemen_id" required>
-            </div>
-
-            <div class="mb-3">
-                <label for="nama" class="form-label">Nama Departemen</label>
-                <input type="text" class="form-control" name="nama" required>
-            </div>
-
-            <div class="mb-3">
-                <label for="deskripsi" class="form-label">Deskripsi</label>
-                <textarea class="form-control" name="deskripsi"></textarea>
-            </div>
-
-            <button type="submit" class="btn btn-primary">Buat Departemen</button>
-        </form>
+        </div>
     </div>
 @endsection
 

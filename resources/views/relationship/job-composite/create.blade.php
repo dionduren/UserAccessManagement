@@ -1,93 +1,109 @@
 @extends('layouts.app')
 
 @section('content')
-    <div class="container">
-        <h1>Buat Relationship antara Job Role Composite Role</h1>
-
-        <!-- Error Display -->
-        @if (session('validationErrors') || session('error'))
-            <div class="alert alert-danger">
-                <h4>Error(s) occurred:</h4>
-                <ul>
-                    <!-- Validation Errors -->
-                    @if (session('validationErrors'))
-                        @foreach (session('validationErrors') as $row => $messages)
-                            <li>Row {{ $row }}:
-                                <ul>
-                                    @foreach ($messages as $message)
-                                        <li>{{ $message }}</li>
-                                    @endforeach
-                                </ul>
-                            </li>
-                        @endforeach
-                    @endif
-
-                    <!-- General Error -->
-                    @if (session('error'))
-                        <li>{{ session('error') }}</li>
-                    @endif
-                </ul>
-            </div>
-        @endif
-
-        <!-- Laravel Validation Errors -->
+    <div class="container-fluid">
         @if ($errors->any())
             <div class="alert alert-danger">
-                <h4>Error(s) occurred:</h4>
-                <ul>
-                    @foreach ($errors->all() as $error)
-                        <li>{{ $error }}</li>
+                <ul class="mb-0">
+                    @foreach ($errors->all() as $message)
+                        <li>{{ $message }}</li>
                     @endforeach
                 </ul>
             </div>
         @endif
 
-
-        <!-- Success Message -->
-        @if (session('success'))
-            <div class="alert alert-success">
-                <h4>Success:</h4>
-                {{ session('success') }}
+        <div class="card shadow-sm">
+            <div class="card-header">
+                <h1>Buat Relationship antara Job Role Composite Role</h1>
             </div>
-        @endif
+            <div class="card-body">
 
-        <form action="{{ route('job-composite.store') }}" method="POST">
-            @csrf
+                <!-- Error Display -->
+                @if (session('validationErrors') || session('error'))
+                    <div class="alert alert-danger">
+                        <h4>Error(s) occurred:</h4>
+                        <ul>
+                            <!-- Validation Errors -->
+                            @if (session('validationErrors'))
+                                @foreach (session('validationErrors') as $row => $messages)
+                                    <li>Row {{ $row }}:
+                                        <ul>
+                                            @foreach ($messages as $message)
+                                                <li>{{ $message }}</li>
+                                            @endforeach
+                                        </ul>
+                                    </li>
+                                @endforeach
+                            @endif
 
-            <!-- Company Dropdown -->
-            <div class="mb-3">
-                <label for="company_id" class="form-label">Perusahaan</label>
-                <select name="company_id" id="company_id" class="form-control" required>
-                    <option value="">Pilih Perusahaan</option>
-                    @foreach ($companies as $company)
-                        <option value="{{ $company->company_code }}">{{ $company->nama }}</option>
-                    @endforeach
-                </select>
+                            <!-- General Error -->
+                            @if (session('error'))
+                                <li>{{ session('error') }}</li>
+                            @endif
+                        </ul>
+                    </div>
+                @endif
+
+                <!-- Laravel Validation Errors -->
+                @if ($errors->any())
+                    <div class="alert alert-danger">
+                        <h4>Error(s) occurred:</h4>
+                        <ul>
+                            @foreach ($errors->all() as $error)
+                                <li>{{ $error }}</li>
+                            @endforeach
+                        </ul>
+                    </div>
+                @endif
+
+
+                <!-- Success Message -->
+                @if (session('success'))
+                    <div class="alert alert-success">
+                        <h4>Success:</h4>
+                        {{ session('success') }}
+                    </div>
+                @endif
+
+                <form action="{{ route('job-composite.store') }}" method="POST">
+                    @csrf
+
+                    <!-- Company Dropdown -->
+                    <div class="mb-3">
+                        <label for="company_id" class="form-label">Perusahaan</label>
+                        <select name="company_id" id="company_id" class="form-control" required>
+                            <option value="">Pilih Perusahaan</option>
+                            @foreach ($companies as $company)
+                                <option value="{{ $company->company_code }}">{{ $company->nama }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+
+                    <!-- Job Role Dropdown (Grouped by Kompartemen and Departemen) -->
+                    <div class="mb-3">
+                        <label for="jabatan_id" class="form-label">Job Role</label>
+                        <select name="jabatan_id" id="jabatan_id" class="form-control select2" required>
+                            <option value="">Pilih Job Role yang belum memiliki Composite Role</option>
+                            <!-- Options will be dynamically populated based on selected Company -->
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="composite_role_id" class="form-label">Composite Role</label>
+                        <select name="composite_role_id" id="composite_role_id" class="form-control select2" required>
+                            <option value="">Pilih Composite Role yang belum memiliki Job Role</option>
+                            <!-- Options will be dynamically populated based on selected Company -->
+                            @foreach ($compositeRoles as $composite)
+                                <option value="{{ $composite->id }}">{{ $composite->company->shortname }} -
+                                    {{ $composite->nama }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary">Create Relationship</button>
+                </form>
             </div>
-
-            <!-- Job Role Dropdown (Grouped by Kompartemen and Departemen) -->
-            <div class="mb-3">
-                <label for="jabatan_id" class="form-label">Job Role</label>
-                <select name="jabatan_id" id="jabatan_id" class="form-control select2" required>
-                    <option value="">Pilih Job Role yang belum memiliki Composite Role</option>
-                    <!-- Options will be dynamically populated based on selected Company -->
-                </select>
-            </div>
-
-            <div class="mb-3">
-                <label for="composite_role_id" class="form-label">Composite Role</label>
-                <select name="composite_role_id" id="composite_role_id" class="form-control select2" required>
-                    <option value="">Pilih Composite Role yang belum memiliki Job Role</option>
-                    <!-- Options will be dynamically populated based on selected Company -->
-                    @foreach ($compositeRoles as $composite)
-                        <option value="{{ $composite->id }}">{{ $composite->company->shortname }} -
-                            {{ $composite->nama }}</option>
-                    @endforeach
-                </select>
-            </div>
-
-            <button type="submit" class="btn btn-primary">Create Relationship</button>
-        </form>
+        </div>
     </div>
 @endsection
 

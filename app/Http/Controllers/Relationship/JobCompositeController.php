@@ -7,6 +7,7 @@ use App\Models\JobRole;
 use Illuminate\Http\Request;
 use App\Models\CompositeRole;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
 
 class JobCompositeController extends Controller
@@ -16,9 +17,14 @@ class JobCompositeController extends Controller
      */
     public function index()
     {
-        $companies = Company::all();
+        $user = auth()->user();
+        $userCompanyCode = $user->loginDetail->company_code ?? null;
 
-        return view('relationship.job-composite.index', compact('companies'));
+        $companies = $userCompanyCode === 'A000'
+            ? Company::all()
+            : Company::where('company_code', $userCompanyCode)->get();
+
+        return view('relationship.job-composite.index', compact('userCompanyCode', 'companies'));
     }
 
     /**
@@ -26,13 +32,35 @@ class JobCompositeController extends Controller
      */
     public function create()
     {
-        $companies = Company::all();
-        $jobRoles = JobRole::whereNotExists(function ($query) {
-            $query->select('*')
-                ->from('tr_composite_roles')
-                ->whereColumn('tr_job_roles.id', 'tr_composite_roles.jabatan_id');
-        })->get();
-        $compositeRoles = CompositeRole::whereNull('jabatan_id')->get();
+        $user = auth()->user();
+        $userCompanyCode = $user->loginDetail->company_code ?? null;
+
+        $companies = $userCompanyCode === 'A000'
+            ? Company::all()
+            : Company::where('company_code', $userCompanyCode)->get();
+
+        if ($userCompanyCode === 'A000') {
+            $jobRoles = JobRole::whereNotExists(function ($query) {
+                $query->select('*')
+                    ->from('tr_composite_roles')
+                    ->whereColumn('tr_job_roles.id', 'tr_composite_roles.jabatan_id');
+            })->get();
+
+            $compositeRoles = CompositeRole::whereNull('jabatan_id')->get();
+        } else {
+            $jobRoles = JobRole::whereHas('company', function ($q) use ($userCompanyCode) {
+                $q->where('company_code', $userCompanyCode);
+            })->whereNotExists(function ($query) {
+                $query->select('*')
+                    ->from('tr_composite_roles')
+                    ->whereColumn('tr_job_roles.id', 'tr_composite_roles.jabatan_id');
+            })->get();
+
+            $compositeRoles = CompositeRole::whereNull('jabatan_id')
+                ->whereHas('company', function ($q) use ($userCompanyCode) {
+                    $q->where('company_code', $userCompanyCode);
+                })->get();
+        }
 
         // \dd($jobRoles, $compositeRoles);
 
@@ -106,11 +134,54 @@ class JobCompositeController extends Controller
      */
     public function edit($id)
     {
+
         $relationship = CompositeRole::findOrFail($id);
 
-        $companies = Company::all();
-        $jobRoles = JobRole::all();
-        $compositeRoles = CompositeRole::all();
+        $user = auth()->user();
+        $userCompanyCode = $user->loginDetail->company_code ?? null;
+
+        if ($userCompanyCode !== 'A000' && $relationship->company_id !== $userCompanyCode) {
+            return redirect()
+                ->route('job-composite.index')
+                ->withErrors(['error' => 'You are not authorized to edit this Relationship.']);
+        }
+
+        $user = auth()->user();
+        $userCompanyCode = $user->loginDetail->company_code ?? null;
+
+        if ($userCompanyCode === 'A000') {
+            $companies = Company::all();
+
+            $jobRoles = JobRole::whereNotExists(function ($q) use ($relationship) {
+                $q->select('*')
+                    ->from('tr_composite_roles')
+                    ->whereColumn('tr_job_roles.id', 'tr_composite_roles.jabatan_id')
+                    ->where('tr_composite_roles.id', '!=', $relationship->id);
+            })->get();
+
+            $compositeRoles = CompositeRole::where(function ($q) use ($relationship) {
+                $q->whereNull('jabatan_id')
+                    ->orWhere('id', $relationship->id);
+            })->get();
+        } else {
+            $companies = Company::where('company_code', $userCompanyCode)->get();
+
+            $jobRoles = JobRole::whereHas('company', function ($q) use ($userCompanyCode) {
+                $q->where('company_code', $userCompanyCode);
+            })->whereNotExists(function ($q) use ($relationship) {
+                $q->select('*')
+                    ->from('tr_composite_roles')
+                    ->whereColumn('tr_job_roles.id', 'tr_composite_roles.jabatan_id')
+                    ->where('tr_composite_roles.id', '!=', $relationship->id);
+            })->get();
+
+            $compositeRoles = CompositeRole::whereHas('company', function ($q) use ($userCompanyCode) {
+                $q->where('company_code', $userCompanyCode);
+            })->where(function ($q) use ($relationship) {
+                $q->whereNull('jabatan_id')
+                    ->orWhere('id', $relationship->id);
+            })->get();
+        }
 
         $job_roles_data = [];
         foreach ($jobRoles as $jobRole) {
@@ -179,42 +250,98 @@ class JobCompositeController extends Controller
 
     public function getCompositeRoles(Request $request)
     {
-        $query = CompositeRole::with(['company', 'jobRole', 'singleRoles']);
+        $user = auth()->user();
+        $userCompanyCode = $user->loginDetail->company_code ?? null;
 
+        $draw  = (int) $request->input('draw', 1);
+        $start = (int) $request->input('start', 0);
+        $length = (int) $request->input('length', 10);
+
+        // New filter inputs from dropdowns
+        $filterCompany     = $request->input('filter_company');        // expects company_code
+        $filterKompartemen = $request->input('filter_kompartemen');    // expects kompartemen_id
+        $filterDepartemen  = $request->input('filter_departemen');     // expects departemen_id
+        $filterJobRole     = $request->input('filter_job_role');       // expects job role id
+
+        // Total (before search / dropdown filters but respecting user company restriction)
+        $recordsTotal = CompositeRole::when($userCompanyCode && $userCompanyCode !== 'A000', function ($q) use ($userCompanyCode) {
+            $q->whereHas('company', fn($cq) => $cq->where('company_code', $userCompanyCode));
+        })
+            ->count();
+
+        // Base working query
+        $query = CompositeRole::query()
+            ->with(['company', 'jobRole', 'singleRoles'])
+            ->leftJoin('ms_company as c', 'c.company_code', '=', 'tr_composite_roles.company_id')
+            ->leftJoin('tr_job_roles as jr', 'jr.id', '=', 'tr_composite_roles.jabatan_id')
+            ->select('tr_composite_roles.*')
+            ->when($userCompanyCode && $userCompanyCode !== 'A000', function ($q) use ($userCompanyCode) {
+                $q->where('c.company_code', $userCompanyCode);
+            });
+
+        // Dropdown filters
+        if ($filterCompany) {
+            $query->where('c.company_code', $filterCompany);
+        }
+        if ($filterKompartemen) {
+            // assumes tr_job_roles has kompartemen_id
+            $query->where('jr.kompartemen_id', $filterKompartemen);
+        }
+        if ($filterDepartemen) {
+            // assumes tr_job_roles has departemen_id
+            $query->where('jr.departemen_id', $filterDepartemen);
+        }
+        if ($filterJobRole) {
+            $query->where('jr.id', $filterJobRole);
+        }
+
+        // Column searches (text inputs)
         if ($request->filled('search_company')) {
-            $searchCompany = strtolower($request->input('search_company'));
-            $query->whereHas('company', function ($companyQuery) use ($searchCompany) {
-                $companyQuery->whereRaw('LOWER(name) LIKE ?', ["%{$searchCompany}%"]);
-            });
+            $term = strtolower($request->input('search_company'));
+            $query->whereRaw('LOWER(c.nama) LIKE ?', ["%{$term}%"]);
         }
-
         if ($request->filled('search_job_role')) {
-            $searchJobRole = strtolower($request->input('search_job_role'));
-            $query->whereHas('jobRole', function ($jobQuery) use ($searchJobRole) {
-                $jobQuery->whereRaw('LOWER(nama) LIKE ?', ["%{$searchJobRole}%"]);
-            });
+            $term = strtolower($request->input('search_job_role'));
+            $query->whereRaw('LOWER(jr.nama) LIKE ?', ["%{$term}%"]);
         }
-
         if ($request->filled('search_composite_role')) {
-            $searchCompositeRole = strtolower($request->input('search_composite_role'));
-            $query->whereRaw('LOWER(nama) LIKE ?', ["%{$searchCompositeRole}%"]);
+            $term = strtolower($request->input('search_composite_role'));
+            $query->whereRaw('LOWER(tr_composite_roles.nama) LIKE ?', ["%{$term}%"]);
         }
 
-        $recordsFiltered = $query->count();
-        $compositeRoles = $query->skip($request->start)->take($request->length)->get();
+        // Filtered count
+        $recordsFiltered = (clone $query)->distinct('tr_composite_roles.id')->count('tr_composite_roles.id');
+
+        // Ordering
+        $orderColumnIndex = (int) $request->input('order.0.column', 0);
+        $orderDir = $request->input('order.0.dir', 'asc') === 'desc' ? 'desc' : 'asc';
+        $orderableMap = [
+            0 => 'c.nama',
+            1 => 'jr.nama',
+            2 => 'tr_composite_roles.nama'
+        ];
+        $orderColumn = $orderableMap[$orderColumnIndex] ?? 'c.nama';
+        $query->orderBy($orderColumn, $orderDir);
+
+        // Pagination
+        if ($length > 0) {
+            $query->skip($start)->take($length);
+        }
+
+        $compositeRoles = $query->get();
 
         $data = $compositeRoles->map(function ($role) {
             return [
                 'company' => $role->company->nama ?? 'N/A',
-                'nama' => $role->nama,
                 'job_role' => $role->jobRole->nama ?? 'Not Assigned',
+                'nama' => $role->nama,
                 'actions' => view('relationship.job-composite.components.action_buttons', ['role' => $role])->render(),
             ];
         });
 
         return response()->json([
-            'draw' => intval($request->draw),
-            'recordsTotal' => CompositeRole::count(),
+            'draw' => $draw,
+            'recordsTotal' => $recordsTotal,
             'recordsFiltered' => $recordsFiltered,
             'data' => $data,
         ]);

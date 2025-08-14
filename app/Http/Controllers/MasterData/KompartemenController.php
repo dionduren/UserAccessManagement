@@ -34,7 +34,11 @@ class KompartemenController extends Controller
 
     public function create()
     {
-        $companies = Company::all();
+        $user = auth()->user();
+        $userCompanyCode = $user->loginDetail->company_code ?? null;
+        $companies = $userCompanyCode === 'A000'
+            ? Company::all()
+            : Company::where('company_code', $userCompanyCode)->get();
         return view('master-data.kompartemen.create', compact('companies'));
     }
 

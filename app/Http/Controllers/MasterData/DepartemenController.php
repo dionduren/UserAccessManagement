@@ -17,17 +17,33 @@ class DepartemenController extends Controller
 {
     public function index()
     {
-        // Retrieve all companies and departemens to pass to the view
-        $companies = Company::all();
-        $kompartemens = Kompartemen::orderBy('nama')->get();
-        $departemens = Departemen::with(['company'])->get();
+        $user = auth()->user();
+        $userCompanyCode = $user->loginDetail->company_code ?? null;
+        $companies = 'zzz';
+        $kompartemens = 'zzz';
+        $departemens = 'zzz';
+
+        if ($userCompanyCode === 'A000') {
+            $companies = Company::all();
+            $kompartemens = Kompartemen::orderBy('nama')->get();
+            $departemens = Departemen::with(['company'])->get();
+        } else {
+            $companies = Company::where('company_code', $userCompanyCode)->get();
+            $kompartemens = Kompartemen::where('company_id', $userCompanyCode)->orderBy('nama')->get();
+            $departemens = Departemen::where('company_id', $userCompanyCode)->get();
+        }
 
         return view('master-data.departemen.index', compact('companies', 'departemens', 'kompartemens'));
     }
 
     public function create()
     {
-        $companies = Company::all();
+        $user = auth()->user();
+        $userCompanyCode = $user->loginDetail->company_code ?? null;
+
+        $companies = $userCompanyCode === 'A000'
+            ? Company::all()
+            : Company::where('company_code', $userCompanyCode)->get();
 
         return view('master-data.departemen.create', compact('companies'));
     }
@@ -67,7 +83,19 @@ class DepartemenController extends Controller
 
     public function edit(Departemen $departemen)
     {
-        $companies = Company::all();
+        $user = auth()->user();
+        $userCompanyCode = $user->loginDetail->company_code ?? null;
+
+        if ($userCompanyCode !== 'A000' && $departemen->company_id !== $userCompanyCode) {
+            return redirect()
+                ->route('departemens.index')
+                ->withErrors(['error' => 'You are not authorized to edit this departemen.']);
+        }
+
+        $companies = $userCompanyCode === 'A000'
+            ? Company::all()
+            : Company::where('company_code', $userCompanyCode)->get();
+
         $company = Company::where('company_code', $departemen->company_id)->first();
         $kompartemen = Kompartemen::where('company_id', $departemen->company_id)->first();
         return view('master-data.departemen.edit', compact('companies', 'company', 'kompartemen', 'departemen'));
