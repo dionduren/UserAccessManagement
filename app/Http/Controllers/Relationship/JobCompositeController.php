@@ -43,7 +43,8 @@ class JobCompositeController extends Controller
             $jobRoles = JobRole::whereNotExists(function ($query) {
                 $query->select('*')
                     ->from('tr_composite_roles')
-                    ->whereColumn('tr_job_roles.id', 'tr_composite_roles.jabatan_id');
+                    ->whereColumn('tr_job_roles.id', 'tr_composite_roles.jabatan_id')
+                    ->whereNull('tr_composite_roles.deleted_at');
             })->get();
 
             $compositeRoles = CompositeRole::whereNull('jabatan_id')->get();

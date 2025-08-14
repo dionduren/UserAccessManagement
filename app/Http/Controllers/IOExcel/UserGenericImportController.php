@@ -4,10 +4,10 @@ namespace App\Http\Controllers\IOExcel;
 
 use App\Http\Controllers\Controller;
 
-use \App\Models\UserGenericUnitKerja;
+use App\Models\UserGenericUnitKerja;
 use App\Models\Periode;
 use App\Models\TempUploadSession;
-use App\Models\UserGeneric;
+use App\Models\userGeneric;
 
 use App\Imports\UserGenericPreviewImport;
 use App\Services\UserGenericService;
@@ -33,7 +33,7 @@ class UserGenericImportController extends Controller
     {
 
         // Get all existing user_profile names from the database (UserGeneric model)
-        $seenUserProfileNames = UserGeneric::query()
+        $seenUserProfileNames = userGeneric::query()
             ->whereNotNull('user_profile')
             ->pluck('user_profile')
             ->map(fn($name) => mb_strtolower(trim($name)))

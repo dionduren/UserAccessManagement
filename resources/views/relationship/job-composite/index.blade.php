@@ -125,6 +125,9 @@
         $(document).ready(function() {
             let masterData = {};
 
+            $('#kompartemenDropdown').select2();
+            $('#departemenDropdown').select2();
+
             let compositeRolesTable = $('#composite_roles_table').DataTable({
                 processing: true,
                 serverSide: true,
@@ -334,7 +337,11 @@
                     jobRoles = comp.job_roles_without_relations || [];
                 }
 
-                populateDropdown('#jobRoleDropdown', jobRoles, 'id', 'nama');
+                if (depId) {
+                    populateDropdown('#jobRoleDropdown', jobRoles, 'id', 'nama');
+                } else {
+                    $('#kompartemenDropdown').trigger('change');
+                }
                 compositeRolesTable.draw();
             });
 
