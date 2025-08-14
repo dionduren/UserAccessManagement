@@ -60,12 +60,6 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Route;
 
-
-
-
-
-
-
 // Route::get('/', function () {
 //     return view('welcome');
 // });
@@ -88,7 +82,7 @@ Route::middleware('guest')->group(function () {
 });
 
 Route::middleware(['auth'])->group(function () {
-    Route::get('/', [HomeController::class, 'index'])->name('home');
+    Route::redirect('/', '/home'); // tanpa name()
     Route::get('/home', [HomeController::class, 'index'])->name('home');
     Route::get('/home/empty/jobRolesComposite', [HomeController::class, 'getJobRolesCompositeEmpty'])->name('home.empty.jobRolesComposite');
     Route::get('/home/empty/compositeRolesJob', [HomeController::class, 'getCompositeRolesJobEmpty'])->name('home.empty.compositeRolesJob');
