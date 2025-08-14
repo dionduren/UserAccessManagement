@@ -1,0 +1,54 @@
+services:
+  app:
+    build: .
+    container_name: uam_dev
+    # depends_on:
+    #   db:
+    #     condition: service_started # Note: Consider adding healthchecks for better control
+    # volumes:
+    #   - type: bind
+    #     source: /var/www/UserAccessManagement
+    #     target: /var/www/html
+    depends_on:
+      db:
+        condition: service_healthy  # Use healthcheck for better startup control
+    volumes:
+      - ./php-config/php.ini:/usr/local/etc/php/conf.d/custom.ini  # Custom PHP config
+      - .:/var/www/html  # 🔥 Fix: Bind the current directory to the container
+    working_dir: /var/www/html
+    environment:
+      - APP_ENV=local
+      - APP_DEBUG=true
+    # command: >
+    #   sh -c "composer install --ignore-platform-req=ext-gd --ignore-platform-req=ext-zip && php artisan key:generate &&  php artisan storage:link &&  php artisan migrate --seed &&  php artisan serve --host=0.0.0.0 --port=8000  "
+    command: >
+      sh -c "cp -n .env.example .env &&
+             composer install --ignore-platform-req=ext-gd --ignore-platform-req=ext-zip &&
+             php artisan key:generate &&
+             php artisan storage:link &&
+             php artisan migrate --seed &&
+             php artisan serve --host=0.0.0.0 --port=8000"
+    ports:
+      - "8001:8000"
+
+  db:
+    image: postgres:latest
+    container_name: postgres_db_uam
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: user_access
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_db_uam:/var/lib/postgresql/data  # Named volume for DB storage
+    healthcheck:  # Ensures database is ready before Laravel runs migrations
+      test: ["CMD", "pg_isready", "-U", "postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  postgres_db_uam:  # Define a named volume for PostgreSQL persistence
+
