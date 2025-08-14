@@ -36,3 +36,17 @@ services:
 
 volumes:
   postgres_db_uam:
+
+queue:
+  build: .
+  container_name: uam_queue
+  depends_on:
+    db:
+      condition: service_healthy
+  volumes:
+    - ./php-config/php.ini:/usr/local/etc/php/conf.d/custom.ini
+    - .:/var/www/html
+  working_dir: /var/www/html
+  command: php artisan queue:work --sleep=1 --tries=3 --timeout=90
+  restart: unless-stopped
+
