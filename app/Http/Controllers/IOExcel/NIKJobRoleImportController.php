@@ -8,6 +8,7 @@ use App\Exports\NIKJobRoleTemplate;
 use App\Imports\NIKJobRoleImport;
 use App\Models\Periode;
 use App\Models\NIKJobRole;
+use App\Models\JobRole; // added
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
@@ -180,45 +181,93 @@ class NIKJobRoleImportController extends Controller
         return response()->json(['success' => true]);
     }
 
-    // public function confirmImport(Request $request)
-    // {
+    // Streaming confirm import
+    public function confirmImport(Request $request)
+    {
+        $parsed = session('parsedData'); // set in preview()
+        if (!$parsed || !isset($parsed['data'], $parsed['periode_id'])) {
+            return redirect()->route('nik_job_role.upload.form')->with('error', 'No data available for import.');
+        }
 
-    //     $parsedData = session('nikJobRoleUpload');
+        $periodeId = $parsed['periode_id'];
+        $rows = $parsed['data'];
+        $total = count($rows);
 
-    //     $import = new NIKJobRoleImport();
-    //     $import->confirmImport($request);
+        try {
+            $response = new StreamedResponse(function () use ($rows, $periodeId, $total) {
+                @ini_set('output_buffering', 'off');
+                @ini_set('zlib.output_compression', '0');
+                @set_time_limit(0);
+                @ob_implicit_flush(true);
+                while (ob_get_level() > 0) {
+                    @ob_end_flush();
+                }
 
-    //     return redirect()->route('nik-job-role.index');
+                $send = function (array $payload) {
+                    echo json_encode($payload) . "\n";
+                    if (ob_get_level() > 0) {
+                        @ob_flush();
+                    }
+                    flush();
+                };
 
-    //     if (!$parsedData || !isset($parsedData['data'])) {
-    //         return response()->json(['error' => 'No data available for import.'], 400);
-    //     }
+                $send(['progress' => 0]);
+                $processed = 0;
+                $lastUpdate = microtime(true);
 
-    //     $periodeId = $parsedData['periode_id'];
-    //     $dataArray = $parsedData['data'];
-    //     $totalRows = count($dataArray);
+                foreach ($rows as $row) {
+                    try {
+                        $jobRoleId = JobRole::where('nama_jabatan', $row['job_role'])->value('id');
+                        if ($jobRoleId) {
+                            NIKJobRole::updateOrCreate(
+                                [
+                                    'periode_id' => $periodeId,
+                                    'nik' => $row['nik'],
+                                    'job_role_id' => $jobRoleId
+                                ],
+                                [
+                                    'is_active' => true,
+                                    'last_update' => Carbon::now()
+                                ]
+                            );
+                        } else {
+                            Log::warning('Job Role not found', ['job_role' => $row['job_role'], 'nik' => $row['nik']]);
+                        }
+                    } catch (\Exception $e) {
+                        Log::error('Row import failed', ['row' => $row, 'error' => $e->getMessage()]);
+                    }
 
-    //     return new StreamedResponse(function () use ($dataArray, $periodeId, $totalRows) {
-    //         foreach ($dataArray as $index => $row) {
+                    $processed++;
+                    if (microtime(true) - $lastUpdate >= 1 || $processed === $total) {
+                        $send(['progress' => (int) round($processed / max(1, $total) * 100)]);
+                        $lastUpdate = microtime(true);
+                    }
+                }
 
-    //             $jobRoleId = JobRole::where('nama_jabatan', $row['job_role'])->value('id');
+                $send([
+                    'success' => true,
+                    'message' => 'Import completed',
+                    'redirect' => route('nik_job_role.upload.form')
+                ]);
+            });
 
-    //             NIKJobRole::updateOrCreate(
-    //                 ['periode_id' => $periodeId, 'nik' => $row['nik'], 'job_role_id' => $jobRoleId],
-    //                 [
-    //                     'is_active' => true,            //boolean
-    //                     'last_update' => Carbon::now(), //datetime
-    //                 ]
-    //             );
+            session()->forget('parsedData');
 
-    //             $progress = (($index + 1) / $totalRows) * 100;
-    //             echo json_encode(['progress' => $progress]) . "\n";
-    //             ob_flush();
-    //             flush();
-    //             sleep(1); // simulate processing delay
-    //         }
-    //     }, 200, ['Content-Type' => 'application/json']);
-    // }
+            $response->headers->set('Content-Type', 'text/event-stream');
+            $response->headers->set('Cache-Control', 'no-cache, no-transform');
+            $response->headers->set('X-Accel-Buffering', 'no');
+            $response->headers->set('Connection', 'keep-alive');
+
+            return $response;
+        } catch (\Exception $e) {
+            Log::error('Confirm import failed', [
+                'message' => $e->getMessage(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+            ]);
+            return redirect()->back()->with('error', 'Import failed: ' . $e->getMessage());
+        }
+    }
 
     public function submitSingle(Request $request)
     {

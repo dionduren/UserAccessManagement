@@ -115,7 +115,7 @@ class CompositeRoleSingleRoleController extends Controller
     // Confirm and process the import
     public function confirmImport(Request $request)
     {
-        set_time_limit(0);
+        @set_time_limit(0);
 
         $data = session('parsedData');
 
@@ -124,82 +124,69 @@ class CompositeRoleSingleRoleController extends Controller
         }
 
         try {
-            // Convert the collection to an array if necessary
             $dataArray = $data instanceof Collection ? $data->toArray() : $data;
             $totalRows = count($dataArray);
             $processedRows = 0;
 
-            // Set headers for streaming response
             $response = new StreamedResponse(function () use ($dataArray, $totalRows, &$processedRows) {
-                $lastUpdate = microtime(true); // Track last time progress was sent
-
-                echo json_encode(['progress' => 0]) . "\n";
-
-                // Start output buffering
-                if (!ob_get_level()) {
-                    ob_start();
+                @ini_set('output_buffering', 'off');
+                @ini_set('zlib.output_compression', '0');
+                @ob_implicit_flush(true);
+                while (ob_get_level() > 0) {
+                    @ob_end_flush();
                 }
-                ob_flush();
-                flush();
 
-                foreach ($dataArray as $index => $row) {
-                    // Skip invalid rows
+                $send = function (array $payload) {
+                    echo json_encode($payload) . "\n";
+                    if (ob_get_level() > 0) {
+                        @ob_flush();
+                    }
+                    flush();
+                };
+
+                $lastUpdate = microtime(true);
+                $send(['progress' => 0]);
+
+                foreach ($dataArray as $row) {
                     if (!isset($row['company_code'], $row['single_role'], $row['composite_role'])) {
                         Log::warning('Skipping invalid row.', ['row' => $row]);
                         continue;
                     }
 
-                    // Step 1: Find the Company by company_code
                     $company = Company::where('company_code', $row['company_code'])->first();
-
                     if (!$company) {
                         Log::warning('Company not found for row', ['row' => $row]);
                         continue;
                     }
 
-                    // Step 2: Create or Update CompositeRole
                     $compositeRole = CompositeRole::updateOrCreate(
                         ['nama' => $row['composite_role'], 'company_id' => $company->company_code]
                     );
 
-                    // Step 3: Create or Update SingleRole
                     $singleRole = SingleRole::updateOrCreate(
                         ['nama' => $row['single_role'], 'company_id' => $company->company_code],
                         ['deskripsi' => $row['single_role_desc']]
                     );
 
-                    // Step 4: Link SingleRole to CompositeRole
                     if (!$compositeRole->singleRoles()->where('single_role_id', $singleRole->id)->exists()) {
                         $compositeRole->singleRoles()->attach($singleRole->id);
                     }
 
-
-                    // Update progress
                     $processedRows++;
-
-                    // Check if 3 seconds have passed since the last update
                     if (microtime(true) - $lastUpdate >= 1 || $processedRows === $totalRows) {
-                        $progress = round(($processedRows / $totalRows) * 100);
-                        echo json_encode(['progress' => $progress]) . "\n";
-                        ob_flush();
-                        flush();
-
-                        $lastUpdate = microtime(true); // Reset the timer
+                        $send(['progress' => (int) round($processedRows / max(1, $totalRows) * 100)]);
+                        $lastUpdate = microtime(true);
                     }
                 }
 
-                echo json_encode(['success' => 'Data imported successfully!']) . "\n";
-                ob_flush();
-                flush();
+                $send(['success' => 'Data imported successfully!']);
             });
 
-            // Clear session data after processing
             session()->forget('parsedData');
 
-            // return response()->json(['success' => 'Data imported successfully!']);
-            // Set streaming headers explicitly
             $response->headers->set('Content-Type', 'text/event-stream');
-            $response->headers->set('Cache-Control', 'no-cache');
+            $response->headers->set('Cache-Control', 'no-cache, no-transform');
+            $response->headers->set('X-Accel-Buffering', 'no');
             $response->headers->set('Connection', 'keep-alive');
 
             return $response;

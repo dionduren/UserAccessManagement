@@ -84,23 +84,11 @@ class CompanyKompartemenController extends Controller
         }
     }
 
-    // public function getPreviewData()
-    // {
-    //     $data = session('parsedData');
-
-    //     if (!$data) {
-    //         return response()->json(['error' => 'No preview data found'], 400);
-    //     }
-
-    //     return DataTables::of(collect($data))->make(true);
-    // }
-
     public function getPreviewData()
     {
         $data = session('parsedData');
 
         if (!$data) {
-            // Optionally redirect instead of returning JSON error
             return redirect()->route('company_kompartemen.upload')->with('error', 'No preview data found. Please upload a file first.');
         }
 
@@ -144,38 +132,55 @@ class CompanyKompartemenController extends Controller
 
         try {
             $response = new StreamedResponse(function () use ($data) {
+                @ini_set('output_buffering', 'off');
+                @ini_set('zlib.output_compression', '0');
+                @set_time_limit(0);
+                @ob_implicit_flush(true);
+                while (ob_get_level() > 0) {
+                    @ob_end_flush();
+                }
+
+                $send = function (array $payload) {
+                    echo json_encode($payload) . "\n";
+                    if (ob_get_level() > 0) {
+                        @ob_flush();
+                    }
+                    flush();
+                };
+
                 $processed = 0;
                 $total = count($data);
                 $lastUpdate = microtime(true);
 
-                echo json_encode(['progress' => 0]) . "\n";
-                ob_flush();
-                flush();
+                $send(['progress' => 0]);
 
                 foreach ($data as $row) {
                     try {
-                        $service = new CompanyKompartemenService();
-                        $service->handleRow($row);
+                        (new CompanyKompartemenService())->handleRow($row);
                     } catch (\Exception $e) {
-                        Log::error('Row import failed', ['row' => $row, 'error' => $e->getMessage()]);
+                        Log::error('Row import failed', [
+                            'row' => $row,
+                            'error' => $e->getMessage()
+                        ]);
                     }
 
                     $processed++;
                     if (microtime(true) - $lastUpdate >= 1 || $processed === $total) {
-                        echo json_encode(['progress' => round(($processed / $total) * 100)]) . "\n";
-                        ob_flush();
-                        flush();
+                        $send(['progress' => (int) round($processed / max(1, $total) * 100)]);
                         $lastUpdate = microtime(true);
                     }
                 }
 
-                echo json_encode(['success' => 'Data imported successfully']) . "\n";
-                ob_flush();
-                flush();
+                $send(['success' => 'Data imported successfully']);
             });
 
             session()->forget('parsedData');
+
             $response->headers->set('Content-Type', 'text/event-stream');
+            $response->headers->set('Cache-Control', 'no-cache, no-transform');
+            $response->headers->set('X-Accel-Buffering', 'no');
+            $response->headers->set('Connection', 'keep-alive');
+
             return $response;
         } catch (\Exception $e) {
             Log::error('Error occurred', [

@@ -7,10 +7,8 @@ use App\Models\Departemen;
 use App\Models\Kompartemen;
 use App\Models\Periode;
 use App\Models\TempUploadSession;
-
 use App\Services\UserGenericUnitKerjaService;
 use App\Imports\UserGenericUnitKerjaPreviewImport;
-
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Maatwebsite\Excel\Facades\Excel;
@@ -116,14 +114,28 @@ class UserGenericUnitKerjaController extends Controller
 
         try {
             $response = new StreamedResponse(function () use ($data, $session) {
+                @ini_set('output_buffering', 'off');
+                @ini_set('zlib.output_compression', '0');
+                @set_time_limit(0);
+                @ob_implicit_flush(true);
+                while (ob_get_level() > 0) {
+                    @ob_end_flush();
+                }
+
+                $send = function (array $payload) {
+                    echo json_encode($payload) . "\n";
+                    if (ob_get_level() > 0) {
+                        @ob_flush();
+                    }
+                    flush();
+                };
+
                 $service = new UserGenericUnitKerjaService();
                 $processed = 0;
                 $total = count($data);
                 $lastUpdate = microtime(true);
 
-                echo json_encode(['progress' => 0]) . "\n";
-                ob_flush();
-                flush();
+                $send(['progress' => 0]);
 
                 foreach ($data as $row) {
                     try {
@@ -134,25 +146,25 @@ class UserGenericUnitKerjaController extends Controller
 
                     $processed++;
                     if (microtime(true) - $lastUpdate >= 1 || $processed === $total) {
-                        echo json_encode(['progress' => round(($processed / $total) * 100)]) . "\n";
-                        ob_flush();
-                        flush();
+                        $send(['progress' => (int) round($processed / max(1, $total) * 100)]);
                         $lastUpdate = microtime(true);
                     }
                 }
 
-                // After complete, send API-style response for blade view to handle
-                echo json_encode([
+                $send([
                     'success' => true,
                     'message' => 'Data imported successfully',
                     'redirect' => route('user-generic-unit-kerja.upload')
-                ]) . "\n";
-                ob_flush();
-                flush();
+                ]);
             });
 
             $session?->delete();
+
             $response->headers->set('Content-Type', 'text/event-stream');
+            $response->headers->set('Cache-Control', 'no-cache, no-transform');
+            $response->headers->set('X-Accel-Buffering', 'no');
+            $response->headers->set('Connection', 'keep-alive');
+
             return $response;
         } catch (\Exception $e) {
             Log::error('Error occurred', [

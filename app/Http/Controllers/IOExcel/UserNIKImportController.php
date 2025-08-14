@@ -254,8 +254,6 @@ class UserNIKImportController extends Controller
   {
     $parsedData = session('parsedData');
 
-    // \dd('Tabulator request input= ', $parsedData, ' | $request = ', $request->all());
-
     if (!$parsedData || !isset($parsedData['data'])) {
       return response()->json(['error' => 'No data available for import.'], 400);
     }
@@ -264,40 +262,84 @@ class UserNIKImportController extends Controller
     $dataArray = $parsedData['data'];
     $totalRows = count($dataArray);
 
-    return new StreamedResponse(function () use ($dataArray, $periodeId, $totalRows) {
-      foreach ($dataArray as $index => $row) {
-        // Check for errors in the row (assuming 'errors' and 'cell_errors' keys exist)
-        $flagged = false;
-        $keterangan = null;
-
-        $rowErrors = isset($row['row_errors']) ? $row['row_errors'] : [];
-        $cellErrors = isset($row['cell_errors']) ? $row['cell_errors'] : [];
-
-        if ((is_array($rowErrors) && count($rowErrors) > 0) || (is_array($cellErrors) && count($cellErrors) > 0)) {
-          $flagged = true;
-          $keterangan = 'Row errors: ' . json_encode($rowErrors) . '; Cell errors: ' . json_encode($cellErrors);
+    try {
+      $response = new StreamedResponse(function () use ($dataArray, $periodeId, $totalRows) {
+        @ini_set('output_buffering', 'off');
+        @ini_set('zlib.output_compression', '0');
+        @set_time_limit(0);
+        @ob_implicit_flush(true);
+        while (ob_get_level() > 0) {
+          @ob_end_flush();
         }
 
-        UserNIK::updateOrCreate(
-          ['periode_id' => $periodeId, 'user_code' => $row['user_code']],
-          [
-            'group' => $row['group'],
-            'user_type' => "NIK",
-            'license_type' => $row['license_type'],
-            'last_login' => $row['last_login'],
-            'valid_from' => $row['valid_from'],
-            'valid_to' => $row['valid_to'],
-            'flagged' => $flagged,
-            'keterangan' => $keterangan,
-          ]
-        );
+        $send = function (array $payload) {
+          echo json_encode($payload) . "\n";
+          if (ob_get_level() > 0) {
+            @ob_flush();
+          }
+          flush();
+        };
 
-        $progress = (($index + 1) / $totalRows) * 100;
-        echo json_encode(['progress' => $progress]) . "\n";
-        ob_flush();
-        flush();
-        sleep(1); // simulate processing delay
-      }
-    }, 200, ['Content-Type' => 'application/json']);
+        $processed = 0;
+        $lastUpdate = microtime(true);
+        $send(['progress' => 0]);
+
+        foreach ($dataArray as $row) {
+          try {
+            $flagged = false;
+            $keterangan = null;
+
+            $rowErrors = $row['row_errors'] ?? [];
+            $cellErrors = $row['cell_errors'] ?? [];
+
+            if ((is_array($rowErrors) && count($rowErrors) > 0) || (is_array($cellErrors) && count($cellErrors) > 0)) {
+              $flagged = true;
+              $keterangan = 'Row errors: ' . json_encode($rowErrors) . '; Cell errors: ' . json_encode($cellErrors);
+            }
+
+            UserNIK::updateOrCreate(
+              ['periode_id' => $periodeId, 'user_code' => $row['user_code']],
+              [
+                'group' => $row['group'],
+                'user_type' => "NIK",
+                'license_type' => $row['license_type'],
+                'last_login' => $row['last_login'],
+                'valid_from' => $row['valid_from'],
+                'valid_to' => $row['valid_to'],
+                'flagged' => $flagged,
+                'keterangan' => $keterangan,
+              ]
+            );
+          } catch (\Exception $e) {
+            Log::error('Row import failed', ['row' => $row, 'error' => $e->getMessage()]);
+          }
+
+          $processed++;
+          if (microtime(true) - $lastUpdate >= 1 || $processed === $totalRows) {
+            $send(['progress' => (int) round($processed / max(1, $totalRows) * 100)]);
+            $lastUpdate = microtime(true);
+          }
+        }
+
+        $send(['success' => true, 'message' => 'Import complete']);
+      });
+
+      // Clear session after preparing stream
+      session()->forget('parsedData');
+
+      $response->headers->set('Content-Type', 'text/event-stream');
+      $response->headers->set('Cache-Control', 'no-cache, no-transform');
+      $response->headers->set('X-Accel-Buffering', 'no');
+      $response->headers->set('Connection', 'keep-alive');
+
+      return $response;
+    } catch (\Exception $e) {
+      Log::error('Error during bulk submit', [
+        'message' => $e->getMessage(),
+        'file' => $e->getFile(),
+        'line' => $e->getLine(),
+      ]);
+      return response()->json(['error' => 'Import failed: ' . $e->getMessage()], 500);
+    }
   }
 }
