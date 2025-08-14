@@ -17,9 +17,15 @@
             </div>
 
             <div class="mb-3">
-                <label for="email" class="form-label">Email</label>
+                <label for="username" class="form-label">Username</label>
+                <input type="text" id="username" name="username" class="form-control"
+                    value="{{ $user->username ?? old('username') }}" required>
+            </div>
+
+            <div class="mb-3">
+                <label for="email" class="form-label">Email (optional)</label>
                 <input type="email" id="email" name="email" class="form-control"
-                    value="{{ $user->email ?? old('email') }}" required>
+                    value="{{ $user->email ?? old('email') }}">
             </div>
 
             @if (!isset($user))
@@ -28,6 +34,21 @@
                     <input type="password" id="password" name="password" class="form-control" required>
                 </div>
             @endif
+
+            <div class="mb-3">
+                <label for="company_code" class="form-label">Perusahaan</label>
+                <select id="company_code" name="company_code" class="form-select" required>
+                    <option value="">--- Pilih Perusahaan ---</option>
+                    @foreach ($companies as $company)
+                        <option value="{{ $company->company_code }}"
+                            {{ old('company_code', isset($user) ? optional($user->loginDetail)->company_code : optional(auth()->user()->loginDetail)->company_code) == $company->company_code ? 'selected' : '' }}>
+                            {{ $company->company_code }} - {{ $company->nama }}
+                        </option>
+                    @endforeach
+                </select>
+            </div>
+
+            {{-- @dd($user->loginDetail ? $user->loginDetail->company_code : '') --}}
 
             <div class="mb-3">
                 <label for="roles" class="form-label">Assign Roles</label>

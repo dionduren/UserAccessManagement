@@ -1,110 +1,98 @@
 @extends('layouts.app')
 
 @section('content')
-    <div class="container">
-        <h1>Access Matrix</h1>
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-12">
+                <div class="card shadow-sm">
+                    <div class="card-header">
+                        <h1 class="h4 mb-0">Access Matrix</h1>
+                    </div>
+                    <div class="card-body">
+                        <!-- Notification Area -->
+                        <div id="notification" class="alert mb-3" aria-live="assertive" role="alert"></div>
 
-        <!-- Notification Area -->
-        <div id="notification" class="alert" aria-live="assertive" role="alert"></div>
+                        <!-- User-Role Matrix -->
+                        <h2 class="h5">Assign Roles to Users</h2>
+                        <div class="table-responsive">
+                            <table class="table table-striped table-hover mt-3">
+                                <thead>
+                                    <tr>
+                                        <th>User</th>
+                                        @foreach ($roles as $role)
+                                            <th>{{ $role->name }}</th>
+                                        @endforeach
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach ($users as $user)
+                                        <tr>
+                                            <td>{{ $user->name }}</td>
+                                            @foreach ($roles as $role)
+                                                <td>
+                                                    <input type="checkbox" data-user="{{ $user->id }}"
+                                                        data-role="{{ $role->name }}"
+                                                        {{ $user->hasRole($role->name) ? 'checked' : '' }}
+                                                        onchange="toggleRole(this)">
+                                                </td>
+                                            @endforeach
+                                        </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        </div>
 
+                        <hr>
 
-        <!-- User-Role Matrix -->
-        <h2>Assign Roles to Users</h2>
-        <div class="table-responsive">
-            <table class="table table-striped table-hover mt-4">
-                <thead>
-                    <tr>
-                        <th>User</th>
-                        @foreach ($roles as $role)
-                            <th>{{ $role->name }}</th>
-                        @endforeach
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach ($users as $user)
-                        <tr>
-                            <td>{{ $user->name }}</td>
-                            @foreach ($roles as $role)
-                                <td>
-                                    <input type="checkbox" data-user="{{ $user->id }}" data-role="{{ $role->name }}"
-                                        {{ $user->hasRole($role->name) ? 'checked' : '' }} onchange="toggleRole(this)">
-                                </td>
-                            @endforeach
-                        </tr>
-                    @endforeach
-                </tbody>
-            </table>
-        </div>
-
-        <!-- Role-Permission Matrix -->
-        <h2>Assign Permissions to Roles</h2>
-        <div class="table-responsive">
-            <table class="table table-striped table-hover mt-4">
-                <thead>
-                    <tr>
-                        <th>Role</th>
-                        @foreach ($permissions as $permission)
-                            <th>{{ $permission->name }}</th>
-                        @endforeach
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach ($roles as $role)
-                        <tr>
-                            <td>{{ $role->name }}</td>
-                            @foreach ($permissions as $permission)
-                                <td>
-                                    <input type="checkbox" data-role="{{ $role->name }}"
-                                        data-permission="{{ $permission->name }}"
-                                        {{ $role->hasPermissionTo($permission->name) ? 'checked' : '' }}
-                                        onchange="togglePermission(this)">
-                                </td>
-                            @endforeach
-                        </tr>
-                    @endforeach
-                </tbody>
-            </table>
+                        <!-- Role-Permission Matrix -->
+                        <h2 class="h5">Assign Permissions to Roles</h2>
+                        <div class="table-responsive">
+                            <table class="table table-striped table-hover mt-3">
+                                <thead>
+                                    <tr>
+                                        <th>Role</th>
+                                        @foreach ($permissions as $permission)
+                                            <th>{{ $permission->name }}</th>
+                                        @endforeach
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach ($roles as $role)
+                                        <tr>
+                                            <td>{{ $role->name }}</td>
+                                            @foreach ($permissions as $permission)
+                                                <td>
+                                                    <input type="checkbox" data-role="{{ $role->name }}"
+                                                        data-permission="{{ $permission->name }}"
+                                                        {{ $role->hasPermissionTo($permission->name) ? 'checked' : '' }}
+                                                        onchange="togglePermission(this)">
+                                                </td>
+                                            @endforeach
+                                        </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
     <script>
-        // Function to display notification with success/failure feedback
-        // function showNotification(message, type) {
-        //     const notification = document.getElementById('notification');
-        //     notification.className = `alert alert-${type} show`; // Add 'show' class to trigger fade-in
-        //     notification.innerText = message;
-
-        //     // Display the notification for 3 seconds, then fade out
-        //     setTimeout(() => {
-        //         notification.classList.remove('show'); // Remove 'show' class for fade-out
-        //     }, 3000);
-        // }
-
         function showNotification(message, type = 'success') {
-
             const notification = document.getElementById('notification');
-
-            // Check if notification element exists
             if (!notification) {
                 console.error("Notification element not found");
                 return;
             }
-
-            // Set alert type and show class
-            notification.className = `alert alert-${type} show`; // Add Bootstrap alert class and show class
+            notification.className = `alert alert-${type} show`;
             notification.innerText = message;
-
-            // console.log("Notification classname = ", notification.className);
-            // console.log("Notification innerText = ", notification.innerText);
-
-            // Display the notification for 3 seconds, then hide it
             setTimeout(() => {
-                notification.classList.remove('show'); // Remove the show class to fade out
+                notification.classList.remove('show');
             }, 3000);
         }
 
-
-        // Function to show loading indicators for AJAX requests
         function toggleLoadingIndicator(element, isLoading) {
             if (isLoading) {
                 element.innerHTML =
@@ -116,15 +104,14 @@
             }
         }
 
-        // AJAX to toggle user role assignment
         function toggleRole(checkbox) {
             const userId = checkbox.getAttribute('data-user');
             const roleName = checkbox.getAttribute('data-role');
             const isChecked = checkbox.checked;
 
-            toggleLoadingIndicator(checkbox, true); // Show loading indicator
+            toggleLoadingIndicator(checkbox, true);
 
-            fetch("{{ route('access-matrix.assign-role') }}", {
+            fetch("{{ route('admin.access-matrix.assign-role') }}", {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -137,39 +124,34 @@
                     })
                 })
                 .then(response => {
-                    // console.log("Raw response:", response); // Log the raw response object
-
-                    // Check if the response is OK before parsing JSON
                     if (!response.ok) {
                         throw new Error(`HTTP error! Status: ${response.status}`);
                     }
-
-                    // Attempt to parse the response as JSON
                     return response.json();
                 })
                 .then(data => {
-                    // console.log("Parsed JSON response:", data); // Log the parsed JSON response
-                    showNotification(data.message, data.status == 'success' ? 'success' : data.status == 'warning' ?
-                        'warning' : 'danger');
+                    showNotification(
+                        data.message,
+                        data.status == 'success' ? 'success' : data.status == 'warning' ? 'warning' : 'danger'
+                    );
                 })
                 .catch(error => {
-                    console.error("Error:", error); // Log any errors that occur
+                    console.error("Error:", error);
                     showNotification('An error occurred while updating the role.', 'danger');
                 })
                 .finally(() => {
-                    toggleLoadingIndicator(checkbox, false); // Remove loading indicator
+                    toggleLoadingIndicator(checkbox, false);
                 });
         }
 
-        // AJAX to toggle role permission assignment
         function togglePermission(checkbox) {
             const roleName = checkbox.getAttribute('data-role');
             const permissionName = checkbox.getAttribute('data-permission');
             const isChecked = checkbox.checked;
 
-            toggleLoadingIndicator(checkbox, true); // Show loading indicator
+            toggleLoadingIndicator(checkbox, true);
 
-            fetch("{{ route('access-matrix.assign-permission') }}", {
+            fetch("{{ route('admin.access-matrix.assign-permission') }}", {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -186,11 +168,10 @@
                     showNotification(data.message, data.status === 'success' ? 'success' : 'danger');
                 })
                 .catch(error => {
-                    showNotification(data.message, data.status == 'success' ? 'success' : data.status == 'warning' ?
-                        'warning' : 'danger');
+                    showNotification('An error occurred while updating the permission.', 'danger');
                 })
                 .finally(() => {
-                    toggleLoadingIndicator(checkbox, false); // Remove loading indicator
+                    toggleLoadingIndicator(checkbox, false);
                 });
         }
     </script>

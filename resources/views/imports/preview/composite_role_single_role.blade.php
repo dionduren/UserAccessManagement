@@ -76,7 +76,7 @@
 
             $('#compositeSingleTable').DataTable({
                 processing: true,
-                serverSide: true,
+                serverSide: false,
                 ajax: {
                     url: "{{ route('composite_single.preview_data') }}",
                     type: "GET",

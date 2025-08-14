@@ -23,25 +23,24 @@
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    @foreach ($data['company'] as $company)
+                                    @foreach ($data['groupedData']['companies'] as $company)
                                         <tr>
                                             <td>{{ $loop->iteration }}</td>
-                                            <td class="text-start">{{ $company->name }}</td>
-                                            <td>{{ $data['groupedData']['kompartemen']->where('company_id', $company->id)->sum('total') }}
+                                            <td class="text-start">{{ $company->nama }}</td>
+                                            <td>{{ $data['groupedData']['data']['kompartemen'][$company->company_code] ?? 0 }}
                                             </td>
-                                            <td>{{ $data['groupedData']['departemen']->where('company_id', $company->id)->sum('total') }}
+                                            <td>{{ $data['groupedData']['data']['departemen'][$company->company_code] ?? 0 }}
                                             </td>
-                                            <td>{{ $data['groupedData']['jobrole']->where('company_id', $company->id)->sum('total') }}
+                                            <td>{{ $data['groupedData']['data']['jobrole'][$company->company_code] ?? 0 }}
                                             </td>
-                                            <td>{{ $data['groupedData']['compositerole']->where('company_id', $company->id)->sum('total') }}
+                                            <td>{{ $data['groupedData']['data']['compositerole'][$company->company_code] ?? 0 }}
                                             </td>
-                                            <td>{{ $data['groupedData']['singlerole']->where('company_id', $company->id)->sum('total') }}
+                                            <td>{{ $data['groupedData']['data']['singlerole'][$company->company_code] ?? 0 }}
                                             </td>
                                         </tr>
                                     @endforeach
-                                    <tr class="text-start fw-bold" style="background-color: rgb(176, 176, 176)">
-                                        <td colspan="2" class="text-end">TOTAL
-                                        </td>
+                                    <tr class="text-center fw-bold " style="background-color: rgb(176, 176, 176)">
+                                        <td colspan="2" class="text-end">TOTAL</td>
                                         <td>{{ $data['kompartemen'] }}</td>
                                         <td>{{ $data['departemen'] }}</td>
                                         <td>{{ $data['jobRole'] }}</td>
@@ -122,12 +121,14 @@
                 </div>
             </div>
             <div class="col-md-3 mb-3">
-                <div class="card bg-danger text-white text-center shadow-sm">
-                    <div class="card-body">
-                        <h5 class="card-title">JobRoles tanpa Composite</h5>
-                        <p class="card-text">{{ $data['JobCompEmpty'] }}</p>
+                <a href="#" id="btnJobCompEmpty" data-metric="jobRolesComposite" class="text-decoration-none">
+                    <div class="card bg-danger text-white text-center shadow-sm" style="cursor:pointer;">
+                        <div class="card-body">
+                            <h5 class="card-title">JobRoles tanpa Composite</h5>
+                            <p class="card-text fw-bold">{{ $data['JobCompEmpty'] }}</p>
+                        </div>
                     </div>
-                </div>
+                </a>
             </div>
         </div>
 
@@ -141,12 +142,14 @@
                 </div>
             </div>
             <div class="col-md-3 mb-3">
-                <div class="card bg-danger text-white text-center shadow-sm">
-                    <div class="card-body">
-                        <h5 class="card-title">CompositeRole tanpa JobRole</h5>
-                        <p class="card-text">{{ $data['compJobEmpty'] }}</p>
+                <a href="#" id="btnCompJobEmpty" data-metric="jobRolesComposite" class="text-decoration-none">
+                    <div class="card bg-danger text-white text-center shadow-sm">
+                        <div class="card-body">
+                            <h5 class="card-title">CompositeRole tanpa JobRole</h5>
+                            <p class="card-text">{{ $data['compJobEmpty'] }}</p>
+                        </div>
                     </div>
-                </div>
+                </a>
             </div>
             <div class="col-md-3 mb-3">
                 <div class="card bg-success text-white text-center shadow-sm">
@@ -157,12 +160,14 @@
                 </div>
             </div>
             <div class="col-md-3 mb-3">
-                <div class="card bg-danger text-white text-center shadow-sm">
-                    <div class="card-body">
-                        <h5 class="card-title">CompositeRole tanpa Single Role</h5>
-                        <p class="card-text">{{ $data['compSingleEmpty'] }}</p>
+                <a href="#" id="btnCompSingleEmpty" class="text-decoration-none">
+                    <div class="card bg-danger text-white text-center shadow-sm" style="cursor:pointer;">
+                        <div class="card-body">
+                            <h5 class="card-title">CompositeRole tanpa Single Role</h5>
+                            <p class="card-text">{{ $data['compSingleEmpty'] }}</p>
+                        </div>
                     </div>
-                </div>
+                </a>
             </div>
         </div>
 
@@ -176,12 +181,14 @@
                 </div>
             </div>
             <div class="col-md-3 mb-3">
-                <div class="card bg-danger text-white text-center shadow-sm">
-                    <div class="card-body">
-                        <h5 class="card-title">SingleRole tanpa JobRole</h5>
-                        <p class="card-text">{{ $data['singleCompEmpty'] }}</p>
+                <a href="#" id="btnSingleCompEmpty" class="text-decoration-none">
+                    <div class="card bg-danger text-white text-center shadow-sm" style="cursor:pointer;">
+                        <div class="card-body">
+                            <h5 class="card-title">SingleRole tanpa JobRole</h5>
+                            <p class="card-text">{{ $data['singleCompEmpty'] }}</p>
+                        </div>
                     </div>
-                </div>
+                </a>
             </div>
             <div class="col-md-3 mb-3">
                 <div class="card bg-success text-white text-center shadow-sm">
@@ -192,12 +199,14 @@
                 </div>
             </div>
             <div class="col-md-3 mb-3">
-                <div class="card bg-danger text-white text-center shadow-sm">
-                    <div class="card-body">
-                        <h5 class="card-title">SingleRole tanpa tCode</h5>
-                        <p class="card-text">{{ $data['singleTcodeEmpty'] }}</p>
+                <a href="#" id="btnSingleTcodeEmpty" class="text-decoration-none">
+                    <div class="card bg-danger text-white text-center shadow-sm" style="cursor:pointer;">
+                        <div class="card-body">
+                            <h5 class="card-title">SingleRole tanpa tCode</h5>
+                            <p class="card-text">{{ $data['singleTcodeEmpty'] }}</p>
+                        </div>
                     </div>
-                </div>
+                </a>
             </div>
         </div>
 
@@ -211,18 +220,109 @@
                 </div>
             </div>
             <div class="col-md-3 mb-3">
-                <div class="card bg-danger text-white text-center shadow-sm">
-                    <div class="card-body">
-                        <h5 class="card-title">tCode tanpa Single Role</h5>
-                        <p class="card-text">{{ $data['tcodeSingEmpty'] }}</p>
+                <a href="#" id="btnTcodeSingEmpty" class="text-decoration-none">
+                    <div class="card bg-danger text-white text-center shadow-sm" style="cursor:pointer;">
+                        <div class="card-body">
+                            <h5 class="card-title">tCode tanpa Single Role</h5>
+                            <p class="card-text">{{ $data['tcodeSingEmpty'] }}</p>
+                        </div>
                     </div>
+                </a>
+            </div>
+        </div>
+
+        <!-- Empty Metrics Per Company Table -->
+
+        <div class="card text-center shadow-sm mb-5">
+            <div class="card-body">
+                <h5>Data UAM tanpa Relationship</h5>
+                <div class="table-responsive mt-4">
+                    <table class="table table-bordered">
+                        <thead>
+                            <tr>
+                                <th>No.</th>
+                                <th>Company</th>
+                                @foreach ($data['groupedData']['emptyMetrics'] as $metric => $counts)
+                                    <th>
+                                        @switch($metric)
+                                            @case('JobCompEmpty')
+                                                JobRoles tanpa Composite
+                                            @break
+
+                                            @case('compJobEmpty')
+                                                CompositeRole tanpa JobRole
+                                            @break
+
+                                            @case('compSingleEmpty')
+                                                CompositeRole tanpa Single Role
+                                            @break
+
+                                            @case('singleCompEmpty')
+                                                SingleRole tanpa JobRole
+                                            @break
+
+                                            @case('singleTcodeEmpty')
+                                                SingleRole tanpa tCode
+                                            @break
+
+                                            @case('tcodeSingEmpty')
+                                                tCode tanpa Single Role
+                                            @break
+
+                                            @default
+                                                {{ $metric }}
+                                        @endswitch
+                                    </th>
+                                @endforeach
+                                <th class="text-center fw-bold" style="background-color: rgb(176, 176, 176)">Total</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach ($data['groupedData']['companies'] as $company)
+                                <tr>
+                                    <td>{{ $loop->iteration }}</td>
+                                    <td class="text-start">{{ $company->nama }}</td>
+                                    @php
+                                        $rowTotal = 0;
+                                    @endphp
+                                    @foreach ($data['groupedData']['emptyMetrics'] as $metric => $counts)
+                                        @php
+                                            $val = $counts[$company->company_code] ?? 0;
+                                            $rowTotal += $val;
+                                        @endphp
+                                        <td>{{ $val }}</td>
+                                    @endforeach
+                                    <td class="text-center fw-bold" style="background-color: rgb(176, 176, 176)">
+                                        {{ $rowTotal }}</td>
+                                </tr>
+                            @endforeach
+                            {{-- Total row --}}
+                            <tr class="text-center fw-bold" style="background-color: rgb(176, 176, 176)">
+                                <td colspan="2" class="text-end">TOTAL</td>
+                                @php
+                                    $colTotals = [];
+                                    $grandTotal = 0;
+                                    foreach ($data['groupedData']['emptyMetrics'] as $metric => $counts) {
+                                        $colTotals[$metric] = 0;
+                                        foreach ($data['groupedData']['companies'] as $company) {
+                                            $colTotals[$metric] += $counts[$company->company_code] ?? 0;
+                                        }
+                                        $grandTotal += $colTotals[$metric];
+                                    }
+                                @endphp
+                                @foreach ($data['groupedData']['emptyMetrics'] as $metric => $counts)
+                                    <td>{{ $colTotals[$metric] }}</td>
+                                @endforeach
+                                <td>{{ $grandTotal }}</td>
+                        </tbody>
+                    </table>
                 </div>
             </div>
         </div>
 
         <!-- Charts -->
         <div class="row">
-            @foreach ($data['groupedData'] as $key => $dataset)
+            @foreach ($data['groupedData']['data'] as $key => $counts)
                 <div class="col-md-6 mb-4">
                     <div class="card shadow-sm">
                         <div class="card-header">
@@ -236,12 +336,40 @@
             @endforeach
         </div>
     </div>
+
+    <!-- Bootstrap Modal for Details -->
+    <div class="modal fade" id="emptyMetricModal" tabindex="-1" aria-labelledby="emptyMetricModalLabel"
+        aria-hidden="true">
+        <div class="modal-dialog modal-xl">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="emptyMetricModalLabel">Detail Data</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <table id="emptyMetricTable" class="table table-bordered table-striped" style="width:100%">
+                        <thead>
+                            <tr>
+                                <th>No</th>
+                                <th>Nama</th>
+                                <th>Company</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- DataTables will fill this -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
 @endsection
 
 @section('scripts')
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
-        let chartData = @json($data['groupedData']);
+        let companies = @json($data['groupedData']['companies']);
+        let groupedData = @json($data['groupedData']['data']);
         let companyColorMap = {
             'PT Pupuk Indonesia (Persero)': 'LavenderBlush',
             'PT Petrokimia Gresik': 'YellowGreen',
@@ -257,16 +385,11 @@
             'PT Pupuk Indonesia Pangan': 'Indigo'
         };
 
-        Object.keys(chartData).forEach(function(key) {
+        Object.keys(groupedData).forEach(function(key) {
             let ctx = document.getElementById('chart_' + key).getContext('2d');
-            let sortedData = chartData[key].sort((a, b) => a.company_id - b.company_id);
-            let myData = sortedData.map(item => item.total);
-            let myLabels = sortedData.map(item => item.company ? item.company.name : 'Unknown');
-            let myColors = sortedData.map(item => {
-                let companyName = item.company ? item.company.name : 'Unknown';
-                let colorStops = companyColorMap[companyName] || ['#000000'];
-                return colorStops;
-            });
+            let myLabels = companies.map(company => company.nama);
+            let myData = companies.map(company => groupedData[key][company.company_code] ?? 0);
+            let myColors = companies.map(company => companyColorMap[company.nama] || '#000000');
 
             new Chart(ctx, {
                 type: 'bar',
@@ -282,9 +405,8 @@
                 },
                 options: {
                     responsive: true,
-                    // maintainAspectRatio: true,
                     animation: {
-                        duration: 0, // Disable animation so gradients compute immediately
+                        duration: 0,
                         onComplete: function() {
                             let chartInstance = this;
                             let ctx = chartInstance.ctx;
@@ -319,6 +441,94 @@
                         }
                     }
                 }
+            });
+        });
+
+        $(document).ready(function() {
+            let modalTable;
+
+            function showEmptyMetricModal(url, title) {
+                $('#emptyMetricModalLabel').text(title);
+                $('#emptyMetricModal').modal('show');
+
+                if ($.fn.DataTable.isDataTable('#emptyMetricTable')) {
+                    $('#emptyMetricTable').DataTable().destroy();
+                    $('#emptyMetricTable tbody').empty();
+                }
+
+                modalTable = $('#emptyMetricTable').DataTable({
+                    processing: true,
+                    serverSide: false,
+                    ajax: {
+                        url: url,
+                        dataSrc: ''
+                    },
+                    columns: [{
+                            data: null,
+                            render: (data, type, row, meta) => meta.row + 1
+                        },
+                        {
+                            data: 'nama'
+                        },
+                        {
+                            data: 'company.nama'
+                        }
+                    ]
+                });
+            }
+
+            // JobRoles tanpa Composite
+            $('#btnJobCompEmpty').on('click', function(e) {
+                e.preventDefault();
+                showEmptyMetricModal(
+                    "{{ route('home.empty.jobRolesComposite') }}",
+                    "JobRoles tanpa Composite"
+                );
+            });
+
+            // CompositeRole tanpa JobRole
+            $('#btnCompJobEmpty').on('click', function(e) {
+                e.preventDefault();
+                showEmptyMetricModal(
+                    "{{ route('home.empty.compositeRolesJob') }}",
+                    "CompositeRole tanpa JobRole"
+                );
+            });
+
+            // CompositeRole tanpa Single Role
+            $('#btnCompSingleEmpty').on('click', function(e) {
+                e.preventDefault();
+                showEmptyMetricModal(
+                    "{{ route('home.empty.compositeRolesSingle') }}",
+                    "CompositeRole tanpa Single Role"
+                );
+            });
+
+            // SingleRole tanpa JobRole
+            $('#btnSingleCompEmpty').on('click', function(e) {
+                e.preventDefault();
+                showEmptyMetricModal(
+                    "{{ route('home.empty.singleRolesComposite') }}",
+                    "SingleRole tanpa JobRole"
+                );
+            });
+
+            // SingleRole tanpa tCode
+            $('#btnSingleTcodeEmpty').on('click', function(e) {
+                e.preventDefault();
+                showEmptyMetricModal(
+                    "{{ route('home.empty.singleRolesTcode') }}",
+                    "SingleRole tanpa tCode"
+                );
+            });
+
+            // tCode tanpa Single Role
+            $('#btnTcodeSingEmpty').on('click', function(e) {
+                e.preventDefault();
+                showEmptyMetricModal(
+                    "{{ route('home.empty.tcodesSingle') }}",
+                    "tCode tanpa Single Role"
+                );
             });
         });
     </script>

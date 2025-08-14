@@ -9,16 +9,20 @@ class CreateCompaniesTable extends Migration
     public function up()
     {
         Schema::create('ms_company', function (Blueprint $table) {
-            $table->id(); // Primary key
-            $table->string('company_code'); // Company code, unique (e.g., A000, B000)
-            $table->string('name'); // Company name, unique
+            $table->string('company_code')->primary(); // Company code, unique (e.g., A000, B000)
+            $table->string('nama')->unique(); // Company name, unique
             $table->string('shortname')->nullable(); // Company name, unique
-            $table->text('description')->nullable(); // Company description
+            $table->text('deskripsi')->nullable(); // Company description
             $table->timestamps(); // Created at and updated at timestamps
             $table->softDeletes(); // Soft delete for safe record deletion
             $table->text('created_by')->nullable();
             $table->text('updated_by')->nullable();
             $table->text('deleted_by')->nullable();
+
+            $table->index('company_code');
+            $table->index('nama');
+            $table->index('shortname');
+            $table->index('deleted_at');
         });
     }
 

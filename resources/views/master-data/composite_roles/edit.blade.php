@@ -14,9 +14,9 @@
                 <select name="company_id" id="company_id" class="form-control select2" required>
                     <option value="">Select a company</option>
                     @foreach ($companies as $company)
-                        <option value="{{ $company->id }}"
-                            {{ $company->id == $compositeRole->company_id ? 'selected' : '' }}>
-                            {{ $company->name }}
+                        <option value="{{ $company->company_code }}"
+                            {{ $company->company_code == $compositeRole->company_id ? 'selected' : '' }}>
+                            {{ $company->nama }}
                         </option>
                     @endforeach
                 </select>
@@ -25,7 +25,7 @@
             <!-- Job Role Dropdown (Grouped by Kompartemen and Departemen) -->
             <div class="mb-3">
                 <label for="jabatan_id" class="form-label">Job Role</label>
-                <select name="jabatan_id" id="jabatan_id" class="form-control select2" required>
+                <select name="jabatan_id" id="jabatan_id" class="form-control select2">
                     <!-- Options will be dynamically populated based on selected Company -->
                 </select>
             </div>
@@ -74,7 +74,7 @@
                                 let selected = role.id == selectedJobRoleId ? 'selected' :
                                     '';
                                 optgroup.append(
-                                    $('<option>').val(role.id).text(role.nama_jabatan)
+                                    $('<option>').val(role.id).text(role.nama)
                                     .attr('selected', selected)
                                 );
 

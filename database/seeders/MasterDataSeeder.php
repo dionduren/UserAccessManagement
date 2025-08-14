@@ -50,9 +50,9 @@ class MasterDataSeeder extends Seeder
         foreach ($companies as $company) {
             Company::create([
                 'company_code' => $company['kode_perusahaan'],
-                'name' => $company['nama_perusahaan'],
+                'nama' => $company['nama_perusahaan'],
                 'shortname' => $company['singkatan'],
-                'description' => null, // Optional description field, set to null or a default value if needed
+                'deskripsi' => null, // Optional description field, set to null or a default value if needed
                 'created_by' => 'seeder',
                 'updated_by' => 'seeder'
             ]);
@@ -167,21 +167,21 @@ class MasterDataSeeder extends Seeder
 
         //     // Seed two job roles for each department
         //     JobRole::create([
-        //         'company_id' => $company->id,
-        //         'kompartemen_id' => $kompartemen->id,
-        //         'departemen_id' => $departemen->id,
-        //         'nama_jabatan' => 'Manager ' . $departemen->name,
-        //         'deskripsi' => 'Responsible for managing the ' . $departemen->name,
+        //         'company_id' => $company->company_code,
+        //         'kompartemen_id' => $kompartemen->kompartemen_id,
+        //         'departemen_id' => $departemen->departemen_id,
+        //         'nama_jabatan' => 'Manager ' . $departemen->nama,
+        //         'deskripsi' => 'Responsible for managing the ' . $departemen->nama,
         //         'created_by' => 1, // Assuming the user with ID 1 is the seeder user
         //         'updated_by' => 1,
         //     ]);
 
         //     JobRole::create([
-        //         'company_id' => $company->id,
-        //         'kompartemen_id' => $kompartemen->id,
-        //         'departemen_id' => $departemen->id,
-        //         'nama_jabatan' => 'Assistant Manager ' . $departemen->name,
-        //         'deskripsi' => 'Assists in managing the ' . $departemen->name,
+        //         'company_id' => $company->company_code,
+        //         'kompartemen_id' => $kompartemen->kompartemen_id,
+        //         'departemen_id' => $departemen->departemen_id,
+        //         'nama_jabatan' => 'Assistant Manager ' . $departemen->nama,
+        //         'deskripsi' => 'Assists in managing the ' . $departemen->nama,
         //         'created_by' => 1,
         //         'updated_by' => 1,
         //     ]);

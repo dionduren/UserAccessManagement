@@ -24,6 +24,7 @@ return new class extends Migration
             throw new \Exception('Error: team_foreign_key on config/permission.php not loaded. Run [php artisan config:clear] and try again.');
         }
 
+        // Tabel permission = menentukan hak akses menu yang bisa diakses
         Schema::create($tableNames['permissions'], function (Blueprint $table) {
             //$table->engine('InnoDB');
             $table->bigIncrements('id'); // permission id
@@ -34,6 +35,7 @@ return new class extends Migration
             $table->unique(['name', 'guard_name']);
         });
 
+        // Tabel roles = menentukan role yang bisa diberikan ke user
         Schema::create($tableNames['roles'], function (Blueprint $table) use ($teams, $columnNames) {
             //$table->engine('InnoDB');
             $table->bigIncrements('id'); // role id
@@ -51,6 +53,7 @@ return new class extends Migration
             }
         });
 
+        // Tabel pivot untuk menghubungkan permission dengan model (user, role, dll)
         Schema::create($tableNames['model_has_permissions'], function (Blueprint $table) use ($tableNames, $columnNames, $pivotPermission, $teams) {
             $table->unsignedBigInteger($pivotPermission);
 
@@ -78,6 +81,7 @@ return new class extends Migration
             }
         });
 
+        // Tabel pivot untuk menghubungkan role dengan model (user, role, dll)
         Schema::create($tableNames['model_has_roles'], function (Blueprint $table) use ($tableNames, $columnNames, $pivotRole, $teams) {
             $table->unsignedBigInteger($pivotRole);
 
@@ -105,6 +109,12 @@ return new class extends Migration
             }
         });
 
+        // Tabel pivot untuk menghubungkan permission dengan role
+        // Ini adalah tabel yang menghubungkan permission dengan role
+        // sehingga role bisa memiliki beberapa permission
+        // dan permission bisa dimiliki oleh beberapa role
+        // Contoh: role admin memiliki permission create, read, update, delete
+        // dan role user memiliki permission read
         Schema::create($tableNames['role_has_permissions'], function (Blueprint $table) use ($tableNames, $pivotRole, $pivotPermission) {
             $table->unsignedBigInteger($pivotPermission);
             $table->unsignedBigInteger($pivotRole);

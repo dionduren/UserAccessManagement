@@ -18,6 +18,19 @@
             </div>
         @endif
 
+        <div class="row mb-3">
+            <div class="col-md-4">
+                <label for="periode_filter">Periode</label>
+                <select id="periode_filter" class="form-select">
+                    <option value="">All</option>
+                    @foreach ($periodes as $p)
+                        <option value="{{ $p->id }}">{{ $p->definisi }}</option>
+                    @endforeach
+                </select>
+            </div>
+        </div>
+
+
         <table id="user_generic_table" class="table table-bordered table-striped table-hover cell-border mt-3">
             <thead>
                 <tr>
@@ -32,7 +45,7 @@
                     <th style="background-color: greenyellow">Code Center</th>
                     <th style="background-color: greenyellow">Definisi</th>
                     <th style="background-color: lightblue">User Terdaftar</th>
-                    <th style="background-color: lightblue">SK penunjukan</th>
+                    {{-- <th style="background-color: lightblue">SK penunjukan</th> --}}
                     <th style="background-color:fuchsia">User Sebelumnya</th>
                     <th>Tipe Lisensi</th>
                     <th>Valid From</th>
@@ -63,10 +76,21 @@
 @section('scripts')
     <script>
         $(document).ready(function() {
+            $('#periode_filter').on('change', function() {
+                userGenericTable.ajax.reload();
+            });
+
+
             let userGenericTable = $('#user_generic_table').DataTable({
                 processing: true,
-                serverSide: true,
-                ajax: "{{ route('dashboard.user-generic') }}",
+                serverSide: false,
+                // ajax: "{{ route('dashboard.user-generic') }}",
+                ajax: {
+                    url: "{{ route('dashboard.user-generic') }}",
+                    data: function(d) {
+                        d.periode_id = $('#periode_filter').val(); // send selected periode
+                    }
+                },
                 columns: [{
                         data: 'id',
                         name: 'id'
@@ -95,10 +119,10 @@
                         data: 'current_user',
                         name: 'current_user'
                     },
-                    {
-                        data: 'dokumen_keterangan',
-                        name: 'dokumen_keterangan'
-                    },
+                    // {
+                    //     data: 'dokumen_keterangan',
+                    //     name: 'dokumen_keterangan'
+                    // },
                     {
                         data: 'prev_user',
                         name: 'prev_user'

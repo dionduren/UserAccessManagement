@@ -1,0 +1,671 @@
+<?php
+
+namespace App\Http\Controllers\Report;
+
+use App\Http\Controllers\Controller;
+use App\Models\Company;
+use App\Models\Departemen;
+use App\Models\JobRole;
+use App\Models\Kompartemen;
+use App\Models\NIKJobRole;
+use App\Models\PenomoranUAR;
+use App\Models\Periode;
+
+use Illuminate\Http\Request;
+
+use PhpOffice\PhpWord\PhpWord;
+use PhpOffice\PhpWord\SimpleType\Jc;
+
+class UARReportController extends Controller
+{
+    public function index(Request $request)
+    {
+        $companies = Company::select('company_code', 'nama')->get();
+
+        $companyId = $request->company_id;
+        $kompartemenId = $request->kompartemen_id;
+        $departemenId = $request->departemen_id;
+
+        $latestPeriode = Periode::latest()->first();
+        if (!$latestPeriode) {
+            $latestPeriode = null;
+        }
+
+        $unitKerja = '';
+        $unitKerjaName = '';
+        $cost_center = '';
+
+        if ($departemenId) {
+            $departemen = Departemen::find($departemenId);
+            $unitKerja = 'Departemen';
+            $unitKerjaName = $departemen ? $departemen->nama : '';
+            $cost_center = $departemen ? $departemen->cost_center : '';
+        } elseif ($kompartemenId) {
+            $kompartemen = Kompartemen::find($kompartemenId);
+            $unitKerja = 'Kompartemen';
+            $unitKerjaName = $kompartemen ? $kompartemen->nama : '';
+            $cost_center = $kompartemen ? $kompartemen->cost_center : '';
+        } elseif ($companyId) {
+            $company = Company::where('company_code', $companyId)->first();
+            $unitKerja = 'Company';
+            $unitKerjaName = $company ? $company->nama : '';
+        }
+
+        // Count users
+        $query = JobRole::query()
+            ->with(['NIKJobRole' => function ($q) {
+                $q->whereNull('deleted_at')->where('is_active', true);
+            }]);
+
+        if ($companyId) {
+            $query->where('company_id', $companyId);
+        }
+        if ($kompartemenId) {
+            $query->where('kompartemen_id', $kompartemenId);
+        }
+        if ($departemenId) {
+            $query->where('departemen_id', $departemenId);
+        }
+
+        $jobRoles = $query->get();
+        $jumlahAwalUser = $jobRoles->reduce(function ($carry, $jobRole) {
+            return $carry + $jobRole->NIKJobRole->count();
+        }, 0);
+
+        return view('report.uar.index', compact(
+            'companies',
+            'unitKerja',
+            'unitKerjaName',
+            'jumlahAwalUser',
+            'latestPeriode'
+        ));
+    }
+
+    public function getKompartemen(Request $request)
+    {
+        $companyId = $request->company_id;
+        $kompartemen = Kompartemen::where('company_id', $companyId)
+            ->select('kompartemen_id', 'nama')
+            ->orderBy('nama')
+            ->get();
+        return response()->json($kompartemen);
+    }
+
+    public function getDepartemen(Request $request)
+    {
+        $companyId = $request->company_id;
+        $kompartemenId = $request->kompartemen_id;
+
+        if ($kompartemenId) {
+            $departemen = Departemen::where('company_id', $companyId)
+                ->where('kompartemen_id', $kompartemenId)
+                ->select('departemen_id', 'nama')
+                ->orderBy('nama')
+                ->get();
+        } else {
+            $departemen = Departemen::where('company_id', $companyId)
+                ->whereNull('kompartemen_id')
+                ->select('departemen_id', 'nama')
+                ->orderBy('nama')
+                ->get();
+        }
+        return response()->json($departemen);
+    }
+
+    public function jobRolesData(Request $request)
+    {
+        $companyId = $request->company_id;
+        $kompartemenId = $request->kompartemen_id;
+        $departemenId = $request->departemen_id;
+        $latestPeriode = Periode::latest()->first();
+        $latestPeriodeYear = $latestPeriode ? date('Y', strtotime($latestPeriode->created_at)) : null;
+        $nomorSurat = 'XXX - Belum terdaftar';
+
+        $cost_center = '';
+        $nik = '';
+
+        $query = NIKJobRole::query()
+            ->with([
+                'jobRole.company',
+                'jobRole.kompartemen',
+                'jobRole.departemen',
+                'userGeneric' => function ($q) use ($latestPeriode) {
+                    $q->where('periode_id', $latestPeriode->id);
+                },
+                'userNIK' => function ($q) use ($latestPeriode) {
+                    $q->whereHas('userDetail', function ($q2) {
+                        $q2->whereNull('deleted_at');
+                    })->where('periode_id', $latestPeriode->id);
+                }
+            ])
+            ->whereNull('deleted_at')
+            ->where('is_active', true)
+            ->where('periode_id', $latestPeriode->id);
+
+        if ($companyId) {
+            $query->whereHas('jobRole', function ($q) use ($companyId) {
+                $q->where('company_id', $companyId);
+            });
+        }
+        if ($kompartemenId) {
+            $query->whereHas('jobRole', function ($q) use ($kompartemenId) {
+                $q->where('kompartemen_id', $kompartemenId);
+            });
+        }
+        if ($departemenId) {
+            $query->whereHas('jobRole', function ($q) use ($departemenId) {
+                $q->where('departemen_id', $departemenId);
+            });
+        }
+
+        if ($departemenId) {
+            $penomoranUAR = PenomoranUAR::where('unit_kerja_id', $departemenId)
+                ->whereNull('deleted_at')
+                ->latest()
+                ->first();
+            $nomorSurat = $penomoranUAR->number ?? 'XXX (Belum terdaftar)';
+            $cost_center = $penomoranUAR->departemen->cost_center;
+        } elseif ($kompartemenId) {
+            $penomoranUAR = PenomoranUAR::where('unit_kerja_id', $kompartemenId)
+                ->whereNull('deleted_at')
+                ->latest()
+                ->first();
+            $nomorSurat = $penomoranUAR->number ?? 'XXX (Belum terdaftar)';
+            $cost_center = $penomoranUAR->kompartemen->cost_center;
+        }
+
+        $nikJobRoles = $query->get();
+        $data = [];
+
+        $nomorSurat = "PI-TIN-UAR-{$latestPeriodeYear}-{$nomorSurat}";
+
+        // OPTION A = Opsi apabila data kosong masih tetap ingin ditampilkan
+        // foreach ($nikJobRoles as $nikJobRole) {
+        //     $jobRole = $nikJobRole->jobRole;
+        //     $data[] = [
+        //         'company' => $jobRole && $jobRole->company ? $jobRole->company->nama : '-',
+        //         'kompartemen' => $nikJobRole->userGeneric && $nikJobRole->userGeneric->UserGenericUnitKerja
+        //             ? ($nikJobRole->userGeneric->UserGenericUnitKerja->kompartemen->nama ?? '-')
+        //             : ($jobRole && $jobRole->kompartemen ? $jobRole->kompartemen->nama : '-'),
+        //         'departemen' => $nikJobRole->userGeneric && $nikJobRole->userGeneric->UserGenericUnitKerja
+        //             ? ($nikJobRole->userGeneric->UserGenericUnitKerja->departemen->nama ?? '-')
+        //             : ($jobRole && $jobRole->departemen ? $jobRole->departemen->nama : '-'),
+        //         'user_nik' => $nikJobRole->nik ?? '-',
+        //         'user_definisi' => $nikJobRole->userGeneric
+        //             ? $nikJobRole->userGeneric->user_profile
+        //             : ($nikJobRole->userNIK && $nikJobRole->userNIK->userDetail ? $nikJobRole->userNIK->userDetail->nama : '-'),
+        //         'job_role' => $jobRole ? $jobRole->nama : '-',
+        //     ];
+        // }
+
+        // OPTION B = Opsi apabila data kosong tidak ditampilkan
+        foreach ($nikJobRoles as $nikJobRole) {
+            // Only include if userGeneric or userNIK exists (not null)
+            if ($nikJobRole->userGeneric || $nikJobRole->userNIK) {
+                $jobRole = $nikJobRole->jobRole;
+                $data[] = [
+                    'company' => $jobRole && $jobRole->company ? $jobRole->company->nama : '-',
+                    'kompartemen' => $nikJobRole->userGeneric && $nikJobRole->userGeneric->UserGenericUnitKerja
+                        ? ($nikJobRole->userGeneric->UserGenericUnitKerja->kompartemen->nama ?? '-')
+                        : ($jobRole && $jobRole->kompartemen ? $jobRole->kompartemen->nama : '-'),
+                    'departemen' => $nikJobRole->userGeneric && $nikJobRole->userGeneric->UserGenericUnitKerja
+                        ? ($nikJobRole->userGeneric->UserGenericUnitKerja->departemen->nama ?? '-')
+                        : ($jobRole && $jobRole->departemen ? $jobRole->departemen->nama : '-'),
+                    'user_nik' => $nikJobRole->nik ?? '-',
+                    'karyawan_nik' => $nikJobRole->userNIK ? $nikJobRole->userNIK->user_code : ($nikJobRole->userGeneric ? $nikJobRole->userGeneric->nik : '-'),
+                    'user_definisi' => $nikJobRole->userGeneric
+                        ? $nikJobRole->userGeneric->user_profile
+                        : ($nikJobRole->userNIK && $nikJobRole->userNIK->userDetail ? $nikJobRole->userNIK->userDetail->nama : '-'),
+                    'job_role' => $jobRole ? $jobRole->nama : '-',
+                ];
+            }
+        }
+
+        // Return DataTables response with additional nomorSurat
+        return response()->json([
+            'data' => $data,
+            'nomorSurat' => $nomorSurat,
+            'cost_center' => $cost_center
+        ]);
+    }
+
+    public function exportWord(Request $request)
+    {
+        $companyId = $request->company_id;
+        $kompartemenId = $request->kompartemen_id;
+        $departemenId = $request->departemen_id;
+
+        // Get data as in index()
+        $unitKerja = '-';
+        $jabatanUnitKerja = '';
+        $unitKerjaName = '';
+        $latestPeriodeObj = Periode::latest()->first();
+        $latestPeriode = $latestPeriodeObj ? $latestPeriodeObj->definisi : '-';
+        $cost_center = '';
+        $latestPeriodeYear = $latestPeriodeObj ? date('Y', strtotime($latestPeriodeObj->created_at)) : null;
+        $nomorSurat = 'XXX'; // Example, replace with your logic
+
+        if ($departemenId) {
+            $departemen = Departemen::find($departemenId);
+            $displayName = $departemen ? $departemen->nama : '';
+            $displayName = preg_replace('/[^\P{C}\n]+/u', '', $displayName); // Remove control chars
+            if (preg_match('/^Dept\.\s*/', $displayName)) {
+                $displayName = preg_replace('/^Dept\.\s*/', '', $displayName);
+                $unitKerja = 'Departemen ' . $displayName;
+            } elseif (preg_match('/^Dep\.\s*/', $displayName)) {
+                $displayName = preg_replace('/^Dep\.\s*/', '', $displayName);
+                $unitKerja = 'Departemen ' . $displayName;
+            } else {
+                $unitKerja = $displayName;
+            }
+            $unitKerja = $this->sanitizeForDocx($unitKerja);
+            $unitKerjaName = $this->sanitizeForDocx($displayName);
+            $jabatanUnitKerja = 'VP';
+            $penomoranUAR = PenomoranUAR::where('unit_kerja_id', $departemenId)
+                ->whereNull('deleted_at')
+                ->latest()
+                ->first();
+            $nomorSurat = $penomoranUAR->number ?? 'XXX (Belum terdaftar)';
+            $cost_center = $penomoranUAR->departemen->cost_center;
+        } elseif ($kompartemenId) {
+            $kompartemen = Kompartemen::find($kompartemenId);
+            $displayName = $kompartemen ? $kompartemen->nama : '';
+            $displayName = preg_replace('/[^\P{C}\n]+/u', '', $displayName); // Remove control chars
+            if (preg_match('/^Komp\.\s*/', $displayName)) {
+                $displayName = preg_replace('/^Komp\.\s*/', '', $displayName);
+                $unitKerja = 'Kompartemen ' . $displayName;
+            } elseif (preg_match('/^Fungs\.\s*/', $displayName)) {
+                $displayName = preg_replace('/^Fungs\.\s*/', '', $displayName);
+                $unitKerja = 'Fungsional ' . $displayName;
+            } else {
+                $unitKerja = $displayName;
+            }
+            $unitKerja = $this->sanitizeForDocx($unitKerja);
+            $unitKerjaName = $this->sanitizeForDocx($displayName);
+            $jabatanUnitKerja = 'SVP';
+            $penomoranUAR = PenomoranUAR::where('unit_kerja_id', $kompartemenId)
+                ->whereNull('deleted_at')
+                ->latest()
+                ->first();
+            $nomorSurat = $penomoranUAR->number ?? 'XXX (Belum terdaftar)';
+            $cost_center = $penomoranUAR->kompartemen->cost_center;
+        } elseif ($companyId) {
+            $company = Company::where('company_code', $companyId)->first();
+            $displayName = $company ? $company->nama : '-';
+            $displayName = preg_replace('/[^\P{C}\n]+/u', '', $displayName); // Remove control chars
+            $unitKerja = $this->sanitizeForDocx($displayName);
+            $unitKerjaName = $this->sanitizeForDocx($displayName);
+            $jabatanUnitKerja = 'Direktur';
+            $cost_center = 'Tidak ada Cost Center untuk Level Perusahaan';
+        }
+
+        // dd($unitKerja, $unitKerjaName, $jabatanUnitKerja, $latestPeriode, $nomorSurat);
+
+        // $query = JobRole::query()
+        //     ->with(['NIKJobRole' => function ($q) {
+        //         $q->whereNull('deleted_at')->where('is_active', true);
+        //     }]);
+        // if ($companyId) $query->where('company_id', $companyId);
+        // if ($kompartemenId) $query->where('kompartemen_id', $kompartemenId);
+        // if ($departemenId) $query->where('departemen_id', $departemenId);
+
+        // $jobRoles = $query->get();
+        $query = NIKJobRole::query()
+            ->with([
+                'jobRole.company',
+                'jobRole.kompartemen',
+                'jobRole.departemen',
+                'userGeneric' => function ($q) use ($latestPeriodeObj) {
+                    $q->where('periode_id', $latestPeriodeObj->id);
+                },
+                'userNIK' => function ($q) use ($latestPeriodeObj) {
+                    $q->whereHas('userDetail', function ($q2) {
+                        $q2->whereNull('deleted_at');
+                    })->where('periode_id', $latestPeriodeObj->id);
+                }
+            ])
+            ->whereNull('deleted_at')
+            ->where('is_active', true)
+            ->where('periode_id', $latestPeriodeObj->id);
+
+        if ($companyId) {
+            $query->whereHas('jobRole', function ($q) use ($companyId) {
+                $q->where('company_id', $companyId);
+            });
+        }
+        if ($kompartemenId) {
+            $query->whereHas('jobRole', function ($q) use ($kompartemenId) {
+                $q->where('kompartemen_id', $kompartemenId);
+            });
+        }
+        if ($departemenId) {
+            $query->whereHas('jobRole', function ($q) use ($departemenId) {
+                $q->where('departemen_id', $departemenId);
+            });
+        }
+
+        // if ($departemenId) {
+        //     $nomorSurat = PenomoranUAR::where('unit_kerja_id', $departemenId)
+        //         ->whereNull('deleted_at')
+        //         ->latest()
+        //         ->first()
+        //         ->number ?? 'XXX (Belum terdaftar)';
+        // } elseif ($kompartemenId) {
+        //     $nomorSurat = PenomoranUAR::where('unit_kerja_id', $kompartemenId)
+        //         ->whereNull('deleted_at')
+        //         ->latest()
+        //         ->first()
+        //         ->number ?? 'XXX (Belum terdaftar)';
+        // }
+
+        $nikJobRoles = $query->get();
+
+        $jumlahAwalUser = $nikJobRoles->filter(function ($nikJobRole) {
+            return $nikJobRole->userGeneric || $nikJobRole->userNIK;
+        })->count();
+
+        // Prepare PhpWord
+        $phpWord = new PhpWord();
+        $section = $phpWord->addSection();
+
+        // Set header for all pages
+        $header = $section->addHeader();
+
+        // Header Table (Logo + Title + Info)
+        $headerTable = $header->addTable(['borderSize' => 6, 'borderColor' => '000000']);
+        // $headerTable = $header->addTable(['borderSize' => 6, 'borderColor' => '000000', 'cellMargin' => 80]);
+        $headerTable->addRow();
+
+        $headerTable->addCell(2000, ['valign' => 'center'])->addImage(
+            public_path('logo_pupuk_indonesia.png'),
+            ['width' => 80, 'height' => 40, 'alignment' => Jc::CENTER]
+        );
+        $headerTable->addCell(4500, ['gridSpan' => 2, 'valign' => 'center'])->addText(
+            'REVIEW USER ID DAN OTORISASI',
+            ['bold' => true, 'size' => 10],
+            ['alignment' => Jc::CENTER, 'space' => ['after' => 0]]
+        );
+        // Add a single row with a cell that spans 2 columns, containing a nested table for the 3 rows (Nomor, Periode, Hal. ke)
+        $nestedTable = $headerTable->addCell(2000, ['gridSpan' => 2, 'valign' => 'center',])->addTable([
+            'borderSize' => 0,
+            'borderColor' => 'FFFFFF',
+        ]);
+        // Row 1: Nomor
+        $nestedTable->addRow();
+        $nestedTable->addCell(1000, [
+            'valign' => 'center',
+            'borderBottomSize' => 6,
+            'borderBottomColor' => '000000',
+            'borderRightSize' => 6,
+            'borderRightColor' => '000000',
+        ])->addText('Nomor', ['size' => 8]);
+        $nestedTable->addCell(2250, [
+            'valign' => 'center',
+            'borderBottomSize' => 6,
+            'borderBottomColor' => '000000',
+        ])->addText('PI-TIN-UAR-' . $latestPeriodeYear . '-' . $nomorSurat, ['size' => 8]);
+
+        // Row 2: Periode
+        $nestedTable->addRow();
+        $nestedTable->addCell(1000, [
+            'valign' => 'center',
+            'borderBottomSize' => 6,
+            'borderBottomColor' => '000000',
+            'borderRightSize' => 6,
+            'borderRightColor' => '000000',
+        ])->addText('Periode', ['size' => 8]);
+        $nestedTable->addCell(2250, [
+            'valign' => 'center',
+            'borderBottomSize' => 6,
+            'borderBottomColor' => '000000',
+        ])->addText($latestPeriode, ['size' => 8]);
+
+        // Row 3: Hal. ke
+        $nestedTable->addRow();
+        $nestedTable->addCell(1000, [
+            'valign' => 'center',
+            'borderRightSize' => 6,
+            'borderRightColor' => '000000',
+        ])->addText('Hal. ke', ['size' => 8]);
+        $nestedTable->addCell(2250, [
+            'valign' => 'center',
+        ])->addPreserveText('{PAGE} dari {NUMPAGES}', ['size' => 8], ['alignment' => Jc::START]);
+
+        // (No need to add the header table to the section body)
+        $header->addTextBreak(1);
+        // $section->addTextBreak(1);
+
+        // Review Table
+        $reviewTable = $section->addTable(['borderSize' => 6, 'borderColor' => '000000', 'cellMargin' => 80]);
+        // First row with cellMargin
+        $reviewTable->addRow();
+        $reviewTable->addCell(12000, [
+            'gridSpan' => 2,
+            'bgColor' => 'D9E1F2',
+            'valign' => 'center'
+        ])->addText(
+            'DOKUMEN REVIEW USER ID DAN OTORISASI',
+            ['bold' => true, 'color' => '000000'],
+            ['alignment' => Jc::CENTER, 'space' => ['after' => 0]]
+        );
+        // Next rows without cellMargin
+        $reviewTable->addRow();
+        $reviewTable->addCell(4000)->addText('Aset Informasi', ['size' => 8], ['space' => ['after' => 0]]);
+        $reviewTable->addCell(8000)->addText('User ID SAP', ['size' => 8], ['space' => ['after' => 0]]);
+        $reviewTable->addRow();
+        $reviewTable->addCell(4000)->addText('Unit Kerja', ['size' => 8], ['space' => ['after' => 0]]);
+        $reviewTable->addCell(8000)->addText($unitKerja ? "$unitKerja" : '-', ['size' => 8], ['space' => ['after' => 0]]);
+        $reviewTable->addRow();
+        $reviewTable->addCell(4000)->addText('Cost Center', ['size' => 8], ['space' => ['after' => 0]]);
+        $reviewTable->addCell(8000)->addText($cost_center ? $cost_center : '-', ['size' => 8], ['space' => ['after' => 0]]);
+        $reviewTable->addRow();
+        $reviewTable->addCell(4000)->addText('Jumlah Awal User', ['size' => 8], ['space' => ['after' => 0]]);
+        $reviewTable->addCell(8000)->addText($jumlahAwalUser, ['italic' => true, 'size' => 8], ['space' => ['after' => 0]]);
+        $reviewTable->addRow();
+        $reviewTable->addCell(4000)->addText('Jumlah User Dihapus', ['size' => 8], ['space' => ['after' => 0]]);
+        $reviewTable->addCell(8000)->addText('', ['size' => 8], ['space' => ['after' => 0]]);
+        $reviewTable->addRow();
+        $reviewTable->addCell(4000)->addText('Jumlah User Baru', ['size' => 8], ['space' => ['after' => 0]]);
+        $reviewTable->addCell(8000)->addText('', ['size' => 8], ['space' => ['after' => 0]]);
+        $reviewTable->addRow();
+        $reviewTable->addCell(4000)->addText('Jumlah Akhir User', ['size' => 8], ['space' => ['after' => 0]]);
+        $reviewTable->addCell(8000)->addText('', ['size' => 8], ['space' => ['after' => 0]]);
+
+        $section->addTextBreak(1);
+
+        // Job Role Table
+        $table = $section->addTable(['borderSize' => 6, 'borderColor' => '000000', 'cellMargin' => 80]);
+        $table->addRow();
+        $table->addCell(12000, [
+            'gridSpan' => 8,
+            'bgColor' => 'D9E1F2',
+            'valign' => 'center'
+        ])->addText(
+            'SUMMARY USER ACCESS REVIEW',
+            ['bold' => true, 'color' => '000000', 'size' => 8],
+            ['alignment' => Jc::CENTER, 'space' => ['after' => 0]]
+        );
+        $table->addRow();
+        $table->addCell(750, ['bgColor' => 'D9E1F2'])->addText('No', ['bold' => true, 'color' => '000000', 'size' => 8], ['alignment' => Jc::CENTER, 'space' => ['after' => 0]]);
+        $table->addCell(3000, ['bgColor' => 'D9E1F2'])->addText('User ID', ['bold' => true, 'color' => '000000', 'size' => 8], ['alignment' => Jc::CENTER, 'space' => ['after' => 0]]);
+        $table->addCell(3000, ['bgColor' => 'D9E1F2'])->addText('Nama', ['bold' => true, 'color' => '000000', 'size' => 8], ['alignment' => Jc::CENTER, 'space' => ['after' => 0]]);
+        $table->addCell(3000, ['bgColor' => 'D9E1F2'])->addText('Job Role', ['bold' => true, 'color' => '000000', 'size' => 8], ['alignment' => Jc::CENTER, 'space' => ['after' => 0]]);
+        $table->addCell(1000, ['bgColor' => 'D9E1F2'])->addText('NIK', ['bold' => true, 'color' => '000000', 'size' => 8], ['alignment' => Jc::CENTER, 'space' => ['after' => 0]]);
+        $table->addCell(1750, ['bgColor' => 'D9E1F2'])->addText('Tetap', ['bold' => true, 'color' => '000000', 'size' => 8], ['alignment' => Jc::CENTER, 'space' => ['after' => 0]]);
+        $table->addCell(1750, ['bgColor' => 'D9E1F2'])->addText('Berubah', ['bold' => true, 'color' => '000000', 'size' => 8], ['alignment' => Jc::CENTER, 'space' => ['after' => 0]]);
+        $table->addCell(2000, ['bgColor' => 'D9E1F2'])->addText('Keterangan', ['bold' => true, 'color' => '000000', 'size' => 8], ['alignment' => Jc::CENTER, 'space' => ['after' => 0]]);
+
+        $no = 1;
+        // foreach ($jobRoles as $jobRole) {
+        //     foreach ($jobRole->NIKJobRole as $nikJobRole) {
+        //         $table->addRow();
+        //         $table->addCell(750, ['valign' => 'center'])->addText(
+        //             $no++,
+        //             ['size' => 8],
+        //             ['space' => ['after' => 0], 'alignment' => Jc::CENTER]
+        //         );
+        //         $table->addCell(3000, ['valign' => 'center'])->addText($nikJobRole->nik ?? '-', ['size' => 8], ['space' => ['after' => 0]]);
+        //         $table->addCell(3000, ['valign' => 'center'])->addText(
+        //             $nikJobRole->userGeneric
+        //                 ? $nikJobRole->userGeneric->user_profile
+        //                 : ($nikJobRole->userNIK->userDetail->nama ?? '-'),
+        //             ['size' => 8],
+        //             ['space' => ['after' => 0]]
+        //         );
+        //         $table->addCell(3000, ['valign' => 'center'])->addText($this->sanitizeForDocx($jobRole->nama ?? '-'), ['size' => 8], ['space' => ['after' => 0]]);
+        //         $table->addCell(1500, ['valign' => 'center'])->addText('', ['size' => 8], ['space' => ['after' => 0]]);
+        //         $table->addCell(1500, ['valign' => 'center'])->addText('X', ['size' => 12, 'color' => 'A6A6A6'], ['space' => ['after' => 0], 'alignment' => Jc::CENTER]);
+        //         $table->addCell(1500, ['valign' => 'center'])->addText('-', ['size' => 8, 'color' => 'A6A6A6'], ['space' => ['after' => 0], 'alignment' => Jc::CENTER]);
+        //         $table->addCell(2000, ['valign' => 'center'])->addText(
+        //             'Apabila ada (perubahan job function/nama/nik/Penonaktifan)',
+        //             ['size' => 8, 'color' => 'A6A6A6'],
+        //             [
+        //                 'space' => ['after' => 0],
+        //                 'wrap' => true,
+        //             ]
+        //         );
+        //     }
+        // }
+
+        // Loop through NIKJobRoles and add rows to the table
+        foreach ($nikJobRoles as $nikJobRole) {
+            if ($nikJobRole->userGeneric || $nikJobRole->userNIK) {
+                $jobRole = $nikJobRole->jobRole;
+                $table->addRow();
+                $table->addCell(750, ['valign' => 'center'])->addText(
+                    $no++,
+                    ['size' => 8],
+                    ['space' => ['after' => 0], 'alignment' => Jc::CENTER]
+                );
+                $table->addCell(3000, ['valign' => 'center'])->addText($nikJobRole->nik ?? '-', ['size' => 8], ['space' => ['after' => 0]]);
+                $table->addCell(3000, ['valign' => 'center'])->addText(
+                    $nikJobRole->userGeneric
+                        ? $nikJobRole->userGeneric->user_profile
+                        : ($nikJobRole->userNIK && $nikJobRole->userNIK->userDetail ? $nikJobRole->userNIK->userDetail->nama : '-'),
+                    ['size' => 8],
+                    ['space' => ['after' => 0]]
+                );
+                $table->addCell(3000, ['valign' => 'center'])->addText($this->sanitizeForDocx($jobRole->nama ?? '-'), ['size' => 8], ['space' => ['after' => 0]]);
+                $table->addCell(3000, ['valign' => 'center'])->addText(
+                    $nikJobRole->userGeneric
+                        ? $nikJobRole->userGeneric->nik
+                        : ($nikJobRole->userNIK ? $nikJobRole->userNIK->user_code : '-'),
+                    ['size' => 8],
+                    ['space' => ['after' => 0]]
+                );
+                $table->addCell(1500, ['valign' => 'center'])->addText('', ['size' => 8], ['space' => ['after' => 0]]);
+                $table->addCell(1500, ['valign' => 'center'])->addText('', ['size' => 8], ['space' => ['after' => 0]]);
+                $table->addCell(2000, ['valign' => 'center'])->addText(
+                    'Apabila ada (perubahan job function/nama/nik/Penonaktifan)',
+                    ['size' => 8, 'color' => 'A6A6A6'],
+                    [
+                        'space' => ['after' => 0],
+                        'wrap' => true,
+                    ]
+                );
+            }
+        }
+
+        // If no data row was added, add an empty row
+        if ($no === 1) {
+            $table->addRow();
+            $table->addCell(750, ['valign' => 'center'])->addText('1.', ['size' => 8], ['alignment' => Jc::CENTER]);
+            $table->addCell(3000, ['valign' => 'center'])->addText('-', ['size' => 8]);
+            $table->addCell(3000, ['valign' => 'center'])->addText('-', ['size' => 8]);
+            $table->addCell(3000, ['valign' => 'center'])->addText('-', ['size' => 8]);
+            $table->addCell(1000, ['valign' => 'center'])->addText('-', ['size' => 8], ['alignment' => Jc::CENTER]);
+            $table->addCell(1750, ['valign' => 'center'])->addText('-', ['size' => 8]);
+            $table->addCell(1750, ['valign' => 'center'])->addText('-', ['size' => 8]);
+            $table->addCell(2000, ['valign' => 'center'])->addText('-', ['size' => 8]);
+        }
+
+        // Approval Table (Persetujuan)
+        $section->addTextBreak(1);
+
+        $approvalTable = $section->addTable(['borderSize' => 6, 'borderColor' => '000000', 'cellMargin' => 80]);
+
+        // Header row
+        $approvalTable->addRow();
+        $approvalTable->addCell(5000, ['bgColor' => 'D9E1F2', 'gridSpan' => 2])->addText('Persetujuan', ['bold' => true], ['space' => ['after' => 0]]);
+        $approvalTable->addCell(2500, ['bgColor' => 'D9E1F2'])->addText('Tanda Tangan', ['bold' => true], ['space' => ['after' => 0]]);
+        $approvalTable->addCell(2500, ['bgColor' => 'D9E1F2'])->addText('Tanggal', ['bold' => true], ['space' => ['after' => 0]]);
+
+        // Disiapkan oleh
+        $approvalTable->addRow();
+        $approvalTable->addCell(null, ['gridSpan' => 4])->addText('Disiapkan oleh:', ['bold' => true, 'size' => 8], ['space' => ['after' => 0]]);
+
+        // // System Administrator
+        $approvalTable->addRow();
+        $approvalTable->addCell(2500)->addText('System Administrator', ['size' => 8], ['space' => ['after' => 0]]);
+        $approvalTable->addCell(2500)->addText('Deny Pratama', ['size' => 8], ['space' => ['after' => 0]]);
+        $approvalTable->addCell(2500)->addText('', ['size' => 8], ['space' => ['after' => 0]]);
+        $approvalTable->addCell(2500)->addText('', ['size' => 8], ['space' => ['after' => 0]]);
+
+        // // Functional Modul Sales & Distribution (SD)
+        $approvalTable->addRow();
+        $approvalTable->addCell(2500)->addText('Functional Modul ....', ['size' => 8], ['space' => ['after' => 0]]);
+        $approvalTable->addCell(2500)->addText('', ['size' => 8], ['space' => ['after' => 0]]);
+        $approvalTable->addCell(2500)->addText('', ['size' => 8], ['space' => ['after' => 0]]);
+        $approvalTable->addCell(2500)->addText('', ['size' => 8], ['space' => ['after' => 0]]);
+
+        // Diverifikasi oleh
+        $approvalTable->addRow();
+        $approvalTable->addCell(null, ['gridSpan' => 4])->addText('Diverifikasi oleh:', ['bold' => true, 'size' => 8], ['space' => ['after' => 0]]);
+
+        // VP Operasional Sistem TI
+        $approvalTable->addRow();
+        $approvalTable->addCell(2500)->addText('VP Operasional Sistem TI', ['size' => 8], ['space' => ['after' => 0]]);
+        $approvalTable->addCell(2500)->addText('Abdul Muhyi Marakarma', ['size' => 8], ['space' => ['after' => 0]]);
+        $approvalTable->addCell(2500)->addText('', ['size' => 8], ['space' => ['after' => 0]]);
+        $approvalTable->addCell(2500)->addText('', ['size' => 8], ['space' => ['after' => 0]]);
+
+        // VP Dept. Strategi & Evaluasi Kinerja
+        $approvalTable->addRow();
+        $approvalTable->addCell(2500)->addText($jabatanUnitKerja . ' ' . $unitKerjaName, ['size' => 8], ['space' => ['after' => 0]]);
+        $approvalTable->addCell(2500)->addText('', ['size' => 8], ['space' => ['after' => 0]]);
+        $approvalTable->addCell(2500)->addText('', ['size' => 8], ['space' => ['after' => 0]]);
+        $approvalTable->addCell(2500)->addText('', ['size' => 8], ['space' => ['after' => 0]]);
+
+        // Output
+        // $fileName = 'Review UAR - ' . $unitKerja . ' - ' . date('Ymd') . '.docx';
+        // $path = storage_path('app/public/' . $fileName);
+        // $phpWord->save($path, 'Word2007', true);
+
+        // return response()->download($path, $fileName, [
+        //     'Content-Type' => 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+        //     'Content-Disposition' => 'attachment; filename="' . $fileName . '"',
+        // ])->deleteFileAfterSend(true);
+        $fileName = 'PI-TIN-UAR-' . $latestPeriodeYear . '-' . $nomorSurat . '_' . $unitKerja . ' ' . $latestPeriodeYear .  '.docx';
+        $filePath = storage_path('app/public/' . $fileName);
+
+        // Save using IOFactory
+        $objWriter = \PhpOffice\PhpWord\IOFactory::createWriter($phpWord, 'Word2007');
+        $objWriter->save($filePath);
+
+        // Set headers for download
+        header("Expires: Mon, 1 Apr 1974 05:00:00 GMT");
+        header("Last-Modified: " . gmdate("D, d M Y H:i:s") . " GMT");
+        header("Cache-Control: no-cache, must-revalidate");
+        header("Pragma: no-cache");
+        header('Content-type: application/vnd.openxmlformats-officedocument.wordprocessingml.document');
+        header("Content-Disposition: attachment; filename=\"" . $fileName . "\"");
+
+        // Output file and delete after send
+        readfile($filePath);
+        unlink($filePath);
+        exit;
+    }
+
+    private function sanitizeForDocx($string)
+    {
+        // // Remove control characters except newline and tab
+        // $string = preg_replace('/[^\P{C}\n\t]+/u', '', $string);
+        // // Convert to UTF-8 if not already
+        // $string = mb_convert_encoding($string, 'UTF-8', 'UTF-8');
+        // // Encode XML special chars
+        // $string = htmlspecialchars($string, ENT_QUOTES | ENT_XML1, 'UTF-8');
+
+        $string = str_replace('&', 'dan', $string);
+        return $string;
+    }
+}

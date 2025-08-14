@@ -1,0 +1,293 @@
+/* Sidebar and Content Container */
+#app {
+    display: flex;
+    flex-direction: row;
+    height: 100dvh;
+    /* modern browsers */
+    height: calc(var(--vh, 1vh) * 100);
+    /* fallback via JS already in app.blade */
+}
+
+/* Main Content Area */
+.flex-grow-1 {
+    padding: 20px;
+    flex-grow: 1;
+    overflow-y: auto;
+    /* keep visible scroll for content */
+}
+
+#notification {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 1050;
+    max-width: 300px;
+    opacity: 0;
+    transition: opacity 0.5s ease;
+}
+
+#notification.show {
+    opacity: 1;
+}
+
+/* Custom styling for Access Matrix responsiveness */
+.table th,
+.table td {
+    padding: 0.5rem;
+    font-size: 0.9rem;
+}
+
+/* Sidebar styling */
+#sidebar {
+    /* LEBAR SIDEBAR */
+    width: 350px;
+    height: 100%;
+    /* take full #app height */
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    background-color: #135029;
+    /* background-color: #343a40; */
+    color: #fff;
+    transition: transform .3s ease;
+}
+
+/* Scrollable area inside the sidebar */
+.sidebar-scroll {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+    overflow-x: hidden;
+    position: relative;
+    padding-right: 0;
+    /* no gutter since we hide scrollbar */
+    scrollbar-gutter: auto;
+    /* don’t reserve space */
+}
+
+/* Hide scrollbar but keep scroll functionality */
+.sidebar-scroll::-webkit-scrollbar {
+    width: 0;
+    height: 0;
+}
+
+.sidebar-scroll {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+}
+
+/* Make the UL a flex column so the spacer can live at the bottom naturally */
+.sidebar-scroll>ul {
+    display: flex;
+    flex-direction: column;
+    min-height: 100%;
+    margin: 0;
+    padding: 0 0 0 0;
+    /* keep your existing padding if any */
+}
+
+/* Spacer: when content is short, it stays at the bottom (margin-top:auto).
+   When content overflows, it becomes a fixed-height bumper at the end of the scroll,
+   so the last item stops above the bottom by this height. */
+.sidebar-spacer {
+    margin-top: auto;
+    height: var(--sidebar-spacer, 96px);
+    /* adjust to taste */
+    flex: 0 0 auto;
+    pointer-events: none;
+}
+
+/* Sidebar and Toggle Button Behavior on Mobile */
+@media (max-width: 768px) {
+    #sidebar {
+        position: fixed;
+        top: 0;
+        left: 0;
+        transform: translateX(-100%);
+        z-index: 1000;
+        height: 100vh;
+    }
+
+    #sidebar.show {
+        transform: translateX(0);
+        /* Slide in when the "show" class is added */
+    }
+
+    /* Display the toggle button on mobile screens */
+    #sidebarToggle {
+        display: inline-block;
+        position: fixed;
+        top: 10px;
+        left: 10px;
+        z-index: 1100;
+    }
+
+    .content-padding {
+        padding: 1em;
+        min-height: 100vh;
+    }
+
+    .content-card {
+        background-color: white;
+        border-radius: 15px;
+        min-height: 92vh;
+        padding-top: 0.75em;
+    }
+}
+
+/* NEW CSS TESTING */
+.top-bar {
+    background: rgb(241 245 249);
+    color: black;
+    padding: 10px 0 0 20px;
+    margin-bottom: 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    top: 0;
+    width: 100%;
+    z-index: 1000;
+    border-radius: 25px;
+}
+
+/* Breadcrumb */
+.breadcrumb {
+    margin-bottom: 0;
+    color: black;
+}
+
+/* Notification & Profile Dropdowns */
+.dropdown-menu {
+    width: 250px;
+    border-radius: 8px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+}
+
+.dropdown-menu .dropdown-item {
+    padding: 10px;
+}
+
+/* Notification UI */
+.notification-card {
+    padding: 10px;
+}
+
+.divider {
+    height: 1px;
+    background: #ccc;
+    margin: 5px 0;
+}
+
+/* Profile */
+.profile-pic {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+}
+
+/* NEW CSS TESTING */
+
+.error-row {
+    background-color: #dc3545 !important;
+    color: white !important;
+}
+
+.warning-row {
+    background-color: #ffc107 !important;
+    color: black !important;
+}
+
+/* Dropdown content */
+.dropdown-content {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: none;
+    /* Hidden by default */
+}
+
+/* Expanded state for dropdown content */
+.dropdown-content.expanded {
+    display: block;
+    /* Ensure it's visible when expanded */
+}
+
+/* Individual dropdown items */
+.dropdown-content li {
+    padding-left: 20px;
+    /* Indentation for child items */
+}
+
+.nav-link.active {
+    background: rgb(241 245 249) !important;
+    color: black !important;
+    border-radius: 0;
+    border-top-left-radius: 80px 80px;
+    border-bottom-left-radius: 80px 80px;
+    font-weight: bold;
+}
+
+.nav-item {
+    margin-bottom: 5px;
+}
+
+.nav-link {
+    transition: all 0.3s ease;
+    padding-right: 10px;
+}
+
+.nav-link:hover,
+.nav-link.active:hover {
+    background-color: #0067C0 !important;
+    /* background-color: rgba(0, 132, 255, 0.96) !important; */
+    /* Optional hover effect */
+    color: white !important;
+    border-radius: 0;
+    border-top-left-radius: 80px 80px;
+    border-bottom-left-radius: 80px 80px;
+    /* Ensure text is visible on hover */
+}
+
+.content-padding {
+    padding-top: 1em;
+    padding-inline-start: 0;
+    padding-bottom: 0;
+    min-height: 100vh;
+}
+
+.content-card {
+    background: rgb(241 245 249);
+    border-radius: 30px;
+    min-height: 92vh;
+}
+
+/* Sidebar dropdown caret: align right and rotate when open */
+#sidebar .nav-link.dropdown-toggle {
+    display: flex;
+    /* row layout */
+    align-items: center;
+    width: 100%;
+}
+
+#sidebar .nav-link.dropdown-toggle .me-auto {
+    margin-inline-end: auto !important;
+    /* pushes caret to the far right */
+}
+
+/* Use Bootstrap's built-in caret (::after) */
+#sidebar .nav-link.dropdown-toggle::after {
+    margin-inline-start: auto;
+    /* keep on the far right */
+    transition: transform .2s ease;
+    border-top-color: currentColor;
+    /* caret color follows text color */
+    opacity: .9;
+    transform: rotate(-90deg);
+    /* default closed: -90deg */
+}
+
+/* Rotate when open; works for SSR (.show) and runtime ([aria-expanded=true]) */
+#sidebar .dropdown:has(.dropdown-content.show)>.nav-link.dropdown-toggle::after,
+#sidebar .nav-link.dropdown-toggle[aria-expanded="true"]::after {
+    transform: rotate(0deg);
+}

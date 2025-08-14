@@ -2,85 +2,103 @@
 
 @section('content')
     <div class="container-fluid">
-        <h1>Relationship > Job Roles - Composite Roles</h1>
+        @if ($errors->any())
+            <div class="alert alert-danger">
+                <ul class="mb-0">
 
-        {{-- <button class="btn btn-primary mb-3" id="createCompositeRole">Create New Relationship</button> --}}
-        <a href="{{ route('job-composite.create') }}" class="btn btn-primary mb-3">
-            <i class="bi bi-plus"></i> Create New Relationship
-        </a>
+                    @if (session('status'))
+                        <div class="alert alert-success">{{ session('status') }}</div>
+                    @endif
 
-        @if (session('status'))
-            <div class="alert alert-success">{{ session('status') }}</div>
-        @endif
+                    <!-- Success Message -->
+                    @if (session('success'))
+                        <div class="alert alert-success">
+                            <h4>Success:</h4>
+                            {{ session('success') }}
+                        </div>
+                    @endif
 
-        <!-- Success Message -->
-        @if (session('success'))
-            <div class="alert alert-success">
-                <h4>Success:</h4>
-                {{ session('success') }}
+                    @foreach ($errors->all() as $message)
+                        <li>{{ $message }}</li>
+                    @endforeach
+                </ul>
             </div>
         @endif
 
-        <!-- Dropdowns for Filtering -->
-        <div class="form-group">
-            <label for="companyDropdown">Select Company</label>
-            <select id="companyDropdown" class="form-control select2">
-                <option value="">-- Select Company --</option>
-                @foreach ($companies as $company)
-                    <option value="{{ $company->id }}">{{ $company->name }}</option>
-                @endforeach
-            </select>
+        <div class="card shadow-sm">
+            <div class="card-header">
+                <h2>Relationship Job Roles - Composite Roles</h2>
+            </div>
+            <div class="card-body">
+
+                {{-- <button class="btn btn-primary mb-3" id="createCompositeRole">Create New Relationship</button> --}}
+                <a href="{{ route('job-composite.create') }}" class="btn btn-primary mb-3">
+                    <i class="bi bi-plus"></i> Buat Relationship Baru
+                </a>
+
+                <!-- Dropdowns for Filtering -->
+                <div class="form-group">
+                    <label for="companyDropdown">Perusahaan</label>
+                    <select id="companyDropdown" class="form-control select2">
+                        <option value="">-- Pilih Perusahaan --</option>
+                        @foreach ($companies as $company)
+                            <option value="{{ $company->company_code }}">{{ $company->nama }}</option>
+                        @endforeach
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="kompartemenDropdown">Kompartemen</label>
+                    <select id="kompartemenDropdown" class="form-control select2" disabled>
+                        <option value="">-- Pilih Kompartemen --</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="departemenDropdown">Departemen</label>
+                    <select id="departemenDropdown" class="form-control select2" disabled>
+                        <option value="">-- Pilih Departemen --</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="jobRoleDropdown">Job Role</label>
+                    <select id="jobRoleDropdown" class="form-control select2" disabled>
+                        <option value="">-- Pilih Job Role --</option>
+                    </select>
+                </div>
+
+                <hr>
+
+                <h3 class="my-2 mt-3">Job Roles - Composite Roles</h3>
+
+                <!-- DataTable -->
+                <table id="composite_roles_table" class="table table-bordered table-striped table-hover cell-border mt-3">
+                    <thead>
+                        <tr>
+                            <th>
+                                <input type="text" id="search_company" class="form-control" placeholder="Search Company">
+                            </th>
+                            <th>
+                                <input type="text" id="search_job_role" class="form-control"
+                                    placeholder="Search Job Role">
+                            </th>
+                            <th>
+                                <input type="text" id="search_composite_role" class="form-control"
+                                    placeholder="Search Composite Role">
+                            </th>
+                            <th rowspan="2">Actions</th>
+                        </tr>
+                        <tr>
+                            <th>Company</th>
+                            <th>Job Role</th>
+                            <th>Composite Role</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
         </div>
-
-        <div class="form-group">
-            <label for="kompartemenDropdown">Select Kompartemen</label>
-            <select id="kompartemenDropdown" class="form-control select2" disabled>
-                <option value="">-- Select Kompartemen --</option>
-            </select>
-        </div>
-
-        <div class="form-group">
-            <label for="departemenDropdown">Select Departemen</label>
-            <select id="departemenDropdown" class="form-control select2" disabled>
-                <option value="">-- Select Departemen --</option>
-            </select>
-        </div>
-
-        <div class="form-group">
-            <label for="jobRoleDropdown">Select Job Role</label>
-            <select id="jobRoleDropdown" class="form-control select2" disabled>
-                <option value="">-- Select Job Role --</option>
-            </select>
-        </div>
-
-        <hr>
-
-        <h3 class="my-2 mt-3">Job Roles - Composite Roles</h3>
-
-        <!-- DataTable -->
-        <table id="composite_roles_table" class="table table-bordered table-striped table-hover cell-border mt-3">
-            <thead>
-                <tr>
-                    <th>
-                        <input type="text" id="search_company" class="form-control" placeholder="Search Company">
-                    </th>
-                    <th>
-                        <input type="text" id="search_job_role" class="form-control" placeholder="Search Job Role">
-                    </th>
-                    <th>
-                        <input type="text" id="search_composite_role" class="form-control"
-                            placeholder="Search Composite Role">
-                    </th>
-                    <th rowspan="2">Actions</th>
-                </tr>
-                <tr>
-                    <th>Company</th>
-                    <th>Job Role</th>
-                    <th>Composite Role</th>
-                </tr>
-            </thead>
-            <tbody></tbody>
-        </table>
     </div>
 
     <!-- Modals -->
@@ -105,17 +123,24 @@
 @section('scripts')
     <script>
         $(document).ready(function() {
-            let masterData = {}; // Store parsed JSON for efficient lookups
+            let masterData = {};
 
             let compositeRolesTable = $('#composite_roles_table').DataTable({
                 processing: true,
                 serverSide: true,
+                orderCellsTop: true,
                 ajax: {
                     url: '/relationship/job-composite/data',
                     data: function(d) {
                         d.search_company = $('#search_company').val();
                         d.search_job_role = $('#search_job_role').val();
                         d.search_composite_role = $('#search_composite_role').val();
+
+                        // dropdown filters
+                        d.filter_company = $('#companyDropdown').val();
+                        d.filter_kompartemen = $('#kompartemenDropdown').val();
+                        d.filter_departemen = $('#departemenDropdown').val();
+                        d.filter_job_role = $('#jobRoleDropdown').val();
                     },
                 },
                 columns: [{
@@ -137,7 +162,6 @@
                         searchable: false
                     },
                 ],
-                responsive: true,
                 searching: false,
                 paging: true,
                 ordering: true,
@@ -145,130 +169,196 @@
                 lengthMenu: [5, 10, 25, 50, 100],
             });
 
-            // Reload table on column search input
+            // Text search inputs
             $('#search_company, #search_job_role, #search_composite_role').on('keyup', function() {
                 compositeRolesTable.draw();
             });
 
-
-            // Fetch JSON data
+            // Load master_data.json and normalize by company_code
+            const userCompanyCode = @json($userCompanyCode);
             $.ajax({
                 url: '/storage/master_data.json',
                 dataType: 'json',
                 success: function(data) {
-                    masterData = data.reduce((acc, company) => {
-                        acc[company.company_id] = company;
-                        return acc;
-                    }, {});
-                    // populateDropdown('#companyDropdown', masterData, 'company_id', 'company_name');
-                    populateDropdown('#companyDropdown', Object.values(masterData), 'company_id',
-                        'company_name');
+                    let working = data || [];
 
+                    if (String(userCompanyCode) !== 'A000') {
+                        working = working.filter(c => String(c.company_id) === String(
+                            userCompanyCode));
+                    }
+
+                    masterData = {};
+                    working.forEach(c => {
+                        masterData[c.company_id] = c; // key by company_id
+                    });
+
+                    // If not super user and exactly one company preselect
+                    if (String(userCompanyCode) !== 'A000' && working.length === 1) {
+                        $('#companyDropdown').val(working[0].company_id).trigger('change');
+                    }
                 },
                 error: function() {
-                    alert('Failed to load master data.');
+                    console.warn('Cannot load master_data.json');
                 }
             });
 
-            // Handle Company dropdown change
+            // On Company change -> fill kompartemen & departemen (both sources)
             $('#companyDropdown').on('change', function() {
-                const companyId = $(this).val();
-                const selectedCompany = masterData[companyId];
+                const code = $(this).val();
                 resetDropdowns(['#kompartemenDropdown', '#departemenDropdown', '#jobRoleDropdown']);
 
-                if (selectedCompany) {
-                    populateDropdown('#kompartemenDropdown', selectedCompany.kompartemen, 'id', 'name');
-                    populateDropdown('#departemenDropdown', selectedCompany.departemen_without_kompartemen,
-                        'id', 'name');
+                if (!code || !masterData[code]) {
+                    compositeRolesTable.draw();
+                    return;
                 }
+                const comp = masterData[code];
+
+                // Kompartemen
+                populateDropdown('#kompartemenDropdown', comp.kompartemen || [], 'kompartemen_id', 'nama');
+
+                // Departemen: union of departemen_without_kompartemen + all departemen from kompartemen
+                let departemenAll = [];
+                if (Array.isArray(comp.departemen_without_kompartemen)) {
+                    departemenAll = departemenAll.concat(comp.departemen_without_kompartemen);
+                }
+                // (comp.kompartemen || []).forEach(k => {
+                //     if (Array.isArray(k.departemen)) {
+                //         departemenAll = departemenAll.concat(k.departemen);
+                //         console.log('Departemen from Kompartemen:', k.departemen);
+                //     }
+                // });
+
+                // de-dup by id
+                const seen = {};
+                departemenAll = departemenAll.filter(d => {
+                    if (seen[d.departemen_id]) {
+                        return false;
+                    }
+                    seen[d.departemen_id] = true;
+                    return true;
+                });
+                populateDropdown('#departemenDropdown', departemenAll, 'departemen_id', 'nama');
+
+                compositeRolesTable.draw();
             });
 
-            // Handle Kompartemen dropdown change
+            // On Kompartemen change -> filter departemen and (NEW) populate job roles that belong directly to kompartemen
             $('#kompartemenDropdown').on('change', function() {
-                const companyId = $('#companyDropdown').val();
-                const kompartemenId = $(this).val();
-                const selectedCompany = masterData[companyId];
-                const kompartemen = selectedCompany.kompartemen.find((k) => k.id == kompartemenId);
+                const code = $('#companyDropdown').val();
+                const kompId = $(this).val();
 
                 resetDropdowns(['#departemenDropdown', '#jobRoleDropdown']);
-                if (kompartemen) {
-                    populateDropdown('#departemenDropdown', kompartemen.departemen, 'id', 'name');
+
+                if (!code || !masterData[code]) {
+                    compositeRolesTable.draw();
+                    return;
                 }
-            });
+                const comp = masterData[code];
 
-            // Handle Departemen dropdown change
-            $('#departemenDropdown').on('change', function() {
-                const companyId = $('#companyDropdown').val();
-                const departemenId = $(this).val();
-                const kompartemenId = $('#kompartemenDropdown').val();
-                const selectedCompany = masterData[companyId];
-                const jobRoles = [];
+                if (kompId) {
+                    const komp = (comp.kompartemen || []).find(k => String(k.kompartemen_id) === String(
+                        kompId));
 
-                if (departemenId) {
-                    let selectedDepartemen;
+                    // Populate departemen under this kompartemen
+                    populateDropdown(
+                        '#departemenDropdown',
+                        (komp && Array.isArray(komp.departemen)) ? komp.departemen : [],
+                        'departemen_id',
+                        'nama'
+                    );
 
-                    // Check if departemen belongs to a kompartemen
-                    if (kompartemenId) {
-                        const selectedKompartemen = selectedCompany.kompartemen?.find((k) => k.id ==
-                            kompartemenId);
-                        selectedDepartemen = selectedKompartemen?.departemen?.find((d) => d.id ==
-                            departemenId);
-                    } else {
-                        // Fallback to departemen_without_kompartemen
-                        selectedDepartemen = selectedCompany.departemen_without_kompartemen?.find((d) => d
-                            .id == departemenId);
+                    // NEW: Populate job roles that are attached directly to the kompartemen (not via departemen)
+                    let kompartemenJobRoles = [];
+                    if (komp) {
+                        if (Array.isArray(komp.job_roles)) {
+                            kompartemenJobRoles = komp.job_roles; // e.g. structure provides job_roles
+                        } else if (Array.isArray(komp.job_roles_without_departemen)) {
+                            kompartemenJobRoles = komp.job_roles_without_departemen; // alternate naming
+                        }
                     }
 
-                    if (selectedDepartemen && selectedDepartemen.job_roles) {
-                        jobRoles.push(...selectedDepartemen.job_roles);
+                    if (kompartemenJobRoles.length) {
+                        populateDropdown('#jobRoleDropdown', kompartemenJobRoles, 'id', 'nama');
+                    } else {
+                        // keep disabled if none
+                        $('#jobRoleDropdown').prop('disabled', true);
                     }
                 } else {
-                    // Populate job_roles_without_relations if no departemen is selected
-                    jobRoles.push(...selectedCompany.job_roles_without_relations || []);
+                    // repopulate union when kompartemen cleared
+                    $('#companyDropdown').trigger('change');
+                    return;
                 }
-
-                console.log('Job Roles:', jobRoles);
-
-                // Populate Job Roles Dropdown
-                populateDropdown('#jobRoleDropdown', jobRoles, 'id', 'name');
+                compositeRolesTable.draw();
             });
 
+            // On Departemen change -> job roles
+            $('#departemenDropdown').on('change', function() {
+                const code = $('#companyDropdown').val();
+                const kompId = $('#kompartemenDropdown').val();
+                const depId = $(this).val();
 
+                resetDropdowns(['#jobRoleDropdown']);
 
-            function reloadTable() {
-                const companyId = $('#companyDropdown').val();
-                const kompartemenId = $('#kompartemenDropdown').val();
-                const departemenId = $('#departemenDropdown').val();
-                const jobRoleId = $('#jobRoleDropdown').val();
+                if (!code || !masterData[code]) {
+                    compositeRolesTable.draw();
+                    return;
+                }
+                const comp = masterData[code];
+                let jobRoles = [];
 
-                compositeRolesTable.ajax.reload(null, false); // Reloads the data without resetting pagination
-            }
+                if (depId) {
+                    // locate departemen under selected kompartemen OR departemen_without_kompartemen
+                    let departemenNode = null;
+                    if (kompId) {
+                        const komp = (comp.kompartemen || []).find(k => String(k.kompartemen_id) === String(
+                            kompId));
+                        departemenNode = komp?.departemen?.find(d => String(d.departemen_id) === String(
+                            depId));
+                    } else {
+                        departemenNode = (comp.departemen_without_kompartemen || []).find(d => String(d
+                            .departemen_id) === String(depId));
+                        if (!departemenNode) {
+                            for (const k of comp.kompartemen || []) {
+                                const found = (k.departemen || []).find(d => String(d.departemen_id) ===
+                                    String(depId));
+                                if (found) {
+                                    departemenNode = found;
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                    if (departemenNode?.job_roles) jobRoles = departemenNode.job_roles;
+                } else {
+                    // no departemen chosen: allow company-level unassigned job roles list if present
+                    jobRoles = comp.job_roles_without_relations || [];
+                }
 
+                populateDropdown('#jobRoleDropdown', jobRoles, 'id', 'nama');
+                compositeRolesTable.draw();
+            });
 
-
-            // Reload DataTable on dropdown changes
-            $('#companyDropdown, #kompartemenDropdown, #departemenDropdown, #jobRoleDropdown').on('change',
-                reloadTable);
-
+            // On Job Role change -> redraw
+            $('#jobRoleDropdown').on('change', function() {
+                compositeRolesTable.draw();
+            });
 
             function populateDropdown(selector, items, valueField, textField) {
-                const dropdown = $(selector);
-                dropdown.empty().append('<option value="">-- Select --</option>');
-
+                const el = $(selector);
+                el.empty().append('<option value="">-- Select --</option>');
                 if (Array.isArray(items) && items.length) {
-                    items.forEach((item) => {
-                        dropdown.append(`<option value="${item[valueField]}">${item[textField]}</option>`);
+                    items.forEach(it => {
+                        el.append(`<option value="${it[valueField]}">${it[textField]}</option>`);
                     });
-                    dropdown.prop('disabled', false);
+                    el.prop('disabled', false);
                 } else {
-                    dropdown.prop('disabled', true);
+                    el.prop('disabled', true);
                 }
             }
 
-            function resetDropdowns(selectors) {
-                selectors.forEach((selector) => {
-                    $(selector).empty().append('<option value="">-- Select --</option>').prop('disabled',
-                        true);
+            function resetDropdowns(list) {
+                list.forEach(sel => {
+                    $(sel).empty().append('<option value="">-- Select --</option>').prop('disabled', true);
                 });
             }
 

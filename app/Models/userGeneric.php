@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Models\Company;
+use App\Models\Periode;
 use App\Models\CostCenter;
 use App\Models\CostPrevUser;
 use App\Models\CostCurrentUser;
@@ -14,17 +15,25 @@ class userGeneric extends Model
 {
     use HasFactory, SoftDeletes;
 
-    protected $table = 'tr_user_ussm_generic';
+    protected $table = 'tr_user_generic';
     protected $primaryKey = 'id';
 
     protected $fillable = [
+        'periode_id',
+        'group',
         'user_code',
         'user_type',
+        'user_profile',
+        'nik',
         'cost_code',
+        'keterangan',
+        'uar_listed',
         'license_type',
-        'group',
+        'last_login',
         'valid_from',
         'valid_to',
+        'flagged',
+        'keterangan_flagged',
         'created_by',
         'updated_by',
         'deleted_by',
@@ -41,14 +50,48 @@ class userGeneric extends Model
     {
         return $this->hasOne(Company::class, 'shortname', 'group');
     }
+    public function userDetail()
+    {
+        return $this->hasOne(UserDetail::class, 'nik', 'nik');
+    }
+
+    // public function kompartemen()
+    // {
+    //     return $this->belongsTo(Kompartemen::class, 'kompartemen_id', 'kompartemen_id');
+    // }
+
+    // public function departemen()
+    // {
+    //     return $this->belongsTo(Departemen::class, 'departemen_id', 'departemen_id');
+    // }
+
+    // public function jobRole()
+    // {
+    //     return $this->belongsTo(JobRole::class, 'job_role_id', 'job_role_id');
+    // }
 
     public function currentUser()
     {
-        return $this->hasOne(CostCurrentUser::class, 'cost_code', 'user_code');
+        return $this->hasOne(CostCurrentUser::class, 'user_code', 'user_code');
     }
 
     public function prevUser()
     {
-        return $this->hasMany(CostPrevUser::class, 'cost_code', 'user_code');
+        return $this->hasMany(CostPrevUser::class, 'user_code', 'user_code');
+    }
+
+    public function periode()
+    {
+        return $this->belongsTo(Periode::class, 'periode_id', 'id');
+    }
+
+    public function userGenericUnitKerja()
+    {
+        return $this->hasOne(UserGenericUnitKerja::class, 'user_cc', 'user_code');
+    }
+
+    public function NIKJobRole()
+    {
+        return $this->hasMany(NIKJobRole::class, 'nik', 'user_code');
     }
 }

@@ -2,9 +2,9 @@
 
 namespace Database\Seeders;
 
-use Carbon\Carbon;
 use App\Models\userNIK;
 use App\Models\UserDetail;
+use Illuminate\Support\Carbon;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\File;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
@@ -58,6 +58,8 @@ class UserNIKSeeder extends Seeder
                     'valid_from' => $validFrom ?? null,
                     'valid_to' => $validTo ?? null,
                     'group' => $user['group'],
+                    'periode_id' => 1,
+                    'last_login' => now()->format('Y-m-d H:i:s'),
                     'created_by' => "Seeder",
                     'updated_by' => "Seeder"
                 ]

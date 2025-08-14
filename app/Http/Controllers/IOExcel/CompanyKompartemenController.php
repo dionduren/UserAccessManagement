@@ -5,22 +5,17 @@ namespace App\Http\Controllers\IOExcel;
 use App\Http\Controllers\Controller;
 
 use App\Models\Company;
-use App\Models\Kompartemen;
-use App\Models\Departemen;
-use App\Models\JobRole;
-use App\Models\CompositeRole;
 
-use App\Imports\CompanyKompartemenImport;
+use App\Imports\CompanyKompartemenPreviewImport;
+use App\Services\CompanyKompartemenService;
 
 use Illuminate\Http\Request;
-use Illuminate\Support\Collection;
-use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Validator;
 
 use Symfony\Component\HttpFoundation\StreamedResponse;
-
-use Maatwebsite\Excel\Facades\Excel;
 use Yajra\DataTables\Facades\DataTables;
+use Maatwebsite\Excel\Facades\Excel;
 
 class CompanyKompartemenController extends Controller
 {
@@ -32,102 +27,111 @@ class CompanyKompartemenController extends Controller
     public function preview(Request $request)
     {
         $request->validate([
-            'excel_file' => 'required|file|mimes:xlsx,xls|max:20480', // Max size of 20MB
+            'excel_file' => 'required|file|mimes:xlsx,xls|max:20480',
         ]);
 
-        // dd($request->file('excel_file')->getPathName());
-        // dd($request->file('excel_file')->getRealPath());
-
-        $filePath = $request->file('excel_file');
-        // $filePath = $request->file('excel_file')->getRealPath();
-
         try {
-            // Load the data using the Excel facade
-            $data = Excel::toCollection(new CompanyKompartemenImport, $filePath)->first();
+            $import = new CompanyKompartemenPreviewImport();
+            Excel::import($import, $request->file('excel_file'));
+            $data = $import->rows;
 
-            // Validate and parse each row
-            $errors = [];
             $parsedData = [];
+            $errors = [];
 
             foreach ($data as $index => $row) {
-                // Custom validation for each row (adjust rules as needed)
                 $validator = Validator::make($row->toArray(), [
                     'company' => 'required|string',
+                    'kompartemen_id' => 'nullable',
                     'kompartemen' => 'nullable|string',
+                    'departemen_id' => 'nullable',
                     'departemen' => 'nullable|string',
                     'job_function' => 'required|string',
-                    'composite_role' => 'required|string'
+                    'composite_role' => 'nullable|string',
                 ]);
 
                 if ($validator->fails()) {
-                    $errorDetails = [
-                        'row' => $index + 1,
-                        'errors' => $validator->errors()->all(),
-                    ];
                     $errors[$index + 1] = $validator->errors()->all();
-
-                    // Log the validation errors with details
-                    Log::error('Validation failed for JobRole-Composite data', $errorDetails);
-                } else {
-                    // Find the company name based on the company code
-                    $company = Company::where('company_code', $row['company'])->first();
-                    $companyName = $company ? $company->name : 'N/A';
-
-                    $kompartemen = $row['kompartemen'] ?? 'None';
-                    $departemen = $row['departemen'] ?? 'None';
-
-                    // Debug if kompartemen or departemen is 'None'
-                    // if (
-                    //     $kompartemen === 'None' || $departemen === 'None'
-                    // ) {
-                    //     dd([
-                    //         'row_index' => $index + 1,
-                    //         'row_data' => $row->toArray(),
-                    //         'kompartemen' => $kompartemen,
-                    //         'departemen' => $departemen,
-                    //     ]);
-                    // }
-
-
-                    // Store validated data along with derived company name for preview
-                    $parsedData[] = [
-                        'company_code' => $row['company'],
-                        'company_name' => $companyName,
-                        'kompartemen' => $row['kompartemen'],
-                        'departemen' => $row['departemen'],
-                        'job_function' => $row['job_function'],
-                        'composite_role' => $row['composite_role'],
-                    ];
+                    Log::error("Validation failed row {$index}", ['errors' => $validator->errors()->all()]);
+                    continue;
                 }
+
+                $company = Company::where('company_code', $row['company'])->first();
+                $parsedData[] = [
+                    'company_code' => $row['company'],
+                    'company_name' => $company->nama ?? null,
+                    'kompartemen_id' => $row['kompartemen_id'] ?? null,
+                    'kompartemen' => $row['kompartemen'] ?? null,
+                    'departemen_id' => $row['departemen_id'] ?? null,
+                    'departemen' => $row['departemen'] ?? null,
+                    'job_function' => $row['job_function'],
+                    'composite_role' => $row['composite_role'],
+                    'status' => $row['status'] ?? ['type' => 'valid', 'message' => '']
+                ];
             }
 
-            if (!($errors) == null) {
-                return redirect()->back()->with('validationErrors', $errors);
+            if ($errors) {
+                return back()->with('validationErrors', $errors);
             }
 
             session(['parsedData' => $parsedData]);
-
             return view('imports.preview.company_kompartemen');
         } catch (\Exception $e) {
-            Log::error('Error during Upload', [
-                'file' => $request->file('excel_file')->getClientOriginalName(),
+            Log::error('Excel Preview Failed', [
                 'message' => $e->getMessage(),
-                'trace' => $e->getTraceAsString(),
+                'trace' => $e->getTraceAsString()
             ]);
-
-            return redirect()->back()->with('error', 'Error during Upload: ' . $e->getMessage());
+            return back()->with('error', 'Error parsing file: ' . $e->getMessage());
         }
     }
+
+    // public function getPreviewData()
+    // {
+    //     $data = session('parsedData');
+
+    //     if (!$data) {
+    //         return response()->json(['error' => 'No preview data found'], 400);
+    //     }
+
+    //     return DataTables::of(collect($data))->make(true);
+    // }
 
     public function getPreviewData()
     {
         $data = session('parsedData');
 
         if (!$data) {
-            return response()->json(['error' => 'No data available for preview.'], 400);
+            // Optionally redirect instead of returning JSON error
+            return redirect()->route('company_kompartemen.upload')->with('error', 'No preview data found. Please upload a file first.');
         }
 
-        return DataTables::of(collect($data))->make(true);
+        return DataTables::of(collect($data))
+            ->addColumn('row_class', function ($row) {
+                if (isset($row['status']) && $row['status']['type'] === 'error') {
+                    return 'error-row';
+                }
+                if (isset($row['status']) && $row['status']['type'] === 'warning') {
+                    return 'warning-row';
+                }
+                return '';
+            })
+            ->addColumn('status_message', function ($row) {
+                return $row['status']['message'] ?? '';
+            })
+            ->addColumn('status_type', function ($row) {
+                if (isset($row['status'])) {
+                    switch ($row['status']['type']) {
+                        case 'error':
+                            return 2;
+                        case 'warning':
+                            return 1;
+                        default:
+                            return 0;
+                    }
+                }
+                return 0;
+            })
+            ->rawColumns(['row_class'])
+            ->make(true);
     }
 
     public function confirmImport()
@@ -135,96 +139,37 @@ class CompanyKompartemenController extends Controller
         $data = session('parsedData');
 
         if (!$data) {
-            Log::debug('Session data not found or empty in confirmImport.');
-            return redirect()->route('company_kompartemen.upload')->with('error', 'No data available for import. Please upload a file first.');
+            return redirect()->route('company_kompartemen.upload')->with('error', 'No data available to import.');
         }
 
         try {
-
             $response = new StreamedResponse(function () use ($data) {
-                $lastUpdate = microtime(true); // Track last time progress was sent
-                $totalRows = count($data);
                 $processed = 0;
+                $total = count($data);
+                $lastUpdate = microtime(true);
 
                 echo json_encode(['progress' => 0]) . "\n";
-
-                // Start output buffering
-                if (!ob_get_level()) {
-                    ob_start();
-                }
-
                 ob_flush();
                 flush();
 
                 foreach ($data as $row) {
-                    $company = Company::where('company_code', $row['company_code'])->first();
-
-                    if (!$company) {
-                        Log::error('Company not found', ['row' => $row]);
-                        continue;
-                    }
-
-                    $kompartemen = null;
-                    $departemen = null;
-
-                    // Create or update Kompartemen and Departemen based on data
-                    if (!$row['kompartemen'] == null && !$row['departemen'] == null) {
-                        $kompartemen = Kompartemen::updateOrCreate(
-                            ['name' => $row['kompartemen'], 'company_id' => $company->id],
-                            ['company_id' => $company->id]
-                        );
-
-                        $departemen = Departemen::updateOrCreate(
-                            ['name' => $row['departemen'], 'company_id' => $company->id, 'kompartemen_id' => $kompartemen->id],
-                            ['company_id' => $company->id, 'kompartemen_id' => $kompartemen->id]
-                        );
-                    } elseif (!$row['departemen'] == null && $row['kompartemen'] == null) {
-                        $departemen = Departemen::updateOrCreate(
-                            ['name' => $row['departemen'], 'company_id' => $company->id],
-                            ['company_id' => $company->id, 'kompartemen_id' => null]
-                        );
-                    } elseif (!$row['kompartemen'] == null && $row['departemen'] == null) {
-                        $kompartemen = Kompartemen::updateOrCreate(
-                            ['name' => $row['kompartemen'], 'company_id' => $company->id],
-                            ['company_id' => $company->id]
-                        );
-                    }
-
-                    // Create or update JobRole
-                    $jobRole = JobRole::updateOrCreate(
-                        ['nama_jabatan' => $row['job_function'], 'company_id' => $company->id],
-                        [
-                            'company_id' => $company->id,
-                            'kompartemen_id' => $kompartemen->id ?? null,
-                            'departemen_id' => $departemen->id ?? null
-                        ]
-                    );
-
-                    // Create or update CompositeRole
-                    if (!$row['composite_role'] == null) {
-                        $compositeRole = CompositeRole::updateOrCreate(
-                            ['nama' => $row['composite_role'], 'company_id' => $company->id],
-                            ['company_id' => $company->id]
-                        );
-
-                        $jobRole->compositeRole()->save($compositeRole);
-                        // $compositeRole->jobRole()->associate($jobRole)->save();
+                    try {
+                        $service = new CompanyKompartemenService();
+                        $service->handleRow($row);
+                    } catch (\Exception $e) {
+                        Log::error('Row import failed', ['row' => $row, 'error' => $e->getMessage()]);
                     }
 
                     $processed++;
-
-                    // Check if 3 seconds have passed since the last update
-                    if (microtime(true) - $lastUpdate >= 1 || $processed === $totalRows) {
-                        $progress = round(($processed / $totalRows) * 100);
-                        echo json_encode(['progress' => $progress]) . "\n";
+                    if (microtime(true) - $lastUpdate >= 1 || $processed === $total) {
+                        echo json_encode(['progress' => round(($processed / $total) * 100)]) . "\n";
                         ob_flush();
                         flush();
-
-                        $lastUpdate = microtime(true); // Reset the timer
+                        $lastUpdate = microtime(true);
                     }
                 }
 
-                echo json_encode(['success' => 'Data imported successfully!']) . "\n";
+                echo json_encode(['success' => 'Data imported successfully']) . "\n";
                 ob_flush();
                 flush();
             });
@@ -240,7 +185,7 @@ class CompanyKompartemenController extends Controller
             ]);
             return response()->json([
                 'error' => true,
-                'message' => 'An unexpected error occurred. Please try again or contact support.',
+                'message' => 'An unexpected error occurred.',
                 'details' => [
                     'error_message' => $e->getMessage(),
                     'file' => $e->getFile(),

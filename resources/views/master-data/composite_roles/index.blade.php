@@ -2,14 +2,9 @@
 
 @section('content')
     <div class="container-fluid">
-        <h1>Master Data > Composite Roles</h1>
-
-        {{-- <button class="btn btn-primary mb-3" id="createCompositeRole">Create New Relationship</button> --}}
         <a href="{{ route('composite-roles.create') }}" class="btn btn-primary mb-3">
-            <i class="bi bi-plus"></i> Create New Composite Role
+            <i class="bi bi-plus"></i> Buat Composite Role Baru
         </a>
-
-        {{-- <button class="btn btn-primary mb-3" id="createCompositeRole">Create New Composite Role</button> --}}
 
         @if (session('status'))
             <div class="alert alert-success">{{ session('status') }}</div>
@@ -25,11 +20,11 @@
 
         <!-- Dropdowns for Filtering -->
         <div class="form-group">
-            <label for="companyDropdown">Select Company</label>
+            <label for="companyDropdown">Pilih Perusahaan</label>
             <select id="companyDropdown" class="form-control select2">
-                <option value="">-- Select Company --</option>
+                <option value="">-- Pilih Perusahaan --</option>
                 @foreach ($companies as $company)
-                    <option value="{{ $company->id }}">{{ $company->name }}</option>
+                    <option value="{{ $company->company_code }}">{{ $company->nama }}</option>
                 @endforeach
             </select>
         </div>
@@ -114,7 +109,7 @@
 
             let compositeRolesTable = $('#composite_roles_table').DataTable({
                 processing: true,
-                serverSide: true,
+                serverSide: false,
                 ajax: {
                     url: '/composite-roles/data',
                     data: function(d) {
@@ -170,8 +165,8 @@
                         return acc;
                     }, {});
                     // populateDropdown('#companyDropdown', masterData, 'company_id', 'company_name');
-                    populateDropdown('#companyDropdown', Object.values(masterData), 'company_id',
-                        'company_name');
+                    // populateDropdown('#companyDropdown', Object.values(masterData), 'company_id',
+                    //     'company_name');
 
                 },
                 error: function() {
@@ -186,9 +181,10 @@
                 resetDropdowns(['#kompartemenDropdown', '#departemenDropdown', '#jobRoleDropdown']);
 
                 if (selectedCompany) {
-                    populateDropdown('#kompartemenDropdown', selectedCompany.kompartemen, 'id', 'name');
+                    populateDropdown('#kompartemenDropdown', selectedCompany.kompartemen, 'kompartemen_id',
+                        'nama');
                     populateDropdown('#departemenDropdown', selectedCompany.departemen_without_kompartemen,
-                        'id', 'name');
+                        'departemen_id', 'nama');
                 }
             });
 
@@ -201,7 +197,8 @@
 
                 resetDropdowns(['#departemenDropdown', '#jobRoleDropdown']);
                 if (kompartemen) {
-                    populateDropdown('#departemenDropdown', kompartemen.departemen, 'id', 'name');
+                    populateDropdown('#departemenDropdown', kompartemen.departemen, 'departemen_id',
+                        'nama');
                 }
             });
 
@@ -239,7 +236,7 @@
                 console.log('Job Roles:', jobRoles);
 
                 // Populate Job Roles Dropdown
-                populateDropdown('#jobRoleDropdown', jobRoles, 'id', 'name');
+                populateDropdown('#jobRoleDropdown', jobRoles, 'id', 'nama');
             });
 
 
@@ -265,7 +262,7 @@
                 dropdown.empty().append('<option value="">-- Select --</option>');
 
                 if (Array.isArray(items) && items.length) {
-                    items.forEach((item) => {
+                    items.sort((a, b) => a[textField].localeCompare(b[textField])).forEach((item) => {
                         dropdown.append(`<option value="${item[valueField]}">${item[textField]}</option>`);
                     });
                     dropdown.prop('disabled', false);

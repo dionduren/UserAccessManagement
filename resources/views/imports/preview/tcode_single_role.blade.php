@@ -76,7 +76,7 @@
 
             $('#singleTcodeTable').DataTable({
                 processing: true,
-                serverSide: true,
+                serverSide: false,
                 ajax: {
                     url: "{{ route('tcode_single_role.preview_data') }}",
                     type: "GET",
@@ -84,10 +84,11 @@
                 columns: [{
                         data: 'company_code',
                         title: 'Company Code'
-                    }, {
-                        data: 'company_name',
-                        title: 'Perusahaan'
                     },
+                    // {
+                    //     data: 'company_name',
+                    //     title: 'Perusahaan'
+                    // },
                     {
                         data: 'single_role',
                         title: 'Single Role'

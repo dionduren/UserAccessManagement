@@ -20,11 +20,26 @@
             </div>
         @endif
 
+        <div class="row">
+            <div class="col">
+                <label for="company_id">Pilih Perusahaan:</label>
+                <select name="company_id" id="company_id" class="form-control mb-3">
+                    <option value="">-- Pilih Perusahaan --</option>
+                    @foreach ($companies as $company)
+                        <option value="{{ $company->company_code }}">{{ $company->nama }}</option>
+                    @endforeach
+                </select>
+            </div>
+        </div>
+
         <table id="cost_center_table" class="table table-bordered table-striped table-hover cell-border mt-3">
             <thead>
                 <tr>
                     <th>id</th>
                     <th>Perusahaan</th>
+                    <th>Tipe Unit Kerja</th>
+                    <th>ID Unit Kerja</th>
+                    <th>Nama Unit Kerja</th>
                     <th>Cost Center</th>
                     <th>Identifier</th>
                     <th>Deskripsi</th>
@@ -32,81 +47,6 @@
                 </tr>
             </thead>
         </table>
-
-        <!-- DataTable -->
-        {{-- <table id="cost_center_table" class="table table-bordered table-striped table-hover cell-border mt-3">
-            <thead>
-                <tr>
-                    <th>
-                        <input type="text" id="search_company" class="form-control" placeholder="Search Perusahaan">
-                    </th>
-                    <th>
-                        <input type="text" id="search_cost_center" class="form-control" placeholder="Search Cost Center">
-                    </th>
-                    <th>
-                        <input type="text" id="search_valid_to" class="form-control" placeholder="Search Valid To">
-                    </th>
-                    <th>
-                        <input type="text" id="search_pic_1" class="form-control" placeholder="Search PIC 1">
-                    </th>
-                    <th>
-                        <input type="text" id="search_pic_2" class="form-control" placeholder="Search PIC 2">
-                    </th>
-                    <th>
-                        <input type="text" id="search_pic_3" class="form-control" placeholder="Search PIC 3">
-                    </th>
-                    <th>
-                        <input type="text" id="search_response" class="form-control" placeholder="Search Response">
-                    </th>
-                    <th>
-                        <input type="text" id="search_remark" class="form-control" placeholder="Search Remark">
-                    </th>
-                    <th rowspan="3">Actions</th>
-                </tr>
-                <tr style="background-color: orange">
-                    <th>Perusahaan</th>
-                    <th>Cost Center</th>
-                    <th>Valid To</th>
-                    <th>Person in Charge</th>
-                    <th>PIC Baru</th>
-                    <th>PIC</th>
-                    <th>Response</th>
-                    <th>Remark</th>
-                </tr>
-                <tr style="background-color:azure">
-                    <th>Perusahaan</th>
-                    <th>Cost Center</th>
-                    <th>Valid To</th>
-                    <th>Penanggung Jawab CC</th>
-                    <th>PIC Baru</th>
-                    <th>PIC Sebelumnya</th>
-                    <th>Surat Penunjukan</th>
-                    <th>Remark</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr>
-                    <td>PT Pupuk Indonesia</td>
-                    <td>A110000OPR2</td>
-                    <td>31.08.2024</td>
-                    <td>Ka. Satuan Pengawasan Intern</td>
-                    <td>Firdy Ikhwany</td>
-                    <td>Satuan Pengawas Intern</td>
-                    <td>26642/A/TI/A0102/IT/2024</td>
-                    <td> - </td>
-                </tr>
-                <tr>
-                    <td>PT Pupuk Indonesia</td>
-                    <td>A3210000MGR</td>
-                    <td>31.12.9999</td>
-                    <td>SVP Pengadaan 1</td>
-                    <td style="background-color: yellow">Dinonaktifkan</td>
-                    <td>VP Pengadaan Barang</td>
-                    <td>26000/A/TI/F0202/IT/2024</td>
-                    <td>Nonaktif</td>
-                </tr>
-            </tbody>
-        </table> --}}
     </div>
 
     <!-- Modals -->
@@ -130,19 +70,38 @@
 @section('scripts')
     <script>
         $(document).ready(function() {
-            let masterData = {}; // Store parsed JSON for efficient lookups
-
             let costCenterTable = $('#cost_center_table').DataTable({
                 processing: true,
-                serverSide: true,
-                ajax: "{{ route('cost-center.index') }}",
+                serverSide: false,
+                ajax: function(data, callback, settings) {
+                    let companyId = $('#company_id').val();
+                    let url = "{{ route('cost-center.index') }}";
+                    if (companyId) {
+                        url += '?company_id=' + encodeURIComponent(companyId);
+                    }
+                    $.get(url, function(json) {
+                        callback(json);
+                    });
+                },
                 columns: [{
                         data: 'id',
                         name: 'id'
                     },
                     {
-                        data: 'group',
-                        name: 'group'
+                        data: 'company_id',
+                        name: 'Perusahaan'
+                    },
+                    {
+                        data: 'level',
+                        name: 'level'
+                    },
+                    {
+                        data: 'level_id',
+                        name: 'level_id'
+                    },
+                    {
+                        data: 'level_name',
+                        name: 'level_name'
                     },
                     {
                         data: 'cost_center',
@@ -174,10 +133,23 @@
                     visible: false
                 }],
                 order: [
-                    [3, 'asc']
-                ]
+                    [6, 'asc']
+                ],
+                dom: 'B<"row justify-content-between"<"col-auto"l><"col text-end"f>>' +
+                    '<"row"<"col-sm-12"tr>>' +
+                    '<"row"<"col-sm-12 col-md-5"i><"col-sm-12 col-md-7 text-end"p>>',
+                buttons: [{
+                    extend: 'excel',
+                    title: 'Master Data Cost Center {{ date('Y-m-d H:i:s') }}',
+                    text: '<i class="bi bi-file-earmark-excel"></i> Export to Excel',
+                    className: 'btn btn-success'
+                }]
             });
 
+            // Reload table when company_id changes
+            $('#company_id').on('change', function() {
+                costCenterTable.ajax.reload();
+            });
         });
 
         // ✅ SweetAlert2 Delete Confirmation

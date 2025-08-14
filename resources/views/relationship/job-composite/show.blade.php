@@ -1,7 +1,9 @@
 <div>
     <h3>{{ $compositeRole->nama }}</h3>
-    <p><strong>Company:</strong> {{ $compositeRole->company->name ?? 'N/A' }}</p>
-    <p><strong>Job Role:</strong> {{ $compositeRole->jobRole->nama_jabatan ?? 'Not Assigned' }}</p>
+    <p><strong>Company:</strong> {{ $compositeRole->company->nama ?? 'N/A' }}</p>
+    <p><strong>Kompartemen:</strong> {{ $compositeRole->kompartemen->nama ?? 'N/A' }}</p>
+    <p><strong>Departemen:</strong> {{ $compositeRole->departemen->nama ?? 'N/A' }}</p>
+    <p><strong>Job Role:</strong> {{ $compositeRole->jobRole->nama ?? 'Not Assigned' }}</p>
     <p><strong>Description:</strong> {{ $compositeRole->deskripsi ?? 'No Description' }}</p>
 
     <h5>Associated Single Roles (Total: {{ $compositeRole->singleRoles()->count() }})</h5>

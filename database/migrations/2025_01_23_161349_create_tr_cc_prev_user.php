@@ -15,7 +15,10 @@ return new class extends Migration
             $table->id();
             $table->string('user_code');
             $table->string('user_name');
-            $table->string('cost_code');
+            $table->string('cost_code')->nullable();
+            $table->string('periode_id')->nullable();
+            $table->boolean('flagged')->default(false);
+            $table->text('keterangan')->nullable();
             $table->text('dokumen_keterangan')->nullable();
             $table->timestamps();
             $table->softDeletes();

@@ -37,4 +37,10 @@ class LoginController extends Controller
         $this->middleware('guest')->except('logout');
         $this->middleware('auth')->only('logout');
     }
+
+    // Use 'username' for authentication instead of 'email'
+    public function username()
+    {
+        return 'username';
+    }
 }

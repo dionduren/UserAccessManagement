@@ -21,55 +21,53 @@
             </div>
         @endif
 
+        <div class="form-group">
+            <label for="periode">Periode</label>
+            <select name="periode" id="periode" class="form-control">
+                <option value="">Silahkan Pilih Periode Data</option>
+                @foreach ($periodes as $periode)
+                    <option value="{{ $periode->id }}">{{ $periode->definisi }}</option>
+                @endforeach
+            </select>
+        </div>
+
         <table id="user_generic_table" class="table table-bordered table-striped table-hover cell-border mt-3">
             <thead>
                 <tr>
                     <th>id</th>
-                    <th>Perusahaan</th>
-                    <th>User Code</th>
-                    <th>Cost Code</th>
-                    {{-- <th style="background-color:greenyellow">Nama</th>
-                    <th style="background-color: greenyellow">Direktorat</th>
-                    <th style="background-color: lightblue">Kompartemen</th>
-                    <th style="background-color: greenyellow">Cost Center</th> --}}
-                    {{-- <th style="background-color: greenyellow">Code Center</th>
-                    <th style="background-color: greenyellow">Definisi</th> --}}
-                    <th>Tipe Lisensi</th>
-                    <th>Valid From</th>
-                    <th>Valid To</th>
-                    <th>Action</th>
+                    <th style="width: 5%;">Perusahaan</th>
+                    {{-- <th style="width: 9%;">Kompartemen ID</th> --}}
+                    <th style="width: 10%;">Kompartemen Name</th>
+                    {{-- <th style="width: 8%;">Departemen ID</th> --}}
+                    <th style="width: 10%;">Departemen Name</th>
+                    {{-- <th style="width: 12%;">Periode</th> --}}
+                    <th style="width: 8%;">User Code</th>
+                    {{-- <th style="width: 12%;">Cost Code</th> --}}
+                    <th style="width: 8%;">User Profile</th>
+                    {{-- <th style="width: 10%;">User Profile</th> --}}
+                    {{-- <th>PIC</th>
+                    <th>Unit Kerja</th>
+                    <th>Job Role</th> --}}
+                    <th style="width: 7%;">Tipe Lisensi</th>
+                    <th style="width: 7%;">Valid From</th>
+                    <th style="width: 7%;">Valid To</th>
+                    <th style="width: 10%;">Last Login</th>
+                    <th style="width: 5%;">Flagged</th>
+                    <th style="width: 12%;">Action</th>
                 </tr>
             </thead>
         </table>
-    </div>
-
-    <!-- Modals -->
-    <div class="modal fade" id="userNIKModal" tabindex="-1" aria-labelledby="userNIKModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-lg">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="userNIKModalLabel">User NIK Details</h5>
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                        <span aria-hidden="true">&times;</span>
-                    </button>
-                </div>
-                <div class="modal-body" id="modal-user-nick-details">
-                    <!-- Content will be loaded dynamically -->
-                </div>
-            </div>
-        </div>
     </div>
 @endsection
 
 @section('scripts')
     <script>
         $(document).ready(function() {
-            let masterData = {}; // Store parsed JSON for efficient lookups
-
-            let userGenericTable = $('#user_generic_table').DataTable({
+            // Initialize DataTable with no ajax source
+            var userGenericTable = $('#user_generic_table').DataTable({
                 processing: true,
-                serverSide: true,
-                ajax: "{{ route('user-generic.index') }}",
+                serverSide: false,
+                ajax: false, // Don't load data initially
                 columns: [{
                         data: 'id',
                         name: 'id'
@@ -78,22 +76,30 @@
                         data: 'group',
                         name: 'group'
                     },
+                    // {
+                    //     data: 'kompartemen_id',
+                    //     name: 'kompartemen_id'
+                    // },
+                    {
+                        data: 'kompartemen_name',
+                        name: 'kompartemen_name'
+                    },
+                    // {
+                    //     data: 'departemen_id',
+                    //     name: 'departemen_id'
+                    // },
+                    {
+                        data: 'departemen_name',
+                        name: 'departemen_name'
+                    },
                     {
                         data: 'user_code',
                         name: 'user_code'
                     },
                     {
-                        data: 'cost_code',
-                        name: 'cost_code'
+                        data: 'user_profile',
+                        name: 'user_profile'
                     },
-                    // {
-                    //     data: 'cost_center',
-                    //     name: 'cost_center'
-                    // },
-                    // {
-                    //     data: 'deskripsi',
-                    //     name: 'deskripsi'
-                    // },
                     {
                         data: 'license_type',
                         name: 'license_type'
@@ -105,6 +111,20 @@
                     {
                         data: 'valid_to',
                         name: 'valid_to'
+                    },
+                    {
+                        data: 'last_login',
+                        name: 'last_login',
+                    },
+                    {
+                        data: 'flagged',
+                        name: 'flagged',
+                        render: function(data, type, row) {
+                            return (data == 1) ? '<span class="badge bg-danger">Flagged</span>' :
+                                '';
+                        },
+                        orderable: true,
+                        searchable: false
                     },
                     {
                         data: 'action',
@@ -123,11 +143,21 @@
                     targets: [0],
                     visible: false
                 }],
-                order: [
-                    [2, 'asc']
-                ]
+                // order: [
+                //     [8, 'desc']
+                // ]
             });
 
+            // Only load data when periode is selected
+            $('#periode').on('change', function() {
+                var periodeId = $(this).val();
+                if (periodeId) {
+                    userGenericTable.ajax.url("{{ route('user-generic.index') }}?periode=" + periodeId)
+                        .load();
+                } else {
+                    userGenericTable.clear().draw(); // Clear table if no periode selected
+                }
+            });
         });
 
         // ✅ SweetAlert2 Delete Confirmation

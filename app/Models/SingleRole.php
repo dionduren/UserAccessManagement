@@ -16,9 +16,20 @@ class SingleRole extends Model
     protected $table = 'tr_single_roles';
     protected $primaryKey = 'id';
 
-    protected $fillable = ['company_id', 'composite_role_id', 'nama', 'deskripsi', 'created_by', 'updated_by'];
+    protected $fillable = [
+        'company_id',
+        'nama',
+        'deskripsi',
+        'created_by',
+        'updated_by'
+    ];
 
     protected $dates = ['deleted_at'];
+
+    public function company()
+    {
+        return $this->belongsTo(Company::class, 'company_id', 'company_code');
+    }
 
     // A single role belongs to a composite role
     public function compositeRoles()
@@ -33,11 +44,5 @@ class SingleRole extends Model
     public function tcodes()
     {
         return $this->belongsToMany(Tcode::class, 'pt_single_role_tcode', 'single_role_id', 'tcode_id');
-    }
-
-    // A single role belongs to a company
-    public function company()
-    {
-        return $this->belongsTo(Company::class);
     }
 }

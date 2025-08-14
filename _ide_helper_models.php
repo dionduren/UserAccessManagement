@@ -307,6 +307,7 @@ namespace App\Models{
  * @property string|null $created_by
  * @property string|null $updated_by
  * @property string|null $deleted_by
+ * @property string|null $status
  * @property-read \App\Models\Company|null $company
  * @property-read \App\Models\CompositeRole|null $compositeRole
  * @property-read \App\Models\Departemen|null $departemen
@@ -325,6 +326,7 @@ namespace App\Models{
  * @method static \Illuminate\Database\Eloquent\Builder|JobRole whereId($value)
  * @method static \Illuminate\Database\Eloquent\Builder|JobRole whereKompartemenId($value)
  * @method static \Illuminate\Database\Eloquent\Builder|JobRole whereNamaJabatan($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|JobRole whereStatus($value)
  * @method static \Illuminate\Database\Eloquent\Builder|JobRole whereUpdatedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder|JobRole whereUpdatedBy($value)
  * @method static \Illuminate\Database\Eloquent\Builder|JobRole withTrashed()
@@ -370,6 +372,87 @@ namespace App\Models{
  * @method static \Illuminate\Database\Eloquent\Builder|Kompartemen withoutTrashed()
  */
 	class Kompartemen extends \Eloquent {}
+}
+
+namespace App\Models{
+/**
+ * 
+ *
+ * @property int $id
+ * @property int|null $periode_id
+ * @property string|null $nik
+ * @property int|null $job_role_id
+ * @property bool $is_active
+ * @property string|null $last_update
+ * @property \Illuminate\Support\Carbon|null $created_at
+ * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property \Illuminate\Support\Carbon|null $deleted_at
+ * @property string|null $created_by
+ * @property string|null $updated_by
+ * @property string|null $deleted_by
+ * @property-read \App\Models\JobRole|null $jobRole
+ * @property-read \App\Models\Periode|null $periode
+ * @property-read \App\Models\UserDetail|null $userDetail
+ * @method static \Illuminate\Database\Eloquent\Builder|NIKJobRole newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder|NIKJobRole newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder|NIKJobRole onlyTrashed()
+ * @method static \Illuminate\Database\Eloquent\Builder|NIKJobRole query()
+ * @method static \Illuminate\Database\Eloquent\Builder|NIKJobRole whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|NIKJobRole whereCreatedBy($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|NIKJobRole whereDeletedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|NIKJobRole whereDeletedBy($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|NIKJobRole whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|NIKJobRole whereIsActive($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|NIKJobRole whereJobRoleId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|NIKJobRole whereLastUpdate($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|NIKJobRole whereNik($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|NIKJobRole wherePeriodeId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|NIKJobRole whereUpdatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|NIKJobRole whereUpdatedBy($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|NIKJobRole withTrashed()
+ * @method static \Illuminate\Database\Eloquent\Builder|NIKJobRole withoutTrashed()
+ */
+	class NIKJobRole extends \Eloquent {}
+}
+
+namespace App\Models{
+/**
+ * 
+ *
+ * @property int $id
+ * @property string|null $definisi
+ * @property string|null $tanggal_create_periode
+ * @property bool $is_active
+ * @property \Illuminate\Support\Carbon|null $created_at
+ * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property \Illuminate\Support\Carbon|null $deleted_at
+ * @property string|null $created_by
+ * @property string|null $updated_by
+ * @property string|null $deleted_by
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\UserDetail> $userDetail
+ * @property-read int|null $user_detail_count
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\userGeneric> $userGeneric
+ * @property-read int|null $user_generic_count
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\userNIK> $userNIK
+ * @property-read int|null $user_n_i_k_count
+ * @method static \Illuminate\Database\Eloquent\Builder|Periode newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder|Periode newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder|Periode onlyTrashed()
+ * @method static \Illuminate\Database\Eloquent\Builder|Periode query()
+ * @method static \Illuminate\Database\Eloquent\Builder|Periode whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|Periode whereCreatedBy($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|Periode whereDefinisi($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|Periode whereDeletedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|Periode whereDeletedBy($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|Periode whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|Periode whereIsActive($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|Periode whereTanggalCreatePeriode($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|Periode whereUpdatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|Periode whereUpdatedBy($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|Periode withTrashed()
+ * @method static \Illuminate\Database\Eloquent\Builder|Periode withoutTrashed()
+ */
+	class Periode extends \Eloquent {}
 }
 
 namespace App\Models{
@@ -512,11 +595,13 @@ namespace App\Models{
  * @property string|null $created_by
  * @property string|null $updated_by
  * @property string|null $deleted_by
+ * @property int|null $periode_id
  * @property-read \App\Models\Company|null $company
  * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\CostCenter> $costCenter
  * @property-read int|null $cost_center_count
  * @property-read \App\Models\Departemen|null $departemen
  * @property-read \App\Models\Kompartemen|null $kompartemen
+ * @property-read \App\Models\Periode|null $periode
  * @property-read \App\Models\User|null $user
  * @property-read \App\Models\userNIK|null $userNIK
  * @method static \Illuminate\Database\Eloquent\Builder|UserDetail newModelQuery()
@@ -539,6 +624,7 @@ namespace App\Models{
  * @method static \Illuminate\Database\Eloquent\Builder|UserDetail whereKompartemenId($value)
  * @method static \Illuminate\Database\Eloquent\Builder|UserDetail whereNama($value)
  * @method static \Illuminate\Database\Eloquent\Builder|UserDetail whereNik($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|UserDetail wherePeriodeId($value)
  * @method static \Illuminate\Database\Eloquent\Builder|UserDetail whereUpdatedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder|UserDetail whereUpdatedBy($value)
  * @method static \Illuminate\Database\Eloquent\Builder|UserDetail withTrashed()
@@ -586,6 +672,8 @@ namespace App\Models{
  * @property string $cost_code
  * @property string $license_type
  * @property string|null $group
+ * @property int|null $periode_id
+ * @property string|null $last_login
  * @property string|null $valid_from
  * @property string|null $valid_to
  * @property \Illuminate\Support\Carbon|null $created_at
@@ -597,6 +685,7 @@ namespace App\Models{
  * @property-read \App\Models\Company|null $Company
  * @property-read \App\Models\CostCenter|null $costCenter
  * @property-read \App\Models\CostCurrentUser|null $currentUser
+ * @property-read \App\Models\Periode|null $periode
  * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\CostPrevUser> $prevUser
  * @property-read int|null $prev_user_count
  * @method static \Illuminate\Database\Eloquent\Builder|userGeneric newModelQuery()
@@ -610,7 +699,9 @@ namespace App\Models{
  * @method static \Illuminate\Database\Eloquent\Builder|userGeneric whereDeletedBy($value)
  * @method static \Illuminate\Database\Eloquent\Builder|userGeneric whereGroup($value)
  * @method static \Illuminate\Database\Eloquent\Builder|userGeneric whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|userGeneric whereLastLogin($value)
  * @method static \Illuminate\Database\Eloquent\Builder|userGeneric whereLicenseType($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|userGeneric wherePeriodeId($value)
  * @method static \Illuminate\Database\Eloquent\Builder|userGeneric whereUpdatedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder|userGeneric whereUpdatedBy($value)
  * @method static \Illuminate\Database\Eloquent\Builder|userGeneric whereUserCode($value)
@@ -634,6 +725,8 @@ namespace App\Models{
  * @property string|null $valid_from
  * @property string|null $valid_to
  * @property string|null $group
+ * @property int|null $periode_id
+ * @property string|null $last_login
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property \Illuminate\Support\Carbon|null $deleted_at
@@ -641,6 +734,7 @@ namespace App\Models{
  * @property string|null $updated_by
  * @property string|null $deleted_by
  * @property-read \App\Models\Company|null $Company
+ * @property-read \App\Models\Periode|null $periode
  * @property-read \App\Models\UserDetail|null $userDetail
  * @method static \Illuminate\Database\Eloquent\Builder|userNIK newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|userNIK newQuery()
@@ -652,7 +746,9 @@ namespace App\Models{
  * @method static \Illuminate\Database\Eloquent\Builder|userNIK whereDeletedBy($value)
  * @method static \Illuminate\Database\Eloquent\Builder|userNIK whereGroup($value)
  * @method static \Illuminate\Database\Eloquent\Builder|userNIK whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|userNIK whereLastLogin($value)
  * @method static \Illuminate\Database\Eloquent\Builder|userNIK whereLicenseType($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|userNIK wherePeriodeId($value)
  * @method static \Illuminate\Database\Eloquent\Builder|userNIK whereUpdatedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder|userNIK whereUpdatedBy($value)
  * @method static \Illuminate\Database\Eloquent\Builder|userNIK whereUserCode($value)
