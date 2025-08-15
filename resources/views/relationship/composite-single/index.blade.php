@@ -1,55 +1,82 @@
 @extends('layouts.app')
 
+@section('header-scripts')
+    <style>
+        table.table-sm td,
+        table.table-sm th {
+            padding: .4rem .5rem;
+            vertical-align: top !important;
+        }
+
+        /* Hide cells we collapse for rowspan */
+        td._grp-hidden {
+            display: none;
+        }
+    </style>
+@endsection
+
 @section('content')
     <div class="container-fluid">
-        <div class="row">
-            <div class="col-12">
-                <!-- Success Message -->
-                @if (session('success'))
-                    <div class="alert alert-success">
-                        <h4>Success:</h4>
-                        {{ session('success') }}
-                    </div>
-                @endif
-
-                <!-- Error Messages -->
-                @if ($errors->any())
-                    <div class="alert alert-danger">
-                        <h4>Error(s) occurred:</h4>
-                        <ul>
-                            @foreach ($errors->all() as $error)
-                                <li>{{ $error }}</li>
-                            @endforeach
-                        </ul>
-                    </div>
-                @endif
+        <!-- General Error -->
+        @if ($errors->any())
+            <div class="alert alert-danger">
+                <ul class="mb-0">
+                    @foreach ($errors->all() as $message)
+                        <li>{{ $message }}</li>
+                    @endforeach
+                </ul>
             </div>
-        </div>
+        @endif
 
-        <div class="row">
-            <div class="col-12">
-                <div class="card">
-                    <div class="card-header">
-                        <h3 class="card-title">List Composite Role - Single Role</h3>
-                        <div class="card-tools">
-                            <a href="{{ route('composite-single.create') }}" class="btn btn-success">
-                                <i class="fas fa-plus"></i> Create
-                            </a>
-                        </div>
-                    </div>
-                    <div class="card-body">
-                        <table id="composite-single-datatable" class="table table-bordered table-striped">
-                            <thead>
-                                <tr>
-                                    <th>Composite Role</th>
-                                    <th>Single Role</th>
-                                    <th>Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                            </tbody>
-                        </table>
-                    </div>
+        <div class="card shadow-sm">
+            <div class="card-header">
+                <h2 class="mb-3">Composite Role - Single Role Mapping</h2>
+            </div>
+            <div class="card-body">
+
+                <div class="d-flex flex-wrap align-items-end gap-2 mb-3">
+                    @if ($userCompanyCode === 'A000')
+                        <form id="filterForm" class="d-flex gap-2">
+                            <div>
+                                <label class="form-label mb-1 small">Company</label>
+                                <select id="companyFilter" name="company_id" class="form-select form-select-sm">
+                                    <option value="">-- All --</option>
+                                    @foreach ($companies as $c)
+                                        <option value="{{ $c->company_code }}" @selected($selectedCompany === $c->company_code)>
+                                            {{ $c->nama }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                            </div>
+                        </form>
+                    @else
+                        <span class="badge bg-secondary">
+                            Company: {{ $companies->first()->nama }} ({{ $companies->first()->company_code }})
+                        </span>
+                    @endif
+
+                    <a href="{{ route('composite-single.create') }}" class="btn btn-success btn-sm">
+                        <i class="bi bi-plus-lg"></i> Create
+                    </a>
+                </div>
+
+                @if (session('success'))
+                    <div class="alert alert-success py-2">{{ session('success') }}</div>
+                @endif
+
+                <div class="table-responsive">
+                    <table id="compositeRolesTable" class="table table-sm table-bordered w-100">
+                        <thead class="table-light">
+                            <tr>
+                                <th width="15%">Company</th>
+                                <th width="20%">Composite Role</th>
+                                <th width="20%">Single Role</th>
+                                <th width="auto">Description</th>
+                                <th width="10%">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
                 </div>
             </div>
         </div>
@@ -58,76 +85,93 @@
 
 @section('scripts')
     <script>
-        $(document).ready(function() {
-            $('#composite-single-datatable').DataTable({
+        document.addEventListener('DOMContentLoaded', function() {
+            const table = $('#compositeRolesTable').DataTable({
                 processing: true,
-                serverSide: false,
-                ajax: '{{ route('composite-single.jsonIndex') }}',
-                columns: [{
-                        data: 'nama',
-                        name: 'Composite Role'
-                    },
-                    {
-                        data: 'singleRoles',
-                        name: 'Single Role'
-                    },
-                    {
-                        data: 'action',
-                        name: 'Action',
-                        orderable: false,
-                        searchable: false
-                    },
-                ],
-                columnDefs: [{
-                    targets: 2,
-                    render: function(data, type, row) {
-                        return `
-                            <a href="${data.edit_url}" class="btn btn-primary btn-sm">
-                                <i class="fas fa-edit"></i> Edit
-                            </a>
-                            <button type="button" class="btn btn-danger btn-sm" onclick="deleteData('${data.delete_url}')">
-                                <i class="fas fa-trash"></i> Delete
-                            </button>
-                        `;
+                serverSide: true,
+                lengthMenu: [10, 25, 50, 100],
+                ajax: {
+                    url: '{{ route('composite-single.datatable') }}',
+                    data: function(d) {
+                        d.company_id = $('#companyFilter').val();
                     }
-                }]
-            });
-        });
-
-        function deleteData(url) {
-            Swal.fire({
-                title: 'Are you sure?',
-                text: "You won't be able to revert this!",
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonColor: '#3085d6',
-                cancelButtonColor: '#d33',
-                confirmButtonText: 'Yes, delete it!'
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    const form = $('<form>', {
-                        method: 'POST',
-                        action: url
-                    });
-
-                    const token = $('meta[name="csrf-token"]').attr('content');
-
-                    form.append($('<input>', {
-                        type: 'hidden',
-                        name: '_token',
-                        value: token
-                    }));
-
-                    form.append($('<input>', {
-                        type: 'hidden',
-                        name: '_method',
-                        value: 'DELETE'
-                    }));
-
-                    $('body').append(form);
-                    form.submit();
+                },
+                columns: [{
+                        data: 'company',
+                        name: 'company',
+                        className: 'company-col'
+                    },
+                    {
+                        data: 'composite_role',
+                        name: 'composite_role',
+                        className: 'composite-col'
+                    },
+                    {
+                        data: 'single_role',
+                        name: 'single_role'
+                    },
+                    {
+                        data: 'description',
+                        name: 'description'
+                    },
+                    {
+                        data: 'actions',
+                        name: 'actions',
+                        orderable: false,
+                        searchable: false,
+                        className: 'actions-col'
+                    }
+                ],
+                // order: [
+                //     [0, 'asc'],
+                //     [1, 'asc'],
+                //     [2, 'asc']
+                // ],
+                drawCallback: function(settings) {
+                    applyRowSpans(this.api());
                 }
             });
-        }
+
+            $('#companyFilter').on('change', function() {
+                table.ajax.reload();
+            });
+
+            function applyRowSpans(api) {
+                // Columns to group: company (0), composite (1), actions (4). Actions grouped by composite only.
+                groupColumn(api, 0, 1); // group by composite when same composite id
+                groupColumn(api, 1, 1);
+                groupColumn(api, 4, 1);
+            }
+
+            function groupColumn(api, colIndex, keyColIndex) {
+                let lastKey = null;
+                let rowspanCell = null;
+                let spanCount = 0;
+
+                api.rows({
+                    page: 'current'
+                }).every(function(rowIdx) {
+                    const data = this.data();
+                    const key = data.group_key; // composite role id
+                    const cell = $(api.cell(rowIdx, colIndex).node());
+
+                    if (colIndex === 0 || colIndex === 1) {
+                        // For company & composite, group by composite id
+                    }
+                    if (lastKey === key) {
+                        // hide
+                        cell.addClass('_grp-hidden');
+                        spanCount++;
+                        if (rowspanCell) rowspanCell.attr('rowspan', spanCount);
+                    } else {
+                        // reset
+                        lastKey = key;
+                        rowspanCell = cell;
+                        spanCount = 1;
+                        cell.removeClass('_grp-hidden').attr('rowspan', 1);
+                    }
+                });
+            }
+        });
     </script>
 @endsection

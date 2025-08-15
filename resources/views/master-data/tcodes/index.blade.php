@@ -2,27 +2,44 @@
 
 @section('content')
     <div class="container-fluid">
-        <h1>Tcodes</h1>
-
-        <!-- Trigger button for Create Modal -->
-        <button type="button" id="triggerCreateModal" class="btn btn-primary mb-3">
-            Create New Tcode
-        </button>
-
-        @if (session('status'))
-            <div class="alert alert-success">{{ session('status') }}</div>
+        <!-- General Error -->
+        @if ($errors->any())
+            <div class="alert alert-danger">
+                <ul class="mb-0">
+                    @foreach ($errors->all() as $message)
+                        <li>{{ $message }}</li>
+                    @endforeach
+                </ul>
+            </div>
         @endif
 
-        <table id="tcodes_table" class="table table-bordered table-striped table-hover cell-border mt-3">
-            <thead>
-                <tr>
-                    <th>Code</th>
-                    <th>Description</th>
-                    <th>Modul SAP</th>
-                    <th>Actions</th>
-                </tr>
-            </thead>
-        </table>
+        <div class="card shadow-sm">
+            <div class="card-header">
+                <h2>Master Data Tcodes</h2>
+            </div>
+            <div class="card-body">
+
+                <!-- Trigger button for Create Modal -->
+                <button type="button" id="triggerCreateModal" class="btn btn-primary mb-3">
+                    Create New Tcode
+                </button>
+
+                @if (session('status'))
+                    <div class="alert alert-success">{{ session('status') }}</div>
+                @endif
+
+                <table id="tcodes_table" class="table table-bordered table-striped table-hover cell-border mt-3">
+                    <thead>
+                        <tr>
+                            <th>Code</th>
+                            <th>Description</th>
+                            {{-- <th>Modul SAP</th> --}}
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                </table>
+            </div>
+        </div>
     </div>
 
     {{-- <!-- Modal for Tcode Create & Edit -->
@@ -52,7 +69,7 @@
             // Initialize DataTable with server-side processing
             $('#tcodes_table').DataTable({
                 processing: true,
-                serverSide: false,
+                serverSide: true,
                 ajax: '{{ route('tcodes.data') }}',
                 columns: [{
                         data: 'code',
@@ -64,11 +81,11 @@
                         name: 'deskripsi',
                         title: 'Description'
                     },
-                    {
-                        data: 'sap_module',
-                        name: 'sap_module',
-                        title: 'Modul SAP'
-                    },
+                    // {
+                    //     data: 'sap_module',
+                    //     name: 'sap_module',
+                    //     title: 'Modul SAP'
+                    // },
                     {
                         data: 'actions',
                         name: 'actions',

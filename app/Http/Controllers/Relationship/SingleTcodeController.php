@@ -18,11 +18,20 @@ class SingleTcodeController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
-        $singleTcodes = Tcode::with('singleRoles')->get();
+        $user = auth()->user();
+        $userCompanyCode = $user->loginDetail->company_code ?? null;
 
-        return view('relationship.single-tcode.index', compact('singleTcodes'));
+        $companies = $userCompanyCode === 'A000'
+            ? Company::orderBy('nama')->get()
+            : Company::where('company_code', $userCompanyCode)->get();
+
+        return view('relationship.single-tcode.index', [
+            'companies'       => $companies,
+            'userCompanyCode' => $userCompanyCode,
+            'selectedCompany' => $request->get('company_id')
+        ]);
     }
 
     /**
@@ -72,8 +81,21 @@ class SingleTcodeController extends Controller
      */
     public function edit(string $id) // $id = single_role_id
     {
-        $companies = Company::with('singleRoles')->get();
         $singleRole = SingleRole::with('tcodes')->findOrFail($id);
+
+        $user = auth()->user();
+        $userCompanyCode = $user->loginDetail->company_code ?? null;
+
+        if ($userCompanyCode !== 'A000' && $singleRole->company_id !== $userCompanyCode) {
+            return redirect()
+                ->route('single-tcode.index')
+                ->withErrors(['error' => 'You are not authorized to edit this single role.']);
+        }
+
+        $companies = $userCompanyCode === 'A000'
+            ? Company::with('singleRoles')->get()
+            : Company::with('singleRoles')->where('company_code', $userCompanyCode)->get();
+
         $tcodes = Tcode::all();
         $selectedTcodes = $singleRole->tcodes->pluck('code')->toArray();
 
@@ -171,5 +193,116 @@ class SingleTcodeController extends Controller
         $singleRoles = SingleRole::where('company_id', $companyId)->get();
 
         return response()->json(['tcodes' => $tcodes, 'singleRoles' => $singleRoles]);
+    }
+
+    // DataTables JSON – paginate by single roles (NOT by each tcode row)
+    public function datatable(Request $request)
+    {
+        $user = auth()->user();
+        $userCompanyCode = $user->loginDetail->company_code ?? null;
+
+        $draw   = (int)$request->input('draw');
+        $length = (int)$request->input('length', 10);  // single roles per page
+        $start  = (int)$request->input('start', 0);
+        $search = $request->input('search.value');
+
+        $base = SingleRole::query()
+            ->leftJoin('ms_company', 'ms_company.company_code', '=', 'tr_single_roles.company_id')
+            ->select('tr_single_roles.*', 'ms_company.nama as company_name')
+            ->with(['tcodes' => function ($q) {
+                $q->orderBy('code');
+            }])
+            ->orderBy('tr_single_roles.company_id');
+
+        if ($userCompanyCode !== 'A000') {
+            $base->where('tr_single_roles.company_id', $userCompanyCode);
+        } elseif ($request->filled('company_id')) {
+            $base->where('tr_single_roles.company_id', $request->company_id);
+        }
+
+        $recordsTotal = (clone $base)->count();
+
+        if ($search) {
+            $driver = DB::getDriverName();
+            $like = $driver === 'pgsql' ? 'ILIKE' : 'LIKE';
+            $base->where(function ($q) use ($search, $like) {
+                $q->where('tr_single_roles.nama', $like, "%$search%")
+                    ->orWhere('tr_single_roles.company_id', $like, "%$search%")
+                    ->orWhere('ms_company.nama', $like, "%$search%")
+                    ->orWhereHas('tcodes', function ($tq) use ($search, $like) {
+                        $tq->where('tr_tcodes.code', $like, "%$search%")
+                            ->orWhere('tr_tcodes.deskripsi', $like, "%$search%");
+                    });
+            });
+        }
+
+        $recordsFiltered = (clone $base)->count();
+
+        if ($request->has('order')) {
+            foreach ($request->input('order') as $ord) {
+                $idx = (int)$ord['column'];
+                $dir = $ord['dir'] === 'desc' ? 'desc' : 'asc';
+                switch ($idx) {
+                    case 0: // company
+                        $base->orderBy('ms_company.nama', $dir)->orderBy('tr_single_roles.nama');
+                        break;
+                    case 1: // single role
+                        $base->orderBy('tr_single_roles.nama', $dir);
+                        break;
+                    case 2: // tcode column – fallback to role then tcode implicitly
+                        $base->orderBy('tr_single_roles.nama', $dir);
+                        break;
+                    default:
+                        $base->orderBy('tr_single_roles.nama');
+                }
+            }
+        } else {
+            $base->orderBy('ms_company.nama')->orderBy('tr_single_roles.nama');
+        }
+
+        $singleRoles = $base->skip($start)->take($length)->get();
+
+        $data = [];
+        foreach ($singleRoles as $sr) {
+            $companyDisplay = $sr->company_name ?? '-';
+            $canModify = $userCompanyCode === 'A000' || $sr->company_id === $userCompanyCode;
+
+            $actionsHtml = $canModify
+                ? '<a href="' . route('single-tcode.edit', $sr->id) . '" class="btn btn-primary btn-sm mb-1 w-100">Edit</a>'
+                . '<form action="' . route('single-tcode.destroy', $sr->id) . '" method="POST" onsubmit="return confirm(\'Remove all tcodes for this Single Role?\')">'
+                . csrf_field() . method_field('DELETE')
+                . '<button class="btn btn-danger btn-sm w-100">Delete</button></form>'
+                : '<span class="text-muted small">Read only</span>';
+
+            if ($sr->tcodes->isEmpty()) {
+                $data[] = [
+                    'company'     => $companyDisplay,
+                    'single_role' => $sr->nama,
+                    'tcode'       => '-',
+                    'description' => '-',
+                    'group_key'   => $sr->id,
+                    'actions'     => $actionsHtml,
+                ];
+                continue;
+            }
+
+            foreach ($sr->tcodes as $t) {
+                $data[] = [
+                    'company'     => $companyDisplay,
+                    'single_role' => $sr->nama,
+                    'tcode'       => $t->code,
+                    'description' => $t->deskripsi ?: '-',
+                    'group_key'   => $sr->id,
+                    'actions'     => $actionsHtml,
+                ];
+            }
+        }
+
+        return response()->json([
+            'draw'            => $draw,
+            'recordsTotal'    => $recordsTotal,
+            'recordsFiltered' => $recordsFiltered,
+            'data'            => $data,
+        ]);
     }
 }

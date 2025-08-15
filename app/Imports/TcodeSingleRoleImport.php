@@ -3,10 +3,7 @@
 namespace App\Imports;
 
 use App\Models\Tcode;
-use App\Models\Company;
-use App\Models\Departemen;
 use App\Models\SingleRole;
-use App\Models\Kompartemen;
 use Maatwebsite\Excel\Concerns\ToModel;
 use Maatwebsite\Excel\Concerns\WithHeadingRow;
 use Maatwebsite\Excel\Concerns\WithChunkReading;
@@ -15,22 +12,33 @@ class TcodeSingleRoleImport implements ToModel, WithHeadingRow, WithChunkReading
 {
     public function model(array $row)
     {
-        // $company = Company::firstOrCreate(['company_code' => $row['company']]);
-        // $kompartemen = Kompartemen::firstOrCreate(['name' => $row['kompartemen']]);
-        // $departemen = Departemen::firstOrCreate(['name' => $row['departemen']]);
-        $singleRole = SingleRole::firstOrCreate([
-            'company_id' => $row['company_code'],
-            'nama' => $row['single_role'],
-            'deskripsi' => $row['single_role_desc'],
-        ]);
+        // Clean targeted fields (remove all whitespace characters)
+        $singleRoleName = $this->cleanValue($row['single_role'] ?? '');
+        $tcodeCode = $this->cleanValue($row['tcode'] ?? '');
 
-        $tcode = Tcode::firstOrCreate([
-            'code' => $row['tcode'],
-            'code' => $row['sap_module'],
-            'deskripsi' => $row['tcode_desc'],
-        ]);
+        if ($singleRoleName !== '') {
+            $singleRole = SingleRole::firstOrCreate([
+                'company_id' => $row['company_code'] ?? null,
+                'nama' => $singleRoleName,
+                'deskripsi' => $row['single_role_desc'] ?? null,
+            ]);
+        }
 
-        // Logic for relating models can go here
+        if ($tcodeCode !== '') {
+            $tcode = Tcode::firstOrCreate([
+                'code' => $tcodeCode,
+                'sap_module' => $row['sap_module'] ?? null,
+                'deskripsi' => $row['tcode_desc'] ?? null,
+            ]);
+        }
+
+        // Relation logic can be added here if needed
+    }
+
+    private function cleanValue(string $value): string
+    {
+        // Remove ALL whitespace characters
+        return preg_replace('/\s+/', '', $value);
     }
 
     public function chunkSize(): int

@@ -2,74 +2,90 @@
 
 @section('content')
     <div class="container-fluid">
-        <h1>Buat Master Data Job Role Baru</h1>
-
-        <!-- Error Messages -->
         @if ($errors->any())
             <div class="alert alert-danger">
-                <h4>Error(s) occurred:</h4>
-                <ul>
-                    @foreach ($errors->all() as $error)
-                        <li>{{ $error }}</li>
+                <ul class="mb-0">
+                    @foreach ($errors->all() as $message)
+                        <li>{{ $message }}</li>
                     @endforeach
                 </ul>
             </div>
         @endif
 
-        <form id="jobRoleForm" action="{{ route('job-roles.store') }}" method="POST">
-            @csrf
-
-            <!-- Company Dropdown -->
-            <div class="mb-3">
-                <label for="company_id" class="form-label">Perusahaan</label>
-                <select name="company_id" id="company_id" class="form-control select2" required>
-                    <option value="">Pilih Perusahaan</option>
-                </select>
+        <div class="card shadow-sm">
+            <div class="card-header">
+                <h2>Buat Master Data Job Role Baru</h2>
             </div>
+            <div class="card-body">
 
-            <!-- Kompartemen Dropdown -->
-            <div class="mb-3">
-                <label for="kompartemen_id" class="form-label">Kompartemen</label>
-                <select name="kompartemen_id" id="kompartemen_id" class="form-control select2">
-                    <option value="">Pilih Kompartemen</option>
-                </select>
+                <!-- Error Messages -->
+                @if ($errors->any())
+                    <div class="alert alert-danger">
+                        <h4>Error(s) occurred:</h4>
+                        <ul>
+                            @foreach ($errors->all() as $error)
+                                <li>{{ $error }}</li>
+                            @endforeach
+                        </ul>
+                    </div>
+                @endif
+
+                <form id="jobRoleForm" action="{{ route('job-roles.store') }}" method="POST">
+                    @csrf
+
+                    <!-- Company Dropdown -->
+                    <div class="mb-3">
+                        <label for="company_id" class="form-label">Perusahaan</label>
+                        <select name="company_id" id="company_id" class="form-control select2" required>
+                            <option value="">Pilih Perusahaan</option>
+                        </select>
+                    </div>
+
+                    <!-- Kompartemen Dropdown -->
+                    <div class="mb-3">
+                        <label for="kompartemen_id" class="form-label">Kompartemen</label>
+                        <select name="kompartemen_id" id="kompartemen_id" class="form-control select2">
+                            <option value="">Pilih Kompartemen</option>
+                        </select>
+                    </div>
+
+                    <!-- Departemen Dropdown -->
+                    <div class="mb-3">
+                        <label for="departemen_id" class="form-label">Departemen</label>
+                        <select name="departemen_id" id="departemen_id" class="form-control select2">
+                            <option value="">Pilih Departemen</option>
+                        </select>
+                    </div>
+
+                    <!-- Job Role ID -->
+                    <div class="mb-3">
+                        <label for="job_role_id" class="form-label">
+                            Job Role ID
+                            <button type="button" class="btn btn-sm btn-outline-secondary" id="generateJobRoleIdBtn"
+                                title="Generate Latest Job Role ID">
+                                Generate
+                            </button>
+                        </label>
+                        <input type="text" class="form-control" name="job_role_id" id="job_role_id"
+                            value="{{ old('job_role_id') }}" readonly>
+                    </div>
+
+                    <!-- Job Role Name -->
+                    <div class="mb-3">
+                        <label for="nama" class="form-label">Nama Job Role</label>
+                        <input type="text" class="form-control" name="nama" value="{{ old('nama') }}" required>
+                    </div>
+
+                    <!-- Description -->
+                    <div class="mb-3">
+                        <label for="deskripsi" class="form-label">Deskripsi</label>
+                        <textarea class="form-control" name="deskripsi">{{ old('deskripsi') }}</textarea>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary">Buat Job Role</button>
+                </form>
             </div>
-
-            <!-- Departemen Dropdown -->
-            <div class="mb-3">
-                <label for="departemen_id" class="form-label">Departemen</label>
-                <select name="departemen_id" id="departemen_id" class="form-control select2">
-                    <option value="">Pilih Departemen</option>
-                </select>
-            </div>
-
-            <!-- Job Role ID -->
-            <div class="mb-3">
-                <label for="job_role_id" class="form-label">
-                    Job Role ID
-                    <button type="button" class="btn btn-sm btn-outline-secondary" id="generateJobRoleIdBtn"
-                        title="Generate Latest Job Role ID">
-                        Generate
-                    </button>
-                </label>
-                <input type="text" class="form-control" name="job_role_id" id="job_role_id"
-                    value="{{ old('job_role_id') }}" readonly>
-            </div>
-
-            <!-- Job Role Name -->
-            <div class="mb-3">
-                <label for="nama" class="form-label">Nama Job Role</label>
-                <input type="text" class="form-control" name="nama" value="{{ old('nama') }}" required>
-            </div>
-
-            <!-- Description -->
-            <div class="mb-3">
-                <label for="deskripsi" class="form-label">Deskripsi</label>
-                <textarea class="form-control" name="deskripsi">{{ old('deskripsi') }}</textarea>
-            </div>
-
-            <button type="submit" class="btn btn-primary">Buat Job Role</button>
-        </form>
+        </div>
     </div>
 @endsection
 

@@ -19,7 +19,15 @@ class CompositeRoleController extends Controller
 {
     public function index()
     {
-        $companies = Company::all();
+        $user = auth()->user();
+        $userCompanyCode = $user->loginDetail->company_code ?? null;
+        $companies = 'zzz';
+
+        if ($userCompanyCode === 'A000') {
+            $companies = Company::all();
+        } else {
+            $companies = Company::where('company_code', $userCompanyCode)->get();
+        }
 
         return view('master-data.composite_roles.index', compact('companies'));
     }
@@ -34,11 +42,21 @@ class CompositeRoleController extends Controller
 
     public function create()
     {
-        $companies = Company::all();
+        $user = auth()->user();
+        $userCompanyCode = $user->loginDetail->company_code ?? null;
+        $companies = 'zzz';
+        $jobRoles = 'zzz';
+
+        if ($userCompanyCode === 'A000') {
+            $companies = Company::all();
+            $jobRoles = JobRole::with(['company', 'kompartemen', 'departemen'])->get();
+        } else {
+            $companies = Company::where('company_code', $userCompanyCode)->get();
+            $jobRoles = JobRole::with(['company', 'kompartemen', 'departemen'])->where('company_id', $userCompanyCode)->get();
+        }
 
         // Structure job roles data by Company > Kompartemen > Departemen
         $job_roles_data = [];
-        $jobRoles = JobRole::with(['company', 'kompartemen', 'departemen'])->get();
 
         foreach ($jobRoles as $jobRole) {
             $companyId = $jobRole->company_id;
@@ -83,11 +101,21 @@ class CompositeRoleController extends Controller
 
     public function edit(CompositeRole $compositeRole)
     {
-        $companies = Company::all();
+        $user = auth()->user();
+        $userCompanyCode = $user->loginDetail->company_code ?? null;
+        $companies = 'zzz';
+        $jobRoles = 'zzz';
+
+        if ($userCompanyCode === 'A000') {
+            $companies = Company::all();
+            $jobRoles = JobRole::with(['company', 'kompartemen', 'departemen'])->get();
+        } else {
+            $companies = Company::where('company_code', $userCompanyCode)->get();
+            $jobRoles = JobRole::with(['company', 'kompartemen', 'departemen'])->where('company_id', $userCompanyCode)->get();
+        }
 
         // Structure job roles data by Company > Kompartemen > Departemen
         $job_roles_data = [];
-        $jobRoles = JobRole::with(['company', 'kompartemen', 'departemen'])->get();
 
         foreach ($jobRoles as $jobRole) {
             $companyId = $jobRole->company_id;

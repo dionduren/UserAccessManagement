@@ -15,7 +15,12 @@ class SingleRoleController extends Controller
 {
     public function index()
     {
-        $companies = Company::all();
+        $user = auth()->user();
+        $userCompanyCode = $user->loginDetail->company_code ?? null;
+        $companies = $userCompanyCode === 'A000'
+            ? Company::all()
+            : Company::where('company_code', $userCompanyCode)->get();
+
         return view('master-data.single_roles.index', compact('companies'));
     }
 
@@ -28,7 +33,12 @@ class SingleRoleController extends Controller
 
     public function create()
     {
-        $companies = Company::all();
+        $user = auth()->user();
+        $userCompanyCode = $user->loginDetail->company_code ?? null;
+        $companies = $userCompanyCode === 'A000'
+            ? Company::all()
+            : Company::where('company_code', $userCompanyCode)->get();
+
         return view('master-data.single_roles.create', compact('companies'));
     }
 
@@ -64,9 +74,13 @@ class SingleRoleController extends Controller
     public function edit($id)
     {
         $singleRole = SingleRole::findOrFail($id);
-        $companies = Company::all();
 
-        // Render the view and pass the data to it
+        $user = auth()->user();
+        $userCompanyCode = $user->loginDetail->company_code ?? null;
+        $companies = $userCompanyCode === 'A000'
+            ? Company::all()
+            : Company::where('company_code', $userCompanyCode)->get();
+
         return view('master-data.single_roles.edit', compact('singleRole', 'companies'))->render();
     }
 
@@ -125,6 +139,7 @@ class SingleRoleController extends Controller
     //                 });
     //         });
     //     }
+    // }
 
     //     // Join with `ms_company` for proper ordering by company name
     //     if ($request->filled('order.0.column')) {
@@ -166,18 +181,25 @@ class SingleRoleController extends Controller
 
     public function getSingleRoles(Request $request)
     {
-        $query = SingleRole::with(['company', 'tcodes', 'compositeRoles'])
-            ->select('tr_single_roles.*'); // Ensure default select
+        $user = auth()->user();
+        $userCompanyCode = $user->loginDetail->company_code ?? null;
 
-        // Filter by `company_id`
-        if ($request->filled('company_id')) {
+        // Base query with relations
+        $query = SingleRole::with(['company', 'tcodes', 'compositeRoles'])
+            ->select('tr_single_roles.*');
+
+        // Company scope:
+        // - If user is not A000, force their company
+        // - If user is A000 (admin) allow optional company_id filter from request
+        if ($userCompanyCode !== 'A000') {
+            $query->where('tr_single_roles.company_id', $userCompanyCode);
+        } elseif ($request->filled('company_id')) {
             $query->where('tr_single_roles.company_id', $request->company_id);
         }
 
         // Global search
         if ($request->filled('search.value')) {
             $searchValue = $request->input('search.value');
-
             $query->where(function ($q) use ($searchValue) {
                 $q->where('tr_single_roles.nama', 'like', "%{$searchValue}%")
                     ->orWhere('tr_single_roles.deskripsi', 'like', "%{$searchValue}%")
@@ -187,12 +209,15 @@ class SingleRoleController extends Controller
             });
         }
 
-        // Join for ordering
+        // Clone before adding joins for accurate filtered count
+        $recordsFiltered = (clone $query)->count();
+
+        // Ordering (may add join)
         if ($request->filled('order.0.column')) {
             $orderableColumns = ['company', 'tr_single_roles.nama', 'tr_single_roles.deskripsi'];
-            $columnIndex = $request->input('order.0.column');
-            $columnDirection = $request->input('order.0.dir', 'asc');
-            $columnName = $orderableColumns[$columnIndex] ?? 'tr_single_roles.nama';
+            $columnIndex      = $request->input('order.0.column');
+            $columnDirection  = $request->input('order.0.dir', 'asc');
+            $columnName       = $orderableColumns[$columnIndex] ?? 'tr_single_roles.nama';
 
             if ($columnName === 'company') {
                 $query->leftJoin('ms_company', 'ms_company.company_code', '=', 'tr_single_roles.company_id')
@@ -203,25 +228,36 @@ class SingleRoleController extends Controller
             }
         }
 
-        // Apply pagination
-        $recordsFiltered = $query->count();
-        $singleRoles = $query->skip($request->start)->take($request->length)->get();
+        // Pagination
+        $singleRoles = $query
+            ->skip(intval($request->start))
+            ->take(intval($request->length))
+            ->get();
 
-        // Format for datatable
+        // Total records the user is allowed to see (before search)
+        $totalQuery = SingleRole::query();
+        if ($userCompanyCode !== 'A000') {
+            $totalQuery->where('company_id', $userCompanyCode);
+        } elseif ($request->filled('company_id')) {
+            $totalQuery->where('company_id', $request->company_id);
+        }
+        $recordsTotal = $totalQuery->count();
+
+        // Format rows
         $data = $singleRoles->map(function ($role) {
             return [
-                'company' => $role->company->nama ?? 'N/A',
-                'nama' => $role->nama,
+                'company'   => $role->company->nama ?? 'N/A',
+                'nama'      => $role->nama,
                 'deskripsi' => $role->deskripsi,
-                'actions' => view('master-data.single_roles.partials.actions', ['role' => $role])->render(),
+                'actions'   => view('master-data.single_roles.partials.actions', ['role' => $role])->render(),
             ];
         });
 
         return response()->json([
-            'draw' => intval($request->draw),
-            'recordsTotal' => SingleRole::count(),
+            'draw'            => intval($request->draw),
+            'recordsTotal'    => $recordsTotal,
             'recordsFiltered' => $recordsFiltered,
-            'data' => $data,
+            'data'            => $data,
         ]);
     }
 }

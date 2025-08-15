@@ -3,27 +3,41 @@
 namespace App\Http\Controllers\Relationship;
 
 use App\Http\Controllers\Controller;
-
 use App\Models\Company;
 use App\Models\CompositeRole;
 use App\Models\SingleRole;
-
 use Illuminate\Http\Request;
-use Yajra\DataTables\DataTables;
+use Illuminate\Support\Facades\DB;
+use Yajra\DataTables\Facades\DataTables;
 
 class CompositeSingleController extends Controller
 {
-
     // Display a listing of the resource.
-    public function index()
+    public function index(Request $request)
     {
-        return view('relationship.composite-single.index');
+        $user  = auth()->user();
+        $userCompanyCode = $user->loginDetail->company_code ?? null;
+
+        $companies = $userCompanyCode === 'A000'
+            ? Company::orderBy('nama')->get()
+            : Company::where('company_code', $userCompanyCode)->get();
+
+        return view('relationship.composite-single.index', [
+            'companies'        => $companies,
+            'userCompanyCode'  => $userCompanyCode,
+            'selectedCompany'  => $request->get('company_id')
+        ]);
     }
 
     // Show the form for creating a new resource.
     public function create()
     {
-        $companies = Company::all();
+        $user = auth()->user();
+        $userCompanyCode = $user->loginDetail->company_code ?? null;
+        $companies = $userCompanyCode === 'A000'
+            ? Company::all()
+            : Company::where('company_code', $userCompanyCode)->get();
+
         return view('relationship.composite-single.create', compact('companies'));
     }
 
@@ -53,7 +67,12 @@ class CompositeSingleController extends Controller
     // Edit form
     public function edit($id)
     {
-        $companies = Company::all();
+        $user = auth()->user();
+        $userCompanyCode = $user->loginDetail->company_code ?? null;
+        $companies = $userCompanyCode === 'A000'
+            ? Company::all()
+            : Company::where('company_code', $userCompanyCode)->get();
+
         $compositeSingle = CompositeRole::with('singleRoles')->findOrFail($id);
         $selectedSingleRoles = $compositeSingle->singleRoles->pluck('id')->toArray();
 
@@ -113,24 +132,29 @@ class CompositeSingleController extends Controller
     //         ->toJson();
     // }
 
-    public function jsonIndex(Request $request)
-    {
-        $compositeSingles = CompositeRole::with('singleRoles')
-            ->has('singleRoles')
-            ->get();
+    // public function jsonIndex(Request $request)
+    // {
+    //     $compositeSingles = CompositeRole::with('singleRoles')->get();
 
-        return DataTables::of($compositeSingles)
-            ->addColumn('singleRoles', function ($compositeSingle) {
-                return $compositeSingle->singleRoles->pluck('nama')->implode(', ');
-            })
-            ->addColumn('action', function ($compositeSingle) {
-                return [
-                    'edit_url' => route('composite-single.edit', $compositeSingle->id),
-                    'delete_url' => route('composite-single.destroy', $compositeSingle->id),
-                ];
-            })
-            ->toJson();
-    }
+    //     return \Yajra\DataTables\DataTables::of($compositeSingles)
+    //         ->addColumn('singleRoles', function ($compositeSingle) {
+    //             $names = $compositeSingle->singleRoles->pluck('nama');
+    //             $lis = $names->map(fn($n) => '<li>' . e($n) . '</li>')->implode('');
+    //             $count = $names->count();
+    //             return '<ul class="mb-0 single-role-list" data-count="' . $count . '">' . $lis . '</ul>';
+    //         })
+    //         ->addColumn('singleRoles_text', function ($compositeSingle) {
+    //             return $compositeSingle->singleRoles->pluck('nama')->implode(', ');
+    //         })
+    //         ->addColumn('action', function ($compositeSingle) {
+    //             return [
+    //                 'edit_url'   => route('composite-single.edit', $compositeSingle->id),
+    //                 'delete_url' => route('composite-single.destroy', $compositeSingle->id),
+    //             ];
+    //         })
+    //         ->rawColumns(['singleRoles'])
+    //         ->make(true);
+    // }
 
     public function searchByCompany(Request $request)
     {
@@ -139,5 +163,130 @@ class CompositeSingleController extends Controller
         $singleRoles = SingleRole::where('company_id', $companyId)->get();
 
         return response()->json(['compositeRoles' => $compositeRoles, 'singleRoles' => $singleRoles]);
+    }
+
+    // DataTables JSON – paginate by composite roles (NOT by single-role rows)
+    public function datatable(Request $request)
+    {
+        $user = auth()->user();
+        $userCompanyCode = $user->loginDetail->company_code ?? null;
+
+        $draw   = (int)$request->input('draw');
+        $length = (int)$request->input('length', 10);     // composites per page
+        $start  = (int)$request->input('start', 0);       // offset in composites
+        $search = $request->input('search.value');
+
+        // Base query (one row per composite role)
+        $base = CompositeRole::query()
+            ->leftJoin('ms_company', 'ms_company.company_code', '=', 'tr_composite_roles.company_id')
+            ->select('tr_composite_roles.*', 'ms_company.nama as company_name')
+            ->with(['singleRoles' => function ($q) {
+                $q->orderBy('nama');
+            }])
+            ->orderBy('tr_composite_roles.company_id');
+
+        // Security / company scoping
+        if ($userCompanyCode !== 'A000') {
+            $base->where('tr_composite_roles.company_id', $userCompanyCode);
+        } elseif ($request->filled('company_id')) {
+            $base->where('tr_composite_roles.company_id', $request->company_id);
+        }
+
+        // Total BEFORE search filter (company scope already applied)
+        $recordsTotal = (clone $base)->count();
+
+        // Search filter (composite, company, any single role name / description)
+        if ($search) {
+            $driver = DB::getDriverName();
+            $like   = $driver === 'pgsql' ? 'ILIKE' : 'LIKE';
+
+            $base->where(function ($q) use ($search, $like) {
+                $q->where('tr_composite_roles.nama', $like, "%$search%")
+                    ->orWhere('tr_composite_roles.company_id', $like, "%$search%")
+                    ->orWhere('ms_company.nama', $like, "%$search%")
+                    ->orWhereHas('singleRoles', function ($sq) use ($search, $like) {
+                        $sq->where('tr_single_roles.nama', $like, "%$search%")
+                            ->orWhere('tr_single_roles.deskripsi', $like, "%$search%");
+                    });
+            });
+        }
+
+        // Count AFTER filtering
+        $recordsFiltered = (clone $base)->count();
+
+        // Ordering (applied at composite level)
+        // DataTables columns: 0 company, 1 composite_role, 2 single_role, 3 description, 4 actions
+        if ($request->has('order')) {
+            foreach ($request->input('order') as $ord) {
+                $idx = (int)$ord['column'];
+                $dir = $ord['dir'] === 'desc' ? 'desc' : 'asc';
+                switch ($idx) {
+                    case 0:
+                        $base->orderBy('ms_company.nama', $dir)->orderBy('tr_composite_roles.nama');
+                        break;
+                    case 1:
+                        $base->orderBy('tr_composite_roles.nama', $dir);
+                        break;
+                    case 2:
+                        // Approximate "single role" ordering: order by first single role name via composite name fallback
+                        $base->orderBy('tr_composite_roles.nama', $dir);
+                        break;
+                    default:
+                        // Fallback stable
+                        $base->orderBy('tr_composite_roles.nama');
+                }
+            }
+        } else {
+            // Default order (company, composite)
+            $base->orderBy('ms_company.nama')->orderBy('tr_composite_roles.nama');
+        }
+
+        // Pagination (by composites)
+        $composites = $base->skip($start)->take($length)->get();
+
+        // Build flattened row set (expanded single roles)
+        $data = [];
+        foreach ($composites as $comp) {
+            $companyDisplay = ($comp->company_name ?? '-');
+            $canModify = $userCompanyCode === 'A000' || $comp->company_id === $userCompanyCode;
+
+            $actionsHtml = $canModify
+                ? '<a href="' . route('composite-single.edit', $comp->id) . '" class="btn btn-primary btn-sm mb-1 w-100">Edit</a>'
+                . '<form action="' . route('composite-single.destroy', $comp->id) . '" method="POST" onsubmit="return confirm(\'Delete all links for this composite role?\')">'
+                . csrf_field() . method_field('DELETE')
+                . '<button class="btn btn-danger btn-sm w-100">Delete</button></form>'
+                : '<span class="text-muted small">Read only</span>';
+
+            // If no single roles, still show a placeholder row
+            if ($comp->singleRoles->isEmpty()) {
+                $data[] = [
+                    'company'        => $companyDisplay,
+                    'composite_role' => $comp->nama,
+                    'single_role'    => '-',
+                    'description'    => '-',
+                    'group_key'      => $comp->id,
+                    'actions'        => $actionsHtml,
+                ];
+                continue;
+            }
+
+            foreach ($comp->singleRoles as $sr) {
+                $data[] = [
+                    'company'        => $companyDisplay,
+                    'composite_role' => $comp->nama,
+                    'single_role'    => $sr->nama,
+                    'description'    => $sr->deskripsi ?: '-',
+                    'group_key'      => $comp->id,
+                    'actions'        => $actionsHtml,
+                ];
+            }
+        }
+
+        return response()->json([
+            'draw'            => $draw,
+            'recordsTotal'    => $recordsTotal,      // total composites (after company scope)
+            'recordsFiltered' => $recordsFiltered,   // filtered composites
+            'data'            => $data,              // expanded rows
+        ]);
     }
 }

@@ -2,51 +2,63 @@
 
 @section('content')
     <div class="container-fluid">
-        <h1>Dashboard Cost Center</h1>
-
-        <a href="{{ route('cost-center.create') }}" target="_blank" class="btn btn-primary mb-3">
-            <i class="bi bi-plus"></i> Create New User Cost Center
-        </a>
-
-        @if (session('status'))
-            <div class="alert alert-success">{{ session('status') }}</div>
-        @endif
-
-        <!-- Success Message -->
-        @if (session('success'))
-            <div class="alert alert-success">
-                <h4>Success:</h4>
-                {{ session('success') }}
+        @if ($errors->any())
+            <div class="alert alert-danger">
+                <ul class="mb-0">
+                    @foreach ($errors->all() as $message)
+                        <li>{{ $message }}</li>
+                    @endforeach
+                </ul>
             </div>
         @endif
 
-        <div class="row">
-            <div class="col">
-                <label for="company_id">Pilih Perusahaan:</label>
-                <select name="company_id" id="company_id" class="form-control mb-3">
-                    <option value="">-- Pilih Perusahaan --</option>
-                    @foreach ($companies as $company)
-                        <option value="{{ $company->company_code }}">{{ $company->nama }}</option>
-                    @endforeach
-                </select>
+        <div class="card shadow-sm">
+            <div class="card-header">
+                <h2>Dashboard Cost Center</h2>
+            </div>
+            <div class="card-body">
+
+                <a href="{{ route('cost-center.create') }}" target="_blank" class="btn btn-primary mb-3">
+                    <i class="bi bi-plus"></i> Create New User Cost Center
+                </a>
+
+                <!-- Success Message -->
+                @if (session('success'))
+                    <div class="alert alert-success">
+                        <h4>Success:</h4>
+                        {{ session('success') }}
+                    </div>
+                @endif
+
+                <div class="row">
+                    <div class="col">
+                        <label for="company_id">Pilih Perusahaan:</label>
+                        <select name="company_id" id="company_id" class="form-control mb-3">
+                            <option value="">-- Pilih Perusahaan --</option>
+                            @foreach ($companies as $company)
+                                <option value="{{ $company->company_code }}">{{ $company->nama }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                </div>
+
+                <table id="cost_center_table" class="table table-bordered table-striped table-hover cell-border mt-3">
+                    <thead>
+                        <tr>
+                            <th>id</th>
+                            <th>Perusahaan</th>
+                            <th>Tipe Unit Kerja</th>
+                            <th>ID Unit Kerja</th>
+                            <th>Nama Unit Kerja</th>
+                            <th>Cost Center</th>
+                            <th>Identifier</th>
+                            <th>Deskripsi</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                </table>
             </div>
         </div>
-
-        <table id="cost_center_table" class="table table-bordered table-striped table-hover cell-border mt-3">
-            <thead>
-                <tr>
-                    <th>id</th>
-                    <th>Perusahaan</th>
-                    <th>Tipe Unit Kerja</th>
-                    <th>ID Unit Kerja</th>
-                    <th>Nama Unit Kerja</th>
-                    <th>Cost Center</th>
-                    <th>Identifier</th>
-                    <th>Deskripsi</th>
-                    <th>Action</th>
-                </tr>
-            </thead>
-        </table>
     </div>
 
     <!-- Modals -->

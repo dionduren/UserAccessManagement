@@ -2,107 +2,124 @@
 
 @section('content')
     <div class="container-fluid">
-        <h2>Master Data Job Roles</h2>
-
-        <a href="{{ route('job-roles.create') }}" class="btn btn-primary mb-3">Buat Job Role</a>
-
-        <!-- Success Message -->
-        @if (session('status'))
-            <div class="alert alert-success">
-                {{ session('status') }}
+        @if ($errors->any())
+            <div class="alert alert-danger">
+                <ul class="mb-0">
+                    @foreach ($errors->all() as $message)
+                        <li>{{ $message }}</li>
+                    @endforeach
+                </ul>
             </div>
         @endif
 
-        @if (session('success'))
-            <div class="alert alert-success">{{ session('success') }}</div>
-        @endif
-
-        <!-- Dropdown for Company Selection -->
-        <div class="form-group mb-3">
-            <label for="companyDropdown">Pilih Perusahaan</label>
-            <select id="companyDropdown" class="form-control">
-                <option value="">-- Semua Perusahaan --</option>
-                @foreach ($companies as $company)
-                    <option value="{{ $company->company_code }}">{{ $company->nama }}</option>
-                @endforeach
-            </select>
-        </div>
-
-        <!-- Dropdown for Kompartemen Selection -->
-        <div class="form-group mb-3">
-            <label for="kompartemenDropdown">Pilih Kompartemen</label>
-            <select id="kompartemenDropdown" class="form-control" disabled>
-                <option value="">-- Semua Kompartemen --</option>
-            </select>
-        </div>
-
-        <!-- Dropdown for Departemen Selection -->
-        <div class="form-group mb-3">
-            <label for="departemenDropdown">Pilih Departemen</label>
-            <select id="departemenDropdown" class="form-control" disabled>
-                <option value="">-- Semua Departemen --</option>
-            </select>
-        </div>
-
-        <!-- Table to display Job Roles -->
-        <table id="jobRolesTable" class="table table-bordered table-striped table-hover mt-3">
-            <thead>
-            </thead>
-            <tbody></tbody>
-        </table>
-    </div>
-
-    <!-- Modal for Job Role Details -->
-    <div class="modal fade" id="showJobRoleModal" tabindex="-1" aria-labelledby="showJobRoleModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-lg">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="showJobRoleModalLabel">Job Role Details</h5>
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                        <span aria-hidden="true">&times;</span>
-                    </button>
-                </div>
-                <div class="modal-body" id="modal-job-role-details">
-                    <!-- Job Role details will be dynamically loaded here -->
-                </div>
+        <div class="card shadow-sm">
+            <div class="card-header">
+                <h2>Master Data Job Roles</h2>
             </div>
-        </div>
-    </div>
+            <div class="card-body">
 
-    <!-- Modal for Flagged Info and Change Flagged Status -->
-    <div class="modal fade" id="flaggedJobRoleModal" tabindex="-1" aria-labelledby="flaggedJobRoleModalLabel"
-        aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="flaggedJobRoleModalLabel">Flagged Info</h5>
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                        <span aria-hidden="true">&times;</span>
-                    </button>
+                <a href="{{ route('job-roles.create') }}" class="btn btn-primary mb-3">Buat Job Role</a>
+
+                <!-- Success Message -->
+                @if (session('status'))
+                    <div class="alert alert-success">
+                        {{ session('status') }}
+                    </div>
+                @endif
+
+                @if (session('success'))
+                    <div class="alert alert-success">{{ session('success') }}</div>
+                @endif
+
+                <!-- Dropdown for Company Selection -->
+                <div class="form-group mb-3">
+                    <label for="companyDropdown">Pilih Perusahaan</label>
+                    <select id="companyDropdown" class="form-control">
+                        <option value="">-- Semua Perusahaan --</option>
+                        @foreach ($companies as $company)
+                            <option value="{{ $company->company_code }}">{{ $company->nama }}</option>
+                        @endforeach
+                    </select>
                 </div>
-                <div class="modal-body" id="modal-flagged-job-role-details">
-                    <!-- Flagged info will be loaded here -->
-                    <div class="text-center">
-                        <span class="spinner-border" role="status"></span>
+
+                <!-- Dropdown for Kompartemen Selection -->
+                <div class="form-group mb-3">
+                    <label for="kompartemenDropdown">Pilih Kompartemen</label>
+                    <select id="kompartemenDropdown" class="form-control" disabled>
+                        <option value="">-- Semua Kompartemen --</option>
+                    </select>
+                </div>
+
+                <!-- Dropdown for Departemen Selection -->
+                <div class="form-group mb-3">
+                    <label for="departemenDropdown">Pilih Departemen</label>
+                    <select id="departemenDropdown" class="form-control" disabled>
+                        <option value="">-- Semua Departemen --</option>
+                    </select>
+                </div>
+
+                <!-- Table to display Job Roles -->
+                <table id="jobRolesTable" class="table table-bordered table-striped table-hover mt-3">
+                    <thead>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+
+            <!-- Modal for Job Role Details -->
+            <div class="modal fade" id="showJobRoleModal" tabindex="-1" aria-labelledby="showJobRoleModalLabel"
+                aria-hidden="true">
+                <div class="modal-dialog modal-lg">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="showJobRoleModalLabel">Job Role Details</h5>
+                            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                <span aria-hidden="true">&times;</span>
+                            </button>
+                        </div>
+                        <div class="modal-body" id="modal-job-role-details">
+                            <!-- Job Role details will be dynamically loaded here -->
+                        </div>
                     </div>
                 </div>
-                <div class="modal-footer d-none" id="flagged-job-role-actions">
-                    <form id="flaggedJobRoleForm" method="POST">
-                        @csrf
-                        <input type="hidden" name="job_role_id" id="flagged-job-role-id" value="">
-                        <div class="form-group">
-                            <label for="flagged-status">Flagged Status</label>
-                            <select class="form-control" name="flagged" id="flagged-status">
-                                <option value="1">Flagged</option>
-                                <option value="0">Not Flagged</option>
-                            </select>
+            </div>
+
+            <!-- Modal for Flagged Info and Change Flagged Status -->
+            <div class="modal fade" id="flaggedJobRoleModal" tabindex="-1" aria-labelledby="flaggedJobRoleModalLabel"
+                aria-hidden="true">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="flaggedJobRoleModalLabel">Flagged Info</h5>
+                            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                <span aria-hidden="true">&times;</span>
+                            </button>
                         </div>
-                        <div class="form-group">
-                            <label for="flagged-keterangan">Keterangan</label>
-                            <textarea class="form-control" name="keterangan" id="flagged-keterangan" rows="2"></textarea>
+                        <div class="modal-body" id="modal-flagged-job-role-details">
+                            <!-- Flagged info will be loaded here -->
+                            <div class="text-center">
+                                <span class="spinner-border" role="status"></span>
+                            </div>
                         </div>
-                        <button type="submit" class="btn btn-primary">Update Flagged Status</button>
-                    </form>
+                        <div class="modal-footer d-none" id="flagged-job-role-actions">
+                            <form id="flaggedJobRoleForm" method="POST">
+                                @csrf
+                                <input type="hidden" name="job_role_id" id="flagged-job-role-id" value="">
+                                <div class="form-group">
+                                    <label for="flagged-status">Flagged Status</label>
+                                    <select class="form-control" name="flagged" id="flagged-status">
+                                        <option value="1">Flagged</option>
+                                        <option value="0">Not Flagged</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label for="flagged-keterangan">Keterangan</label>
+                                    <textarea class="form-control" name="keterangan" id="flagged-keterangan" rows="2"></textarea>
+                                </div>
+                                <button type="submit" class="btn btn-primary">Update Flagged Status</button>
+                            </form>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>

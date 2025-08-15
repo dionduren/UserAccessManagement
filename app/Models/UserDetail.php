@@ -69,12 +69,6 @@ class UserDetail extends Model
         return $this->hasOne(userNIK::class, 'user_code', 'nik');
     }
 
-
-    public function user()
-    {
-        return $this->hasOne(User::class, 'username', 'nik');
-    }
-
     public function costCenter()
     {
         return $this->hasMany(CostCenter::class, 'cost_code', 'cost_code');

@@ -83,25 +83,25 @@
 
                     <li>
                         <a href="{{ route('job-roles.index') }}"
-                            class="nav-link {{ request()->routeIs('job-roles.index') ? 'active' : 'text-white' }}">
+                            class="nav-link {{ request()->routeIs('job-roles.*') ? 'active' : 'text-white' }}">
                             <i class="bi bi-person-badge me-2"></i> Job Roles
                         </a>
                     </li>
                     <li>
                         <a href="{{ route('composite-roles.index') }}"
-                            class="nav-link {{ request()->routeIs('composite-roles.index') ? 'active' : 'text-white' }}">
+                            class="nav-link {{ request()->routeIs('composite-roles.*') ? 'active' : 'text-white' }}">
                             <i class="bi bi-people-fill me-2"></i> Composite Roles
                         </a>
                     </li>
                     <li>
                         <a href="{{ route('single-roles.index') }}"
-                            class="nav-link {{ request()->routeIs('single-roles.index') ? 'active' : 'text-white' }}">
+                            class="nav-link {{ request()->routeIs('single-roles.*') ? 'active' : 'text-white' }}">
                             <i class="bi bi-person-fill me-2"></i> Single Roles
                         </a>
                     </li>
                     <li>
                         <a href="{{ route('tcodes.index') }}"
-                            class="nav-link {{ request()->routeIs('tcodes.index') ? 'active' : 'text-white' }}">
+                            class="nav-link {{ request()->routeIs('tcodes.*') ? 'active' : 'text-white' }}">
                             <i class="bi bi-code-slash me-2"></i> Tcodes
                         </a>
                     </li>
@@ -182,6 +182,26 @@
                         </li>
                     </div>
                 </div>
+            @endcan
+
+            <hr>
+
+            @can('Super Admin')
+                <div>
+                    <h5>MIDDLE DB</h5>
+                </div>
+                <li class="nav-item">
+                    <a href="{{ route('middle_db.master_data_karyawan.index') }}"
+                        class="mb-1 nav-link {{ request()->routeIs('middle_db.master_data_karyawan.*') ? 'active' : 'text-white' }}">
+                        <i class="bi bi-people-fill me-2"></i> Master Data Karyawan
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="{{ route('middle_db.unit_kerja.index') }}"
+                        class="mb-1 nav-link {{ request()->routeIs('middle_db.unit_kerja.*') ? 'active' : 'text-white' }}">
+                        <i class="bi bi-diagram-3 me-2"></i> Unit Kerja
+                    </a>
+                </li>
             @endcan
 
             <hr>

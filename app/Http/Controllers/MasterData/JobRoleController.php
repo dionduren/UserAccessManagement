@@ -26,7 +26,6 @@ class JobRoleController extends Controller
         // $job_roles = JobRole::with(['compositeRole', 'company', 'kompartemen', 'departemen'])->get();
         // return view('job_roles.index', compact('job_roles'));
 
-        // Fetch all companies to populate the initial dropdown
         $user = auth()->user();
         $userCompanyCode = $user->loginDetail->company_code ?? null;
         $companies = 'zzz';
@@ -388,8 +387,8 @@ class JobRoleController extends Controller
             $jobRole = JobRole::where('id', $id)->firstOrFail();
             $jobRole->flagged = $request->flagged;
             $jobRole->keterangan = $request->keterangan;
-            $jobRole->supdated_by = auth()->user()->name ?? 'system';
-            $jobRole->supdated_at = now();
+            $jobRole->updated_by = auth()->user()->name ?? 'system';
+            $jobRole->updated_at = now();
             $jobRole->save();
 
             // Regenerate the JSON file after updating flagged status

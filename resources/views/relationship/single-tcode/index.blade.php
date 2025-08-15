@@ -1,56 +1,82 @@
 @extends('layouts.app')
 
+@section('header-scripts')
+    <style>
+        table.table-sm td,
+        table.table-sm th {
+            padding: .4rem .5rem;
+            vertical-align: top !important;
+        }
+
+        td._grp-hidden {
+            display: none;
+        }
+    </style>
+@endsection
+
 @section('content')
     <div class="container-fluid">
-        <div class="row">
-            <div class="col-12">
-                <!-- Success Message -->
-                @if (session('success'))
-                    <div class="alert alert-success">
-                        <h4>Success:</h4>
-                        {{ session('success') }}
-                    </div>
-                @endif
 
-                <!-- Error Messages -->
-                @if ($errors->any())
-                    <div class="alert alert-danger">
-                        <h4>Error(s) occurred:</h4>
-                        <ul>
-                            @foreach ($errors->all() as $error)
-                                <li>{{ $error }}</li>
-                            @endforeach
-                        </ul>
-                    </div>
-                @endif
+        @if (session('success'))
+            <div class="alert alert-success py-2 mb-3">{{ session('success') }}</div>
+        @endif
+
+        @if ($errors->any())
+            <div class="alert alert-danger py-2 mb-3">
+                <ul class="mb-0">
+                    @foreach ($errors->all() as $m)
+                        <li>{{ $m }}</li>
+                    @endforeach
+                </ul>
             </div>
-        </div>
+        @endif
 
-        <div class="row">
-            <div class="col-12">
-                <div class="card">
-                    <div class="card-header">
-                        <h3 class="card-title">List Single Role - Tcode</h3>
-                        <div class="card-tools">
-                            <a href="{{ route('single-tcode.create') }}" class="btn btn-success">
-                                <i class="fas fa-plus"></i> Create
-                            </a>
-                        </div>
-                    </div>
-                    <div class="card-body">
-                        <table id="single-tcode-datatable" class="table table-bordered table-striped">
-                            <thead>
-                                <tr>
-                                    <th>Single Role</th>
-                                    <th>Tcode</th>
-                                    <th>Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                            </tbody>
-                        </table>
-                    </div>
+        <div class="card shadow-sm">
+            <div class="card-header">
+                <h2 class="mb-3">Single Role - Tcode Mapping</h2>
+            </div>
+            <div class="card-body">
+                <div class="d-flex flex-wrap align-items-end gap-2 mb-3">
+                    @if ($userCompanyCode === 'A000')
+                        <form id="filterForm" class="d-flex gap-2">
+                            <div>
+                                <label class="form-label mb-1 small">Company</label>
+                                <select id="companyFilter" name="company_id" class="form-select form-select-sm">
+                                    <option value="">-- All --</option>
+                                    @foreach ($companies as $c)
+                                        <option value="{{ $c->company_code }}" @selected($selectedCompany === $c->company_code)>
+                                            {{ $c->nama }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                            </div>
+                        </form>
+                    @else
+                        <span class="badge bg-secondary">
+                            Company: {{ $companies->first()->nama }} ({{ $companies->first()->company_code }})
+                        </span>
+                    @endif
+
+                    <a href="{{ route('single-tcode.create') }}" class="btn btn-success btn-sm">
+                        <i class="bi bi-plus-lg"></i> Create
+                    </a>
                 </div>
+
+                <div class="table-responsive">
+                    <table id="singleRoleTcodeTable" class="table table-sm table-bordered w-100">
+                        <thead class="table-light">
+                            <tr>
+                                <th width="15%">Company</th>
+                                <th width="20%">Single Role</th>
+                                <th width="20%">Tcode</th>
+                                <th>Description</th>
+                                <th width="10%">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+
             </div>
         </div>
     </div>
@@ -58,28 +84,83 @@
 
 @section('scripts')
     <script>
-        $(document).ready(function() {
-            $('#single-tcode-datatable').DataTable({
+        document.addEventListener('DOMContentLoaded', function() {
+            const table = $('#singleRoleTcodeTable').DataTable({
                 processing: true,
-                serverSide: false,
-                ajax: '{{ route('single-tcode.jsonIndex') }}',
+                serverSide: true,
+                lengthMenu: [10, 25, 50, 100],
+                ajax: {
+                    url: '{{ route('single-tcode.datatable') }}',
+                    data: function(d) {
+                        d.company_id = $('#companyFilter').val();
+                    }
+                },
                 columns: [{
-                        data: 'single_role_name',
-                        name: 'single_role_name'
+                        data: 'company',
+                        name: 'company',
+                        className: 'company-col'
                     },
                     {
-                        data: 'tcodes',
-                        name: 'tcodes'
+                        data: 'single_role',
+                        name: 'single_role',
+                        className: 'single-col'
                     },
                     {
-                        data: 'action',
-                        name: 'action',
+                        data: 'tcode',
+                        name: 'tcode'
+                    },
+                    {
+                        data: 'description',
+                        name: 'description'
+                    },
+                    {
+                        data: 'actions',
+                        name: 'actions',
                         orderable: false,
-                        searchable: false
+                        searchable: false,
+                        className: 'actions-col'
                     },
-                ]
+                ],
+                drawCallback: function() {
+                    applyRowSpans(this.api());
+                }
             });
 
+            $('#companyFilter').on('change', function() {
+                table.ajax.reload();
+            });
+
+            function applyRowSpans(api) {
+                groupColumn(api, 0); // company
+                groupColumn(api, 1); // single role
+                groupColumn(api, 4); // actions (group by single role)
+            }
+
+            function groupColumn(api, colIndex) {
+                let lastKey = null;
+                let rowspanCell = null;
+                let spanCount = 0;
+                api.rows({
+                    page: 'current'
+                }).every(function(rowIdx) {
+                    const data = this.data();
+                    const key = data.group_key;
+                    const cell = $(api.cell(rowIdx, colIndex).node());
+
+                    if (colIndex === 0 || colIndex === 1 || colIndex === 4) {
+                        if (lastKey === key) {
+                            cell.addClass('_grp-hidden');
+                            spanCount++;
+                            if (rowspanCell) rowspanCell.attr('rowspan', spanCount);
+                        } else {
+                            lastKey = key;
+                            rowspanCell = cell;
+                            spanCount = 1;
+                            cell.removeClass('_grp-hidden').attr('rowspan', 1);
+                        }
+                    }
+                });
+            }
         });
     </script>
 @endsection

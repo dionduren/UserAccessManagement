@@ -2,7 +2,6 @@
 
 use App\Http\Controllers\AccessMatrixController;
 use App\Http\Controllers\AdminController;
-
 use App\Http\Controllers\DynamicUploadController;
 use App\Http\Controllers\EmployeeController;
 use App\Http\Controllers\HomeController;
@@ -13,8 +12,9 @@ use App\Http\Controllers\UserController;
 
 use App\Http\Controllers\Auth\EmailChangeRequestController;
 use App\Http\Controllers\Auth\ForgotPasswordController;
-use App\Http\Controllers\Auth\ResetPasswordController;
 use App\Http\Controllers\Auth\ProfileController;
+use App\Http\Controllers\Auth\ResetPasswordController;
+
 
 use App\Http\Controllers\IOExcel\CompanyKompartemenController;
 use App\Http\Controllers\IOExcel\CompanyMasterDataController;
@@ -26,11 +26,14 @@ use App\Http\Controllers\IOExcel\UserGenericImportController;
 use App\Http\Controllers\IOExcel\UserGenericUnitKerjaController;
 use App\Http\Controllers\IOExcel\UserNIKImportController;
 use App\Http\Controllers\IOExcel\USSMJobRoleController;
-// use App\Http\Controllers\IOExcel\ExcelImportController;
-
 use App\Http\Controllers\MasterData\CompanyController;
 use App\Http\Controllers\MasterData\CompositeRoleController;
 use App\Http\Controllers\MasterData\CostCenterController;
+// use App\Http\Controllers\IOExcel\ExcelImportController;
+
+use App\Http\Controllers\Middle_DB\MasterDataKaryawanController;
+use App\Http\Controllers\Middle_DB\UnitKerjaController;
+
 use App\Http\Controllers\MasterData\CostPrevUserController;
 use App\Http\Controllers\MasterData\DepartemenController;
 use App\Http\Controllers\MasterData\JobRoleController;
@@ -43,9 +46,9 @@ use App\Http\Controllers\MasterData\TerminatedEmployeeController;
 use App\Http\Controllers\MasterData\UserDetailController;
 use App\Http\Controllers\MasterData\UserGenericController;
 use App\Http\Controllers\MasterData\UserNIKController;
-
 use App\Http\Controllers\Relationship\CompositeSingleController;
 use App\Http\Controllers\Relationship\JobCompositeController;
+
 use App\Http\Controllers\Relationship\NIKJobController;
 use App\Http\Controllers\Relationship\SingleTcodeController;
 use App\Http\Controllers\Relationship\UserGenericJobRoleController;
@@ -56,9 +59,11 @@ use App\Http\Controllers\Report\UARReportController;
 use App\Http\Controllers\Report\WorkUnitReportController;
 
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Route;
+
 
 // Route::get('/', function () {
 //     return view('welcome');
@@ -91,6 +96,63 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/home/empty/singleRolesTcode', [HomeController::class, 'getSingleRolesTcodeEmpty'])->name('home.empty.singleRolesTcode');
     Route::get('/home/empty/tcodesSingle', [HomeController::class, 'getTcodesSingleEmpty'])->name('home.empty.tcodesSingle');
 
+
+    // SQL SERVER CONNECTION
+    // Route::get('/sqlsrv/ping', function () {
+    //     // TEST 1 - Ping to check profile
+    //     // DB::connection('sqlsrv_ext')->getPdo(); // throws if fails
+    //     // return DB::connection('sqlsrv_ext')->selectOne('SELECT SUSER_SNAME() AS login, DB_NAME() AS db');
+
+    //     // TEST 2 - Get Top 20 data
+    //     // $rows = DB::connection('sqlsrv_ext')
+    //     //     ->table('dbo.BASIS_KARYAWAN')   // schema.view
+    //     //     ->limit(20)
+    //     //     ->get();
+
+    //     // return $rows;
+
+    //     // TEST 3 - create view
+    //     // $schema = 'dbo';
+    //     // $view   = 'UAR_Unit_Kerja';
+    //     // $sql    = "SELECT DISTINCT
+    //     //         company,
+    //     //         dir_id as direktorat_id,
+    //     //         dir_title as direktorat,
+    //     //         komp_id as kompartemen_id,
+    //     //         komp_title as kompartemen,
+    //     //         dept_id as departement_id,
+    //     //         dept_title as departemen,
+    //     //         cc_code as cost_center
+    //     //        FROM BASIS_KARYAWAN"; // removed ORDER BY
+
+    //     // $conn = DB::connection('sqlsrv_ext');
+    //     // $conn->statement("IF OBJECT_ID(N'{$schema}.{$view}', N'V') IS NOT NULL DROP VIEW [{$schema}].[{$view}]");
+    //     // $conn->statement("CREATE VIEW [{$schema}].[{$view}] AS {$sql}");
+    //     // return 'OK';
+
+    //     // TEST 4 - check the table
+    //     $rows = DB::connection('sqlsrv_ext')
+    //         ->table('dbo.BASIS_KARYAWAN')
+    //         ->distinct()
+    //         ->select([
+    //             'company',
+    //             DB::raw('dir_id  as direktorat_id'),
+    //             DB::raw('dir_title as direktorat'),
+    //             DB::raw('komp_id as kompartemen_id'),
+    //             DB::raw('komp_title as kompartemen'),
+    //             DB::raw('dept_id as departement_id'),
+    //             DB::raw('dept_title as departemen'),
+    //             DB::raw('cc_code as cost_center'),
+    //         ])
+    //         ->orderBy('company')
+    //         ->orderBy('dir_id')
+    //         ->orderBy('komp_id')
+    //         ->orderBy('dept_id')
+    //         ->get();
+
+    //     // Simple JSON response:
+    //     return response()->json($rows);
+    // });
 
     // ======== USER PROFILE ===========
     Route::get('/profile', [ProfileController::class, 'show'])->name('profile.show');
@@ -213,11 +275,13 @@ Route::middleware(['auth'])->group(function () {
     // Route::get('/relationship/composite-single/data', [CompositeSingleController::class, 'getSingleRoles'])->name('composite-single.jsonIndex');
     // Route::get('/relationship/composite-single/empty-single', [CompositeSingleController::class, 'getEmptySingleRole'])->name('composite-single.empty-single');
     // Route::get('/relationship/composite-single/composite-single', [CompositeSingleController::class, 'getCompositeSingleRoles'])->name('composite-single.composite-single');
-    Route::get('/relationship/composite-single/data-set', [CompositeSingleController::class, 'jsonIndex'])->name('composite-single.jsonIndex');
+    Route::get('/relationship/composite-single/data', [CompositeSingleController::class, 'datatable'])->name('composite-single.datatable');
+    // Route::get('/relationship/composite-single/data-set', [CompositeSingleController::class, 'jsonIndex'])->name('composite-single.jsonIndex');
     Route::get('/relationship/composite-single/data-filter-company', [CompositeSingleController::class, 'searchByCompany'])->name('composite-single.filter-company');
     Route::resource('/relationship/composite-single', CompositeSingleController::class);
 
-    Route::get('/relationship/single-tcode/data-set', [SingleTcodeController::class, 'jsonIndex'])->name('single-tcode.jsonIndex');
+    // Route::get('/relationship/single-tcode/data-set', [SingleTcodeController::class, 'jsonIndex'])->name('single-tcode.jsonIndex');
+    Route::get('single-tcode/datatable', [SingleTcodeController::class, 'datatable'])->name('single-tcode.datatable');
     Route::get('/relationship/single-tcode/data-filter-company', [SingleTcodeController::class, 'searchByCompany'])->name('single-tcode.filter-company');
     Route::resource('/relationship/single-tcode', SingleTcodeController::class);
 
@@ -357,6 +421,20 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/preview-page', [USSMJobRoleController::class, 'previewPage'])->name('previewPage');
         Route::get('/preview-data', [USSMJobRoleController::class, 'getPreviewData'])->name('previewData');
         Route::post('/confirm-import', [USSMJobRoleController::class, 'confirmImport'])->name('confirmImport');
+    });
+
+    // ------------------ SYNC DATA - MIDDLE DB ------------------
+
+    Route::prefix('middle-db/master-data-karyawan')->name('middle_db.master_data_karyawan.')->group(function () {
+        Route::get('/index', [MasterDataKaryawanController::class, 'index'])->name('index');
+        Route::get('/data', [MasterDataKaryawanController::class, 'data'])->name('data');
+        Route::post('/sync', [MasterDataKaryawanController::class, 'sync'])->name('sync');
+    });
+
+    Route::prefix('middle-db/unit-kerja')->name('middle_db.unit_kerja.')->group(function () {
+        Route::get('/index', [UnitKerjaController::class, 'index'])->name('index');
+        Route::get('/data', [UnitKerjaController::class, 'data'])->name('data');
+        Route::post('/sync', [UnitKerjaController::class, 'sync'])->name('sync');
     });
 
     // ------------------ REPORT ------------------

@@ -2,68 +2,85 @@
 
 @section('content')
     <div class="container-fluid">
-        <a href="{{ route('composite-roles.create') }}" class="btn btn-primary mb-3">
-            <i class="bi bi-plus"></i> Buat Composite Role Baru
-        </a>
-
-        @if (session('status'))
-            <div class="alert alert-success">{{ session('status') }}</div>
-        @endif
-
-        <!-- Success Message -->
-        @if (session('success'))
-            <div class="alert alert-success">
-                <h4>Success:</h4>
-                {{ session('success') }}
+        @if ($errors->any())
+            <div class="alert alert-danger">
+                <ul class="mb-0">
+                    @foreach ($errors->all() as $message)
+                        <li>{{ $message }}</li>
+                    @endforeach
+                </ul>
             </div>
         @endif
 
-        <!-- Dropdowns for Filtering -->
-        <div class="form-group">
-            <label for="companyDropdown">Pilih Perusahaan</label>
-            <select id="companyDropdown" class="form-control select2">
-                <option value="">-- Pilih Perusahaan --</option>
-                @foreach ($companies as $company)
-                    <option value="{{ $company->company_code }}">{{ $company->nama }}</option>
-                @endforeach
-            </select>
-        </div>
+        <div class="card shadow-sm">
+            <div class="card-header">
+                <h2>Master Data Composite Roles</h2>
+            </div>
+            <div class="card-body">
+                <a href="{{ route('composite-roles.create') }}" class="btn btn-primary mb-3">
+                    <i class="bi bi-plus"></i> Buat Composite Role Baru
+                </a>
 
-        <div class="form-group">
-            <label for="kompartemenDropdown">Select Kompartemen</label>
-            <select id="kompartemenDropdown" class="form-control select2" disabled>
-                <option value="">-- Select Kompartemen --</option>
-            </select>
-        </div>
+                @if (session('status'))
+                    <div class="alert alert-success">{{ session('status') }}</div>
+                @endif
 
-        <div class="form-group">
-            <label for="departemenDropdown">Select Departemen</label>
-            <select id="departemenDropdown" class="form-control select2" disabled>
-                <option value="">-- Select Departemen --</option>
-            </select>
-        </div>
+                <!-- Success Message -->
+                @if (session('success'))
+                    <div class="alert alert-success">
+                        <h4>Success:</h4>
+                        {{ session('success') }}
+                    </div>
+                @endif
 
-        <div class="form-group">
-            <label for="jobRoleDropdown">Select Job Role</label>
-            <select id="jobRoleDropdown" class="form-control select2" disabled>
-                <option value="">-- Select Job Role --</option>
-            </select>
-        </div>
+                <!-- Dropdowns for Filtering -->
+                <div class="form-group">
+                    <label for="companyDropdown">Pilih Perusahaan</label>
+                    <select id="companyDropdown" class="form-control select2">
+                        <option value="">-- Pilih Perusahaan --</option>
+                        @foreach ($companies as $company)
+                            <option value="{{ $company->company_code }}">{{ $company->nama }}</option>
+                        @endforeach
+                    </select>
+                </div>
 
-        <!-- DataTable -->
-        <table id="composite_roles_table" class="table table-bordered table-striped table-hover cell-border mt-3">
-            <thead>
-                <tr>
-                    <th>Company</th>
-                    <th>Composite Role</th>
-                    <th>Deskripsi</th>
-                    {{-- <th>Job Role</th> --}}
-                    {{-- <th>Single Roles</th> --}}
-                    <th>Actions</th>
-                </tr>
-            </thead>
-            <tbody></tbody>
-        </table>
+                <div class="form-group">
+                    <label for="kompartemenDropdown">Select Kompartemen</label>
+                    <select id="kompartemenDropdown" class="form-control select2" disabled>
+                        <option value="">-- Select Kompartemen --</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="departemenDropdown">Select Departemen</label>
+                    <select id="departemenDropdown" class="form-control select2" disabled>
+                        <option value="">-- Select Departemen --</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="jobRoleDropdown">Select Job Role</label>
+                    <select id="jobRoleDropdown" class="form-control select2" disabled>
+                        <option value="">-- Select Job Role --</option>
+                    </select>
+                </div>
+
+                <!-- DataTable -->
+                <table id="composite_roles_table" class="table table-bordered table-striped table-hover cell-border mt-3">
+                    <thead>
+                        <tr>
+                            <th>Company</th>
+                            <th>Composite Role</th>
+                            <th>Deskripsi</th>
+                            {{-- <th>Job Role</th> --}}
+                            {{-- <th>Single Roles</th> --}}
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </div>
     </div>
 
     <!-- Modals -->
@@ -193,7 +210,8 @@
                 const companyId = $('#companyDropdown').val();
                 const kompartemenId = $(this).val();
                 const selectedCompany = masterData[companyId];
-                const kompartemen = selectedCompany.kompartemen.find((k) => k.id == kompartemenId);
+                const kompartemen = selectedCompany.kompartemen.find((k) => k.kompartemen_id ==
+                    kompartemenId);
 
                 resetDropdowns(['#departemenDropdown', '#jobRoleDropdown']);
                 if (kompartemen) {
@@ -215,14 +233,15 @@
 
                     // Check if departemen belongs to a kompartemen
                     if (kompartemenId) {
-                        const selectedKompartemen = selectedCompany.kompartemen?.find((k) => k.id ==
+                        const selectedKompartemen = selectedCompany.kompartemen?.find((k) => k
+                            .kompartemen_id ==
                             kompartemenId);
-                        selectedDepartemen = selectedKompartemen?.departemen?.find((d) => d.id ==
+                        selectedDepartemen = selectedKompartemen?.departemen?.find((d) => d.departemen_id ==
                             departemenId);
                     } else {
                         // Fallback to departemen_without_kompartemen
                         selectedDepartemen = selectedCompany.departemen_without_kompartemen?.find((d) => d
-                            .id == departemenId);
+                            .departemen_id == departemenId);
                     }
 
                     if (selectedDepartemen && selectedDepartemen.job_roles) {

@@ -13,26 +13,38 @@ class CompositeRoleSingleRoleImport implements ToModel, WithHeadingRow, WithChun
 {
     public function model(array $row)
     {
-        // Step 1: Validate or create Composite Role
-        $compositeRole = CompositeRole::firstOrCreate([
-            'nama' => $row['composite_role'],
-        ], [
-            'deskripsi' => $row['composite_description'] ?? null,
-            'company_id' => $row['company_id'] ?? null,
-        ]);
+        // Clean targeted fields (remove all whitespace characters)
+        $compositeRoleName = $this->cleanValue($row['composite_role'] ?? '');
+        $singleRoleName = $this->cleanValue($row['single_role'] ?? '');
 
-        // Step 2: Validate or create Single Role
-        if (!empty($row['single_role'])) {
-            $singleRole = SingleRole::firstOrCreate([
-                'nama' => $row['single_role'],
-                'company_id' => $row['company_id'] ?? null,
+        // Step 1: Validate or create Composite Role
+        if ($compositeRoleName !== '') {
+            $compositeRole = CompositeRole::firstOrCreate([
+                'nama' => $compositeRoleName,
             ], [
-                'deskripsi' => $row['single_description'] ?? null,
+                'deskripsi' => $row['composite_description'] ?? null,
+                'company_id' => $row['company_id'] ?? null,
             ]);
 
-            // Step 3: Link Single Role to Composite Role
-            $compositeRole->singleRoles()->syncWithoutDetaching([$singleRole->id]);
+            // Step 2: Validate or create Single Role
+            if ($singleRoleName !== '') {
+                $singleRole = SingleRole::firstOrCreate([
+                    'nama' => $singleRoleName,
+                    'company_id' => $row['company_id'] ?? null,
+                ], [
+                    'deskripsi' => $row['single_description'] ?? null,
+                ]);
+
+                // Step 3: Link Single Role to Composite Role
+                $compositeRole->singleRoles()->syncWithoutDetaching([$singleRole->id]);
+            }
         }
+    }
+
+    private function cleanValue(string $value): string
+    {
+        // Remove ALL whitespace characters
+        return preg_replace('/\s+/', '', $value);
     }
 
     public function chunkSize(): int

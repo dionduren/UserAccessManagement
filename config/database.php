@@ -93,6 +93,19 @@ return [
             // 'trust_server_certificate' => env('DB_TRUST_SERVER_CERTIFICATE', 'false'),
         ],
 
+        'sqlsrv_ext' => [
+            'driver' => 'sqlsrv',
+            'host' => env('SQLSRV_HOST', 'localhost'),
+            'port' => env('SQLSRV_PORT', '1433'),
+            'database' => env('SQLSRV_DATABASE', ''),
+            'username' => env('SQLSRV_USERNAME', ''),
+            'password' => env('SQLSRV_PASSWORD', ''),
+            'charset' => 'utf8',
+            'prefix' => '',
+            'encrypt' => env('SQLSRV_ENCRYPT', 'yes'),              // yes|no
+            'trust_server_certificate' => env('SQLSRV_TRUST_CERT', true),
+        ],
+
     ],
 
     /*
@@ -125,7 +138,7 @@ return [
 
         'options' => [
             'cluster' => env('REDIS_CLUSTER', 'redis'),
-            'prefix' => env('REDIS_PREFIX', Str::slug(env('APP_NAME', 'laravel'), '_').'_database_'),
+            'prefix' => env('REDIS_PREFIX', Str::slug(env('APP_NAME', 'laravel'), '_') . '_database_'),
         ],
 
         'default' => [

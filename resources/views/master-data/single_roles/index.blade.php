@@ -2,60 +2,78 @@
 
 @section('content')
     <div class="container-fluid">
-        <h1>Single Roles</h1>
-
-        <!-- Trigger button for Create Modal -->
-        <button type="button" id="triggerCreateModal" class="btn btn-primary mb-3">
-            Buat Single Role Baru
-        </button>
-
-        <!-- Status Messages -->
-        @if (session('status'))
-            <div class="alert alert-success">{{ session('status') }}</div>
+        <!-- General Error -->
+        @if ($errors->any())
+            <div class="alert alert-danger">
+                <ul class="mb-0">
+                    @foreach ($errors->all() as $message)
+                        <li>{{ $message }}</li>
+                    @endforeach
+                </ul>
+            </div>
         @endif
 
-        <!-- Dropdowns for Filtering -->
-        <div class="form-group">
-            <label for="companyDropdown">Pilih Perusahaan</label>
-            <select id="companyDropdown" class="form-control select2">
-                <option value="">-- Pilih Perusahaan --</option>
-                @foreach ($companies as $company)
-                    <option value="{{ $company->company_code }}">{{ $company->nama }}</option>
-                @endforeach
-            </select>
-        </div>
+        <div class="card shadow-sm">
+            <div class="card-header">
+                <h2>Master Data Single Roles</h2>
+            </div>
+            <div class="card-body">
 
-        <!-- Table for displaying Single Roles -->
-        <table id="single_roles_table" class="table table-bordered table-striped table-hover cell-border mt-3">
-            <thead>
-                <tr>
-                    <th>Perusahaan</th>
-                    <th>Single Role</th>
-                    <th>Deskripsi</th>
-                    <th>Actions</th>
-                </tr>
-            </thead>
-        </table>
-    </div>
-    {{-- 
+                <!-- Trigger button for Create Modal -->
+                <button type="button" id="triggerCreateModal" class="btn btn-primary mb-3">
+                    Buat Single Role Baru
+                </button>
+
+                <!-- Status Messages -->
+                @if (session('status'))
+                    <div class="alert alert-success">{{ session('status') }}</div>
+                @endif
+
+                <!-- Dropdowns for Filtering -->
+                <div class="form-group">
+                    <label for="companyDropdown">Pilih Perusahaan</label>
+                    <select id="companyDropdown" class="form-control select2">
+                        <option value="">-- Pilih Perusahaan --</option>
+                        @foreach ($companies as $company)
+                            <option value="{{ $company->company_code }}">{{ $company->nama }}</option>
+                        @endforeach
+                    </select>
+                </div>
+
+                <!-- Table for displaying Single Roles -->
+                <table id="single_roles_table" class="table table-bordered table-striped table-hover cell-border mt-3">
+                    <thead>
+                        <tr>
+                            <th>Perusahaan</th>
+                            <th>Single Role</th>
+                            <th>Deskripsi</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                </table>
+            </div>
+            {{-- 
     <!-- Modals -->
     <div id="modalContainer"></div> <!-- Placeholder for loading modals dynamically --> --}}
 
-    <!-- Placeholder for modals -->
-    <div class="modal fade" id="singleRoleModal" tabindex="-1" aria-labelledby="singleRoleModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-lg">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="singleRoleModalLabel"></h5>
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                        <span aria-hidden="true">&times;</span>
-                    </button>
-                </div>
-                <div class="modal-body" id="singleRoleModalBody">
-                    <!-- Content for create, edit, or show details will be loaded dynamically -->
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+            <!-- Placeholder for modals -->
+            <div class="modal fade" id="singleRoleModal" tabindex="-1" aria-labelledby="singleRoleModalLabel"
+                aria-hidden="true">
+                <div class="modal-dialog modal-lg">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="singleRoleModalLabel"></h5>
+                            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                <span aria-hidden="true">&times;</span>
+                            </button>
+                        </div>
+                        <div class="modal-body" id="singleRoleModalBody">
+                            <!-- Content for create, edit, or show details will be loaded dynamically -->
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -69,7 +87,7 @@
             // Initialize DataTable
             const table = $('#single_roles_table').DataTable({
                 processing: true,
-                serverSide: false,
+                serverSide: true,
                 ajax: {
                     url: '/single-roles/data',
                     data: function(d) {
