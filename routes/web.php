@@ -98,61 +98,61 @@ Route::middleware(['auth'])->group(function () {
 
 
     // SQL SERVER CONNECTION
-    // Route::get('/sqlsrv/ping', function () {
-    //     // TEST 1 - Ping to check profile
-    //     // DB::connection('sqlsrv_ext')->getPdo(); // throws if fails
-    //     // return DB::connection('sqlsrv_ext')->selectOne('SELECT SUSER_SNAME() AS login, DB_NAME() AS db');
+    Route::get('/sqlsrv/ping', function () {
+        // TEST 1 - Ping to check profile
+        // DB::connection('sqlsrv_ext')->getPdo(); // throws if fails
+        // return DB::connection('sqlsrv_ext')->selectOne('SELECT SUSER_SNAME() AS login, DB_NAME() AS db');
 
-    //     // TEST 2 - Get Top 20 data
-    //     // $rows = DB::connection('sqlsrv_ext')
-    //     //     ->table('dbo.BASIS_KARYAWAN')   // schema.view
-    //     //     ->limit(20)
-    //     //     ->get();
+        // TEST 2 - Get Top 20 data
+        // $rows = DB::connection('sqlsrv_ext')
+        //     ->table('dbo.BASIS_KARYAWAN')   // schema.view
+        //     ->limit(20)
+        //     ->get();
 
-    //     // return $rows;
+        // return $rows;
 
-    //     // TEST 3 - create view
-    //     // $schema = 'dbo';
-    //     // $view   = 'UAR_Unit_Kerja';
-    //     // $sql    = "SELECT DISTINCT
-    //     //         company,
-    //     //         dir_id as direktorat_id,
-    //     //         dir_title as direktorat,
-    //     //         komp_id as kompartemen_id,
-    //     //         komp_title as kompartemen,
-    //     //         dept_id as departement_id,
-    //     //         dept_title as departemen,
-    //     //         cc_code as cost_center
-    //     //        FROM BASIS_KARYAWAN"; // removed ORDER BY
+        // TEST 3 - create view
+        // $schema = 'dbo';
+        // $view   = 'UAR_Unit_Kerja';
+        // $sql    = "SELECT DISTINCT
+        //         company,
+        //         dir_id as direktorat_id,
+        //         dir_title as direktorat,
+        //         komp_id as kompartemen_id,
+        //         komp_title as kompartemen,
+        //         dept_id as departement_id,
+        //         dept_title as departemen,
+        //         cc_code as cost_center
+        //        FROM BASIS_KARYAWAN"; // removed ORDER BY
 
-    //     // $conn = DB::connection('sqlsrv_ext');
-    //     // $conn->statement("IF OBJECT_ID(N'{$schema}.{$view}', N'V') IS NOT NULL DROP VIEW [{$schema}].[{$view}]");
-    //     // $conn->statement("CREATE VIEW [{$schema}].[{$view}] AS {$sql}");
-    //     // return 'OK';
+        // $conn = DB::connection('sqlsrv_ext');
+        // $conn->statement("IF OBJECT_ID(N'{$schema}.{$view}', N'V') IS NOT NULL DROP VIEW [{$schema}].[{$view}]");
+        // $conn->statement("CREATE VIEW [{$schema}].[{$view}] AS {$sql}");
+        // return 'OK';
 
-    //     // TEST 4 - check the table
-    //     $rows = DB::connection('sqlsrv_ext')
-    //         ->table('dbo.BASIS_KARYAWAN')
-    //         ->distinct()
-    //         ->select([
-    //             'company',
-    //             DB::raw('dir_id  as direktorat_id'),
-    //             DB::raw('dir_title as direktorat'),
-    //             DB::raw('komp_id as kompartemen_id'),
-    //             DB::raw('komp_title as kompartemen'),
-    //             DB::raw('dept_id as departement_id'),
-    //             DB::raw('dept_title as departemen'),
-    //             DB::raw('cc_code as cost_center'),
-    //         ])
-    //         ->orderBy('company')
-    //         ->orderBy('dir_id')
-    //         ->orderBy('komp_id')
-    //         ->orderBy('dept_id')
-    //         ->get();
+        // TEST 4 - check the table
+        $rows = DB::connection('sqlsrv_ext')
+            ->table('dbo.BASIS_KARYAWAN')
+            ->distinct()
+            ->select([
+                'company',
+                DB::raw('dir_id  as direktorat_id'),
+                DB::raw('dir_title as direktorat'),
+                DB::raw('komp_id as kompartemen_id'),
+                DB::raw('komp_title as kompartemen'),
+                DB::raw('dept_id as departement_id'),
+                DB::raw('dept_title as departemen'),
+                DB::raw('cc_code as cost_center'),
+            ])
+            ->orderBy('company')
+            ->orderBy('dir_id')
+            ->orderBy('komp_id')
+            ->orderBy('dept_id')
+            ->get();
 
-    //     // Simple JSON response:
-    //     return response()->json($rows);
-    // });
+        // Simple JSON response:
+        return response()->json($rows);
+    });
 
     // ======== USER PROFILE ===========
     Route::get('/profile', [ProfileController::class, 'show'])->name('profile.show');
