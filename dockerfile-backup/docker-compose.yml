@@ -2,34 +2,19 @@ services:
   app:
     build: .
     container_name: uam_dev
-    # depends_on:
-    #   db:
-    #     condition: service_started # Note: Consider adding healthchecks for better control
-    # volumes:
-    #   - type: bind
-    #     source: /var/www/UserAccessManagement
-    #     target: /var/www/html
     depends_on:
       db:
-        condition: service_healthy  # Use healthcheck for better startup control
+        condition: service_healthy
     volumes:
-      - ./php-config/php.ini:/usr/local/etc/php/conf.d/custom.ini  # Custom PHP config
-      - .:/var/www/html  # 🔥 Fix: Bind the current directory to the container
+      - ./php-config/php.ini:/usr/local/etc/php/conf.d/custom.ini
+      - .:/var/www/html
     working_dir: /var/www/html
     environment:
-      - APP_ENV=local
-      - APP_DEBUG=true
-    # command: >
-    #   sh -c "composer install --ignore-platform-req=ext-gd --ignore-platform-req=ext-zip && php artisan key:generate &&  php artisan storage:link &&  php artisan migrate --seed &&  php artisan serve --host=0.0.0.0 --port=8000  "
-    command: >
-      sh -c "cp -n .env.example .env &&
-             composer install --ignore-platform-req=ext-gd --ignore-platform-req=ext-zip &&
-             php artisan key:generate &&
-             php artisan storage:link &&
-             php artisan migrate --seed &&
-             php artisan serve --host=0.0.0.0 --port=8000"
+      APP_ENV: local
+      APP_DEBUG: "true"
     ports:
-      - "8001:8000"
+      - "8001:80" # Apache langsung serve port 80 di container
+    command: apache2-foreground
 
   db:
     image: postgres:latest
@@ -42,13 +27,26 @@ services:
     ports:
       - "5432:5432"
     volumes:
-      - postgres_db_uam:/var/lib/postgresql/data  # Named volume for DB storage
-    healthcheck:  # Ensures database is ready before Laravel runs migrations
+      - postgres_db_uam:/var/lib/postgresql/data
+    healthcheck:
       test: ["CMD", "pg_isready", "-U", "postgres"]
       interval: 10s
       timeout: 5s
       retries: 5
 
 volumes:
-  postgres_db_uam:  # Define a named volume for PostgreSQL persistence
+  postgres_db_uam:
+
+queue:
+  build: .
+  container_name: uam_queue
+  depends_on:
+    db:
+      condition: service_healthy
+  volumes:
+    - ./php-config/php.ini:/usr/local/etc/php/conf.d/custom.ini
+    - .:/var/www/html
+  working_dir: /var/www/html
+  command: php artisan queue:work --sleep=1 --tries=3 --timeout=90
+  restart: unless-stopped
 
