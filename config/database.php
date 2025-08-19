@@ -107,6 +107,15 @@ return [
             'trust_server_certificate' => env('SQLSRV_TRUST_CERT', true), // true for dev/self-signed
         ],
 
+        'sqlsrv_freetds' => [
+            'driver' => 'dblib',
+            'host' => env('DB_SQLSRV_HOST', '192.168.188.112'),
+            'port' => env('DB_SQLSRV_PORT', '1433'),
+            'database' => env('DB_SQLSRV_DATABASE', 'forge'),
+            'username' => env('DB_SQLSRV_USERNAME', 'forge'),
+            'password' => env('DB_SQLSRV_PASSWORD', ''),
+            'charset' => 'UTF-8',
+        ],
     ],
 
     /*
