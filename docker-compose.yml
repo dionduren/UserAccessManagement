@@ -1,5 +1,3 @@
-version: "3.9"
-
 services:
   app:
     build: .
@@ -14,20 +12,9 @@ services:
     environment:
       APP_ENV: local
       APP_DEBUG: "true"
-      # pass-thru for your external SQL Server (optional convenience)
-      SQLSRV_HOST: ${SQLSRV_HOST:-host.docker.internal}
-      SQLSRV_PORT: ${SQLSRV_PORT:-1433}
-      SQLSRV_DATABASE: ${SQLSRV_DATABASE:-}
-      SQLSRV_USERNAME: ${SQLSRV_USERNAME:-}
-      SQLSRV_PASSWORD: ${SQLSRV_PASSWORD:-}
-      SQLSRV_ENCRYPT: ${SQLSRV_ENCRYPT:-yes}
-      SQLSRV_TRUST_CERT: ${SQLSRV_TRUST_CERT:-true}
     ports:
       - "8001:80"
     command: apache2-foreground
-    # On Linux, make host.docker.internal available for convenience:
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
 
   db:
     image: postgres:16
@@ -62,16 +49,6 @@ services:
     environment:
       APP_ENV: local
       APP_DEBUG: "true"
-      # same external SQL Server env for workers
-      SQLSRV_HOST: ${SQLSRV_HOST:-host.docker.internal}
-      SQLSRV_PORT: ${SQLSRV_PORT:-1433}
-      SQLSRV_DATABASE: ${SQLSRV_DATABASE:-}
-      SQLSRV_USERNAME: ${SQLSRV_USERNAME:-}
-      SQLSRV_PASSWORD: ${SQLSRV_PASSWORD:-}
-      SQLSRV_ENCRYPT: ${SQLSRV_ENCRYPT:-yes}
-      SQLSRV_TRUST_CERT: ${SQLSRV_TRUST_CERT:-true}
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
 
 volumes:
   postgres_db_uam:

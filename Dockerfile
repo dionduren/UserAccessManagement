@@ -6,7 +6,7 @@ WORKDIR /var/www/html
 
 # System + build deps
 RUN apt-get update && apt-get install -y \
-    apt-transport-https ca-certificates curl gnupg2 \
+    apt-transport-https ca-certificates curl gnupg \
     git nano unzip \
     build-essential autoconf \
     libpq-dev \
@@ -15,15 +15,15 @@ RUN apt-get update && apt-get install -y \
     unixodbc-dev \
     && rm -rf /var/lib/apt/lists/*
 
-# Microsoft repo (Debian 12 / bookworm) for msodbcsql18 + mssql-tools18
+# Microsoft repo (Debian 12 / bookworm) for msodbcsql17 + mssql-tools
 RUN set -eux; \
     curl -fsSL https://packages.microsoft.com/keys/microsoft.asc \
     | gpg --dearmor -o /usr/share/keyrings/microsoft-prod.gpg; \
     echo "deb [arch=amd64 signed-by=/usr/share/keyrings/microsoft-prod.gpg] https://packages.microsoft.com/debian/12/prod bookworm main" \
     > /etc/apt/sources.list.d/microsoft-prod.list; \
     apt-get update; \
-    ACCEPT_EULA=Y apt-get install -y msodbcsql18 mssql-tools18; \
-    echo 'export PATH="$PATH:/opt/mssql-tools18/bin"' >> /etc/profile; \
+    ACCEPT_EULA=Y apt-get install -y msodbcsql17 mssql-tools; \
+    echo 'export PATH="$PATH:/opt/mssql-tools/bin"' >> /etc/profile; \
     rm -rf /var/lib/apt/lists/*
 
 # PHP extensions
@@ -31,7 +31,7 @@ RUN set -eux; \
 RUN docker-php-ext-configure gd --with-freetype --with-jpeg \
     && docker-php-ext-install -j"$(nproc)" gd zip pdo_pgsql bcmath xml
 
-# PHP SQL Server drivers (pecl) - requires msodbcsql18/unixodbc-dev
+# PHP SQL Server drivers (pecl) - use with ODBC 17
 RUN pecl install sqlsrv pdo_sqlsrv \
     && docker-php-ext-enable sqlsrv pdo_sqlsrv
 
@@ -48,5 +48,5 @@ RUN mkdir -p storage bootstrap/cache \
     && chown -R www-data:www-data storage bootstrap/cache \
     && chmod -R 775 storage bootstrap/cache
 
-# Optional: expose sqlcmd in PATH for non-login shells
-ENV PATH="${PATH}:/opt/mssql-tools18/bin"
+# Make sqlcmd available in non-login shells
+ENV PATH="${PATH}:/opt/mssql-tools/bin"
