@@ -87,7 +87,7 @@ class MasterDataKaryawan extends Model
         $table = (new self)->getTable();
 
         // Fetch required columns from external source
-        $extRows = DB::connection('sqlsrv_ext')
+        $extRows = DB::connection('sqlsrv_freetds')
             ->table('dbo.BASIS_KARYAWAN')
             ->selectRaw("
                 emp_no    AS nik,

@@ -33,7 +33,7 @@ class UnitKerja extends Model
         $table = (new self)->getTable();
 
         // Adjust field mappings below to match actual external columns
-        $extRows = DB::connection('sqlsrv_ext')
+        $extRows = DB::connection('sqlsrv_freetds')
             ->table('dbo.BASIS_KARYAWAN')
             ->distinct()
             ->select([
