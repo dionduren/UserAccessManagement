@@ -98,7 +98,7 @@ Route::middleware(['auth'])->group(function () {
 
 
     // SQL SERVER CONNECTION
-    Route::get('/sqlsrv/ping', function () {
+    Route::get('/dblib/ping', function () {
         // TEST 1 - Ping to check profile
         // DB::connection('sqlsrv_ext')->getPdo(); // throws if fails
         // return DB::connection('sqlsrv_ext')->selectOne('SELECT SUSER_SNAME() AS login, DB_NAME() AS db');
@@ -131,7 +131,7 @@ Route::middleware(['auth'])->group(function () {
         // return 'OK';
 
         // TEST 4 - check the table
-        $rows = DB::connection('sqlsrv_ext')
+        $rows = DB::connection('sqlsrv_freetds')
             ->table('dbo.BASIS_KARYAWAN')
             ->distinct()
             ->select([

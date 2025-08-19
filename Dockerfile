@@ -16,25 +16,10 @@ RUN apt-get update && apt-get install -y \
     freetds-bin freetds-dev \
     && rm -rf /var/lib/apt/lists/*
 
-# Microsoft repo (Debian 12 / bookworm) for msodbcsql17 + mssql-tools
-RUN set -eux; \
-    curl -fsSL https://packages.microsoft.com/keys/microsoft.asc \
-    | gpg --dearmor -o /usr/share/keyrings/microsoft-prod.gpg; \
-    echo "deb [arch=amd64 signed-by=/usr/share/keyrings/microsoft-prod.gpg] https://packages.microsoft.com/debian/12/prod bookworm main" \
-    > /etc/apt/sources.list.d/microsoft-prod.list; \
-    apt-get update; \
-    ACCEPT_EULA=Y apt-get install -y msodbcsql17 mssql-tools; \
-    echo 'export PATH="$PATH:/opt/mssql-tools/bin"' >> /etc/profile; \
-    rm -rf /var/lib/apt/lists/*
-
 # PHP extensions
-# Configure GD with freetype/jpeg support (common for Laravel image handling)
 RUN docker-php-ext-configure gd --with-freetype --with-jpeg \
-    && docker-php-ext-install -j"$(nproc)" gd zip pdo_pgsql bcmath xml pdo_dblib
-
-# PHP SQL Server drivers (pecl) - use with ODBC 17
-RUN pecl install sqlsrv pdo_sqlsrv \
-    && docker-php-ext-enable sqlsrv pdo_sqlsrv
+    && docker-php-ext-install -j"$(nproc)" gd zip pdo_pgsql bcmath xml \
+    && docker-php-ext-install pdo_dblib
 
 # Apache: enable mod_rewrite and set DocumentRoot to /public
 RUN a2enmod rewrite \
@@ -48,6 +33,3 @@ RUN curl -sS https://getcomposer.org/installer | php \
 RUN mkdir -p storage bootstrap/cache \
     && chown -R www-data:www-data storage bootstrap/cache \
     && chmod -R 775 storage bootstrap/cache
-
-# Make sqlcmd available in non-login shells
-ENV PATH="${PATH}:/opt/mssql-tools/bin"
