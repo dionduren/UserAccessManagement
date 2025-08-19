@@ -426,13 +426,16 @@ Route::middleware(['auth'])->group(function () {
     // ------------------ SYNC DATA - MIDDLE DB ------------------
 
     Route::prefix('middle-db/master-data-karyawan')->name('middle_db.master_data_karyawan.')->group(function () {
-        Route::get('/index', [MasterDataKaryawanController::class, 'index'])->name('index');
+        // Add root path so either /middle-db/master-data-karyawan or /middle-db/master-data-karyawan/index works
+        Route::get('/', [MasterDataKaryawanController::class, 'index'])->name('index');
+        Route::get('/index', [MasterDataKaryawanController::class, 'index']); // optional duplicate
         Route::get('/data', [MasterDataKaryawanController::class, 'data'])->name('data');
         Route::post('/sync', [MasterDataKaryawanController::class, 'sync'])->name('sync');
     });
 
     Route::prefix('middle-db/unit-kerja')->name('middle_db.unit_kerja.')->group(function () {
-        Route::get('/index', [UnitKerjaController::class, 'index'])->name('index');
+        Route::get('/', [UnitKerjaController::class, 'index'])->name('index');
+        Route::get('/index', [UnitKerjaController::class, 'index']); // optional duplicate
         Route::get('/data', [UnitKerjaController::class, 'data'])->name('data');
         Route::post('/sync', [UnitKerjaController::class, 'sync'])->name('sync');
     });
