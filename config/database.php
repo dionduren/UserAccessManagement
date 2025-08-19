@@ -105,8 +105,6 @@ return [
             // ODBC Driver 18 defaults to Encrypt=Yes
             'encrypt'  => env('SQLSRV_ENCRYPT', 'yes'),     // 'yes' or 'no'
             'trust_server_certificate' => env('SQLSRV_TRUST_CERT', true), // true for dev/self-signed
-            // Force password-based auth (prevents Integrated/SSPI)
-            'authentication' => env('SQLSRV_AUTH', 'SqlPassword'), // or 'ActiveDirectoryPassword'
         ],
 
     ],
