@@ -98,12 +98,15 @@ return [
             'host' => env('SQLSRV_HOST', 'localhost'),
             'port' => env('SQLSRV_PORT', '1433'),
             'database' => env('SQLSRV_DATABASE', ''),
-            'username' => env('SQLSRV_USERNAME', ''),
-            'password' => env('SQLSRV_PASSWORD', ''),
-            'charset' => 'utf8',
-            'prefix' => '',
-            'encrypt' => env('SQLSRV_ENCRYPT', 'yes'),              // yes|no
-            'trust_server_certificate' => env('SQLSRV_TRUST_CERT', true),
+            'username' => env('SQLSRV_USERNAME', ''),   // MUST be non-empty
+            'password' => env('SQLSRV_PASSWORD', ''),   // MUST be non-empty
+            'charset'  => 'utf8',
+            'prefix'   => '',
+            // ODBC Driver 18 defaults to Encrypt=Yes
+            'encrypt'  => env('SQLSRV_ENCRYPT', 'yes'),     // 'yes' or 'no'
+            'trust_server_certificate' => env('SQLSRV_TRUST_CERT', true), // true for dev/self-signed
+            // Force password-based auth (prevents Integrated/SSPI)
+            'authentication' => env('SQLSRV_AUTH', 'SqlPassword'), // or 'ActiveDirectoryPassword'
         ],
 
     ],
