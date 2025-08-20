@@ -109,9 +109,9 @@
                         {{-- <th width="20%" style="background-color: #d4edda;">Kompartemen</th> --}}
                         {{-- <th width="20%" style="background-color: #d4edda;">Departemen</th> --}}
                         <th width="7,5%">NIK</th>
-                        <th>Tetap</th>
-                        <th>Berubah</th>
-                        <th>Keterangan</th>
+                        <th style="background-color: yellowgreen">User ID (Middle DB)</th>
+                        <th style="background-color: yellowgreen">Nama (Middle DB)</th>
+                        <th style="background-color: orange">NIK (Master Karyawan)</th>
                     </tr>
                 </thead>
             </table>
@@ -215,29 +215,17 @@
                         name: 'karyawan_nik'
                     },
                     {
-                        data: null,
-                        name: 'tetap',
-                        defaultContent: '',
-                        render: function() {
-                            return '';
-                        }
+                        data: 'mdb_usmm.sap_user_id',
+                        name: 'mdb_usmm.sap_user_id'
                     },
                     {
-                        data: null,
-                        name: 'berubah',
-                        defaultContent: '',
-                        render: function() {
-                            return '';
-                        }
+                        data: 'mdb_usmm.nama',
+                        name: 'mdb_usmm.nama'
                     },
                     {
-                        data: null,
-                        name: 'keterangan',
-                        defaultContent: '',
-                        render: function() {
-                            return '';
-                        }
-                    }
+                        data: 'mdb_usmm.nik',
+                        name: 'mdb_usmm.nik'
+                    },
                 ],
                 tooltips: true,
                 responsive: true,

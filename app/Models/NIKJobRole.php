@@ -5,9 +5,12 @@ namespace App\Models;
 use App\Models\JobRole;
 use App\Models\Periode;
 use App\Models\UserDetail;
+use App\Models\middle_db\MasterUSMM;
+
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
+
 
 class NIKJobRole extends Model
 {
@@ -58,5 +61,10 @@ class NIKJobRole extends Model
     public function userNIK()
     {
         return $this->belongsTo(userNIK::class, 'nik', 'user_code');
+    }
+
+    public function mdb_usmm()
+    {
+        return $this->belongsTo(MasterUSMM::class, 'nik', 'sap_user_id');
     }
 }

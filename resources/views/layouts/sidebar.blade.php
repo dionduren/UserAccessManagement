@@ -202,6 +202,62 @@
                         <i class="bi bi-diagram-3 me-2"></i> Unit Kerja
                     </a>
                 </li>
+
+                <div class="dropdown">
+                    <a class="mb-1 nav-link dropdown-toggle {{ request()->routeIs('middle_db.usmm.*') ? 'active' : 'text-white' }}"
+                        data-bs-toggle="dropdown" href="#" role="button"
+                        aria-expanded="{{ request()->routeIs('middle_db.usmm.*') ? 'true' : 'false' }}">
+                        <i class="bi bi-folder-fill me-2"></i> Master USMM
+                    </a>
+                    <div class="dropdown-content {{ request()->routeIs('middle_db.usmm.*') ? 'show' : '' }}">
+                        <li class="nav-item">
+                            <a href="{{ route('middle_db.usmm.index') }}"
+                                class="mb-1 nav-link {{ request()->routeIs('middle_db.usmm.index') ? 'active' : 'text-white' }}">
+                                <i class="bi bi-person-badge me-2"></i> Active
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="{{ route('middle_db.usmm.inactive') }}"
+                                class="mb-1 nav-link {{ request()->routeIs('middle_db.usmm.inactive') ? 'active' : 'text-white' }}">
+                                <i class="bi bi-person-dash me-2"></i> Inactive
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="{{ route('middle_db.usmm.expired') }}"
+                                class="mb-1 nav-link {{ request()->routeIs('middle_db.usmm.expired') ? 'active' : 'text-white' }}">
+                                <i class="bi bi-person-exclamation me-2"></i> Expired
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="{{ route('middle_db.usmm.all') }}"
+                                class="mb-1 nav-link {{ request()->routeIs('middle_db.usmm.all') ? 'active' : 'text-white' }}">
+                                <i class="bi bi-people-fill me-2"></i> Full Data
+                            </a>
+                        </li>
+                    </div>
+                </div>
+
+                <div class="dropdown">
+                    <a class="mb-1 nav-link dropdown-toggle {{ request()->routeIs('middle_db.raw.*') ? 'active' : 'text-white' }}"
+                        data-bs-toggle="dropdown" href="#" role="button"
+                        aria-expanded="{{ request()->routeIs('middle_db.raw.*') ? 'true' : 'false' }}">
+                        <i class="bi bi-folder-fill me-2"></i> RAW
+                    </a>
+                    <div class="dropdown-content {{ request()->routeIs('middle_db.raw.*') ? 'show' : '' }}">
+                        <li class="nav-item">
+                            <a href="{{ route('middle_db.raw.uam_relationship.index') }}"
+                                class="mb-1 nav-link {{ request()->routeIs('middle_db.raw.uam_relationship.*') ? 'active' : 'text-white' }}">
+                                <i class="bi bi-diagram-3 me-2"></i> UAM Relationship Raw
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="{{ route('middle_db.raw.generic_karyawan_mapping.index') }}"
+                                class="mb-1 nav-link {{ request()->routeIs('middle_db.raw.generic_karyawan_mapping.*') ? 'active' : 'text-white' }}">
+                                <i class="bi bi-people-fill me-2"></i> Generic Karyawan Mapping Raw
+                            </a>
+                        </li>
+                    </div>
+                </div>
             @endcan
 
             <hr>

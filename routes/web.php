@@ -5,8 +5,8 @@ use App\Http\Controllers\AdminController;
 use App\Http\Controllers\DynamicUploadController;
 use App\Http\Controllers\EmployeeController;
 use App\Http\Controllers\HomeController;
-use App\Http\Controllers\JSONController;
 use App\Http\Controllers\PeriodeController;
+use App\Http\Controllers\JSONController;
 use App\Http\Controllers\TcodeImportController;
 use App\Http\Controllers\UserController;
 
@@ -14,7 +14,6 @@ use App\Http\Controllers\Auth\EmailChangeRequestController;
 use App\Http\Controllers\Auth\ForgotPasswordController;
 use App\Http\Controllers\Auth\ProfileController;
 use App\Http\Controllers\Auth\ResetPasswordController;
-
 
 use App\Http\Controllers\IOExcel\CompanyKompartemenController;
 use App\Http\Controllers\IOExcel\CompanyMasterDataController;
@@ -31,9 +30,6 @@ use App\Http\Controllers\MasterData\CompositeRoleController;
 use App\Http\Controllers\MasterData\CostCenterController;
 // use App\Http\Controllers\IOExcel\ExcelImportController;
 
-use App\Http\Controllers\Middle_DB\MasterDataKaryawanController;
-use App\Http\Controllers\Middle_DB\UnitKerjaController;
-
 use App\Http\Controllers\MasterData\CostPrevUserController;
 use App\Http\Controllers\MasterData\DepartemenController;
 use App\Http\Controllers\MasterData\JobRoleController;
@@ -46,15 +42,21 @@ use App\Http\Controllers\MasterData\TerminatedEmployeeController;
 use App\Http\Controllers\MasterData\UserDetailController;
 use App\Http\Controllers\MasterData\UserGenericController;
 use App\Http\Controllers\MasterData\UserNIKController;
+
+use App\Http\Controllers\Middle_DB\MasterDataKaryawanController;
+use App\Http\Controllers\Middle_DB\UnitKerjaController;
+use App\Http\Controllers\Middle_DB\MasterUSMMController;
+use App\Http\Controllers\Middle_DB\raw\UAMRelationshipRawController;
+use \App\Http\Controllers\Middle_DB\raw\GenericKaryawanMappingRawController;
+
 use App\Http\Controllers\Relationship\CompositeSingleController;
 use App\Http\Controllers\Relationship\JobCompositeController;
-
 use App\Http\Controllers\Relationship\NIKJobController;
 use App\Http\Controllers\Relationship\SingleTcodeController;
 use App\Http\Controllers\Relationship\UserGenericJobRoleController;
-
 use App\Http\Controllers\Report\JobRoleReportController;
 use App\Http\Controllers\Report\UAMReportController;
+
 use App\Http\Controllers\Report\UARReportController;
 use App\Http\Controllers\Report\WorkUnitReportController;
 
@@ -425,19 +427,50 @@ Route::middleware(['auth'])->group(function () {
 
     // ------------------ SYNC DATA - MIDDLE DB ------------------
 
-    Route::prefix('middle-db/master-data-karyawan')->name('middle_db.master_data_karyawan.')->group(function () {
-        // Add root path so either /middle-db/master-data-karyawan or /middle-db/master-data-karyawan/index works
-        Route::get('/', [MasterDataKaryawanController::class, 'index'])->name('index');
-        Route::get('/index', [MasterDataKaryawanController::class, 'index']); // optional duplicate
-        Route::get('/data', [MasterDataKaryawanController::class, 'data'])->name('data');
-        Route::post('/sync', [MasterDataKaryawanController::class, 'sync'])->name('sync');
+    Route::prefix('middle-db')->name('middle_db.')->group(function () {
+
+        Route::prefix('master-data-karyawan')->name('master_data_karyawan.')->group(function () {
+            Route::get('/',      [MasterDataKaryawanController::class, 'index'])->name('index');
+            Route::get('/data',  [MasterDataKaryawanController::class, 'data'])->name('data');
+            Route::post('/sync', [MasterDataKaryawanController::class, 'sync'])->name('sync');
+        });
+
+        Route::prefix('unit-kerja')->name('unit_kerja.')->group(function () {
+            Route::get('/',      [UnitKerjaController::class, 'index'])->name('index');
+            Route::get('/data',  [UnitKerjaController::class, 'data'])->name('data');
+            Route::post('/sync', [UnitKerjaController::class, 'sync'])->name('sync');
+        });
+
+        Route::prefix('usmm')->name('usmm.')->group(function () {
+            Route::get('/',              [MasterUSMMController::class, 'index'])->name('index');
+            Route::get('/data',          [MasterUSMMController::class, 'data'])->name('data');
+
+            Route::get('/inactive',      [MasterUSMMController::class, 'inactive'])->name('inactive');
+            Route::get('/inactive/data', [MasterUSMMController::class, 'inactiveData'])->name('inactiveData');
+
+            Route::get('/expired',       [MasterUSMMController::class, 'expired'])->name('expired');
+            Route::get('/expired/data',  [MasterUSMMController::class, 'expiredData'])->name('expiredData');
+
+            Route::get('/all',           [MasterUSMMController::class, 'all'])->name('all');
+            Route::get('/all/data',      [MasterUSMMController::class, 'allData'])->name('allData');
+
+            Route::post('/sync',         [MasterUSMMController::class, 'sync'])->name('sync');
+        });
     });
 
-    Route::prefix('middle-db/unit-kerja')->name('middle_db.unit_kerja.')->group(function () {
-        Route::get('/', [UnitKerjaController::class, 'index'])->name('index');
-        Route::get('/index', [UnitKerjaController::class, 'index']); // optional duplicate
-        Route::get('/data', [UnitKerjaController::class, 'data'])->name('data');
-        Route::post('/sync', [UnitKerjaController::class, 'sync'])->name('sync');
+    Route::prefix('middle-db/raw')->name('middle_db.raw.')->group(function () {
+
+        Route::prefix('uam-relationship')->name('uam_relationship.')->group(function () {
+            Route::get('/', [UAMRelationshipRawController::class, 'index'])->name('index');
+            Route::get('/data', [UAMRelationshipRawController::class, 'data'])->name('data');
+            Route::post('/sync', [UAMRelationshipRawController::class, 'sync'])->name('sync');
+        });
+
+        Route::prefix('generic-karyawan-mapping')->name('generic_karyawan_mapping.')->group(function () {
+            Route::get('/', [GenericKaryawanMappingRawController::class, 'index'])->name('index');
+            Route::get('/data', [GenericKaryawanMappingRawController::class, 'data'])->name('data');
+            Route::post('/sync', [GenericKaryawanMappingRawController::class, 'sync'])->name('sync');
+        });
     });
 
     // ------------------ REPORT ------------------

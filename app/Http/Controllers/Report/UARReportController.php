@@ -114,15 +114,22 @@ class UARReportController extends Controller
 
     public function jobRolesData(Request $request)
     {
-        $companyId = $request->company_id;
-        $kompartemenId = $request->kompartemen_id;
-        $departemenId = $request->departemen_id;
-        $latestPeriode = Periode::latest()->first();
-        $latestPeriodeYear = $latestPeriode ? date('Y', strtotime($latestPeriode->created_at)) : null;
-        $nomorSurat = 'XXX - Belum terdaftar';
+        $companyId      = $request->company_id;
+        $kompartemenId  = $request->kompartemen_id;
+        $departemenId   = $request->departemen_id;
 
-        $cost_center = '';
-        $nik = '';
+        $latestPeriode = Periode::latest()->first();
+        if (!$latestPeriode) {
+            return response()->json([
+                'data' => [],
+                'nomorSurat' => '-',
+                'cost_center' => '-'
+            ]);
+        }
+
+        $latestPeriodeYear = date('Y', strtotime($latestPeriode->created_at));
+        $nomorSurat   = 'XXX - Belum terdaftar';
+        $cost_center  = '';
 
         $query = NIKJobRole::query()
             ->with([
@@ -136,7 +143,9 @@ class UARReportController extends Controller
                     $q->whereHas('userDetail', function ($q2) {
                         $q2->whereNull('deleted_at');
                     })->where('periode_id', $latestPeriode->id);
-                }
+                },
+                // include the relation mdb_usmm
+                'mdb_usmm',
             ])
             ->whereNull('deleted_at')
             ->where('is_active', true)
@@ -163,15 +172,27 @@ class UARReportController extends Controller
                 ->whereNull('deleted_at')
                 ->latest()
                 ->first();
-            $nomorSurat = $penomoranUAR->number ?? 'XXX (Belum terdaftar)';
-            $cost_center = $penomoranUAR->departemen->cost_center;
+
+            if ($penomoranUAR) {
+                $nomorSurat  = $penomoranUAR->number;
+                $cost_center = $penomoranUAR->departemen?->cost_center ?? 'Belum terdaftar';
+            } else {
+                $nomorSurat = 'XXX (Belum terdaftar)';
+                $cost_center = Departemen::find($departemenId)?->cost_center ?? 'Belum terdaftar';
+            }
         } elseif ($kompartemenId) {
             $penomoranUAR = PenomoranUAR::where('unit_kerja_id', $kompartemenId)
                 ->whereNull('deleted_at')
                 ->latest()
                 ->first();
-            $nomorSurat = $penomoranUAR->number ?? 'XXX (Belum terdaftar)';
-            $cost_center = $penomoranUAR->kompartemen->cost_center;
+
+            if ($penomoranUAR) {
+                $nomorSurat  = $penomoranUAR->number;
+                $cost_center = $penomoranUAR->kompartemen?->cost_center ?? 'Belum terdaftar';
+            } else {
+                $nomorSurat = 'XXX (Belum terdaftar)';
+                $cost_center = Kompartemen::find($kompartemenId)?->cost_center ?? 'Belum terdaftar';
+            }
         }
 
         $nikJobRoles = $query->get();
@@ -200,31 +221,40 @@ class UARReportController extends Controller
 
         // OPTION B = Opsi apabila data kosong tidak ditampilkan
         foreach ($nikJobRoles as $nikJobRole) {
-            // Only include if userGeneric or userNIK exists (not null)
             if ($nikJobRole->userGeneric || $nikJobRole->userNIK) {
                 $jobRole = $nikJobRole->jobRole;
+
+                $mdb = $nikJobRole->mdb_usmm;
+                // Adjust field names as they exist in GenericKaryawanMapping model
+                $mdbData = $mdb ? [
+                    'sap_user_id' => $mdb->sap_user_id ?? null,
+                    'nama'        => $mdb->full_name ?? null,
+                    'nik'         => $mdb->masterDataKaryawan_nama ? $mdb->masterDataKaryawan_nama->nik : null,
+                ] : null;
+
                 $data[] = [
-                    'company' => $jobRole && $jobRole->company ? $jobRole->company->nama : '-',
-                    'kompartemen' => $nikJobRole->userGeneric && $nikJobRole->userGeneric->UserGenericUnitKerja
-                        ? ($nikJobRole->userGeneric->UserGenericUnitKerja->kompartemen->nama ?? '-')
-                        : ($jobRole && $jobRole->kompartemen ? $jobRole->kompartemen->nama : '-'),
-                    'departemen' => $nikJobRole->userGeneric && $nikJobRole->userGeneric->UserGenericUnitKerja
-                        ? ($nikJobRole->userGeneric->UserGenericUnitKerja->departemen->nama ?? '-')
-                        : ($jobRole && $jobRole->departemen ? $jobRole->departemen->nama : '-'),
-                    'user_nik' => $nikJobRole->nik ?? '-',
-                    'karyawan_nik' => $nikJobRole->userNIK ? $nikJobRole->userNIK->user_code : ($nikJobRole->userGeneric ? $nikJobRole->userGeneric->nik : '-'),
-                    'user_definisi' => $nikJobRole->userGeneric
-                        ? $nikJobRole->userGeneric->user_profile
-                        : ($nikJobRole->userNIK && $nikJobRole->userNIK->userDetail ? $nikJobRole->userNIK->userDetail->nama : '-'),
-                    'job_role' => $jobRole ? $jobRole->nama : '-',
+                    'company'       => $jobRole?->company?->nama ?? '-',
+                    'kompartemen'   => $nikJobRole->userGeneric?->UserGenericUnitKerja?->kompartemen->nama
+                        ?? $jobRole?->kompartemen?->nama
+                        ?? '-',
+                    'departemen'    => $nikJobRole->userGeneric?->UserGenericUnitKerja?->departemen->nama
+                        ?? $jobRole?->departemen?->nama
+                        ?? '-',
+                    'user_nik'      => $nikJobRole->nik ?? '-',
+                    'karyawan_nik'  => $nikJobRole->userNIK?->user_code
+                        ?? $nikJobRole->userGeneric?->nik
+                        ?? '-',
+                    'user_definisi' => $nikJobRole->userGeneric?->user_profile
+                        ?? ($nikJobRole->userNIK?->userDetail?->nama ?? '-'),
+                    'job_role'      => $jobRole?->nama ?? '-',
+                    'mdb_usmm' => $mdbData,
                 ];
             }
         }
 
-        // Return DataTables response with additional nomorSurat
         return response()->json([
-            'data' => $data,
-            'nomorSurat' => $nomorSurat,
+            'data'        => $data,
+            'nomorSurat'  => $nomorSurat,
             'cost_center' => $cost_center
         ]);
     }

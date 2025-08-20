@@ -2,17 +2,20 @@
 
 namespace App\Models\middle_db;
 
-use App\Models\User;
 use App\Models\Company;
-use App\Models\Periode;
-use App\Models\userNIK;
-use App\Models\userGEneric;
 use App\Models\CostCenter;
 use App\Models\Departemen;
 use App\Models\Kompartemen;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Database\Eloquent\Model;
+use App\Models\Periode;
+use App\Models\User;
+use App\Models\userGEneric;
+use App\Models\userNIK;
+use App\Models\middle_db\raw\GenericKaryawanMapping;
+use App\Models\middle_db\MasterUSMM;
+
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\DB;
 
 class MasterDataKaryawan extends Model
 {
@@ -76,7 +79,17 @@ class MasterDataKaryawan extends Model
         return $this->hasMany(CostCenter::class, 'cost_code', 'cost_code');
     }
 
-    /**
+    public function genericKaryawanMapping()
+    {
+        return $this->hasOne(GenericKaryawanMapping::class, 'sap_user_id', 'nik');
+    }
+
+    public function MasterUSMM()
+    {
+        return $this->hasOne(MasterUSMM::class, 'sap_user_id', 'nik');
+    }
+
+    /*
      * Sync data from external SQL Server (sqlsrv_ext) into local table.
      * Truncates local table first.
      * @return array { inserted => int }
