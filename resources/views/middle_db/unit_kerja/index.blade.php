@@ -13,17 +13,15 @@
         @endif
 
         <div class="card shadow-sm">
-            <div class="card-header">
-                <h2>Middle DB - Unit Kerja</h2>
+            <div class="card-header d-flex flex-column flex-md-row align-items-md-center gap-2">
+                <h2 class="mb-0 flex-grow-1">Middle DB - Unit Kerja</h2>
+                <div class="d-flex gap-2">
+                    <button id="btnSync" class="btn btn-primary btn-sm">Sync Data</button>
+                    <button id="btnReload" class="btn btn-outline-secondary btn-sm">Reload / Clear Filters</button>
+                </div>
             </div>
             <div class="card-body">
-
-                <div class="d-flex mb-3 gap-2">
-                    <button id="btnSync" class="btn btn-primary btn-sm">
-                        Sync Data
-                    </button>
-                    <span id="syncStatus" class="text-muted small"></span>
-                </div>
+                <div class="mb-2 small text-muted" id="syncStatus"></div>
 
                 <table id="karyawanTable" class="table table-sm table-striped table-bordered w-100 table-responsive">
                     <thead class="table-light">
@@ -38,6 +36,25 @@
                             <th>Departemen</th>
                             <th>Cost Center</th>
                         </tr>
+                        <tr class="filters">
+                            <th></th>
+                            <th><input data-col="1" type="text" class="form-control form-control-sm"
+                                    placeholder="Company"></th>
+                            <th><input data-col="2" type="text" class="form-control form-control-sm"
+                                    placeholder="Dir ID"></th>
+                            <th><input data-col="3" type="text" class="form-control form-control-sm"
+                                    placeholder="Direktorat"></th>
+                            <th><input data-col="4" type="text" class="form-control form-control-sm"
+                                    placeholder="Komp ID"></th>
+                            <th><input data-col="5" type="text" class="form-control form-control-sm"
+                                    placeholder="Kompartemen"></th>
+                            <th><input data-col="6" type="text" class="form-control form-control-sm"
+                                    placeholder="Dept ID"></th>
+                            <th><input data-col="7" type="text" class="form-control form-control-sm"
+                                    placeholder="Departemen"></th>
+                            <th><input data-col="8" type="text" class="form-control form-control-sm"
+                                    placeholder="Cost Center"></th>
+                        </tr>
                     </thead>
                     <tbody></tbody>
                 </table>
@@ -49,11 +66,22 @@
 @section('scripts')
     <script>
         document.addEventListener('DOMContentLoaded', function() {
+            const btnSync = document.getElementById('btnSync');
+            const btnReload = document.getElementById('btnReload');
+            const statusEl = document.getElementById('syncStatus');
+
             const tbl = $('#karyawanTable').DataTable({
                 processing: true,
+                deferRender: true,
+                pageLength: 25,
+                orderCellsTop: true,
+                order: [
+                    [1, 'asc']
+                ],
                 ajax: '{{ route('middle_db.unit_kerja.data') }}',
                 columns: [{
-                        data: 'id'
+                        data: 'id',
+                        visible: false
                     },
                     {
                         data: 'company'
@@ -80,18 +108,28 @@
                         data: 'cost_center'
                     }
                 ],
-                columnDefs: [{
-                    targets: 0,
-                    visible: false
-                }]
+                initComplete: function() {
+                    $('#karyawanTable thead tr.filters input').on('keyup change', function() {
+                        const colIdx = $(this).data('col');
+                        const val = this.value;
+                        if (tbl.column(colIdx).search() !== val) {
+                            tbl.column(colIdx).search(val).draw();
+                        }
+                    });
+                }
             });
 
-            const btn = document.getElementById('btnSync');
-            const statusEl = document.getElementById('syncStatus');
+            btnReload.addEventListener('click', () => {
+                $('#karyawanTable thead tr.filters input').each(function() {
+                    this.value = '';
+                    tbl.column($(this).data('col')).search('');
+                });
+                tbl.ajax.reload(null, false);
+            });
 
-            btn.addEventListener('click', async () => {
+            btnSync.addEventListener('click', async () => {
                 if (!confirm('Sync will TRUNCATE and reload data. Continue?')) return;
-                btn.disabled = true;
+                btnSync.disabled = true;
                 statusEl.textContent = 'Sync in progress...';
                 try {
                     const resp = await fetch('{{ route('middle_db.unit_kerja.sync') }}', {
@@ -103,14 +141,14 @@
                     });
                     if (!resp.ok) throw new Error('HTTP ' + resp.status);
                     const data = await resp.json();
-                    statusEl.textContent = `Done. Inserted: ${data.inserted}`;
+                    statusEl.textContent = 'Done. Inserted: ' + (data.inserted ?? '?');
                     tbl.ajax.reload(null, false);
                 } catch (e) {
                     console.error(e);
                     statusEl.textContent = 'Error during sync.';
                     alert('Sync failed.');
                 } finally {
-                    btn.disabled = false;
+                    btnSync.disabled = false;
                     setTimeout(() => statusEl.textContent = '', 8000);
                 }
             });

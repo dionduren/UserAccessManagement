@@ -33,13 +33,30 @@
                             <th>Employee Full Name</th>
                             <th>Synced At</th>
                         </tr>
+                        <tr class="filters">
+                            <th></th>
+                            <th><input data-col="1" type="text" class="form-control form-control-sm"
+                                    placeholder="SAP User ID"></th>
+                            <th><input data-col="2" type="text" class="form-control form-control-sm"
+                                    placeholder="User Full Name"></th>
+                            <th><input data-col="3" type="text" class="form-control form-control-sm"
+                                    placeholder="Company"></th>
+                            <th><input data-col="4" type="text" class="form-control form-control-sm"
+                                    placeholder="Personnel No"></th>
+                            <th><input data-col="5" type="text" class="form-control form-control-sm"
+                                    placeholder="Employee Full Name"></th>
+                            <th>
+                                {{-- <input data-col="6" type="text" class="form-control form-control-sm"
+                                    placeholder="Synced At"> --}}
+                            </th>
+                        </tr>
                     </thead>
                     <tbody></tbody>
                 </table>
 
                 <div class="mt-2 d-flex gap-2">
                     <button id="btnReload" class="btn btn-outline-secondary btn-sm">
-                        Reload Table
+                        Reload / Clear Filters
                     </button>
                 </div>
             </div>
@@ -58,6 +75,7 @@
                 processing: true,
                 deferRender: true,
                 pageLength: 25,
+                orderCellsTop: true,
                 order: [
                     [1, 'asc']
                 ],
@@ -87,10 +105,23 @@
                         data: 'created_at',
                         render: v => v ? new Date(v).toLocaleString() : ''
                     }
-                ]
+                ],
+                initComplete: function() {
+                    $('#mappingTable thead tr.filters input').on('keyup change', function() {
+                        const colIdx = $(this).data('col');
+                        const val = this.value;
+                        if (table.column(colIdx).search() !== val) {
+                            table.column(colIdx).search(val).draw();
+                        }
+                    });
+                }
             });
 
             reloadBtn.addEventListener('click', () => {
+                $('#mappingTable thead tr.filters input').each(function() {
+                    this.value = '';
+                    table.column($(this).data('col')).search('');
+                });
                 table.ajax.reload(null, false);
             });
 

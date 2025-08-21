@@ -204,6 +204,42 @@
                 </li>
 
                 <div class="dropdown">
+                    <a class="mb-1 nav-link dropdown-toggle text-danger" data-bs-toggle="dropdown" href="#"
+                        role="button" aria-expanded="false">
+                        <i class="bi bi-folder-fill me-2"></i> Master UAM
+                    </a>
+                    <div class="dropdown-content">
+                        <li class="nav-item">
+                            <a href="#" class="mb-1 nav-link text-danger">Composite Role</a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="#" class="mb-1 nav-link text-danger">Single Role</a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="#" class="mb-1 nav-link text-danger">Tcode</a>
+                        </li>
+                    </div>
+                </div>
+
+                <div class="dropdown">
+                    <a class="mb-1 nav-link dropdown-toggle text-danger" data-bs-toggle="dropdown" href="#"
+                        role="button" aria-expanded="false">
+                        <i class="bi bi-folder-fill me-2"></i> Relationship
+                    </a>
+                    <div class="dropdown-content">
+                        <li class="nav-item">
+                            <a href="#" class="mb-1 nav-link text-danger">User - Composite Role</a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="#" class="mb-1 nav-link text-danger">Composite Role - Single Role</a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="#" class="mb-1 nav-link text-danger">Single Role - Tcode</a>
+                        </li>
+                    </div>
+                </div>
+
+                <div class="dropdown">
                     <a class="mb-1 nav-link dropdown-toggle {{ request()->routeIs('middle_db.usmm.*') ? 'active' : 'text-white' }}"
                         data-bs-toggle="dropdown" href="#" role="button"
                         aria-expanded="{{ request()->routeIs('middle_db.usmm.*') ? 'true' : 'false' }}">

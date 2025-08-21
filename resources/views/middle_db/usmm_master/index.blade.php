@@ -19,8 +19,9 @@
                 <h2 class="mb-0 flex-grow-1">Middle DB - USMM Master (Active Users)</h2>
                 <form id="filterForm" class="d-flex gap-2 flex-wrap">
                     @csrf
+                    {{-- Legacy global search (unused now) --}}
                     <input type="text" id="searchQ" name="q" class="form-control form-control-sm"
-                        placeholder="Search (User / Name / Company / Dept)" style="min-width:240px" hidden>
+                        placeholder="Global Search" style="min-width:240px; display:none">
                     <button type="button" id="btnSync" class="btn btn-primary btn-sm">
                         Sync Data
                     </button>
@@ -36,12 +37,36 @@
                             <th>SAP User ID</th>
                             <th>Full Name</th>
                             <th>Department</th>
-                            <th width='7.5%'>Last Logon Date</th>
-                            <th width='7.5%'>Last Logon Time</th>
+                            <th width="7.5%">Last Logon Date</th>
+                            <th width="7.5%">Last Logon Time</th>
                             <th>User Type</th>
-                            <th width='7.5%'>Valid From</th>
-                            <th width='7.5%'>Valid To</th>
+                            <th width="7.5%">Valid From</th>
+                            <th width="7.5%">Valid To</th>
                             <th>Contractual Type</th>
+                        </tr>
+                        <tr class="filters">
+                            <th><input data-col="0" type="text" class="form-control form-control-sm"
+                                    placeholder="Company"></th>
+                            <th><input data-col="1" type="text" class="form-control form-control-sm"
+                                    placeholder="User ID"></th>
+                            <th><input data-col="2" type="text" class="form-control form-control-sm"
+                                    placeholder="Full Name"></th>
+                            <th><input data-col="3" type="text" class="form-control form-control-sm"
+                                    placeholder="Department"></th>
+                            <th><input data-col="4" type="text" class="form-control form-control-sm"
+                                    placeholder="Logon Date"></th>
+                            <th>
+                                {{-- <input data-col="5" type="text" class="form-control form-control-sm"
+                                    placeholder="Logon Time"> --}}
+                            </th>
+                            <th><input data-col="6" type="text" class="form-control form-control-sm"
+                                    placeholder="User Type"></th>
+                            <th><input data-col="7" type="text" class="form-control form-control-sm"
+                                    placeholder="Valid From"></th>
+                            <th><input data-col="8" type="text" class="form-control form-control-sm"
+                                    placeholder="Valid To"></th>
+                            <th><input data-col="9" type="text" class="form-control form-control-sm"
+                                    placeholder="Contractual"></th>
                         </tr>
                     </thead>
                     <tbody></tbody>
@@ -49,7 +74,7 @@
 
                 <div class="mt-2 d-flex gap-2">
                     <button id="btnReload" class="btn btn-outline-secondary btn-sm">
-                        Reload Table
+                        Reload / Clear Filters
                     </button>
                 </div>
             </div>
@@ -60,26 +85,21 @@
 @section('scripts')
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            const qInput = document.getElementById('searchQ');
             const btnReload = document.getElementById('btnReload');
             const btnSync = document.getElementById('btnSync');
             const statusEl = document.getElementById('syncStatus');
-
-            let typingTimer;
-            const debounceMs = 400;
 
             const table = $('#usmmTable').DataTable({
                 processing: true,
                 deferRender: true,
                 pageLength: 25,
+                orderCellsTop: true,
                 order: [
                     [1, 'asc']
                 ],
                 ajax: {
-                    url: '{{ route('middle_db.usmm.data') }}',
-                    data: d => {
-                        d.q = qInput.value.trim();
-                    }
+                    url: '{{ route('middle_db.usmm.data') }}'
+                    // No per-column params (client-side filtering after load)
                 },
                 columns: [{
                         data: 'company'
@@ -166,25 +186,31 @@
                     },
                     {
                         data: 'contr_user_type_desc'
-                    },
-                ]
+                    }
+                ],
+                initComplete: function() {
+                    $('#usmmTable thead tr.filters input').on('keyup change', function() {
+                        const colIdx = $(this).data('col');
+                        const val = this.value;
+                        if (table.column(colIdx).search() !== val) {
+                            table.column(colIdx).search(val).draw();
+                        }
+                    });
+                }
             });
-
-            // Auto reload on typing (debounced)
-            qInput.addEventListener('keyup', () => {
-                clearTimeout(typingTimer);
-                typingTimer = setTimeout(() => table.ajax.reload(), debounceMs);
-            });
-            qInput.addEventListener('keydown', () => clearTimeout(typingTimer));
 
             btnReload.addEventListener('click', () => {
+                $('#usmmTable thead tr.filters input').each(function() {
+                    this.value = '';
+                    table.column($(this).data('col')).search('');
+                });
                 table.ajax.reload(null, false);
             });
 
             btnSync.addEventListener('click', async () => {
                 Swal.fire({
                     title: 'Sync USMM Data?',
-                    html: '<div class="text-start small">Operasi ini akan:<ul class="mb-0"><li>TRUNCATE tabel lokal</li><li>Impor ulang seluruh data dari sumber eksternal</li></ul></div>',
+                    html: '<div class="text-start small">Operation will:<ul class="mb-0"><li>TRUNCATE local table</li><li>Re-import all data</li></ul></div>',
                     icon: 'warning',
                     showCancelButton: true,
                     confirmButtonText: 'Yes, proceed',
@@ -194,17 +220,14 @@
                     focusCancel: true
                 }).then(async (res) => {
                     if (!res.isConfirmed) return;
-
                     btnSync.disabled = true;
                     statusEl.textContent = 'Sync in progress...';
-
                     Swal.fire({
                         title: 'Processing...',
                         html: 'Please wait while syncing data.',
                         allowOutsideClick: false,
                         didOpen: () => Swal.showLoading()
                     });
-
                     try {
                         const resp = await fetch('{{ route('middle_db.usmm.sync') }}', {
                             method: 'POST',
@@ -218,7 +241,6 @@
                         statusEl.textContent = 'Sync complete. Inserted: ' + (data
                             .inserted ?? '?');
                         table.ajax.reload(null, false);
-
                         Swal.fire({
                             icon: 'success',
                             title: 'Sync Complete',

@@ -8,9 +8,7 @@
             <div class="card-header d-flex flex-column flex-md-row align-items-md-center gap-2">
                 <h2 class="mb-0 flex-grow-1">USMM - Inactive Users (&gt; 6 Months)</h2>
                 <div class="d-flex gap-2">
-                    <input type="text" id="searchInactive" class="form-control form-control-sm" placeholder="Search..."
-                        style="min-width:220px">
-                    <button id="btnReloadInactive" class="btn btn-outline-secondary btn-sm">Reload Table</button>
+                    <button id="btnReloadInactive" class="btn btn-outline-secondary btn-sm">Reload / Clear Filters</button>
                 </div>
             </div>
             <div class="card-body">
@@ -28,6 +26,38 @@
                             <th width="7.5%">Valid To</th>
                             <th>Contractual Type</th>
                         </tr>
+                        <tr class="filters">
+                            <th><input data-col="0" type="text" class="form-control form-control-sm"
+                                    placeholder="Company">
+                            </th>
+                            <th><input data-col="1" type="text" class="form-control form-control-sm"
+                                    placeholder="User ID">
+                            </th>
+                            <th><input data-col="2" type="text" class="form-control form-control-sm"
+                                    placeholder="Full Name">
+                            </th>
+                            <th><input data-col="3" type="text" class="form-control form-control-sm"
+                                    placeholder="Department">
+                            </th>
+                            <th><input data-col="4" type="text" class="form-control form-control-sm"
+                                    placeholder="Logon Date">
+                            </th>
+                            <th><input data-col="5" type="text" class="form-control form-control-sm"
+                                    placeholder="Logon Time">
+                            </th>
+                            <th><input data-col="6" type="text" class="form-control form-control-sm"
+                                    placeholder="User Type">
+                            </th>
+                            <th><input data-col="7" type="text" class="form-control form-control-sm"
+                                    placeholder="Valid From">
+                            </th>
+                            <th><input data-col="8" type="text" class="form-control form-control-sm"
+                                    placeholder="Valid To">
+                            </th>
+                            <th><input data-col="9" type="text" class="form-control form-control-sm"
+                                    placeholder="Contractual">
+                            </th>
+                        </tr>
                     </thead>
                     <tbody></tbody>
                 </table>
@@ -39,7 +69,6 @@
 @section('scripts')
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            const searchInput = document.getElementById('searchInactive');
             const btnReload = document.getElementById('btnReloadInactive');
 
             const formatDate = (data) => {
@@ -70,21 +99,12 @@
                 processing: true,
                 deferRender: true,
                 pageLength: 25,
+                orderCellsTop: true,
                 order: [
                     [1, 'asc']
                 ],
                 ajax: {
-                    url: '{{ route('middle_db.usmm.inactiveData') }}',
-                    dataSrc: function(json) {
-                        const q = searchInput.value.trim().toLowerCase();
-                        if (!q) return json.data;
-                        return json.data.filter(r =>
-                            (r.sap_user_id || '').toLowerCase().includes(q) ||
-                            (r.full_name || '').toLowerCase().includes(q) ||
-                            (r.company || '').toLowerCase().includes(q) ||
-                            (r.department || '').toLowerCase().includes(q)
-                        );
-                    }
+                    url: '{{ route('middle_db.usmm.inactiveData') }}'
                 },
                 columns: [{
                         data: 'company'
@@ -119,18 +139,26 @@
                     },
                     {
                         data: 'contr_user_type_desc'
-                    },
-                ]
+                    }
+                ],
+                initComplete: function() {
+                    $('#usmmInactiveTable thead tr.filters input').on('keyup change', function() {
+                        const colIdx = $(this).data('col');
+                        const val = this.value;
+                        if (table.column(colIdx).search() !== val) {
+                            table.column(colIdx).search(val).draw();
+                        }
+                    });
+                }
             });
 
-            let typingTimer;
-            searchInput.addEventListener('keyup', () => {
-                clearTimeout(typingTimer);
-                typingTimer = setTimeout(() => table.ajax.reload(), 350);
+            btnReload.addEventListener('click', () => {
+                $('#usmmInactiveTable thead tr.filters input').each(function() {
+                    this.value = '';
+                    table.column($(this).data('col')).search('');
+                });
+                table.ajax.reload(null, false);
             });
-            searchInput.addEventListener('keydown', () => clearTimeout(typingTimer));
-
-            btnReload.addEventListener('click', () => table.ajax.reload(null, false));
         });
     </script>
 @endsection

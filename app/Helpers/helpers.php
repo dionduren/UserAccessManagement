@@ -171,6 +171,6 @@ if (!function_exists('getBreadcrumbs')) {
 
     ];
 
-    return isset($breadcrumbs[$routeName]) ? '<li class="breadcrumb-item">' . $breadcrumbs[$routeName] . '</li>' : '<li class="breadcrumb-item">Dashboard</li>';
+    return isset($breadcrumbs[$routeName]) ? '<li class="breadcrumb-item">' . $breadcrumbs[$routeName] . '</li>' : '<li class="breadcrumb-item"></li>';
   }
 }
