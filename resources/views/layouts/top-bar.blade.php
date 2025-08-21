@@ -4,7 +4,7 @@
         <ol class="breadcrumb">
             {!! getBreadcrumbs() !!}
         </ol>
-    </nav>`
+    </nav>
 
     <div class="d-flex align-items-center">
         @auth()

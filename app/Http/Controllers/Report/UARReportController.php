@@ -561,28 +561,60 @@ class UARReportController extends Controller
         foreach ($nikJobRoles as $nikJobRole) {
             if ($nikJobRole->userGeneric || $nikJobRole->userNIK) {
                 $jobRole = $nikJobRole->jobRole;
+
+                // New logic: prefer mdb_usmm values if present
+                $mdb = $nikJobRole->mdb_usmm;
+
+                // ORIGINAL (reference):
+                // User ID (was: $nikJobRole->nik)
+                // Nama (was: userGeneric->user_profile OR userNIK->userDetail->nama)
+                // NIK  (was: userGeneric->nik OR userNIK->user_code)
+
+                if ($mdb) {
+                    $userId    = $mdb->sap_user_id ?? ($nikJobRole->nik ?? '-');
+                    $userName  = $this->sanitizeForDocx($mdb->full_name ?? (
+                        $nikJobRole->userGeneric?->user_profile
+                        ?? ($nikJobRole->userNIK?->userDetail?->nama ?? '-')
+                    ));
+                    // If relation to MasterDataKaryawan (alias masterDataKaryawan_nama) exists, take its nik
+                    $nikValue  = $mdb->masterDataKaryawan_nama->nik ?? '-';
+                } else {
+                    $userId    = $nikJobRole->nik ?? '-';
+                    $userName  = $this->sanitizeForDocx(
+                        $nikJobRole->userGeneric?->user_profile
+                            ?? ($nikJobRole->userNIK?->userDetail?->nama ?? '-')
+                    );
+                    $nikValue  = $nikJobRole->userGeneric?->nik
+                        ?? ($nikJobRole->userNIK?->user_code ?? '-');
+                }
+
                 $table->addRow();
                 $table->addCell(750, ['valign' => 'center'])->addText(
                     $no++,
                     ['size' => 8],
                     ['space' => ['after' => 0], 'alignment' => Jc::CENTER]
                 );
-                $table->addCell(3000, ['valign' => 'center'])->addText($nikJobRole->nik ?? '-', ['size' => 8], ['space' => ['after' => 0]]);
+                // User ID
+                $table->addCell(3000, ['valign' => 'center'])->addText($userId, ['size' => 8], ['space' => ['after' => 0]]);
+                // Nama
                 $table->addCell(3000, ['valign' => 'center'])->addText(
-                    $nikJobRole->userGeneric
-                        ? $nikJobRole->userGeneric->user_profile
-                        : ($nikJobRole->userNIK && $nikJobRole->userNIK->userDetail ? $nikJobRole->userNIK->userDetail->nama : '-'),
+                    $userName,
                     ['size' => 8],
                     ['space' => ['after' => 0]]
                 );
-                $table->addCell(3000, ['valign' => 'center'])->addText($this->sanitizeForDocx($jobRole->nama ?? '-'), ['size' => 8], ['space' => ['after' => 0]]);
+                // Job Role
                 $table->addCell(3000, ['valign' => 'center'])->addText(
-                    $nikJobRole->userGeneric
-                        ? $nikJobRole->userGeneric->nik
-                        : ($nikJobRole->userNIK ? $nikJobRole->userNIK->user_code : '-'),
+                    $this->sanitizeForDocx($jobRole->nama ?? '-'),
                     ['size' => 8],
                     ['space' => ['after' => 0]]
                 );
+                // NIK
+                $table->addCell(3000, ['valign' => 'center'])->addText(
+                    $nikValue,
+                    ['size' => 8],
+                    ['space' => ['after' => 0]]
+                );
+                // Tetap / Berubah / Keterangan (unchanged placeholders)
                 $table->addCell(1500, ['valign' => 'center'])->addText('', ['size' => 8], ['space' => ['after' => 0]]);
                 $table->addCell(1500, ['valign' => 'center'])->addText('', ['size' => 8], ['space' => ['after' => 0]]);
                 $table->addCell(2000, ['valign' => 'center'])->addText(

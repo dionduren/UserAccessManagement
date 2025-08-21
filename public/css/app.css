@@ -1,3 +1,15 @@
+/* --- GLOBAL NORMALIZATION (add near top) --- */
+/* html,
+body {
+    margin: 0;
+    height: 100%;
+} */
+
+/* Optional: prevent whole-window double scroll; internal areas handle scrolling */
+body {
+    overflow: hidden;
+}
+
 /* Sidebar and Content Container */
 #app {
     display: flex;
@@ -140,6 +152,7 @@
     background: rgb(241 245 249);
     color: black;
     padding: 10px 0 0 20px;
+    margin-top: 15px;
     margin-bottom: 0;
     display: flex;
     justify-content: space-between;
