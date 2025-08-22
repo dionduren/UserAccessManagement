@@ -17,7 +17,17 @@ class UAMRelationshipRawController extends Controller
     public function data(Request $request)
     {
         $rows = DB::table('mdb_uam_relationship_raw')
-            ->select('id', 'sap_user', 'composite_role', 'single_role', 'tcode', 'created_at')
+            ->select(
+                'id',
+                'sap_user',
+                'composite_role',
+                'composite_role_desc',
+                'single_role',
+                'single_role_desc',
+                'tcode',
+                'tcode_desc',
+                'created_at'
+            )
             ->orderBy('sap_user')
             ->orderBy('composite_role')
             ->orderBy('single_role')
@@ -26,23 +36,6 @@ class UAMRelationshipRawController extends Controller
 
         return response()->json(['data' => $rows]);
     }
-
-    // public function data(Request $request)
-    // {
-    //     $like = $request->get('like');
-    //     $q = DB::table('mdb_uam_relationship_raw')
-    //         ->select('id', 'sap_user', 'composite_role', 'single_role', 'tcode', 'created_at')
-    //         ->orderBy('sap_user')
-    //         ->orderBy('composite_role')
-    //         ->orderBy('single_role')
-    //         ->orderBy('tcode');
-
-    //     if ($like) {
-    //         $q->where('composite_role', 'like', $like);
-    //     }
-
-    //     return response()->json(['data' => $q->get()]);
-    // }
 
     public function sync(Request $request)
     {

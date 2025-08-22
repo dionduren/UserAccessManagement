@@ -33,22 +33,39 @@
                             <th>ID</th>
                             <th>SAP User</th>
                             <th>Composite Role</th>
+                            <th>Composite Desc</th>
                             <th>Single Role</th>
+                            <th>Single Desc</th>
                             <th>TCode</th>
+                            <th>TCode Desc</th>
                             <th>Synced At</th>
                         </tr>
                         <tr class="filters">
                             <th></th>
                             <th><input data-col="1" type="text" class="form-control form-control-sm"
-                                    placeholder="SAP User"></th>
+                                    placeholder="SAP User">
+                            </th>
                             <th><input data-col="2" type="text" class="form-control form-control-sm"
-                                    placeholder="Composite"></th>
+                                    placeholder="Composite">
+                            </th>
                             <th><input data-col="3" type="text" class="form-control form-control-sm"
-                                    placeholder="Single"></th>
+                                    placeholder="Comp Desc">
+                            </th>
                             <th><input data-col="4" type="text" class="form-control form-control-sm"
-                                    placeholder="TCode"></th>
+                                    placeholder="Single">
+                            </th>
                             <th><input data-col="5" type="text" class="form-control form-control-sm"
-                                    placeholder="Synced At"></th>
+                                    placeholder="Single Desc">
+                            </th>
+                            <th><input data-col="6" type="text" class="form-control form-control-sm"
+                                    placeholder="TCode">
+                            </th>
+                            <th><input data-col="7" type="text" class="form-control form-control-sm"
+                                    placeholder="TCode Desc">
+                            </th>
+                            <th><input data-col="8" type="text" class="form-control form-control-sm"
+                                    placeholder="Synced At">
+                            </th>
                         </tr>
                     </thead>
                     <tbody></tbody>
@@ -97,10 +114,19 @@
                         data: 'composite_role'
                     },
                     {
+                        data: 'composite_role_desc'
+                    },
+                    {
                         data: 'single_role'
                     },
                     {
+                        data: 'single_role_desc'
+                    },
+                    {
                         data: 'tcode'
+                    },
+                    {
+                        data: 'tcode_desc'
                     },
                     {
                         data: 'created_at',

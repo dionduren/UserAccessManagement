@@ -46,6 +46,7 @@ use App\Http\Controllers\MasterData\UserNIKController;
 use App\Http\Controllers\Middle_DB\MasterDataKaryawanController;
 use App\Http\Controllers\Middle_DB\UnitKerjaController;
 use App\Http\Controllers\Middle_DB\MasterUSMMController;
+use App\Http\Controllers\Middle_DB\UAMViewsController;
 use App\Http\Controllers\Middle_DB\raw\UAMRelationshipRawController;
 use \App\Http\Controllers\Middle_DB\raw\GenericKaryawanMappingRawController;
 
@@ -455,6 +456,30 @@ Route::middleware(['auth'])->group(function () {
             Route::get('/all/data',      [MasterUSMMController::class, 'allData'])->name('allData');
 
             Route::post('/sync',         [MasterUSMMController::class, 'sync'])->name('sync');
+        });
+
+        // UAM Views (relationship + masters)
+        Route::prefix('uam')->name('uam.')->group(function () {
+
+            // Relationship
+            Route::get('/user-composite',        [UAMViewsController::class, 'userComposite'])->name('user_composite.index');
+            Route::get('/user-composite/data',   [UAMViewsController::class, 'userCompositeData'])->name('user_composite.data');
+
+            Route::get('/composite-single',      [UAMViewsController::class, 'compositeSingle'])->name('composite_single.index');
+            Route::get('/composite-single/data', [UAMViewsController::class, 'compositeSingleData'])->name('composite_single.data');
+
+            Route::get('/single-tcode',          [UAMViewsController::class, 'singleTcode'])->name('single_tcode.index');
+            Route::get('/single-tcode/data',     [UAMViewsController::class, 'singleTcodeData'])->name('single_tcode.data');
+
+            // Masters
+            Route::get('/composite-master',      [UAMViewsController::class, 'compositeMaster'])->name('composite_master.index');
+            Route::get('/composite-master/data', [UAMViewsController::class, 'compositeMasterData'])->name('composite_master.data');
+
+            Route::get('/single-master',         [UAMViewsController::class, 'singleMaster'])->name('single_master.index');
+            Route::get('/single-master/data',    [UAMViewsController::class, 'singleMasterData'])->name('single_master.data');
+
+            Route::get('/tcode-master',          [UAMViewsController::class, 'tcodeMaster'])->name('tcode_master.index');
+            Route::get('/tcode-master/data',     [UAMViewsController::class, 'tcodeMasterData'])->name('tcode_master.data');
         });
     });
 
