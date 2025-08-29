@@ -21,6 +21,10 @@ class UAMViewsController extends Controller
     {
         return view('middle_db.view.single_tcode.index');
     }
+    public function compositeSingleAO()
+    {
+        return view('middle_db.view.composite_ao.index');
+    }
 
     /* ===== Master Pages ===== */
     public function compositeMaster()
@@ -203,6 +207,77 @@ class UAMViewsController extends Controller
             'draw'            => $draw,
             'recordsTotal'    => $recordsTotal,      // total distinct singles (unfiltered)
             'recordsFiltered' => $recordsFiltered,   // filtered distinct singles
+            'data'            => $data,
+        ]);
+    }
+
+    public function compositeSingleAOData(Request $request)
+    {
+        $draw    = (int)$request->input('draw');
+        $start   = (int)$request->input('start', 0);
+        $length  = (int)$request->input('length', 10);
+        $comp    = trim($request->input('comp', ''));
+        $single  = trim($request->input('single', ''));
+
+        $baseView = 'v_uam_composite_single_ao';
+
+        // Total distinct AO composites
+        $recordsTotal = DB::table($baseView)->distinct()->count('composite_role');
+
+        $distinct = DB::table($baseView . ' as vcs')
+            ->select('vcs.composite_role')
+            ->distinct();
+
+        if ($comp !== '') {
+            $distinct->where('vcs.composite_role', 'LIKE', "%{$comp}%");
+        }
+        if ($single !== '') {
+            $distinct->whereExists(function ($q) use ($single, $baseView) {
+                $q->select(DB::raw(1))
+                    ->from($baseView . ' as v2')
+                    ->whereColumn('v2.composite_role', 'vcs.composite_role')
+                    ->where('v2.single_role', 'LIKE', "%{$single}%");
+            });
+        }
+
+        $recordsFiltered = (clone $distinct)->count();
+        $distinct->orderBy('vcs.composite_role');
+
+        $pageCompositeRoles = $distinct->skip($start)->take($length)->pluck('composite_role')->toArray();
+
+        if (!$pageCompositeRoles) {
+            return response()->json([
+                'draw' => $draw,
+                'recordsTotal' => $recordsTotal,
+                'recordsFiltered' => $recordsFiltered,
+                'data' => [],
+            ]);
+        }
+
+        $pairsQ = DB::table($baseView)
+            ->whereIn('composite_role', $pageCompositeRoles)
+            ->orderBy('composite_role')
+            ->orderBy('single_role');
+
+        if ($single !== '') {
+            $pairsQ->where('single_role', 'LIKE', "%{$single}%");
+        }
+
+        $pairs = $pairsQ->get();
+
+        $data = [];
+        foreach ($pairs as $p) {
+            $data[] = [
+                'composite_role' => $p->composite_role,
+                'single_role'    => $p->single_role,
+                'group_key'      => $p->composite_role,
+            ];
+        }
+
+        return response()->json([
+            'draw'            => $draw,
+            'recordsTotal'    => $recordsTotal,
+            'recordsFiltered' => $recordsFiltered,
             'data'            => $data,
         ]);
     }

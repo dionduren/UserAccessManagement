@@ -127,8 +127,10 @@ class MasterUSMM extends Model
                 SQL;
 
         // koneksi eksternal: ganti 'sqlsrv_freetds' jika berbeda (mis: 'dblib')
+        // $rows = DB::connection('sqlsrv_freetds')->select($sql);
         // $rows = DB::connection('sqlsrv_ext')->select($sql);
-        $rows = DB::connection('sqlsrv_freetds')->select($sql);
+        $connection = env('SYNC_CONNECTION', 'sqlsrv_ext');
+        $rows = DB::connection($connection)->select($sql);
 
         DB::table($table)->truncate();
 

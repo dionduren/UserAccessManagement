@@ -3,10 +3,11 @@
 namespace App\Http\Controllers\Middle_DB;
 
 use App\Http\Controllers\Controller;
-
+use App\Models\Company;
 use App\Models\middle_db\MasterDataKaryawan;
-
+use App\Models\middle_db\raw\DuplicateNameFilter;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class MasterDataKaryawanController extends Controller
 {

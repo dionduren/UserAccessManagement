@@ -35,55 +35,54 @@ class UAMRelationshipRAW extends Model
     $table = (new self)->getTable();
 
     $sql = <<<SQL
-            SELECT DISTINCT
-                au.UNAME        AS sap_user,
-                ca.AGR_NAME     AS composite_role,
-                cr_desc.TEXT    AS composite_role_desc,
-                ca.CHILD_AGR    AS single_role,
-                sr_desc.TEXT    AS single_role_desc,
-                a.LOW           AS tcode,
-                tc.TTEXT        AS tcode_desc
-            FROM BASIS_AGR_AGRS AS ca
-            JOIN BASIS_AGR_1251 AS a
-              ON a.AGR_NAME = ca.CHILD_AGR
-             AND a.OBJECT   = 'S_TCODE'
-             AND a.FIELD    = 'TCD'
-            JOIN BASIS_AGR_USERS AS au
-              ON au.AGR_NAME = ca.AGR_NAME
-            OUTER APPLY (
-              SELECT TOP (1) t.TEXT
-              FROM BASIS_AGR_TEXTS t
-              WHERE t.AGR_NAME = ca.AGR_NAME
-                AND t.SPRAS = 'E'
-              ORDER BY t.LINE
-            ) AS cr_desc
-            OUTER APPLY (
-              SELECT TOP (1) t.TEXT
-              FROM BASIS_AGR_TEXTS t
-              WHERE t.AGR_NAME = ca.CHILD_AGR
-                AND t.SPRAS = 'E'
-              ORDER BY t.LINE
-            ) AS sr_desc
-            LEFT JOIN BASIS_TSTCT tc
-              ON tc.TCODE = a.LOW
-             AND tc.SPRSL = 'E'
-            WHERE ca.AGR_NAME LIKE ?
-            ORDER BY au.UNAME, ca.AGR_NAME, ca.CHILD_AGR, a.LOW
-        SQL;
+SELECT DISTINCT
+    au.UNAME        AS sap_user,
+    ca.AGR_NAME     AS composite_role,
+    cr_desc.TEXT    AS composite_role_desc,
+    ca.CHILD_AGR    AS single_role,
+    sr_desc.TEXT    AS single_role_desc,
+    a.LOW           AS tcode,
+    tc.TTEXT        AS tcode_desc
+FROM BASIS_AGR_AGRS AS ca
+JOIN BASIS_AGR_USERS AS au
+  ON au.AGR_NAME = ca.AGR_NAME
+OUTER APPLY (
+  SELECT TOP (1) t.TEXT
+  FROM BASIS_AGR_TEXTS AS t
+  WHERE t.AGR_NAME = ca.AGR_NAME AND t.SPRAS = 'E'
+  ORDER BY t.LINE
+) AS cr_desc
+OUTER APPLY (
+  SELECT TOP (1) t.TEXT
+  FROM BASIS_AGR_TEXTS AS t
+  WHERE t.AGR_NAME = ca.CHILD_AGR AND t.SPRAS = 'E'
+  ORDER BY t.LINE
+) AS sr_desc
+LEFT JOIN BASIS_AGR_1251 AS a
+  ON a.AGR_NAME = ca.CHILD_AGR
+ AND a.OBJECT   = 'S_TCODE'
+ AND a.FIELD    = 'TCD'
+LEFT JOIN BASIS_TSTCT AS tc
+  ON tc.TCODE = a.LOW
+ AND tc.SPRSL = 'E'
+WHERE ca.AGR_NAME LIKE ?
+ORDER BY au.UNAME, ca.AGR_NAME, ca.CHILD_AGR, a.LOW
+SQL;
 
+    $connection = env('SYNC_CONNECTION', 'sqlsrv_ext');
 
-    $rows = DB::connection('sqlsrv_freetds')->select($sql, [$roleLike]);
-    // $rows = DB::connection('sqlsrv_ext')->select($sql, [$roleLike]);
+    // FIX: provide binding for the single '?' placeholder (previously caused SQLSTATE[07002])
+    $rows = DB::connection($connection)->select($sql, [$roleLike]);
 
     DB::table($table)->truncate();
 
     $now = now();
-    $buf = [];
+    $batchSize = 1000;
+    $buffer = [];
     $inserted = 0;
-    $batch = 1000;
 
     foreach ($rows as $r) {
-      $buf[] = [
+      $buffer[] = [
         'sap_user'             => $r->sap_user,
         'composite_role'       => $r->composite_role,
         'composite_role_desc'  => $r->composite_role_desc,
@@ -94,16 +93,16 @@ class UAMRelationshipRAW extends Model
         'created_at'           => $now,
         'updated_at'           => $now,
       ];
-      if (count($buf) >= $batch) {
-        DB::table($table)->insert($buf);
-        $inserted += count($buf);
-        $buf = [];
+      if (count($buffer) >= $batchSize) {
+        DB::table($table)->insert($buffer);
+        $inserted += count($buffer);
+        $buffer = [];
       }
     }
 
-    if ($buf) {
-      DB::table($table)->insert($buf);
-      $inserted += count($buf);
+    if ($buffer) {
+      DB::table($table)->insert($buffer);
+      $inserted += count($buffer);
     }
 
     return ['inserted' => $inserted];

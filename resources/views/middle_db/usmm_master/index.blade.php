@@ -43,6 +43,7 @@
                             <th width="7.5%">Valid From</th>
                             <th width="7.5%">Valid To</th>
                             <th>Contractual Type</th>
+                            <th>Updated On</th>
                         </tr>
                         <tr class="filters">
                             <th><input data-col="0" type="text" class="form-control form-control-sm"
@@ -67,6 +68,10 @@
                                     placeholder="Valid To"></th>
                             <th><input data-col="9" type="text" class="form-control form-control-sm"
                                     placeholder="Contractual"></th>
+                            <th>
+                                {{-- <input data-col="10" type="text" class="form-control form-control-sm"
+                                    placeholder="Updated On"> --}}
+                            </th>
                         </tr>
                     </thead>
                     <tbody></tbody>
@@ -186,6 +191,12 @@
                     },
                     {
                         data: 'contr_user_type_desc'
+                    },
+                    {
+                        data: 'created_at',
+                        render: function(val) {
+                            return val ? new Date(val).toLocaleString() : '';
+                        }
                     }
                 ],
                 initComplete: function() {

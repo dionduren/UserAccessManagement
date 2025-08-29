@@ -147,6 +147,68 @@
                 }
             });
 
+            syncBtn.addEventListener('click', async () => {
+                Swal.fire({
+                    title: 'Konfirmasi Sync',
+                    html: 'Proses ini akan <b>TRUNCATE</b> tabel dan mengimpor ulang data.<br>Lanjutkan?',
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonText: 'Ya, lanjutkan',
+                    cancelButtonText: 'Batal',
+                    reverseButtons: true,
+                }).then(async (result) => {
+                    if (!result.isConfirmed) return;
+
+                    syncBtn.disabled = true;
+                    statusEl.textContent = 'Sync in progress...';
+
+                    const loader = Swal.fire({
+                        title: 'Sedang memproses',
+                        text: 'Mengambil data...',
+                        allowOutsideClick: false,
+                        allowEscapeKey: false,
+                        didOpen: () => Swal.showLoading()
+                    });
+
+                    try {
+                        const formData = new FormData();
+                        formData.append('like', likeInput.value);
+                        const resp = await fetch(
+                            '{{ route('middle_db.raw.uam_relationship.sync') }}', {
+                                method: 'POST',
+                                headers: {
+                                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                                    'Accept': 'application/json'
+                                },
+                                body: formData
+                            });
+                        if (!resp.ok) throw new Error('HTTP ' + resp.status);
+                        const data = await resp.json();
+
+                        Swal.fire({
+                            title: 'Berhasil',
+                            text: `Sync selesai. Inserted: ${data.inserted}`,
+                            icon: 'success',
+                            timer: 4000,
+                            showConfirmButton: false
+                        });
+                        statusEl.textContent = `Sync complete. Inserted: ${data.inserted}`;
+                        table.ajax.reload(null, false);
+                    } catch (e) {
+                        console.error(e);
+                        Swal.fire({
+                            title: 'Gagal',
+                            text: 'Sync gagal dijalankan.',
+                            icon: 'error'
+                        });
+                        statusEl.textContent = 'Sync failed.';
+                    } finally {
+                        syncBtn.disabled = false;
+                        setTimeout(() => statusEl.textContent = '', 8000);
+                    }
+                });
+            });
+
             reloadBtn.addEventListener('click', () => {
                 // Clear all filters then reload
                 $('#uamTable thead tr.filters input').each(function() {
@@ -155,35 +217,6 @@
                     table.column(colIdx).search('');
                 });
                 table.ajax.reload(null, false);
-            });
-
-            syncBtn.addEventListener('click', async () => {
-                if (!confirm('This will TRUNCATE and re-import data. Continue?')) return;
-                syncBtn.disabled = true;
-                statusEl.textContent = 'Sync in progress...';
-                try {
-                    const formData = new FormData();
-                    formData.append('like', likeInput.value);
-                    const resp = await fetch('{{ route('middle_db.raw.uam_relationship.sync') }}', {
-                        method: 'POST',
-                        headers: {
-                            'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                            'Accept': 'application/json'
-                        },
-                        body: formData
-                    });
-                    if (!resp.ok) throw new Error('HTTP ' + resp.status);
-                    const data = await resp.json();
-                    statusEl.textContent = `Sync complete. Inserted: ${data.inserted}`;
-                    table.ajax.reload(null, false);
-                } catch (e) {
-                    console.error(e);
-                    statusEl.textContent = 'Sync failed.';
-                    alert('Sync failed.');
-                } finally {
-                    syncBtn.disabled = false;
-                    setTimeout(() => statusEl.textContent = '', 8000);
-                }
             });
         });
     </script>

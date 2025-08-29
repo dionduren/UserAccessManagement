@@ -4,13 +4,10 @@ namespace App\Models\middle_db;
 
 use App\Models\Company;
 use App\Models\CostCenter;
-use App\Models\Departemen;
-use App\Models\Kompartemen;
-use App\Models\Periode;
-use App\Models\User;
 use App\Models\userGEneric;
 use App\Models\userNIK;
 use App\Models\middle_db\raw\GenericKaryawanMapping;
+use App\Models\middle_db\raw\DuplicateNameFilter;
 use App\Models\middle_db\MasterUSMM;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -89,6 +86,11 @@ class MasterDataKaryawan extends Model
         return $this->hasOne(MasterUSMM::class, 'sap_user_id', 'nik');
     }
 
+    public function duplicateNameFilter()
+    {
+        return $this->hasMany(DuplicateNameFilter::class, 'nik', 'nik');
+    }
+
     /*
      * Sync data from external SQL Server (sqlsrv_ext) into local table.
      * Truncates local table first.
@@ -100,7 +102,10 @@ class MasterDataKaryawan extends Model
         $table = (new self)->getTable();
 
         // Fetch required columns from external source
-        $extRows = DB::connection('sqlsrv_freetds')
+        // $rows = DB::connection('sqlsrv_freetds')->select($sql);
+        // $rows = DB::connection('sqlsrv_ext')->select($sql);
+        $connection = env('SYNC_CONNECTION', 'sqlsrv_ext');
+        $extRows = DB::connection($connection)
             ->table('dbo.BASIS_KARYAWAN')
             ->selectRaw("
                 emp_no    AS nik,

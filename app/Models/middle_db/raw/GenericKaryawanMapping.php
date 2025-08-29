@@ -62,8 +62,10 @@ class GenericKaryawanMapping extends Model
             SQL;
 
         // Ambil data dari koneksi eksternal (ganti 'sqlsrv_freetds' sesuai konfigurasi kamu)
-        $rows = DB::connection('sqlsrv_freetds')->select($sql);
+        // $rows = DB::connection('sqlsrv_freetds')->select($sql);
         // $rows = DB::connection('sqlsrv_ext')->select($sql);
+        $connection = env('SYNC_CONNECTION', 'sqlsrv_ext');
+        $rows = DB::connection($connection)->select($sql);
 
         // Kosongkan tabel lokal
         DB::table($table)->truncate();

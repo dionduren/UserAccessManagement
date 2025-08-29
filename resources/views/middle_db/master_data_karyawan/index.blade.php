@@ -141,9 +141,28 @@
             });
 
             btnSync.addEventListener('click', async () => {
-                if (!confirm('Sync will TRUNCATE and reload data. Continue?')) return;
+                const confirmResult = await Swal.fire({
+                    title: 'Konfirmasi Sync',
+                    html: 'Proses ini akan <b>TRUNCATE</b> dan memuat ulang data Master Karyawan.<br>Lanjutkan?',
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonText: 'Ya, jalankan',
+                    cancelButtonText: 'Batal',
+                    reverseButtons: true
+                });
+                if (!confirmResult.isConfirmed) return;
+
                 btnSync.disabled = true;
                 statusEl.textContent = 'Sync in progress...';
+
+                const loading = Swal.fire({
+                    title: 'Sinkronisasi',
+                    text: 'Sedang memproses...',
+                    allowOutsideClick: false,
+                    allowEscapeKey: false,
+                    didOpen: () => Swal.showLoading()
+                });
+
                 try {
                     const resp = await fetch('{{ route('middle_db.master_data_karyawan.sync') }}', {
                         method: 'POST',
@@ -154,12 +173,25 @@
                     });
                     if (!resp.ok) throw new Error('HTTP ' + resp.status);
                     const data = await resp.json();
-                    statusEl.textContent = 'Done. Inserted: ' + (data.inserted ?? '?');
+
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Berhasil',
+                        html: 'Sync selesai.<br>Inserted: <b>' + (data.inserted ?? '?') +
+                            '</b>',
+                        timer: 4000,
+                        showConfirmButton: false
+                    });
+                    statusEl.textContent = 'Sync complete. Inserted: ' + (data.inserted ?? '?');
                     tbl.ajax.reload(null, false);
                 } catch (e) {
                     console.error(e);
-                    statusEl.textContent = 'Error during sync.';
-                    alert('Sync failed.');
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Gagal',
+                        text: 'Sync gagal dijalankan.'
+                    });
+                    statusEl.textContent = 'Sync failed.';
                 } finally {
                     btnSync.disabled = false;
                     setTimeout(() => statusEl.textContent = '', 8000);

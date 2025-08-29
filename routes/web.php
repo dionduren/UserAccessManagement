@@ -47,6 +47,9 @@ use App\Http\Controllers\Middle_DB\MasterDataKaryawanController;
 use App\Http\Controllers\Middle_DB\UnitKerjaController;
 use App\Http\Controllers\Middle_DB\MasterUSMMController;
 use App\Http\Controllers\Middle_DB\UAMViewsController;
+use App\Http\Controllers\Middle_DB\CompositeRoleCompareController;
+use App\Http\Controllers\Middle_DB\DuplicateNameController;
+use App\Http\Controllers\Middle_DB\GenericKaryawanMappingMidDBController;
 use App\Http\Controllers\Middle_DB\raw\UAMRelationshipRawController;
 use \App\Http\Controllers\Middle_DB\raw\GenericKaryawanMappingRawController;
 
@@ -55,6 +58,8 @@ use App\Http\Controllers\Relationship\JobCompositeController;
 use App\Http\Controllers\Relationship\NIKJobController;
 use App\Http\Controllers\Relationship\SingleTcodeController;
 use App\Http\Controllers\Relationship\UserGenericJobRoleController;
+use App\Http\Controllers\Relationship\LocalUAMRelationshipController;
+
 use App\Http\Controllers\Report\JobRoleReportController;
 use App\Http\Controllers\Report\UAMReportController;
 
@@ -300,6 +305,11 @@ Route::middleware(['auth'])->group(function () {
         Route::delete('/{id}', [UserGenericJobRoleController::class, 'destroy'])->name('destroy');
     });
 
+    Route::prefix('/relationship/uam')->name('relationship.uam.')->group(function () {
+        Route::get('/', [LocalUAMRelationshipController::class, 'index'])->name('index');
+        Route::get('/data', [LocalUAMRelationshipController::class, 'data'])->name('data');
+    });
+
     // === import export excel
     // Route::get('/import', [ExcelImportController::class, 'showUploadForm'])->name('excel.upload');
     // Route::post('/import', [ExcelImportController::class, 'import'])->name('excel.import');
@@ -434,6 +444,10 @@ Route::middleware(['auth'])->group(function () {
             Route::get('/',      [MasterDataKaryawanController::class, 'index'])->name('index');
             Route::get('/data',  [MasterDataKaryawanController::class, 'data'])->name('data');
             Route::post('/sync', [MasterDataKaryawanController::class, 'sync'])->name('sync');
+
+            Route::get('/duplicates',        [DuplicateNameController::class, 'index'])->name('duplicates.index');
+            Route::get('/duplicates/data',   [DuplicateNameController::class, 'data'])->name('duplicates.data');
+            Route::post('/duplicates/store', [DuplicateNameController::class, 'store'])->name('duplicates.store');
         });
 
         Route::prefix('unit-kerja')->name('unit_kerja.')->group(function () {
@@ -459,6 +473,12 @@ Route::middleware(['auth'])->group(function () {
         });
 
         // UAM Views (relationship + masters)
+        Route::prefix('generic-karyawan-mapping')->name('generic_karyawan_mapping.')->group(function () {
+            Route::get('/',              [GenericKaryawanMappingMidDBController::class, 'index'])->name('index');
+            Route::get('/data',          [GenericKaryawanMappingMidDBController::class, 'data'])->name('data');
+            Route::post('/sync',         [GenericKaryawanMappingMidDBController::class, 'sync'])->name('sync');
+        });
+
         Route::prefix('uam')->name('uam.')->group(function () {
 
             // Relationship
@@ -474,12 +494,18 @@ Route::middleware(['auth'])->group(function () {
             // Masters
             Route::get('/composite-master',      [UAMViewsController::class, 'compositeMaster'])->name('composite_master.index');
             Route::get('/composite-master/data', [UAMViewsController::class, 'compositeMasterData'])->name('composite_master.data');
+            Route::get('/composite-ao',          [UAMViewsController::class, 'compositeSingleAO'])->name('composite_ao.index');
+            Route::get('/composite-ao/data',     [UAMViewsController::class, 'compositeSingleAOData'])->name('composite_ao.data');
 
             Route::get('/single-master',         [UAMViewsController::class, 'singleMaster'])->name('single_master.index');
             Route::get('/single-master/data',    [UAMViewsController::class, 'singleMasterData'])->name('single_master.data');
 
             Route::get('/tcode-master',          [UAMViewsController::class, 'tcodeMaster'])->name('tcode_master.index');
             Route::get('/tcode-master/data',     [UAMViewsController::class, 'tcodeMasterData'])->name('tcode_master.data');
+
+
+
+            Route::get('composite-role/compare', [CompositeRoleCompareController::class, 'compare'])->name('composite_role.compare');
         });
     });
 

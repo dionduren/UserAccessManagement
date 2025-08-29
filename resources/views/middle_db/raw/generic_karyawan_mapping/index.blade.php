@@ -80,7 +80,7 @@
                     [1, 'asc']
                 ],
                 ajax: {
-                    url: '{{ route('middle_db.raw.generic_karyawan_mapping.data') }}',
+                    url: '{{ route('middle_db.raw.generic_karyawan_mapping.data') }}'
                 },
                 columns: [{
                         data: 'id',
@@ -126,9 +126,28 @@
             });
 
             syncBtn.addEventListener('click', async () => {
-                if (!confirm('Sync will TRUNCATE and reload data. Continue?')) return;
+                const confirmResult = await Swal.fire({
+                    title: 'Konfirmasi Sync',
+                    html: 'Proses ini akan <b>TRUNCATE</b> dan memuat ulang data.<br>Lanjutkan?',
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonText: 'Ya, lanjutkan',
+                    cancelButtonText: 'Batal',
+                    reverseButtons: true
+                });
+                if (!confirmResult.isConfirmed) return;
+
                 syncBtn.disabled = true;
                 statusEl.textContent = 'Sync in progress...';
+
+                const loading = Swal.fire({
+                    title: 'Sedang Sinkronisasi',
+                    text: 'Mohon tunggu...',
+                    allowOutsideClick: false,
+                    allowEscapeKey: false,
+                    didOpen: () => Swal.showLoading()
+                });
+
                 try {
                     const resp = await fetch(
                         '{{ route('middle_db.raw.generic_karyawan_mapping.sync') }}', {
@@ -140,12 +159,24 @@
                         });
                     if (!resp.ok) throw new Error('HTTP ' + resp.status);
                     const data = await resp.json();
+
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Berhasil',
+                        html: 'Sync selesai.<br>Inserted: <b>' + data.inserted + '</b>',
+                        timer: 4000,
+                        showConfirmButton: false
+                    });
                     statusEl.textContent = 'Sync complete. Inserted: ' + data.inserted;
                     table.ajax.reload(null, false);
                 } catch (e) {
                     console.error(e);
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Gagal',
+                        text: 'Sync gagal dijalankan.'
+                    });
                     statusEl.textContent = 'Sync failed.';
-                    alert('Sync failed.');
                 } finally {
                     syncBtn.disabled = false;
                     setTimeout(() => statusEl.textContent = '', 8000);

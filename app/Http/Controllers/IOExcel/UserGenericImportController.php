@@ -327,9 +327,9 @@ class UserGenericImportController extends Controller
 
         // if (preg_match('/[^A-Za-zÀ-ž\'’-]/', $trimmed)) return "Invalid characters in name";
 
-        $dupKey = mb_strtolower($trimmed);
-        if (in_array($dupKey, $seenSet)) return "Nama duplikat: $trimmed";
-        $seenSet[] = $dupKey;
+        // $dupKey = mb_strtolower($trimmed);
+        // if (in_array($dupKey, $seenSet)) return "Nama duplikat: $trimmed";
+        // $seenSet[] = $dupKey;
 
         // $blacklist = ["function", "null", "undefined"];
         // if (in_array($dupKey, $blacklist)) return "Nama \"$trimmed\" tidak valid";
