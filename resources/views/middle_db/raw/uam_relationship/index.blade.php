@@ -15,8 +15,13 @@
         <div class="card shadow-sm">
             <div class="card-header d-flex flex-column flex-md-row align-items-md-center gap-2">
                 <h2 class="mb-0 flex-grow-1">Middle DB - UAM Relationship (RAW)</h2>
+                <button type="button" id="btnSync" class="btn btn-primary btn-sm">
+                    Sync Data
+                </button>
             </div>
             <div class="card-body">
+                <div id="syncStatus" class="small text-muted mb-2"></div>
+                `
                 <table id="uamTable" class="table table-sm table-striped table-bordered w-100">
                     <thead class="table-light">
                         <tr>
@@ -75,6 +80,8 @@
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             const reloadBtn = document.getElementById('btnReload');
+            const syncBtn = document.getElementById('btnSync');
+            const statusEl = document.getElementById('syncStatus');
 
             const table = $('#uamTable').DataTable({
                 processing: true,
@@ -137,6 +144,64 @@
                     table.column(colIdx).search('');
                 });
                 table.ajax.reload(null, false);
+            });
+
+            syncBtn.addEventListener('click', async () => {
+                const confirmResult = await Swal.fire({
+                    title: 'Konfirmasi Sync',
+                    html: 'Proses ini akan <b>TRUNCATE</b> dan memuat ulang data.<br>Lanjutkan?',
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonText: 'Ya, lanjutkan',
+                    cancelButtonText: 'Batal',
+                    reverseButtons: true
+                });
+                if (!confirmResult.isConfirmed) return;
+
+                syncBtn.disabled = true;
+                statusEl.textContent = 'Sync in progress...';
+
+                const loading = Swal.fire({
+                    title: 'Sedang Sinkronisasi',
+                    text: 'Mohon tunggu...',
+                    allowOutsideClick: false,
+                    allowEscapeKey: false,
+                    didOpen: () => Swal.showLoading()
+                });
+
+                try {
+                    const resp = await fetch(
+                        '{{ route('middle_db.raw.uam_relationship.sync') }}', {
+                            method: 'POST',
+                            headers: {
+                                'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                                'Accept': 'application/json'
+                            }
+                        });
+                    if (!resp.ok) throw new Error('HTTP ' + resp.status);
+                    const data = await resp.json();
+
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Berhasil',
+                        html: 'Sync selesai.<br>Inserted: <b>' + data.inserted + '</b>',
+                        timer: 4000,
+                        showConfirmButton: false
+                    });
+                    statusEl.textContent = 'Sync complete. Inserted: ' + data.inserted;
+                    table.ajax.reload(null, false);
+                } catch (e) {
+                    console.error(e);
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Gagal',
+                        text: 'Sync gagal dijalankan.'
+                    });
+                    statusEl.textContent = 'Sync failed.';
+                } finally {
+                    syncBtn.disabled = false;
+                    setTimeout(() => statusEl.textContent = '', 8000);
+                }
             });
         });
     </script>
