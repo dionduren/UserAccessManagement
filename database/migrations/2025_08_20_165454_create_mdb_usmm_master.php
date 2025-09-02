@@ -25,6 +25,8 @@ return new class extends Migration
             $table->string('valid_to')->nullable();            // ll.gltgb (YYYYMMDD)
             $table->string('contractual_user_type')->nullable();      // us06.lic_type (CA/CB/…)
             $table->string('contr_user_type_desc')->nullable();     // mapped desc
+            $table->string('creator')->nullable();     // mapped desc
+            $table->string('creator_created_at')->nullable();     // mapped desc
             $table->timestamps();
         });
     }

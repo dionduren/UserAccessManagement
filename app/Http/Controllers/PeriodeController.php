@@ -54,9 +54,11 @@ class PeriodeController extends Controller
     {
         $request->validate([
             'definisi' => 'required|string|max:255|unique:ms_periode,definisi',
+            'tanggal_create_periode' => 'required',
         ]);
 
-        $request->request->add(['tanggal_create_periode' => date('Y-m-d H:i:s')]);
+        $request['tanggal_create_periode'] = Carbon::createFromFormat('Y-m-d\TH:i', $request['tanggal_create_periode'])
+            ->format('Y-m-d H:i:s');
 
         Periode::create($request->all());
 
@@ -124,16 +126,17 @@ class PeriodeController extends Controller
      */
     public function update(Request $request, Periode $periode)
     {
-        $request->validate([
-            'definisi' => [
-                'required',
-                'string',
-                'max:255',
-                Rule::unique('ms_periode', 'definisi')->ignore($periode->id),
-            ],
+        $data = $request->validate([
+            'definisi' => 'required|string',
+            'tanggal_create_periode' => 'required',
+            'is_active' => 'required|boolean',
         ]);
 
-        $periode->update($request->all());
+        // Convert "Y-m-d\TH:i" -> Carbon -> proper datetime (seconds added)
+        $data['tanggal_create_periode'] = Carbon::createFromFormat('Y-m-d\TH:i', $data['tanggal_create_periode'])
+            ->format('Y-m-d H:i:s');
+
+        $periode->update($data);
 
         return redirect()->route('periode.index')->with('success', 'Periode dengan definisi ' . $request->definisi . ' berhasil diperbarui.');
     }

@@ -321,7 +321,13 @@
                         <li class="nav-item">
                             <a href="{{ route('middle_db.usmm.index') }}"
                                 class="mb-1 nav-link {{ request()->routeIs('middle_db.usmm.index') ? 'active' : 'text-white' }}">
-                                <i class="bi bi-person-badge me-2"></i> Active
+                                <i class="bi bi-person-badge me-2"></i> Active - All USMM
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="{{ route('middle_db.usmm.activeGeneric') }}"
+                                class="mb-1 nav-link {{ request()->routeIs('middle_db.usmm.activeGeneric') ? 'active' : 'text-white' }}">
+                                <i class="bi bi-person-dash me-2"></i> Active - Generic
                             </a>
                         </li>
                         <li class="nav-item">
@@ -629,6 +635,12 @@
                         <a href="{{ route('report.uam.index') }}"
                             class="mb-1 nav-link {{ request()->routeIs('report.uam.index') ? 'active' : 'text-white' }}">
                             <i class="bi bi-file-earmark-text me-2"></i> Report UAM
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="{{ route('report.ba_penarikan.index') }}"
+                            class="mb-1 nav-link {{ request()->routeIs('report.ba_penarikan.index') ? 'active' : 'text-white' }}">
+                            <i class="bi bi-file-earmark-text me-2"></i> Report BA Penarikan Data
                         </a>
                     </li>
                 </div>

@@ -5,6 +5,7 @@ namespace App\Models\middle_db;
 use App\Models\NIKJobRole;
 use App\Models\middle_db\MasterDataKaryawan;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Migrations\MigrationCreator;
 use Illuminate\Support\Facades\DB;
 
 class MasterUSMM extends Model
@@ -25,6 +26,8 @@ class MasterUSMM extends Model
         'valid_to',
         'contractual_user_type',
         'contr_user_type_desc',
+        'creator',
+        'creator_created_at'
     ];
 
     protected $casts = [
@@ -65,6 +68,8 @@ class MasterUSMM extends Model
                         u.trdat,
                         u.ltime,
                         u.ustyp,
+                        u.aname,
+                        u.erdat,
                         u.gltgv,
                         u.gltgb,
                         ROW_NUMBER() OVER (
@@ -94,7 +99,9 @@ class MasterUSMM extends Model
                         WHEN 'CB' THEN 'SAP Professional User'
                         WHEN 'CA' THEN 'SAP Application Developer'
                         ELSE 'Not Assigned'
-                    END                                       AS contr_user_type_desc
+                    END                                       AS contr_user_type_desc,
+                    ll.aname								  AS creator,
+                    ll.erdat								  AS creator_created_at
                 FROM basis_user_addr ua
                 JOIN latest_login ll
                     ON ll.bname = ua.bname AND ll.rn = 1
@@ -153,6 +160,8 @@ class MasterUSMM extends Model
                 'valid_to'              => $r->valid_to ?? null,        // YYYYMMDD
                 'contractual_user_type' => $r->contractual_user_type ?? null,
                 'contr_user_type_desc'  => $r->contr_user_type_desc ?? null,
+                'creator'               => $r->creator ?? null,
+                'creator_created_at'    => $r->creator_created_at ?? null,
                 'created_at'            => $now,
                 'updated_at'            => $now,
             ];

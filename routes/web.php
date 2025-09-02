@@ -62,9 +62,9 @@ use App\Http\Controllers\Relationship\LocalUAMRelationshipController;
 
 use App\Http\Controllers\Report\JobRoleReportController;
 use App\Http\Controllers\Report\UAMReportController;
-
 use App\Http\Controllers\Report\UARReportController;
 use App\Http\Controllers\Report\WorkUnitReportController;
+use App\Http\Controllers\Report\BAPenarikanDataController;
 
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -460,6 +460,9 @@ Route::middleware(['auth'])->group(function () {
             Route::get('/',              [MasterUSMMController::class, 'index'])->name('index');
             Route::get('/data',          [MasterUSMMController::class, 'data'])->name('data');
 
+            Route::get('/active-generic',      [MasterUSMMController::class, 'activeGeneric'])->name('activeGeneric');
+            Route::get('/active-generic/data', [MasterUSMMController::class, 'activeGenericData'])->name('activeGenericData');
+
             Route::get('/inactive',      [MasterUSMMController::class, 'inactive'])->name('inactive');
             Route::get('/inactive/data', [MasterUSMMController::class, 'inactiveData'])->name('inactiveData');
 
@@ -543,7 +546,6 @@ Route::middleware(['auth'])->group(function () {
         // Route::get('/download', [UARReportController::class, 'download'])->name('download');
     });
 
-
     Route::prefix('report/uam')->name('report.uam.')->group(function () {
         Route::get('/', [UAMReportController::class, 'index'])->name('index');
         Route::get('/get-kompartemen', [UAMReportController::class, 'getKompartemen'])->name('get-kompartemen');
@@ -554,6 +556,12 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/export-word', [UAMReportController::class, 'exportWord'])->name('export-word');
         Route::get('/export-single-excel', [UAMReportController::class, 'exportSingleExcel'])->name('export-single-excel');
         // Route::get('/download', [UARReportController::class, 'download'])->name('download');
+    });
+
+    Route::prefix('report/ba-penarikan')->name('report.ba_penarikan.')->group(function () {
+        Route::get('/', [BAPenarikanDataController::class, 'index'])->name('index');
+        Route::get('/data', [BAPenarikanDataController::class, 'data'])->name('data');
+        Route::get('/export-word', [BAPenarikanDataController::class, 'exportWord'])->name('export_word');
     });
 
     // ------------------ PENOMORAN UAR & UAM ------------------
