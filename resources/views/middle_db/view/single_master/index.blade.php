@@ -34,7 +34,7 @@
                 order: [
                     [0, 'asc']
                 ],
-                ajax: '{{ route('middle_db.uam.single_master.data') }}',
+                ajax: '{{ route('middle_db.view.uam.single_master.data') }}',
                 columns: [{
                     data: 'single_role'
                 }, {

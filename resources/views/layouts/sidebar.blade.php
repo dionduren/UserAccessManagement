@@ -196,6 +196,7 @@
                 <div>
                     <h5>MIDDLE DB</h5>
                 </div>
+
                 <div class="dropdown">
                     @php
                         $isMasterDataKaryawanActive = request()->routeIs('middle_db.master_data_karyawan.*');
@@ -227,91 +228,9 @@
                     </a>
                 </li>
 
-                <div class="dropdown">
-                    @php
-                        $isMasterUAMActive = request()->routeIs(
-                            'middle_db.uam.composite_master.*',
-                            'middle_db.uam.single_master.*',
-                            'middle_db.uam.tcode_master.*',
-                        );
-                    @endphp
-                    <a class="mb-1 nav-link dropdown-toggle {{ $isMasterUAMActive ? 'active' : 'text-white' }}"
-                        data-bs-toggle="dropdown" href="#" role="button"
-                        aria-expanded="{{ $isMasterUAMActive ? 'true' : 'false' }}">
-                        <i class="bi bi-folder-fill me-2"></i> Master UAM
-                    </a>
-                    <div class="dropdown-content {{ $isMasterUAMActive ? 'show' : '' }}">
-                        <li class="nav-item">
-                            <a href="{{ route('middle_db.uam.composite_master.index') }}"
-                                class="mb-1 nav-link {{ request()->routeIs('middle_db.uam.composite_master.*') ? 'active' : 'text-white' }}">
-                                <i class="bi bi-people-fill me-2"></i> Composite Role
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a href="{{ route('middle_db.uam.single_master.index') }}"
-                                class="mb-1 nav-link {{ request()->routeIs('middle_db.uam.single_master.*') ? 'active' : 'text-white' }}">
-                                <i class="bi bi-person-fill me-2"></i> Single Role
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a href="{{ route('middle_db.uam.tcode_master.index') }}"
-                                class="mb-1 nav-link {{ request()->routeIs('middle_db.uam.tcode_master.*') ? 'active' : 'text-white' }}">
-                                <i class="bi bi-code-slash me-2"></i> Tcode
-                            </a>
-                        </li>
-                    </div>
-                </div>
+                <hr width="80%" class="my-auto" style="margin-left: auto">
 
-                <div class="dropdown">
-                    @php
-                        $isUAMRelationshipActive = request()->routeIs(
-                            'middle_db.uam.user_composite.*',
-                            'middle_db.uam.composite_single.*',
-                            'middle_db.uam.single_tcode.*',
-                            'middle_db.uam.composite_ao.*',
-                        );
-                    @endphp
-                    <a class="mb-1 nav-link dropdown-toggle {{ $isUAMRelationshipActive ? 'active' : 'text-white' }}"
-                        data-bs-toggle="dropdown" href="#" role="button"
-                        aria-expanded="{{ $isUAMRelationshipActive ? 'true' : 'false' }}">
-                        <i class="bi bi-folder-fill me-2"></i> Relationship UAM
-                    </a>
-                    <div class="dropdown-content {{ $isUAMRelationshipActive ? 'show' : '' }}">
-                        <li class="nav-item">
-                            <a href="{{ route('middle_db.uam.user_composite.index') }}"
-                                class="mb-1 nav-link {{ request()->routeIs('middle_db.uam.user_composite.*') ? 'active' : 'text-white' }}">
-                                <i class="bi bi-person-badge me-2"></i> User - Composite Role
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a href="{{ route('middle_db.uam.composite_single.index') }}"
-                                class="mb-1 nav-link {{ request()->routeIs('middle_db.uam.composite_single.*') ? 'active' : 'text-white' }}">
-                                <i class="bi bi-link-45deg me-2"></i> Composite Role - Single Role
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a href="{{ route('middle_db.uam.single_tcode.index') }}"
-                                class="mb-1 nav-link {{ request()->routeIs('middle_db.uam.single_tcode.*') ? 'active' : 'text-white' }}">
-                                <i class="bi bi-code-slash me-2"></i> Single Role - Tcode
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a href="{{ route('middle_db.uam.composite_ao.index') }}"
-                                class="mb-1 nav-link {{ request()->routeIs('middle_db.uam.composite_ao.*') ? 'active' : 'text-white' }}">
-                                <i class="bi bi-diagram-3 me-2"></i> Composite Role - AO
-                            </a>
-                        </li>
-                    </div>
-                </div>
-
-                <li class="nav-item">
-                    <a href="{{ route('middle_db.uam.composite_role.compare') }}"
-                        class="mb-1 nav-link {{ request()->routeIs('middle_db.uam.composite_role.compare') ? 'active' : 'text-white' }}">
-                        <i class="bi bi-file-diff me-2"></i> Compare Composite Role
-                    </a>
-                </li>
-
-                <div class="dropdown">
+                <div class="dropdown mt-2">
                     <a class="mb-1 nav-link dropdown-toggle {{ request()->routeIs('middle_db.usmm.*') ? 'active' : 'text-white' }}"
                         data-bs-toggle="dropdown" href="#" role="button"
                         aria-expanded="{{ request()->routeIs('middle_db.usmm.*') ? 'true' : 'false' }}">
@@ -359,18 +278,16 @@
                 </li>
 
                 <div class="dropdown">
-                    <a class="mb-1 nav-link dropdown-toggle {{ request()->routeIs('middle_db.raw.*') ? 'active' : 'text-white' }}"
+                    @php
+                        $isRawUSMMSectionActive = request()->routeIs('middle_db.raw.generic_karyawan_mapping*');
+                    @endphp
+                    <a class="mb-1 nav-link dropdown-toggle {{ $isRawUSMMSectionActive ? 'active' : 'text-white' }}"
                         data-bs-toggle="dropdown" href="#" role="button"
-                        aria-expanded="{{ request()->routeIs('middle_db.raw.*') ? 'true' : 'false' }}">
-                        <i class="bi bi-folder-fill me-2"></i> RAW
+                        aria-expanded="{{ $isRawUSMMSectionActive ? 'true' : 'false' }}">
+                        <i class="bi bi-folder-fill me-2"></i> RAW USMM Generic
                     </a>
-                    <div class="dropdown-content {{ request()->routeIs('middle_db.raw.*') ? 'show' : '' }}">
-                        <li class="nav-item">
-                            <a href="{{ route('middle_db.raw.uam_relationship.index') }}"
-                                class="mb-1 nav-link {{ request()->routeIs('middle_db.raw.uam_relationship.*') ? 'active' : 'text-white' }}">
-                                <i class="bi bi-diagram-3 me-2"></i> UAM Relationship Raw
-                            </a>
-                        </li>
+                    <div class="dropdown-content {{ $isRawUSMMSectionActive ? 'show' : '' }}">
+
                         <li class="nav-item">
                             <a href="{{ route('middle_db.raw.generic_karyawan_mapping.index') }}"
                                 class="mb-1 nav-link {{ request()->routeIs('middle_db.raw.generic_karyawan_mapping.*') ? 'active' : 'text-white' }}">
@@ -379,6 +296,132 @@
                         </li>
                     </div>
                 </div>
+
+                <hr width="80%" class="my-auto" style="margin-left: auto">
+
+                <div class="dropdown">
+                    @php
+                        $isMasterUAMActive = request()->routeIs(
+                            'middle_db.uam.composite_role.*',
+                            'middle_db.uam.single_role.*',
+                            'middle_db.uam.tcode.*',
+                        );
+                    @endphp
+                    <a class="mb-1 nav-link dropdown-toggle {{ $isMasterUAMActive ? 'active' : 'text-white' }}"
+                        data-bs-toggle="dropdown" href="#" role="button"
+                        aria-expanded="{{ $isMasterUAMActive ? 'true' : 'false' }}">
+                        <i class="bi bi-folder-fill me-2"></i> Master UAM
+                    </a>
+                    <div class="dropdown-content {{ $isMasterUAMActive ? 'show' : '' }}">
+                        <li class="nav-item">
+                            <a href="{{ route('middle_db.uam.composite_role.index') }}"
+                                class="mb-1 nav-link {{ request()->routeIs('middle_db.uam.composite_role.*') ? 'active' : 'text-white' }}">
+                                <i class="bi bi-people-fill me-2"></i> Composite Role
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="{{ route('middle_db.uam.single_role.index') }}"
+                                class="mb-1 nav-link {{ request()->routeIs('middle_db.uam.single_role.*') ? 'active' : 'text-white' }}">
+                                <i class="bi bi-person-fill me-2"></i> Single Role
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="{{ route('middle_db.uam.tcode.index') }}"
+                                class="mb-1 nav-link {{ request()->routeIs('middle_db.uam.tcode.*') ? 'active' : 'text-white' }}">
+                                <i class="bi bi-code-slash me-2"></i> Tcode
+                            </a>
+                        </li>
+                    </div>
+                </div>
+
+                <div class="dropdown mt-2">
+                    @php
+                        $isRawSectionActive = request()->routeIs('middle_db.raw.uam*', 'middle_db.view.uam*');
+                    @endphp
+                    <a class="mb-1 nav-link dropdown-toggle {{ $isRawSectionActive ? 'active' : 'text-white' }}"
+                        data-bs-toggle="dropdown" href="#" role="button"
+                        aria-expanded="{{ $isRawSectionActive ? 'true' : 'false' }}">
+                        <i class="bi bi-database-fill-gear me-2"></i> RAW UAM
+                    </a>
+                    <div class="dropdown-content {{ $isRawSectionActive ? 'show' : '' }}">
+                        <li class="nav-item">
+                            <a href="{{ route('middle_db.raw.uam_relationship.index') }}"
+                                class="mb-1 nav-link {{ request()->routeIs('middle_db.raw.uam_relationship.*') ? 'active' : 'text-white' }}">
+                                <i class="bi bi-diagram-3 me-2"></i> UAM Full Raw
+                            </a>
+                        </li>
+
+                        <li class="nav-item">
+                            <a href="{{ route('middle_db.view.uam.composite_master.index') }}"
+                                class="mb-1 nav-link {{ request()->routeIs('middle_db.view.uam.composite_master.*') ? 'active' : 'text-white' }}">
+                                <i class="bi bi-people-fill me-2"></i>RAW DISTINCT - Composite Role
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="{{ route('middle_db.view.uam.single_master.index') }}"
+                                class="mb-1 nav-link {{ request()->routeIs('middle_db.view.uam.single_master.*') ? 'active' : 'text-white' }}">
+                                <i class="bi bi-person-fill me-2"></i>RAW DISTINCT - Single Role
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="{{ route('middle_db.view.uam.tcode_master.index') }}"
+                                class="mb-1 nav-link {{ request()->routeIs('middle_db.view.uam.tcode_master.*') ? 'active' : 'text-white' }}">
+                                <i class="bi bi-code-slash me-2"></i>RAW DISTINCT - Tcode
+                            </a>
+                        </li>
+                    </div>
+                </div>
+
+
+
+                <div class="dropdown">
+                    @php
+                        $isUAMRelationshipActive = request()->routeIs(
+                            'middle_db.view.uam.user_composite.*',
+                            'middle_db.view.uam.composite_single.*',
+                            'middle_db.view.uam.single_tcode.*',
+                            'middle_db.view.uam.composite_ao.*',
+                        );
+                    @endphp
+                    <a class="mb-1 nav-link dropdown-toggle {{ $isUAMRelationshipActive ? 'active' : 'text-white' }}"
+                        data-bs-toggle="dropdown" href="#" role="button"
+                        aria-expanded="{{ $isUAMRelationshipActive ? 'true' : 'false' }}">
+                        <i class="bi bi-database-fill-gear me-2"></i>RAW Relationship UAM
+                    </a>
+                    <div class="dropdown-content {{ $isUAMRelationshipActive ? 'show' : '' }}">
+                        <li class="nav-item">
+                            <a href="{{ route('middle_db.view.uam.user_composite.index') }}"
+                                class="mb-1 nav-link {{ request()->routeIs('middle_db.view.uam.user_composite.*') ? 'active' : 'text-white' }}">
+                                <i class="bi bi-person-badge me-2"></i> User - Composite Role
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="{{ route('middle_db.view.uam.composite_single.index') }}"
+                                class="mb-1 nav-link {{ request()->routeIs('middle_db.view.uam.composite_single.*') ? 'active' : 'text-white' }}">
+                                <i class="bi bi-link-45deg me-2"></i> Composite Role - Single Role
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="{{ route('middle_db.view.uam.single_tcode.index') }}"
+                                class="mb-1 nav-link {{ request()->routeIs('middle_db.view.uam.single_tcode.*') ? 'active' : 'text-white' }}">
+                                <i class="bi bi-code-slash me-2"></i> Single Role - Tcode
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="{{ route('middle_db.view.uam.composite_ao.index') }}"
+                                class="mb-1 nav-link {{ request()->routeIs('middle_db.view.uam.composite_ao.*') ? 'active' : 'text-white' }}">
+                                <i class="bi bi-diagram-3 me-2"></i> Composite Role - AO
+                            </a>
+                        </li>
+                    </div>
+                </div>
+
+                <li class="nav-item">
+                    <a href="{{ route('middle_db.uam.composite_role.compare') }}"
+                        class="mb-1 nav-link {{ request()->routeIs('middle_db.uam.composite_role.compare') ? 'active' : 'text-white' }}">
+                        <i class="bi bi-file-diff me-2"></i> Compare Composite Role
+                    </a>
+                </li>
             @endcan
 
             <hr>
@@ -484,7 +527,7 @@
                         class="dropdown-content {{ (request()->routeIs('dynamic_upload.upload') && request()->route('module') === 'master_nik') || request()->routeIs('user-detail*') ? 'show' : '' }}">
                         <li class="nav-item">
                             <a href="{{ route('dynamic_upload.upload', ['module' => 'master_nik']) }}"
-                                class="nav-link {{ request()->route('module') === 'master_nik' ? 'active' : 'text-white' }}">
+                                class="nav-` {{ request()->route('module') === 'master_nik' ? 'active' : 'text-white' }}">
                                 <i class="bi bi-cloud-upload"></i> Upload {{ $modules['master_nik']['name'] }}
                             </a>
                         </li>

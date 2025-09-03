@@ -50,6 +50,7 @@ use App\Http\Controllers\Middle_DB\UAMViewsController;
 use App\Http\Controllers\Middle_DB\CompositeRoleCompareController;
 use App\Http\Controllers\Middle_DB\DuplicateNameController;
 use App\Http\Controllers\Middle_DB\GenericKaryawanMappingMidDBController;
+use App\Http\Controllers\Middle_DB\UAMComponentController;
 use App\Http\Controllers\Middle_DB\raw\UAMRelationshipRawController;
 use \App\Http\Controllers\Middle_DB\raw\GenericKaryawanMappingRawController;
 
@@ -482,7 +483,7 @@ Route::middleware(['auth'])->group(function () {
             Route::post('/sync',         [GenericKaryawanMappingMidDBController::class, 'sync'])->name('sync');
         });
 
-        Route::prefix('uam')->name('uam.')->group(function () {
+        Route::prefix('view/uam')->name('view.uam.')->group(function () {
 
             // Relationship
             Route::get('/user-composite',        [UAMViewsController::class, 'userComposite'])->name('user_composite.index');
@@ -505,8 +506,24 @@ Route::middleware(['auth'])->group(function () {
 
             Route::get('/tcode-master',          [UAMViewsController::class, 'tcodeMaster'])->name('tcode_master.index');
             Route::get('/tcode-master/data',     [UAMViewsController::class, 'tcodeMasterData'])->name('tcode_master.data');
+        });
 
 
+        Route::prefix('uam')->name('uam.')->group(function () {
+            // Composite
+            Route::get('composite-role', [UAMComponentController::class, 'compositeRole'])->name('composite_role.index');
+            Route::get('composite-role/data', [UAMComponentController::class, 'compositeData'])->name('composite_role.data');
+            Route::post('composite-role/sync', [UAMComponentController::class, 'compositeSync'])->name('composite_role.sync');
+
+            // Single
+            Route::get('single-role', [UAMComponentController::class, 'singleRole'])->name('single_role.index');
+            Route::get('single-role/data', [UAMComponentController::class, 'singleData'])->name('single_role.data');
+            Route::post('single-role/sync', [UAMComponentController::class, 'singleSync'])->name('single_role.sync');
+
+            // TCode
+            Route::get('tcode', [UAMComponentController::class, 'tcode'])->name('tcode.index');
+            Route::get('tcode/data', [UAMComponentController::class, 'tcodeData'])->name('tcode.data');
+            Route::post('tcode/sync', [UAMComponentController::class, 'tcodeSync'])->name('tcode.sync');
 
             Route::get('composite-role/compare', [CompositeRoleCompareController::class, 'compare'])->name('composite_role.compare');
         });

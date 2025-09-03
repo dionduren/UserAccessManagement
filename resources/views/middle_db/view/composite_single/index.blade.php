@@ -62,7 +62,7 @@
                 ],
                 orderCellsTop: true,
                 ajax: {
-                    url: '{{ route('middle_db.uam.composite_single.data') }}',
+                    url: '{{ route('middle_db.view.uam.composite_single.data') }}',
                     data: function(d) {
                         // Pass composite & single filters separately (pagination stays on composites)
                         d.comp = $compInput.val();

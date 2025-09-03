@@ -34,7 +34,7 @@
                 order: [
                     [0, 'asc']
                 ],
-                ajax: '{{ route('middle_db.uam.composite_master.data') }}',
+                ajax: '{{ route('middle_db.view.uam.composite_master.data') }}',
                 columns: [{
                     data: 'composite_role'
                 }, {

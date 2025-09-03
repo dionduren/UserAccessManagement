@@ -34,7 +34,7 @@
                 order: [
                     [0, 'asc']
                 ],
-                ajax: '{{ route('middle_db.uam.user_composite.data') }}',
+                ajax: '{{ route('middle_db.view.uam.user_composite.data') }}',
                 columns: [{
                     data: 'sap_user'
                 }, {

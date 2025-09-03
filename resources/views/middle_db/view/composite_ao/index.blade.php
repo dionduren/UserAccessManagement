@@ -62,7 +62,7 @@
                 ],
                 orderCellsTop: true,
                 ajax: {
-                    url: '{{ route('middle_db.uam.composite_ao.data') }}',
+                    url: '{{ route('middle_db.view.uam.composite_ao.data') }}',
                     data: function(d) {
                         d.comp = $compInput.val();
                         d.single = $singleInput.val();

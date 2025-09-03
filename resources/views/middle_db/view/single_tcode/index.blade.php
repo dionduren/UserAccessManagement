@@ -60,7 +60,7 @@
                 ],
                 orderCellsTop: true,
                 ajax: {
-                    url: '{{ route('middle_db.uam.single_tcode.data') }}',
+                    url: '{{ route('middle_db.view.uam.single_tcode.data') }}',
                     data: function(d) {
                         d.single = $single.val();
                         d.tcode = $tcode.val();

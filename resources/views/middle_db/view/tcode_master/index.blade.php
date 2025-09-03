@@ -34,7 +34,7 @@
                 order: [
                     [0, 'asc']
                 ],
-                ajax: '{{ route('middle_db.uam.tcode_master.data') }}',
+                ajax: '{{ route('middle_db.view.uam.tcode_master.data') }}',
                 columns: [{
                     data: 'tcode'
                 }, {
