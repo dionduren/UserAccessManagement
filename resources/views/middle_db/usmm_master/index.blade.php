@@ -19,9 +19,9 @@
                 <h2 class="mb-0 flex-grow-1">Middle DB - USMM Master (Active Users)</h2>
                 <form id="filterForm" class="d-flex gap-2 flex-wrap">
                     @csrf
-                    {{-- Legacy global search (unused now) --}}
-                    <input type="text" id="searchQ" name="q" class="form-control form-control-sm"
-                        placeholder="Global Search" style="min-width:240px; display:none">
+                    <button type="button" id="btnExport" class="btn btn-success btn-sm">
+                        Export Excel
+                    </button>
                     <button type="button" id="btnSync" class="btn btn-primary btn-sm">
                         Sync Data
                     </button>
@@ -88,10 +88,20 @@
 @endsection
 
 @section('scripts')
+    {{-- DataTables Buttons (only assets added; layout untouched) --}}
+    <link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.4.2/css/buttons.dataTables.min.css">
+    <script src="https://cdn.datatables.net/buttons/2.4.2/js/dataTables.buttons.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <script src="https://cdn.datatables.net/buttons/2.4.2/js/buttons.html5.min.js"></script>
+
+    {{-- Hidden container for buttons (keeps default DT layout) --}}
+    <div id="dtHiddenButtons" style="display:none;"></div>
+
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             const btnReload = document.getElementById('btnReload');
             const btnSync = document.getElementById('btnSync');
+            const btnExport = document.getElementById('btnExport');
             const statusEl = document.getElementById('syncStatus');
 
             const table = $('#usmmTable').DataTable({
@@ -104,7 +114,6 @@
                 ],
                 ajax: {
                     url: '{{ route('middle_db.usmm.data') }}'
-                    // No per-column params (client-side filtering after load)
                 },
                 columns: [{
                         data: 'company'
@@ -194,9 +203,7 @@
                     },
                     {
                         data: 'created_at',
-                        render: function(val) {
-                            return val ? new Date(val).toLocaleString() : '';
-                        }
+                        render: v => v ? new Date(v).toLocaleString() : ''
                     }
                 ],
                 initComplete: function() {
@@ -208,6 +215,24 @@
                         }
                     });
                 }
+            });
+
+            // Initialize Buttons WITHOUT altering existing layout
+            new $.fn.dataTable.Buttons(table, {
+                buttons: [{
+                    extend: 'excelHtml5',
+                    title: 'usmm_active_users',
+                    exportOptions: {
+                        columns: ':visible'
+                    }
+                }]
+            });
+            // Append buttons to a hidden div (keeps original DT layout untouched)
+            table.buttons().container().appendTo('#dtHiddenButtons');
+
+            btnExport.addEventListener('click', () => {
+                // Trigger first (only) button = excel
+                table.button(0).trigger();
             });
 
             btnReload.addEventListener('click', () => {

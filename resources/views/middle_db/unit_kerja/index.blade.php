@@ -11,13 +11,16 @@
                 </ul>
             </div>
         @endif
-
         <div class="card shadow-sm">
             <div class="card-header d-flex flex-column flex-md-row align-items-md-center gap-2">
                 <h2 class="mb-0 flex-grow-1">Middle DB - Unit Kerja</h2>
-                <div class="d-flex gap-2">
+                <div class="d-flex flex-wrap gap-2">
                     <button id="btnSync" class="btn btn-primary btn-sm">Sync Data</button>
                     <button id="btnReload" class="btn btn-outline-secondary btn-sm">Reload / Clear Filters</button>
+                    <a href="{{ url('/compare/company') }}" class="btn btn-warning btn-sm">Compare Company</a>
+                    <a href="{{ url('/compare/kompartemen') }}" class="btn btn-warning btn-sm">Compare Kompartemen</a>
+                    <a href="{{ url('/compare/departemen') }}" class="btn btn-warning btn-sm">Compare Departemen</a>
+                    <a href="{{ url('/compare/cost-center') }}" class="btn btn-warning btn-sm">Compare Cost Center</a>
                 </div>
             </div>
             <div class="card-body">

@@ -43,6 +43,8 @@ use App\Http\Controllers\MasterData\UserDetailController;
 use App\Http\Controllers\MasterData\UserGenericController;
 use App\Http\Controllers\MasterData\UserNIKController;
 
+use App\Http\Controllers\MasterData\Compare\UnitKerjaCompareController;
+
 use App\Http\Controllers\Middle_DB\MasterDataKaryawanController;
 use App\Http\Controllers\Middle_DB\UnitKerjaController;
 use App\Http\Controllers\Middle_DB\MasterUSMMController;
@@ -52,7 +54,7 @@ use App\Http\Controllers\Middle_DB\DuplicateNameController;
 use App\Http\Controllers\Middle_DB\GenericKaryawanMappingMidDBController;
 use App\Http\Controllers\Middle_DB\UAMComponentController;
 use App\Http\Controllers\Middle_DB\raw\UAMRelationshipRawController;
-use \App\Http\Controllers\Middle_DB\raw\GenericKaryawanMappingRawController;
+use App\Http\Controllers\Middle_DB\raw\GenericKaryawanMappingRawController;
 
 use App\Http\Controllers\Relationship\CompositeSingleController;
 use App\Http\Controllers\Relationship\JobCompositeController;
@@ -543,6 +545,14 @@ Route::middleware(['auth'])->group(function () {
             Route::post('/sync', [GenericKaryawanMappingRawController::class, 'sync'])->name('sync');
         });
     });
+
+    // ------------- DATA COMPARE ----------------
+
+    // Route::get('/compare/unit-kerja', [UnitKerjaCompareController::class, 'index'])->name('compare.unit_kerja');
+    Route::get('/compare/company', [UnitKerjaCompareController::class, 'company'])->name('compare.unit_kerja');
+    Route::get('/compare/kompartemen', [UnitKerjaCompareController::class, 'kompartemen'])->name('compare.unit_kerja');
+    Route::get('/compare/departemen', [UnitKerjaCompareController::class, 'departemen'])->name('compare.unit_kerja');
+    Route::get('/compare/cost-center', [UnitKerjaCompareController::class, 'costCenter'])->name('compare.unit_kerja');
 
     // ------------------ REPORT ------------------
 
