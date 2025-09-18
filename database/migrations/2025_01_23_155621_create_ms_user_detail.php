@@ -13,16 +13,15 @@ return new class extends Migration
     {
         Schema::create('ms_user_detail', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('periode_id')->nullable();
             $table->string('nama');
             $table->string('nik');
             $table->string('company_id')->nullable();
             $table->string('direktorat')->nullable();
             $table->string('kompartemen_id')->nullable();
             $table->string('departemen_id')->nullable();
-            $table->string('email')->nullable();
             $table->string('atasan')->nullable();
             $table->string('cost_center')->nullable();
-            $table->foreignId('periode_id')->nullable();
             $table->string('error_kompartemen_id')->nullable();
             $table->string('error_kompartemen_name')->nullable();
             $table->string('error_departemen_id')->nullable();

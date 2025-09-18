@@ -16,7 +16,7 @@ use App\Models\JobRole;
 return [
     'modules' => [
         'master_nik' => [
-            'name' => 'Master Karyawan NIK Upload',
+            'name' => 'Master Karyawan NIK',
             'user_type' => null,
             'table' => 'ms_user_detail',
             'model' => UserDetail::class,
@@ -33,7 +33,7 @@ return [
             'validate_columns' => ['kompartemen_id', 'departemen_id']
         ],
         'user_nik' => [
-            'name' => 'User NIK Upload',
+            'name' => 'User ID NIK',
             'user_type' => 'NIK',
             'table' => 'tr_user_ussm_nik',
             'model' => userNIK::class,
@@ -66,7 +66,7 @@ return [
         //     ],
         // ],
         'nik_job_role' => [
-            'name' => 'USSM - Job Role Upload',
+            'name' => 'USSM - Job Role',
             'user_type' => null, // Optional to make controller logic consistent
             'table' => 'tr_ussm_job_role',
             'model' => NIKJobRole::class,

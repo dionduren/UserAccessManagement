@@ -104,9 +104,10 @@ class MasterDataKaryawan extends Model
         // Fetch required columns from external source
         // $rows = DB::connection('sqlsrv_freetds')->select($sql);
         // $rows = DB::connection('sqlsrv_ext')->select($sql);
-        $connection = env('SYNC_CONNECTION', 'sqlsrv_ext');
+        $connection = env('SYNC_CONNECTION1', 'sqlsrv1_ext');
         $extRows = DB::connection($connection)
-            ->table('dbo.BASIS_KARYAWAN')
+            // ->table('dbo.BASIS_KARYAWAN')
+            ->table('dbo.PIHC_MASTER_KARYAWAN_2021')
             ->selectRaw("
                 emp_no    AS nik,
                 nama,

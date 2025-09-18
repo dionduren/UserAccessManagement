@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers\Report;
 
-use \Carbon\Carbon;
+use \PhpOffice\PhpWord\IOFactory;
 
 use App\Exports\ArrayExport;
 
@@ -11,12 +11,16 @@ use App\Models\Company;
 use App\Models\Departemen;
 use App\Models\JobRole;
 use App\Models\Kompartemen;
+use App\Models\middle_db\CompositeRole as MiddleCompositeRole;
+use App\Models\middle_db\SingleRole as MiddleSingleRole;
+
 use App\Models\PenomoranUAM;
 use App\Models\Periode;
 
 use App\Models\SingleRole;
-
+use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
 use Maatwebsite\Excel\Facades\Excel;
 use PhpOffice\PhpWord\PhpWord;
 use PhpOffice\PhpWord\SimpleType\Jc;
@@ -160,76 +164,195 @@ class UAMReportController extends Controller
 
         $nomorSurat = "PI-TIN-UAM-{$latestPeriodeYear}-{$nomorSurat}";
 
+        // Prefetch middle-db composite role descriptions by name to avoid N+1
+        $middleDescriptions = [];
+        $compositeNames = $jobRoles
+            ->filter(function ($jr) {
+                return $jr->compositeRole && !empty($jr->compositeRole->nama);
+            })
+            ->pluck('compositeRole.nama')
+            ->filter()
+            ->unique()
+            ->values();
+
+        if ($compositeNames->isNotEmpty()) {
+            $middleDescriptions = MiddleCompositeRole::whereIn('composite_role', $compositeNames)
+                ->pluck('definisi', 'composite_role')
+                ->toArray();
+        }
+
+        // Prefetch AO per composite role from middle-db (AO Single Role rows)
+        $aoByComposite = [];
+        if ($compositeNames->isNotEmpty()) {
+            $aoQueryNames = $compositeNames->map(fn($name) => $name . '-AO')->all();
+            $aoRows = MiddleSingleRole::whereIn('single_role', $aoQueryNames)
+                ->get(['single_role', 'definisi']); // only fields available per dd()
+
+            foreach ($aoRows as $row) {
+                // Map back to composite name by removing "-AO"
+                $comp = (string) Str::of($row->single_role)->beforeLast('-AO');
+                if ($comp === '') {
+                    continue;
+                }
+                // Build display text: "AO Single Role - definisi"
+                $aoByComposite[$comp] = trim(($row->single_role ? '<strong>' . $row->single_role . '</strong>' : '-') . ($row->definisi ? '<br>' . $row->definisi : '-'));
+            }
+        }
+
         // Build data based on jobRole and its compositeRole relationship
         $compositeRoles = [];
         foreach ($jobRoles as $jobRole) {
             if ($jobRole->compositeRole && $jobRole->compositeRole->count() > 0) {
+                $compositeName = $jobRole->compositeRole->nama ?? null;
+                $effectiveDescription = $compositeName && isset($middleDescriptions[$compositeName])
+                    ? $middleDescriptions[$compositeName]
+                    : ($jobRole->compositeRole->deskripsi ?? '-');
+
+                // Mark composite name as (MDB) when description comes from middle_db
+                $isCompositeFromMDB = $compositeName && isset($middleDescriptions[$compositeName]);
+                $displayCompositeName = $compositeName
+                    ? ($compositeName . ($isCompositeFromMDB ? ' <span style="color: green;"><strong><italic>{MDB}</italic></strong></span>' : ''))
+                    : '-';
+
+                // Compose composite role label as "nama <br> deskripsi"
+                $compositeLabel = '<strong>' . $displayCompositeName . '</strong>'
+                    . ($effectiveDescription ? '<br>' . $effectiveDescription : '-');
+
+                // Use prebuilt AO text from the AO Single Role row
+                $aoText = $compositeName && isset($aoByComposite[$compositeName])
+                    ? $aoByComposite[$compositeName]
+                    : '-';
+
                 $data[] = [
                     'company' => $jobRole->company ? $jobRole->company->nama : '-',
                     'kompartemen' => $jobRole->kompartemen ? $jobRole->kompartemen->nama : '-',
                     'departemen' => $jobRole->departemen ? $jobRole->departemen->nama : '-',
                     'job_role' => $jobRole->nama ?? '-',
-                    'composite_role' => $jobRole->compositeRole->nama ?? '-',
-                    'composite_role_description' => $jobRole->compositeRole->deskripsi ?? '-',
+                    'composite_role' => $compositeLabel,
+                    'authorization_object' => $aoText,
                 ];
-                // Collect unique composite roles
+
                 $compositeRoles[$jobRole->compositeRole->id] = $jobRole->compositeRole;
             }
         }
 
-        // Fetch single roles for each composite role
+        // Fetch single roles for each composite role (MDB-first, then local)
         $compositeRolesWithSingles = [];
         foreach ($compositeRoles as $compositeRole) {
-            // Specify table name for id and nama to avoid ambiguity
-            $singleRoles = $compositeRole->singleRoles()
-                ->whereNull('tr_single_roles.deleted_at')
-                ->get(['tr_single_roles.id', 'tr_single_roles.nama', 'tr_single_roles.deskripsi']);
-            $compositeRolesWithSingles[] = [
-                'id' => $compositeRole->id,
-                'nama' => $compositeRole->nama,
-                'single_roles' => $singleRoles->map(function ($role) {
+            $mappedSingles = collect();
+            $compositeDisplayName = $compositeRole->nama;
+
+            // Try middle_db first by composite name
+            $usedMDBComposite = false;
+            $compositeDisplayNameRaw = $compositeRole->nama; // raw
+            $compositeDisplayNameHtml = $compositeDisplayNameRaw;
+            if (!empty($compositeRole->nama)) {
+                $mdbComposite = MiddleCompositeRole::where('composite_role', $compositeRole->nama)->first();
+                if ($mdbComposite) {
+                    $usedMDBComposite = true;
+                    $mdbSingles = $mdbComposite->singleRoles()->get(['mdb_single_role.single_role', 'mdb_single_role.definisi']);
+                    $mappedSingles = $mdbSingles->map(function ($r) {
+                        $raw = $r->single_role;
+                        return [
+                            'id' => null, // no local id
+                            'nama' => $raw, // RAW for lookups
+                            'nama_display' => $raw . ' <span style="color: green;"><strong><italic>{MDB}</italic></strong></span>', // UI only
+                            'deskripsi' => $r->definisi,
+                        ];
+                    });
+                    // mark composite display as MDB (keep raw untouched)
+                    $compositeDisplayNameHtml = $compositeDisplayNameRaw . ' <span style="color: green;"><strong><italic>{MDB}</italic></strong></span>';
+                }
+            }
+            // If not found in middle_db, fall back to local
+            if (!$usedMDBComposite) {
+                $singleRoles = $compositeRole->singleRoles()
+                    ->whereNull('tr_single_roles.deleted_at')
+                    ->get(['tr_single_roles.id', 'tr_single_roles.nama', 'tr_single_roles.deskripsi']);
+
+                $mappedSingles = $singleRoles->map(function ($role) {
                     return [
                         'id' => $role->id,
-                        'nama' => $role->nama,
+                        'nama' => $role->nama,         // RAW
+                        'nama_display' => $role->nama, // UI == raw (no MDB)
                         'deskripsi' => $role->deskripsi,
                     ];
-                })->toArray(),
+                });
+                $compositeDisplayNameHtml = $compositeDisplayNameRaw; // no MDB
+            }
+
+            $compositeRolesWithSingles[] = [
+                'id' => $compositeRole->id,
+                'nama' => $compositeDisplayNameRaw,         // RAW
+                'nama_display' => $compositeDisplayNameHtml, // UI
+                'single_roles' => $mappedSingles->toArray(),
             ];
         }
 
-        // Compile unique single roles
+        // Compile unique single roles (MDB-first for tcodes, then local)
         $uniqueSingleRoles = [];
         foreach ($compositeRolesWithSingles as $cr) {
             foreach ($cr['single_roles'] as $sr) {
-                if (!isset($uniqueSingleRoles[$sr['id']])) {
-                    $singleRoleModel = SingleRole::find($sr['id']);
+                $key = $sr['id'] ?? $sr['nama']; // use id when available, otherwise RAW name
+                if (!isset($uniqueSingleRoles[$key])) {
                     $tcodes = [];
-                    if ($singleRoleModel && method_exists($singleRoleModel, 'tcodes')) {
-                        $tcodes = $singleRoleModel->tcodes()
-                            ->whereNull('tr_tcodes.deleted_at')
-                            ->get(['tr_tcodes.code', 'tr_tcodes.deskripsi'])
+
+                    // Try middle_db first by RAW SR name
+                    $srNameLookup = $sr['nama'] ?? '';
+                    $mdbSingle = $srNameLookup
+                        ? MiddleSingleRole::where('single_role', $srNameLookup)->first()
+                        : null;
+
+                    if ($mdbSingle && method_exists($mdbSingle, 'tcodes')) {
+                        $tcodes = $mdbSingle->tcodes()
+                            ->get(['mdb_tcode.tcode', 'mdb_tcode.definisi'])
                             ->map(function ($t) {
                                 return [
-                                    'tcode' => $t->code,
-                                    'deskripsi' => $t->deskripsi,
+                                    'tcode' => $t->tcode, // RAW for lookups
+                                    'tcode_display' => $t->tcode . ' <span style="color: green;"><strong><italic>{MDB}</italic></strong></span>',
+                                    'deskripsi' => $t->definisi,
                                 ];
                             })->toArray();
+                    } elseif (!empty($sr['id'])) {
+                        // Fall back to local tcodes by local SR id
+                        $singleRoleModel = \App\Models\SingleRole::find($sr['id']);
+                        if ($singleRoleModel && method_exists($singleRoleModel, 'tcodes')) {
+                            $tcodes = $singleRoleModel->tcodes()
+                                ->whereNull('tr_tcodes.deleted_at')
+                                ->get(['tr_tcodes.code', 'tr_tcodes.deskripsi'])
+                                ->map(function ($t) {
+                                    return [
+                                        'tcode' => $t->code,          // RAW
+                                        'tcode_display' => $t->code,  // UI == raw
+                                        'deskripsi' => $t->deskripsi,
+                                    ];
+                                })->toArray();
+                        }
                     }
-                    $uniqueSingleRoles[$sr['id']] = [
-                        'id' => $sr['id'],
-                        'nama' => $sr['nama'],
-                        'deskripsi' => $sr['deskripsi'],
-                        'tcodes' => $tcodes,
+
+                    // Determine display name for SR (use provided display, or build it)
+                    $srNameDisplay = $sr['nama_display'] ?? $sr['nama'] ?? '-';
+                    if ($mdbSingle && empty($sr['nama_display'])) {
+                        $srNameDisplay = ($sr['nama'] ?? '-') . ' <span style="color: green;"><strong><italic>{MDB}</italic></strong></span>';
+                    }
+
+                    $uniqueSingleRoles[$key] = [
+                        'id' => $sr['id'] ?? null,
+                        'nama' => $sr['nama'] ?? '-',               // RAW
+                        'nama_display' => $srNameDisplay,           // UI
+                        'deskripsi' => $sr['deskripsi'] ?? null,
+                        'tcodes' => $tcodes,                        // each has tcode + tcode_display
                     ];
                 }
             }
         }
 
+        // Now return after finishing the loops
         return response()->json([
             'data' => $data,
             'nomorSurat' => $nomorSurat,
-            'composite_roles' => $compositeRolesWithSingles,
-            'single_roles' => array_values($uniqueSingleRoles), // add this line
+            'composite_roles' => $compositeRolesWithSingles,             // each has nama + nama_display
+            'single_roles' => array_values($uniqueSingleRoles),          // each has nama + nama_display + tcodes
         ]);
     }
 
@@ -267,6 +390,8 @@ class UAMReportController extends Controller
         $company = Company::where('company_code', $companyId)->first();
         $kompartemen = Kompartemen::where('kompartemen_id', $kompartemenId)->first();
         $departemen = Departemen::where('departemen_id', $departemenId)->first();
+        $uniqueSingleRoles = [];
+        $uniqueTcodeCount = [];
 
         $query = JobRole::query()
             ->with([
@@ -310,6 +435,7 @@ class UAMReportController extends Controller
                     return [
                         'id' => $role->id,
                         'nama' => $role->nama,
+                        'deskripsi' => $role->deskripsi,
                     ];
                 })->toArray(),
             ];
@@ -511,14 +637,13 @@ class UAMReportController extends Controller
                     return [
                         'id' => $role->id,
                         'nama' => $role->nama,
-                        'deskripsi' => $role->deskripsi,
                     ];
                 })->toArray(),
             ];
         }
 
+        // Compile unique single roles
         $uniqueSingleRoles = [];
-        $uniqueTcodes = [];
         foreach ($compositeRolesWithSingles as $cr) {
             foreach ($cr['single_roles'] as $sr) {
                 if (!isset($uniqueSingleRoles[$sr['id']])) {
@@ -528,8 +653,7 @@ class UAMReportController extends Controller
                         $tcodes = $singleRoleModel->tcodes()
                             ->whereNull('tr_tcodes.deleted_at')
                             ->get(['tr_tcodes.code', 'tr_tcodes.deskripsi'])
-                            ->map(function ($t) use (&$uniqueTcodes) {
-                                $uniqueTcodes[$t->code] = true;
+                            ->map(function ($t) {
                                 return [
                                     'tcode' => $t->code,
                                     'deskripsi' => $t->deskripsi,
@@ -539,101 +663,23 @@ class UAMReportController extends Controller
                     $uniqueSingleRoles[$sr['id']] = [
                         'id' => $sr['id'],
                         'nama' => $sr['nama'],
-                        'deskripsi' => $sr['deskripsi'],
                         'tcodes' => $tcodes,
                     ];
-                } else {
-                    // Also collect tcodes for already added single roles
-                    $singleRoleModel = SingleRole::find($sr['id']);
-                    if ($singleRoleModel && method_exists($singleRoleModel, 'tcodes')) {
-                        $singleRoleModel->tcodes()
-                            ->whereNull('tr_tcodes.deleted_at')
-                            ->get(['tr_tcodes.code'])
-                            ->each(function ($t) use (&$uniqueTcodes) {
-                                $uniqueTcodes[$t->code] = true;
-                            });
-                    }
                 }
             }
         }
-        $uniqueSingleRoleCount = count($uniqueSingleRoles);
-        $uniqueTcodeCount = count($uniqueTcodes);
-
-        // Prepare PhpWord
+        // Initialize PhpWord and create main section
         $phpWord = new PhpWord();
+        $section = $phpWord->addSection();
 
-        // COVER PAGE SECTION (no header/footer)
-        $coverSection = $phpWord->addSection([
-            'headerHeight' => 0,
-            'footerHeight' => 0,
-            'marginTop' => 1200,
-            'marginBottom' => 1200,
-            'marginLeft' => 1200,
-            'marginRight' => 1200,
-            'colsNum' => 1,
-            'breakType' => 'continuous',
-            'titlePg' => true,
-        ]);
+        // Calculate total unique tcodes for display limit
+        $uniqueTcodeCount = array_reduce(array_values($uniqueSingleRoles), function ($carry, $sr) {
+            return $carry + (isset($sr['tcodes']) && is_array($sr['tcodes']) ? count($sr['tcodes']) : 0);
+        }, 0);
 
-        // Add cover page title
-        $coverTable = $coverSection->addTable(['borderSize' => 6, 'borderColor' => '000000', 'cellMargin' => 20]);
-
-        // Add empty rows for spacing
-        // for ($i = 0; $i < 6; $i++) $coverTable->addRow(300);
-
-        $coverTable->addRow(8000, [
-            'valign' => 'center',
-        ]);
-        $coverTable->addCell(9000, ['gridSpan' => 3, 'valign' => 'center'])->addText(
-            'USER ACCESS MATRIX <w:br/> ' . mb_strtoupper(($unitKerja ? "$unitKerja" : '-'), 'UTF-8') . '<w:br/><w:br/>',
-            ['bold' => true, 'size' => 20],
-            ['alignment' => Jc::CENTER, 'spaceAfter' => 0]
-        );
-        // Name row
-        $coverTable->addRow();
-        $coverTable->addCell(10200, ['gridSpan' => 3])->addText('DISUSUN OLEH', ['bold' => true, 'size' => 10], ['alignment' => Jc::CENTER, 'spaceAfter' => 0]);
-        // Signature row
-        $coverTable->addRow(1000, ['exactHeight' => true]);
-        $coverTable->addCell(3400)->addText('', ['size' => 10], ['alignment' => Jc::CENTER, 'spaceAfter' => 0]);
-        $coverTable->addCell(3400)->addText('', ['size' => 10], ['alignment' => Jc::CENTER, 'spaceAfter' => 0]);
-        $coverTable->addCell(3400)->addText('', ['size' => 10], ['alignment' => Jc::CENTER, 'spaceAfter' => 0]);
-        $coverTable->addRow(250, ['exactHeight' => true]);
-        $coverTable->addCell(3400)->addText('', ['size' => 10], ['alignment' => Jc::CENTER, 'spaceAfter' => 0]);
-        $coverTable->addCell(3400)->addText('', ['size' => 10], ['alignment' => Jc::CENTER, 'spaceAfter' => 0]);
-        $coverTable->addCell(3400)->addText('', ['size' => 10], ['alignment' => Jc::CENTER, 'spaceAfter' => 0]);
-        // Position row
-        $coverTable->addRow(250, ['exactHeight' => true]);
-        $coverTable->addCell(3400)->addText('Staf Operasional TI', ['bold' => true, 'size' => 9], ['alignment' => Jc::CENTER, 'spaceAfter' => 0]);
-        $coverTable->addCell(3400)->addText('Junior Officer Tata Kelola TI', ['bold' => true, 'size' => 9], ['alignment' => Jc::CENTER, 'spaceAfter' => 0]);
-        $coverTable->addCell(3400)->addText('Key User', ['bold' => true, 'size' => 9], ['alignment' => Jc::CENTER, 'spaceAfter' => 0]);
-
-        // Header row: "DISETUJUI OLEH"
-        // Name row
-        $coverTable->addRow();
-        $coverTable->addCell(9000, ['gridSpan' => 3])->addText('DISETUJUI OLEH', ['bold' => true, 'size' => 10], ['alignment' => Jc::CENTER, 'spaceAfter' => 0]);
-        // Signature row
-        $coverTable->addRow(1000, ['exactHeight' => true]);
-        $coverTable->addCell(3400)->addText('', ['size' => 10], ['alignment' => Jc::CENTER, 'spaceAfter' => 0]);
-        $coverTable->addCell(3400)->addText('', ['size' => 10], ['alignment' => Jc::CENTER, 'spaceAfter' => 0]);
-        $coverTable->addCell(3400)->addText('', ['size' => 10], ['alignment' => Jc::CENTER, 'spaceAfter' => 0]);
-        // Name row
-        $coverTable->addRow(250, ['exactHeight' => true]);
-        $coverTable->addCell(3400)->addText('Abdul Muhyi Marakarma', ['size' => 10], ['alignment' => Jc::CENTER, 'spaceBefore' => 0, 'spaceAfter' => 0]);
-        $coverTable->addCell(3400)->addText('Sony Candra Dirganto', ['size' => 10], ['alignment' => Jc::CENTER, 'spaceBefore' => 0, 'spaceAfter' => 0]);
-        $coverTable->addCell(3400)->addText('', ['size' => 10], ['alignment' => Jc::CENTER, 'spaceBefore' => 0, 'spaceAfter' => 0]);
-
-        // Position row
-        $coverTable->addRow(250, ['exactHeight' => true]);
-        $coverTable->addCell(3400)->addText('VP Operasional Sistem TI', ['bold' => true, 'size' => 9], ['alignment' => Jc::CENTER, 'spaceBefore' => 0, 'spaceAfter' => 0]);
-        $coverTable->addCell(3400)->addText('VP Strategi dan Tata Kelola TI', ['bold' => true, 'size' => 9], ['alignment' => Jc::CENTER, 'spaceBefore' => 0, 'spaceAfter' => 0]);
-        $coverTable->addCell(3400)->addText($jabatanUnitKerja . ' ' . $unitKerjaName, ['bold' => true, 'size' => 9], ['alignment' => Jc::CENTER, 'spaceBefore' => 0, 'spaceAfter' => 0]);
-        $coverTable->addRow(250, ['exactHeight' => true]);
-        $coverTable->addCell(3400);
-        $coverTable->addCell(3400);
-        $coverTable->addCell(3400);
-
-        // Add a new table for document info (logo, nomor, tanggal, disclaimer)
-        $docInfoTable = $coverSection->addTable(['borderSize' => 6, 'borderColor' => '000000', 'cellMargin' => 20]);
+        // Build document info table
+        $docInfoTable = $section->addTable(['borderSize' => 6, 'borderColor' => '000000', 'cellMargin' => 80]);
+        $docInfoTable = $section->addTable(['borderSize' => 6, 'borderColor' => '000000', 'cellMargin' => 80]);
         $docInfoTable->addRow(500, ['exactHeight' => true]);
         $docInfoTable->addCell(3400, ['valign' => 'center', 'vMerge' => 'restart',])->addImage(
             public_path('logo_pupuk_indonesia.png'),
@@ -657,11 +703,10 @@ class UAMReportController extends Controller
             ['alignment' => Jc::CENTER, 'spaceAfter' => 0]
         );
         $docInfoTable->addRow(1200, ['exactHeight' => true]);
-        $docInfoTable->addCell(null, ['vMerge' => 'continue']);
-        $docInfoTable->addCell(6000, [
-            'valign' => 'center',
-            'gridSpan' => 2,
-        ])->addText(
+        // Main section with header/footer
+        $header = $section->addHeader(['gridSpan' => 2]);
+
+        $header->addText(
             "PupukIndonesia@" . Carbon::today()->year . " Dokumen ini milik PT Pupuk Indonesia (Persero). Segala informasi yang tercantum dalam dokumen ini bersifat rahasia dan terbatas, serta tidak diperkenankan untuk didistribusikan kembali, baik dalam bentuk cetakan maupun elektronik, tanpa persetujuan dari PT Pupuk Indonesia (Persero).",
             ['size' => 8],
             ['alignment' => Jc::CENTER, 'spaceAfter' => 0]
@@ -671,7 +716,7 @@ class UAMReportController extends Controller
         $section = $phpWord->addSection();
         $header = $section->addHeader();
 
-        // Header Table (Logo + Title + Info)
+        // Header Table (Logo + Title + No Dok + Nomor Surat)
         $headerTable = $header->addTable(['borderSize' => 6, 'borderColor' => '000000', 'cellMarginLeft' => 50, 'cellMarginTop' => 25, 'cellMarginRight' => 50, 'cellMarginBottom' => 25]);
 
         // Row 1: Logo + Title + No Dok + Nomor Surat
@@ -713,128 +758,8 @@ class UAMReportController extends Controller
         $headerTable->addCell(1200, ['valign' => 'center',])->addText('Hal. ke', ['size' => 9], ['spaceBefore' => 0, 'spaceAfter' => 0]);
         $headerTable->addCell(3000, ['valign' => 'center',])->addPreserveText('{PAGE} dari {NUMPAGES}', ['size' => 9], ['alignment' => Jc::START, 'spaceBefore' => 0, 'spaceAfter' => 0]);
 
-        // HEADER KOLOM TENGAH - JUDUL DOKUMEN
-        // $nestedTitleCell = $headerTable->addCell(4500, ['valign' => 'top']);
-        // // Create a nested table for the title section
-        // $titleTable = $nestedTitleCell->addTable([
-        //     'borderSize' => 0,
-        //     'borderColor' => 'FFFFFF',
-        // ]);
-        // $titleTable->addRow(375);
-        // $titleTable->addCell(4500, [
-        //     'valign' => 'center',
-        //     'borderBottomSize' => 6,
-        //     'borderBottomColor' => '000000',
-        // ])->addText(
-        //     'TEKNOLOGI INFORMASI',
-        //     ['bold' => true, 'size' => 10],
-        //     ['alignment' => Jc::CENTER, 'space' => ['after' => 0]]
-        // );
-        // Make the second cell span 3 rows to match the height of HEADER KOLOM KANAN row 2+3+4
-        // $titleTable->addRow();
-        // $titleTable->addCell(4500, [
-        //     'valign' => 'center',
-        //     'rowSpan' => 3, // span 3 rows
-        //     'borderRightColor' => '000000',
-        // ])->addText(
-        //     'USER ACCESS MATRIX <w:br/> ' . mb_strtoupper(($unitKerja ? "$unitKerja" : '-'), 'UTF-8'),
-        //     ['bold' => true, 'size' => 10],
-        //     ['alignment' => Jc::CENTER, 'space' => ['after' => 0]]
-        // );
-
-        // // HEADER KOLOM KANAN
-
-        // $nestedTable = $headerTable->addCell(2000, ['gridSpan' => 2, 'valign' => 'center',])->addTable([
-        //     'borderSize' => 0,
-        //     'borderColor' => 'FFFFFF',
-        // ]);
-        // // Row 1: Nomor
-        // $nestedTable->addRow();
-        // $nestedTable->addCell(1000, [
-        //     'valign' => 'center',
-        //     'borderBottomSize' => 6,
-        //     'borderBottomColor' => '000000',
-        //     'borderRightSize' => 6,
-        //     'borderRightColor' => '000000',
-        // ])->addText('No Dok', ['size' => 8]);
-        // $nestedTable->addCell(2250, [
-        //     'valign' => 'center',
-        //     'borderBottomSize' => 6,
-        //     'borderBottomColor' => '000000',
-        // ])->addText('PI-TIN-UAM-' . $latestPeriodeYear . '-' . $nomorSurat, ['size' => 8]);
-
-        // // Row 2: Rev. Ke
-        // $nestedTable->addRow();
-        // $nestedTable->addCell(1000, [
-        //     'valign' => 'center',
-        //     'borderBottomSize' => 6,
-        //     'borderBottomColor' => '000000',
-        //     'borderRightSize' => 6,
-        //     'borderRightColor' => '000000',
-        // ])->addText('Rev. ke', ['size' => 8]);
-        // $nestedTable->addCell(2250, [
-        //     'valign' => 'center',
-        //     'borderBottomSize' => 6,
-        //     'borderBottomColor' => '000000',
-        // ])->addText('0', ['size' => 8]);
-
-        // // Row 3: Tanggal
-        // $nestedTable->addRow();
-        // $nestedTable->addCell(1000, [
-        //     'valign' => 'center',
-        //     'borderBottomSize' => 6,
-        //     'borderBottomColor' => '000000',
-        //     'borderRightSize' => 6,
-        //     'borderRightColor' => '000000',
-        // ])->addText('Periode', ['size' => 8]);
-        // $nestedTable->addCell(2250, [
-        //     'valign' => 'center',
-        //     'borderBottomSize' => 6,
-        //     'borderBottomColor' => '000000',
-        // ])->addText(\Carbon\Carbon::today()->locale('id')->isoFormat('DD MMMM YYYY'), ['size' => 8]);
-
-        // // Row 4: Hal. ke
-        // $nestedTable->addRow();
-        // $nestedTable->addCell(1000, [
-        //     'valign' => 'center',
-        //     'borderRightSize' => 6,
-        //     'borderRightColor' => '000000',
-        // ])->addText('Hal. ke', ['size' => 8]);
-        // $nestedTable->addCell(2250, [
-        //     'valign' => 'center',
-        // ])->addPreserveText('{PAGE} dari {NUMPAGES}', ['size' => 8], ['alignment' => Jc::START]);
-
-        // (No need to add the header table to the section body)
         $header->addTextBreak(1);
-        // $section->addTextBreak(1);
 
-        // // Review Table
-        // $reviewTable = $section->addTable(['borderSize' => 6, 'borderColor' => '000000', 'cellMargin' => 80]);
-        // // First row with cellMargin
-        // $reviewTable->addRow();
-        // $reviewTable->addCell(12000, [
-        //     'gridSpan' => 2,
-        //     'bgColor' => 'D9E1F2',
-        //     'valign' => 'center'
-        // ])->addText(
-        //     'DOKUMEN REVIEW USER ID DAN OTORISASI',
-        //     ['bold' => true, 'color' => '000000'],
-        //     ['alignment' => Jc::CENTER, 'space' => ['after' => 0]]
-        // );
-
-        // // Next rows without cellMargin
-        // $reviewTable->addRow();
-        // $reviewTable->addCell(4000)->addText('Nomor Surat', ['size' => 8], ['space' => ['after' => 0]]);
-        // $reviewTable->addCell(8000)->addText('PI-TIN-UAM-' . $latestPeriodeYear . '-' . $nomorSurat, ['size' => 8], ['space' => ['after' => 0]]);
-        // $reviewTable->addRow();
-        // $reviewTable->addCell(4000)->addText('Unit Kerja', ['size' => 8], ['space' => ['after' => 0]]);
-        // $reviewTable->addCell(8000)->addText($unitKerja ? "$unitKerja" : '-', ['size' => 8], ['space' => ['after' => 0]]);
-        // $reviewTable->addRow();
-        // $reviewTable->addCell(4000)->addText('Jumlah Unique Single Role', ['size' => 8], ['space' => ['after' => 0]]);
-        // $reviewTable->addCell(8000)->addText($uniqueSingleRoleCount, ['size' => 8], ['space' => ['after' => 0]]);
-        // $reviewTable->addRow();
-        // $reviewTable->addCell(4000)->addText('Jumlah Unique Tcode', ['size' => 8], ['space' => ['after' => 0]]);
-        // $reviewTable->addCell(8000)->addText($uniqueTcodeCount, ['size' => 8], ['space' => ['after' => 0]]);
 
         $section->addText(
             '1. TABEL MAPPING JOB FUNCTION DAN COMPOSITE ROLE',
@@ -976,59 +901,12 @@ class UAMReportController extends Controller
             }
         }
 
-        // // Approval Table (Persetujuan)
-        // $section->addTextBreak(1);
-
-        // $approvalTable = $section->addTable(['borderSize' => 6, 'borderColor' => '000000', 'cellMargin' => 80]);
-
-        // // Header row
-        // $approvalTable->addRow();
-        // $approvalTable->addCell(5000, ['bgColor' => 'D9E1F2', 'gridSpan' => 2])->addText('Persetujuan', ['bold' => true], ['space' => ['after' => 0]]);
-        // $approvalTable->addCell(2500, ['bgColor' => 'D9E1F2'])->addText('Tanda Tangan', ['bold' => true], ['space' => ['after' => 0]]);
-        // $approvalTable->addCell(2500, ['bgColor' => 'D9E1F2'])->addText('Tanggal', ['bold' => true], ['space' => ['after' => 0]]);
-
-        // // Disiapkan oleh
-        // $approvalTable->addRow();
-        // $approvalTable->addCell(null, ['gridSpan' => 4])->addText('Disiapkan oleh:', ['bold' => true, 'size' => 8], ['space' => ['after' => 0]]);
-
-        // // // System Administrator
-        // $approvalTable->addRow();
-        // $approvalTable->addCell(2500)->addText('System Administrator', ['size' => 8], ['space' => ['after' => 0]]);
-        // $approvalTable->addCell(2500)->addText('Deny Pratama', ['size' => 8], ['space' => ['after' => 0]]);
-        // $approvalTable->addCell(2500)->addText('', ['size' => 8], ['space' => ['after' => 0]]);
-        // $approvalTable->addCell(2500)->addText('', ['size' => 8], ['space' => ['after' => 0]]);
-
-        // // // Functional Modul Sales & Distribution (SD)
-        // $approvalTable->addRow();
-        // $approvalTable->addCell(2500)->addText('Functional Modul ....', ['size' => 8], ['space' => ['after' => 0]]);
-        // $approvalTable->addCell(2500)->addText('', ['size' => 8], ['space' => ['after' => 0]]);
-        // $approvalTable->addCell(2500)->addText('', ['size' => 8], ['space' => ['after' => 0]]);
-        // $approvalTable->addCell(2500)->addText('', ['size' => 8], ['space' => ['after' => 0]]);
-
-        // // Diverifikasi oleh
-        // $approvalTable->addRow();
-        // $approvalTable->addCell(null, ['gridSpan' => 4])->addText('Diverifikasi oleh:', ['bold' => true, 'size' => 8], ['space' => ['after' => 0]]);
-
-        // // VP Operasional Sistem TI
-        // $approvalTable->addRow();
-        // $approvalTable->addCell(2500)->addText('VP Operasional Sistem TI', ['size' => 8], ['space' => ['after' => 0]]);
-        // $approvalTable->addCell(2500)->addText('Abdul Muhyi Marakarma', ['size' => 8], ['space' => ['after' => 0]]);
-        // $approvalTable->addCell(2500)->addText('', ['size' => 8], ['space' => ['after' => 0]]);
-        // $approvalTable->addCell(2500)->addText('', ['size' => 8], ['space' => ['after' => 0]]);
-
-        // // VP Dept. Strategi & Evaluasi Kinerja
-        // $approvalTable->addRow();
-        // $approvalTable->addCell(2500)->addText($jabatanUnitKerja . ' ' . $unitKerjaName, ['size' => 8], ['space' => ['after' => 0]]);
-        // $approvalTable->addCell(2500)->addText('', ['size' => 8], ['space' => ['after' => 0]]);
-        // $approvalTable->addCell(2500)->addText('', ['size' => 8], ['space' => ['after' => 0]]);
-        // $approvalTable->addCell(2500)->addText('', ['size' => 8], ['space' => ['after' => 0]]);
-
         // Output
         $fileName = 'PI-TIN-UAM-' . $latestPeriodeYear . '-' . $nomorSurat . '_' . $unitKerja . ' ' . $latestPeriodeYear .  '.docx';
         $filePath = storage_path('app/public/' . $fileName);
 
         // Save using IOFactory
-        $objWriter = \PhpOffice\PhpWord\IOFactory::createWriter($phpWord, 'Word2007');
+        $objWriter = IOFactory::createWriter($phpWord, 'Word2007');
         $objWriter->save($filePath);
 
         return response()->download($filePath, $fileName)->deleteFileAfterSend(true);

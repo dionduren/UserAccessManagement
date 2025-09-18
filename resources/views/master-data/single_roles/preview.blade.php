@@ -37,7 +37,7 @@
     </div>
 @endsection
 
-@push('scripts')
+@section('scripts')
     <script>
         $(document).ready(function() {
             $('#preview-table').DataTable({
@@ -47,4 +47,4 @@
             });
         });
     </script>
-@endpush
+@endsection

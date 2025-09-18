@@ -4,10 +4,13 @@ namespace App\Models\middle_db;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use App\Models\middle_db\view\UAMCompositeSingle;
+use App\Models\middle_db\view\UAMCompositeAO; // add
 
 class CompositeRole extends Model
 {
-
     protected $table = 'mdb_composite_role';
 
     protected $fillable = [
@@ -43,6 +46,44 @@ class CompositeRole extends Model
     public function scopeOrdered($query)
     {
         return $query->orderBy('composite_role');
+    }
+
+    // View rows linking this composite to single roles (read-only)
+    public function compositeSingles(): HasMany
+    {
+        return $this->hasMany(UAMCompositeSingle::class, 'composite_role', 'composite_role');
+    }
+
+    // Single roles via mapping view
+    public function singleRoles(): BelongsToMany
+    {
+        return $this->belongsToMany(
+            SingleRole::class,
+            'v_uam_composite_single',
+            'composite_role', // foreign key on pivot referencing this model
+            'single_role',    // foreign key on pivot referencing related model
+            'composite_role', // local key on this model
+            'single_role'     // local key on related model
+        );
+    }
+
+    // View rows linking this composite to its AO single role (read-only)
+    public function compositeAOs(): HasMany
+    {
+        return $this->hasMany(UAMCompositeAO::class, 'composite_role', 'composite_role');
+    }
+
+    // AO Single roles via AO mapping view (single_role = composite_role . '-AO')
+    public function aoSingleRoles(): BelongsToMany
+    {
+        return $this->belongsToMany(
+            SingleRole::class,
+            'v_uam_composite_single_ao',
+            'composite_role', // FK on view referencing this model
+            'single_role',    // FK on view referencing related model
+            'composite_role', // local key on this model
+            'single_role'     // local key on related model
+        );
     }
 
     // Sync from external SAP source (BASIS_AGR_TEXTS)

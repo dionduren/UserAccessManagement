@@ -8,6 +8,8 @@
             <div class="card-header d-flex flex-column flex-md-row align-items-md-center gap-2">
                 <h2 class="mb-0 flex-grow-1">USMM - Active Generic Users</h2>
                 <div class="d-flex gap-2">
+                    <a href="{{ route('compare.usmm.generic') }}" target="_blank" class="btn btn-warning btn-sm">Compare USMM
+                        Generic</a>
                     <button id="btnReloadInactive" class="btn btn-outline-secondary btn-sm">Reload / Clear Filters</button>
                 </div>
             </div>

@@ -2,8 +2,14 @@
 @section('content')
     <div class="container-fluid">
         <div class="card shadow-sm">
-            <div class="card-header d-flex justify-content-between align-items-center">
-                <h5 class="mb-0">User - Composite Role</h5>
+            <div class="card-header d-flex flex-column flex-md-row align-items-md-center gap-2">
+                <h5 class="mb-0 flex-grow-1">User - Composite Role</h5>
+                <a href="{{ route('compare.uam.relationship.user_composite.exist') }}" target="_blank"
+                    class="btn btn-success btn-sm">Compare
+                    Existing Data</a>
+                <a href="{{ route('compare.uam.relationship.user_composite') }}" target="_blank"
+                    class="btn btn-warning btn-sm">Compare
+                    Empty Data</a>
                 <button id="btnReload" class="btn btn-outline-secondary btn-sm">Reload</button>
             </div>
             <div class="card-body">

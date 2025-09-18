@@ -12,6 +12,11 @@
                         <input id="compExclude" class="form-control form-control-sm" style="width:140px" value="%-AO"
                             title="NOT LIKE">
                     </div>
+                    <a href="{{ route('compare.uam.composite.exist') }}" target="_blank"
+                        class="btn btn-success btn-sm">Compare
+                        Existing Data</a>
+                    <a href="{{ route('compare.uam.composite') }}" target="_blank" class="btn btn-warning btn-sm">Compare
+                        Empty Data</a>
                     <button id="btnSync" class="btn btn-primary btn-sm">Sync</button>
                     <button id="btnReload" class="btn btn-outline-secondary btn-sm">Reload</button>
                 </div>

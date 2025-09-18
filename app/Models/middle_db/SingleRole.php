@@ -5,13 +5,20 @@ namespace App\Models\middle_db;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use App\Models\middle_db\view\UAMCompositeSingle;
+use App\Models\middle_db\view\UAMSingleTcode;
+use App\Models\middle_db\view\UAMCompositeAO; // add
 
 class SingleRole extends Model
 {
     use HasFactory;
 
     protected $table = 'mdb_single_role';
-
+    protected $primaryKey = 'single_role';      // <-- add
+    public $incrementing = false;               // <-- add
+    protected $keyType = 'string';              // <-- add
     protected $fillable = [
         'single_role',
         'definisi',
@@ -38,6 +45,63 @@ class SingleRole extends Model
     public function scopeOrdered($query)
     {
         return $query->orderBy('single_role');
+    }
+
+    // View rows linking this single role to composite roles (read-only)
+    public function compositeSingles(): HasMany
+    {
+        return $this->hasMany(UAMCompositeSingle::class, 'single_role', 'single_role');
+    }
+
+    // Composite roles via mapping view
+    public function compositeRoles(): BelongsToMany
+    {
+        return $this->belongsToMany(
+            CompositeRole::class,
+            'v_uam_composite_single',
+            'single_role',     // foreign key on pivot referencing this model
+            'composite_role',  // foreign key on pivot referencing related model
+            'single_role',     // local key on this model
+            'composite_role'   // local key on related model
+        );
+    }
+
+    // View rows linking this single role to tcodes (read-only)
+    public function singleTcodes(): HasMany
+    {
+        return $this->hasMany(UAMSingleTcode::class, 'single_role', 'single_role');
+    }
+
+    // Tcodes via mapping view
+    public function tcodes(): BelongsToMany
+    {
+        return $this->belongsToMany(
+            Tcode::class,
+            'v_uam_single_tcode',   // pivot/view
+            'single_role',          // FK on pivot to this model
+            'tcode',                // FK on pivot to related model
+            'single_role',          // local key on this model
+            'tcode'                 // local key on related model
+        );
+    }
+
+    // View rows linking this AO single role to composite roles (read-only)
+    public function compositeAOs(): HasMany
+    {
+        return $this->hasMany(UAMCompositeAO::class, 'single_role', 'single_role');
+    }
+
+    // Composite roles via AO mapping view
+    public function aoCompositeRoles(): BelongsToMany
+    {
+        return $this->belongsToMany(
+            CompositeRole::class,
+            'v_uam_composite_single_ao',
+            'single_role',     // FK on view referencing this model
+            'composite_role',  // FK on view referencing related model
+            'single_role',     // local key on this model
+            'composite_role'   // local key on related model
+        );
     }
 
     // Sync from external SAP source (BASIS_AGR_TEXTS)

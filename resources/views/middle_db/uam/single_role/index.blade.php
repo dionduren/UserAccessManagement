@@ -12,6 +12,10 @@
                         <input id="like2" class="form-control form-control-sm" style="width:140px" value="%-AO%"
                             title="LIKE #2">
                     </div>
+                    <a href="{{ route('compare.uam.single.exist') }}" target="_blank" class="btn btn-success btn-sm">Compare
+                        Existing Data</a>
+                    <a href="{{ route('compare.uam.single') }}" target="_blank" class="btn btn-warning btn-sm">Compare
+                        Empty Data</a>
                     <button id="btnSync" class="btn btn-primary btn-sm">Sync</button>
                     <button id="btnReload" class="btn btn-outline-secondary btn-sm">Reload</button>
                 </div>

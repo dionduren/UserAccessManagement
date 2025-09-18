@@ -77,7 +77,7 @@ class MasterUSMM extends Model
                             ORDER BY u.trdat DESC, u.ltime DESC
                         ) AS rn
                     FROM basis_usr02 u
-                    WHERE NULLIF(LTRIM(RTRIM(u.class)), '') IS NOT NULL
+                    -- WHERE NULLIF(LTRIM(RTRIM(u.class)), '') IS NOT NULL
                 )
                 SELECT
                     ll.class                                 AS company,
@@ -109,7 +109,7 @@ class MasterUSMM extends Model
                     ON ua.bname = us06.bname
                 WHERE us06.lic_type IN ('CA', 'CB')
                 AND ll.ustyp IN ('A','B')
-                AND NULLIF(LTRIM(RTRIM(ll.class)), '') IS NOT NULL
+                -- AND NULLIF(LTRIM(RTRIM(ll.class)), '') IS NOT NULL
                 ORDER BY 
                     CASE UPPER(LTRIM(RTRIM(ll.class)))
                         WHEN 'PIHC' THEN 1

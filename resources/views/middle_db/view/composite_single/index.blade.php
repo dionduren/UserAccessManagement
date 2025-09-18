@@ -18,8 +18,14 @@
     <div class="container-fluid">
         <div class="card shadow-sm">
             <div class="card-header d-flex justify-content-between align-items-center">
-                <h5 class="mb-0">Composite - Single Role</h5>
+                <h5 class="mb-0 flex-grow-1">Composite - Single Role</h5>
                 <div class="d-flex gap-2">
+                    <a href="{{ route('compare.uam.relationship.composite_single.exist') }}" target="_blank"
+                        class="btn btn-success btn-sm">Compare
+                        Existing Data</a>
+                    <a href="{{ route('compare.uam.relationship.composite_single') }}" target="_blank"
+                        class="btn btn-warning btn-sm">Compare
+                        Empty Data</a>
                     <button id="btnReload" class="btn btn-outline-secondary btn-sm">Reload</button>
                 </div>
             </div>

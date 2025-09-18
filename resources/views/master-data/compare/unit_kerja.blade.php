@@ -5,11 +5,8 @@
 @section('content')
     <div class="container-fluid">
         <h4 class="mb-3">Perbandingan Data Unit Kerja</h4>
-
         <div class="row">
-            <div class="col-1"></div>
-
-            <div class="col-5">
+            <div class="col-6">
                 <div class="card shadow-sm mb-4">
                     <div class="card-header py-2 d-flex justify-content-between align-items-center">
                         <strong>Local Only (Not in Middle DB)</strong>
@@ -21,14 +18,14 @@
                                 <tr>
                                     <th style="width:50px;">#</th>
                                     <th>Company</th>
-                                    <th>Level</th>
+                                    {{-- <th>Level</th> --}}
                                     <th>ID</th>
                                     <th>Value (Nama)</th>
                                 </tr>
                                 <tr class="dt-filters">
-                                    <th><input class="form-control form-control-sm" placeholder="Company"></th>
                                     <th></th>
-                                    <th><input class="form-control form-control-sm" placeholder="Level"></th>
+                                    <th><input class="form-control form-control-sm" placeholder="Company"></th>
+                                    {{-- <th><input class="form-control form-control-sm" placeholder="Level"></th> --}}
                                     <th><input class="form-control form-control-sm" placeholder="ID"></th>
                                     <th><input class="form-control form-control-sm" placeholder="Value"></th>
                                 </tr>
@@ -38,7 +35,7 @@
                                     <tr>
                                         <td>{{ $i + 1 }}</td>
                                         <td>{{ $row['company'] }}</td>
-                                        <td>{{ $row['level'] }}</td>
+                                        {{-- <td>{{ $row['level'] }}</td> --}}
                                         <td>{{ $row['id'] }}</td>
                                         <td>{{ $row['value'] }}</td>
                                     </tr>
@@ -52,11 +49,7 @@
                 </div>
             </div>
 
-            <div class="col-auto d-flex align-items-center justify-content-center">
-                <div class="vr" style="height:100%;"></div>
-            </div>
-
-            <div class="col-5">
+            <div class="col-6">
                 <div class="card shadow-sm mb-4">
                     <div class="card-header py-2 d-flex justify-content-between align-items-center">
                         <strong>Middle DB Only (Not in Local)</strong>
@@ -68,14 +61,14 @@
                                 <tr>
                                     <th style="width:50px;">#</th>
                                     <th>Company</th>
-                                    <th>Level</th>
+                                    {{-- <th>Level</th> --}}
                                     <th>ID</th>
                                     <th>Value (Nama)</th>
                                 </tr>
                                 <tr class="dt-filters">
-                                    <th><input class="form-control form-control-sm" placeholder="Company"></th>
                                     <th></th>
-                                    <th><input class="form-control form-control-sm" placeholder="Level"></th>
+                                    <th><input class="form-control form-control-sm" placeholder="Company"></th>
+                                    {{-- <th><input class="form-control form-control-sm" placeholder="Level"></th> --}}
                                     <th><input class="form-control form-control-sm" placeholder="ID"></th>
                                     <th><input class="form-control form-control-sm" placeholder="Value"></th>
                                 </tr>
@@ -85,7 +78,7 @@
                                     <tr>
                                         <td>{{ $i + 1 }}</td>
                                         <td>{{ $row['company'] }}</td>
-                                        <td>{{ $row['level'] }}</td>
+                                        {{-- <td>{{ $row['level'] }}</td> --}}
                                         <td>{{ $row['id'] }}</td>
                                         <td>{{ $row['value'] }}</td>
                                     </tr>
@@ -102,7 +95,7 @@
     </div>
 @endsection
 
-@push('styles')
+@section('styles')
     <style>
         table.dataTable thead .dt-filters th {
             padding: 4px 6px !important;
@@ -113,9 +106,9 @@
             width: 100%;
         }
     </style>
-@endpush
+@endsection
 
-@push('scripts')
+@section('scripts')
     <script>
         document.addEventListener('DOMContentLoaded', function() {
 
@@ -131,8 +124,8 @@
                     pageLength: 25,
                     deferRender: true,
                     order: [
-                        [0, 'asc'],
-                        [2, 'asc'],
+                        [1, 'asc'],
+                        // [2, 'asc'],
                         [3, 'asc']
                     ], // Company, Level, ID
                     dom: 'lfrtip',
@@ -157,7 +150,7 @@
 
                 function renumber() {
                     let start = table.page.info().start;
-                    table.column(1, {
+                    table.column(0, {
                         page: 'current'
                     }).nodes().each(function(cell, idx) {
                         cell.innerHTML = start + idx + 1;
@@ -171,4 +164,4 @@
             initDT('#middle-missing-table');
         });
     </script>
-@endpush
+@endsection

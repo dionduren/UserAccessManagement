@@ -5,12 +5,18 @@ namespace App\Models\middle_db;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use App\Models\middle_db\view\UAMSingleTcode;
 
 class Tcode extends Model
 {
     use HasFactory;
 
     protected $table = 'mdb_tcode';
+    protected $primaryKey = 'tcode';   // <-- add
+    public $incrementing = false;      // <-- add
+    protected $keyType = 'string';     // <-- add
 
     protected $fillable = [
         'tcode',
@@ -32,6 +38,25 @@ class Tcode extends Model
         return $query->orderBy('tcode');
     }
 
+    // View rows linking this tcode to single roles (read-only)
+    public function singleTcodes(): HasMany
+    {
+        return $this->hasMany(UAMSingleTcode::class, 'tcode', 'tcode');
+    }
+
+    // Single roles via mapping view
+    public function singleRoles(): BelongsToMany
+    {
+        return $this->belongsToMany(
+            SingleRole::class,
+            'v_uam_single_tcode',  // pivot/view
+            'tcode',               // FK on pivot to this model
+            'single_role',         // FK on pivot to related model
+            'tcode',               // local key on this model
+            'single_role'          // local key on related model
+        );
+    }
+
     // Sync from external SAP sources
     public static function syncFromExternal(): array
     {
@@ -43,12 +68,13 @@ class Tcode extends Model
                 a.LOW   AS tcode,
                 t.TTEXT AS description
             FROM BASIS_AGR_1251 a
-            INNER JOIN BASIS_TSTCT t
+            LEFT JOIN BASIS_TSTCT t
                 ON a.LOW = t.TCODE
                 AND t.SPRSL = 'E'
             WHERE a.OBJECT = 'S_TCODE'
             AND a.FIELD  = 'TCD'
             AND a.AGR_NAME NOT IN (SELECT AGR_NAME FROM BASIS_AGR_AGRS)
+            AND a.low NOT LIKE ' '
             ORDER BY a.LOW
             SQL;
 

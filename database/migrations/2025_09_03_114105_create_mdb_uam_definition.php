@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('mdb_composite_role', function (Blueprint $table) {
             $table->id();
             $table->string('composite_role');
-            $table->string('definisi');
+            $table->string('definisi')->nullable();
             $table->timestamps();
         });
 
@@ -22,7 +22,7 @@ return new class extends Migration
         Schema::create('mdb_single_role', function (Blueprint $table) {
             $table->id();
             $table->string('single_role');
-            $table->string('definisi');
+            $table->string('definisi')->nullable();
             $table->timestamps();
         });
 
@@ -30,7 +30,7 @@ return new class extends Migration
         Schema::create('mdb_tcode', function (Blueprint $table) {
             $table->id();
             $table->string('tcode');
-            $table->string('definisi');
+            $table->string('definisi')->nullable();
             $table->timestamps();
         });
     }

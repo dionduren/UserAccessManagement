@@ -42,8 +42,13 @@ use App\Http\Controllers\MasterData\TerminatedEmployeeController;
 use App\Http\Controllers\MasterData\UserDetailController;
 use App\Http\Controllers\MasterData\UserGenericController;
 use App\Http\Controllers\MasterData\UserNIKController;
+use App\Http\Controllers\MasterData\UIDNIKUnitKerjaController;
+use App\Http\Controllers\MasterData\UIDGenericUnitKerjaController;
 
 use App\Http\Controllers\MasterData\Compare\UnitKerjaCompareController;
+use App\Http\Controllers\MasterData\Compare\UAMCompareController;
+use App\Http\Controllers\MasterData\Compare\UAMRelationshipCompareController;
+use App\Http\Controllers\MasterData\Compare\USMMCompareController;
 
 use App\Http\Controllers\Middle_DB\MasterDataKaryawanController;
 use App\Http\Controllers\Middle_DB\UnitKerjaController;
@@ -55,6 +60,7 @@ use App\Http\Controllers\Middle_DB\GenericKaryawanMappingMidDBController;
 use App\Http\Controllers\Middle_DB\UAMComponentController;
 use App\Http\Controllers\Middle_DB\raw\UAMRelationshipRawController;
 use App\Http\Controllers\Middle_DB\raw\GenericKaryawanMappingRawController;
+use App\Http\Controllers\Middle_DB\import\ImportUserNIKUnitKerjaController;
 
 use App\Http\Controllers\Relationship\CompositeSingleController;
 use App\Http\Controllers\Relationship\JobCompositeController;
@@ -367,6 +373,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('user-nik/download-template', [UserNIKController::class, 'downloadTemplate'])->name('user-nik.download-template');
     Route::get('user-nik/compare', [UserNIKController::class, 'compare'])->name('user-nik.compare');
     Route::get('user-nik/get-periodic', [UserNIKController::class, 'getPeriodicUserNIK'])->name('user-nik.get-periodic');
+    Route::get('user-nik/middle-db', [MasterUSMMController::class, 'activeNIK'])->name('user-nik.middle_db');
     // Resource Route
     Route::resource('user-nik', UserNIKController::class);
 
@@ -385,6 +392,7 @@ Route::middleware(['auth'])->group(function () {
         Route::get('preview', [UserGenericImportController::class, 'previewPage'])->name('previewPage');
         Route::get('preview-data', [UserGenericImportController::class, 'getPreviewData'])->name('getPreviewData');
         Route::post('import', [UserGenericImportController::class, 'confirmImport'])->name('confirmImport');
+        Route::get('/middle-db',      [MasterUSMMController::class, 'activeGeneric'])->name('middle_db');
     });
 
     Route::get('terminated-employee/getData', [TerminatedEmployeeController::class, 'getData'])->name('terminated-employee.get-data');
@@ -407,6 +415,61 @@ Route::middleware(['auth'])->group(function () {
     Route::get('relationship/nik-job/without-job-role', [NIKJobController::class, 'indexWithoutJobRole'])->name('nik-job.null-relationship');
     Route::resource('relationship/nik-job', NIKJobController::class);
 
+    Route::prefix('unit-kerja')->name('unit_kerja.')->group(function () {
+        // User NIK
+        Route::get('user-nik', [UIDNIKUnitKerjaController::class, 'index'])->name('user_nik.index');
+        Route::get('user-nik/data', [UIDNIKUnitKerjaController::class, 'index'])->name('user_nik.data'); // returns JSON when requested via Accept: application/json
+        Route::get('user-nik/create', [UIDNIKUnitKerjaController::class, 'create'])->name('user_nik.create');
+        Route::post('user-nik', [UIDNIKUnitKerjaController::class, 'store'])->name('user_nik.store');
+        Route::get('user-nik/{userNIKUnitKerja}', [UIDNIKUnitKerjaController::class, 'show'])->name('user_nik.show');
+        Route::get('user-nik/{userNIKUnitKerja}/edit', [UIDNIKUnitKerjaController::class, 'edit'])->name('user_nik.edit');
+        Route::put('user-nik/{userNIKUnitKerja}', [UIDNIKUnitKerjaController::class, 'update'])->name('user_nik.update');
+        Route::delete('user-nik/{userNIKUnitKerja}', [UIDNIKUnitKerjaController::class, 'destroy'])->name('user_nik.destroy');
+
+        // User Generic
+        // --- STATIC AJAX ENDPOINTS FIRST (avoid collision with {userGenericUnitKerja}) ---
+        Route::get('user-generic/company-structure', [UIDGenericUnitKerjaController::class, 'companyStructure'])
+            ->name('user_generic.company_structure');
+
+        Route::get('user-generic/search-users', [UIDGenericUnitKerjaController::class, 'searchUsers'])
+            ->name('user_generic.search_users');
+
+        // --- LIST/JSON INDEX ---
+        Route::get('user-generic', [UIDGenericUnitKerjaController::class, 'index'])
+            ->name('user_generic.index');
+        Route::get('user-generic/data', [UIDGenericUnitKerjaController::class, 'index'])
+            ->name('user_generic.data');
+
+        // --- CREATE/STORE ---
+        Route::get('user-generic/create', [UIDGenericUnitKerjaController::class, 'create'])
+            ->name('user_generic.create');
+        Route::post('user-generic', [UIDGenericUnitKerjaController::class, 'store'])
+            ->name('user_generic.store');
+
+        // --- DYNAMIC ROUTES (CONSTRAINED TO NUMBERS) ---
+        Route::get('user-generic/{userGenericUnitKerja}', [UIDGenericUnitKerjaController::class, 'show'])
+            ->whereNumber('userGenericUnitKerja')
+            ->name('user_generic.show');
+
+        Route::get('user-generic/{userGenericUnitKerja}/edit', [UIDGenericUnitKerjaController::class, 'edit'])
+            ->whereNumber('userGenericUnitKerja')
+            ->name('user_generic.edit');
+
+        Route::put('user-generic/{userGenericUnitKerja}', [UIDGenericUnitKerjaController::class, 'update'])
+            ->whereNumber('userGenericUnitKerja')
+            ->name('user_generic.update');
+
+        Route::delete('user-generic/{userGenericUnitKerja}', [UIDGenericUnitKerjaController::class, 'destroy'])
+            ->whereNumber('userGenericUnitKerja')
+            ->name('user_generic.destroy');
+    });
+
+    // ------------------ IMPORT DATA MIDDLE DB ------------------
+    Route::prefix('import/user-nik-unit-kerja')->name('import.nik_unit_kerja.')->group(function () {
+        Route::get('/', [ImportUserNIKUnitKerjaController::class, 'index'])->name('index');
+        Route::get('/data', [ImportUserNIKUnitKerjaController::class, 'data'])->name('data'); // expects ?periode_id=
+        Route::post('/import', [ImportUserNIKUnitKerjaController::class, 'import'])->name('import');
+    });
     // ------------------ UPLOAD DATA ------------------
 
     // Route::prefix('nik-job/upload')->name('nik_job_role.upload.')->group(function () {
@@ -465,6 +528,9 @@ Route::middleware(['auth'])->group(function () {
 
             Route::get('/active-generic',      [MasterUSMMController::class, 'activeGeneric'])->name('activeGeneric');
             Route::get('/active-generic/data', [MasterUSMMController::class, 'activeGenericData'])->name('activeGenericData');
+
+            Route::get('/active-nik',      [MasterUSMMController::class, 'activeNIK'])->name('activeNIK');
+            Route::get('/active-nik/data', [MasterUSMMController::class, 'activeNIKData'])->name('activeNIKData');
 
             Route::get('/inactive',      [MasterUSMMController::class, 'inactive'])->name('inactive');
             Route::get('/inactive/data', [MasterUSMMController::class, 'inactiveData'])->name('inactiveData');
@@ -531,6 +597,8 @@ Route::middleware(['auth'])->group(function () {
         });
     });
 
+    Route::get('/mapping/middle-db/user-generic-uam', [GenericKaryawanMappingMidDBController::class, 'index'])->name('mapping.middle_db.user_generic_uam');
+
     Route::prefix('middle-db/raw')->name('middle_db.raw.')->group(function () {
 
         Route::prefix('uam-relationship')->name('uam_relationship.')->group(function () {
@@ -549,10 +617,40 @@ Route::middleware(['auth'])->group(function () {
     // ------------- DATA COMPARE ----------------
 
     // Route::get('/compare/unit-kerja', [UnitKerjaCompareController::class, 'index'])->name('compare.unit_kerja');
-    Route::get('/compare/company', [UnitKerjaCompareController::class, 'company'])->name('compare.unit_kerja');
-    Route::get('/compare/kompartemen', [UnitKerjaCompareController::class, 'kompartemen'])->name('compare.unit_kerja');
-    Route::get('/compare/departemen', [UnitKerjaCompareController::class, 'departemen'])->name('compare.unit_kerja');
-    Route::get('/compare/cost-center', [UnitKerjaCompareController::class, 'costCenter'])->name('compare.unit_kerja');
+
+    Route::prefix('compare')->name('compare.')->group(function () {
+        Route::get('/company', [UnitKerjaCompareController::class, 'company'])->name('unit_kerja');
+        Route::get('/kompartemen', [UnitKerjaCompareController::class, 'kompartemen'])->name('unit_kerja');
+        Route::get('/departemen', [UnitKerjaCompareController::class, 'departemen'])->name('unit_kerja');
+        Route::get('/cost-center', [UnitKerjaCompareController::class, 'costCenter'])->name('unit_kerja');
+
+        Route::prefix('/uam')->name('uam.')->group(function () {
+            Route::get('/composite-role', [UAMCompareController::class, 'compositeRole'])->name('composite');
+            Route::get('/composite-role-exist', [UAMCompareController::class, 'compositeRoleExist'])->name('composite.exist');
+            Route::get('/single-role', [UAMCompareController::class, 'singleRole'])->name('single');
+            Route::get('/single-role-exist', [UAMCompareController::class, 'singleRoleExist'])->name('single.exist');
+            Route::get('/tcode', [UAMCompareController::class, 'tcode'])->name('tcode');
+            Route::get('/tcode-exist', [UAMCompareController::class, 'tcodeExist'])->name('tcode.exist');
+
+            // Relationship compares
+            Route::prefix('/relationship')->name('relationship.')->group(function () {
+                Route::get('/user-composite', [UAMRelationshipCompareController::class, 'userComposite'])->name('user_composite');
+                Route::get('/user-composite-exist', [UAMRelationshipCompareController::class, 'userCompositeExist'])->name('user_composite.exist');
+                Route::get('/composite-single', [UAMRelationshipCompareController::class, 'compositeSingle'])->name('composite_single');
+                Route::get('/composite-single-exist', [UAMRelationshipCompareController::class, 'compositeSingleExist'])->name('composite_single.exist');
+                Route::get('/single-tcode', [UAMRelationshipCompareController::class, 'singleTcode'])->name('single_tcode');
+                Route::get('/single-tcode-exist', [UAMRelationshipCompareController::class, 'singleTcodeExist'])->name('single_tcode.exist');
+            });
+        });
+
+        Route::prefix('/usmm')->name('usmm.')->group(function () {
+            Route::get('/generic', [USMMCompareController::class, 'genericIndex'])->name('generic');
+            Route::get('/generic/data', [USMMCompareController::class, 'genericCompareData'])->name('generic.data');
+
+            Route::get('/nik', [USMMCompareController::class, 'nikIndex'])->name('nik');
+            Route::get('/nik/data', [USMMCompareController::class, 'nikCompareData'])->name('nik.data');
+        });
+    });
 
     // ------------------ REPORT ------------------
 

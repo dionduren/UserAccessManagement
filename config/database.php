@@ -107,6 +107,20 @@ return [
             'trust_server_certificate' => env('SQLSRV_TRUST_CERT', true), // true for dev/self-signed
         ],
 
+        'sqlsrv1_ext' => [
+            'driver' => 'sqlsrv',
+            'host' => env('SQLSRV1_HOST', 'localhost'),
+            'port' => env('SQLSRV1_PORT', '1433'),
+            'database' => env('SQLSRV1_DATABASE', ''),
+            'username' => env('SQLSRV1_USERNAME', ''),   // MUST be non-empty
+            'password' => env('SQLSRV1_PASSWORD', ''),   // MUST be non-empty
+            'charset'  => 'utfs8',
+            'prefix'   => '',
+            // ODBC Driver 18 defaults to Encrypt=Yes
+            'encrypt'  => env('SQLSRV_ENCRYPT', 'yes'),     // 'yes' or 'no'
+            'trust_server_certificate' => env('SQLSRV_TRUST_CERT', true), // true for dev/self-signed
+        ],
+
         'sqlsrv_freetds' => [
             'driver' => 'dblib',
             'host' => env('DB_SQLSRV_HOST', '192.168.188.112'),

@@ -117,8 +117,8 @@
                     <tr>
                         <th width="5%">No</th>
                         <th>Job Role</th>
-                        <th>Composite Role</th>
-                        <th>Deskripsi</th>
+                        <th width="30%">Composite Role</th>
+                        <th width="30%">Authorization Object</th>
                     </tr>
                 </thead>
             </table>
@@ -256,8 +256,8 @@
                         name: 'composite_role'
                     },
                     {
-                        data: 'composite_role_description',
-                        name: 'composite_role_description'
+                        data: 'authorization_object',
+                        name: 'authorization_object'
                     },
                 ],
                 tooltips: true,
@@ -366,9 +366,9 @@
                                         tbody +=
                                             `<td rowspan="${singleRoles.length}">${idx + 1}</td>`;
                                         tbody +=
-                                            `<td rowspan="${singleRoles.length}">${cr.nama}</td>`;
+                                            `<td rowspan="${singleRoles.length}">${cr.nama_display}</td>`;
                                     }
-                                    tbody += `<td>${sr.nama}</td>`;
+                                    tbody += `<td>${sr.nama_display}</td>`;
                                     tbody += `<td>${sr.deskripsi}</td>`;
                                     tbody += '</tr>';
                                 });
@@ -393,9 +393,9 @@
                                             tbody +=
                                                 `<td rowspan="${sr.tcodes.length}">${idx}</td>`;
                                             tbody +=
-                                                `<td rowspan="${sr.tcodes.length}">${sr.nama}</td>`;
+                                                `<td rowspan="${sr.tcodes.length}">${sr.nama_display}</td>`;
                                         }
-                                        tbody += `<td>${tc.tcode}</td>`;
+                                        tbody += `<td>${tc.tcode_display}</td>`;
                                         tbody +=
                                             `<td>${tc.deskripsi || '-'}</td>`;
                                         tbody += '</tr>';

@@ -28,42 +28,30 @@ class DuplicateNameController extends Controller
      */
     public function data(Request $request)
     {
-        $perCompany = (int)$request->query('per_company', 0) === 1;
+        $table = (new MasterDataKaryawan)->getTable();
 
-        // Subquery nama duplikat
-        if ($perCompany) {
-            // Duplikat dalam konteks (company, nama)
-            $dupNames = MasterDataKaryawan::select('company', 'nama')
-                ->groupBy('company', 'nama')
-                ->havingRaw('COUNT(*) > 1');
-            $base = MasterDataKaryawan::query()
-                ->joinSub($dupNames, 'd', function ($j) {
-                    $j->on('master_data_karyawan.company', '=', 'd.company')
-                        ->on('master_data_karyawan.nama', '=', 'd.nama');
-                });
-        } else {
-            // Duplikat berdasarkan nama saja (lintas company)
-            $dupNames = MasterDataKaryawan::select('nama')
-                ->groupBy('nama')
-                ->havingRaw('COUNT(*) > 1');
-            $base = MasterDataKaryawan::query()
-                ->whereIn('nama', $dupNames->pluck('nama'));
-        }
+        // Only show duplicates that exist within the same company
+        $dupNames = MasterDataKaryawan::select('company', 'nama')
+            ->groupBy('company', 'nama')
+            ->havingRaw('COUNT(*) > 1');
 
-        // Ambil nik yang sudah ada di filter untuk penandaan
         $filteredNik = DuplicateNameFilter::pluck('nik')->toBase();
 
-        $rows = $base
+        $rows = MasterDataKaryawan::query()
+            ->joinSub($dupNames, 'd', function ($j) use ($table) {
+                $j->on("$table.company", '=', 'd.company')
+                    ->on("$table.nama", '=', 'd.nama');
+            })
             ->select([
-                'nik',
-                'nama',
-                'company',
-                'departemen',
-                'kompartemen',
+                "$table.nik",
+                "$table.nama",
+                "$table.company",
+                "$table.departemen",
+                "$table.kompartemen",
             ])
-            ->orderBy('nama')
-            ->orderBy('company')
-            ->orderBy('nik')
+            ->orderBy("$table.nama")
+            ->orderBy("$table.company")
+            ->orderBy("$table.nik")
             ->get()
             ->map(function ($r) use ($filteredNik) {
                 return [
