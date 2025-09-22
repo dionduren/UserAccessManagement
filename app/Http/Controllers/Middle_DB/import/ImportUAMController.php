@@ -559,40 +559,129 @@ class ImportUAMController extends Controller
         $actor = Auth::user()?->name ?? 'system';
         $now   = now();
 
-        // Select extended columns from middle DB (adjust names if different)
-        $sourceQuery = MiddleCompositeRole::query()
+        // 1. Load base descriptions (optional pattern)
+        $baseDescQuery = MiddleCompositeRole::query()
+            ->select(['composite_role', 'definisi'])
+            ->when(!$all, fn($q) => $q->sapPattern());
+
+        $baseDescMap = $baseDescQuery
+            ->get()
+            ->reduce(function ($carry, $row) {
+                $carry[strtoupper($row->composite_role)] = trim((string)$row->definisi) ?: null;
+                return $carry;
+            }, []);
+
+        // 2. Aggregate metadata from the view
+        // Adjust column names below if your view differs (e.g. composite_role_desc -> definisi / description)
+        $viewQuery = UAMCompositeSingle::query()
             ->select([
                 'composite_role',
-                'definisi',
                 'company_id',
                 'kompartemen_id',
                 'departemen_id',
-            ])
-            ->when(!$all, fn($q) => $q->sapPattern())
-            ->ordered();
+                DB::raw('COALESCE(composite_role_desc, NULL) as composite_role_desc')
+            ]);
 
-        $total = (clone $sourceQuery)->count();
+        $rows = $viewQuery->get();
 
-        $summary = [
-            'mode'              => $fullRefresh ? 'full_refresh' : 'upsert',
-            'source_total'      => $total,
-            'processed'         => 0,
-            'inserted'          => 0,
-            'updated'           => 0,
-            'skipped'           => 0,
-            'errors'            => 0,
-            'overwrite_desc'    => $overwrite,
-            'full_refresh'      => $fullRefresh,
-        ];
-
-        if ($total === 0) {
+        if ($rows->isEmpty() && empty($baseDescMap)) {
             return response()->json([
-                'message' => 'No composite roles found (check filters).',
-                'summary' => $summary
+                'message' => 'No composite role data found in sources (view & base table empty).',
+                'summary' => ['source_total' => 0]
             ], 422);
         }
 
+        // Aggregate per composite_role
+        $agg = []; // key => ['desc'=>..., 'company_id'=>.., 'kompartemen_id'=>.., 'departemen_id'=>..]
+        $conflicts = 0;
+
+        foreach ($rows as $r) {
+            $name = strtoupper(trim($r->composite_role ?? ''));
+            if ($name === '') continue;
+
+            $meta = [
+                'company_id'     => $r->company_id,
+                'kompartemen_id' => $r->kompartemen_id,
+                'departemen_id'  => $r->departemen_id,
+            ];
+
+            if (!isset($agg[$name])) {
+                $agg[$name] = [
+                    'company_id'     => $meta['company_id'],
+                    'kompartemen_id' => $meta['kompartemen_id'],
+                    'departemen_id'  => $meta['departemen_id'],
+                    'desc_view'      => trim((string)$r->composite_role_desc) ?: null,
+                ];
+                continue;
+            }
+
+            // Conflict detection (metadata differs)
+            $prev = $agg[$name];
+            if (
+                ($prev['company_id']     ?? null) !== ($meta['company_id']     ?? null) ||
+                ($prev['kompartemen_id'] ?? null) !== ($meta['kompartemen_id'] ?? null) ||
+                ($prev['departemen_id']  ?? null) !== ($meta['departemen_id']  ?? null)
+            ) {
+                $conflicts++;
+                // Keep first; optionally could choose non-null overrides
+                // Simple enrichment: fill nulls if previous were null
+                if ($prev['company_id'] === null && $meta['company_id'] !== null) {
+                    $agg[$name]['company_id'] = $meta['company_id'];
+                }
+                if ($prev['kompartemen_id'] === null && $meta['kompartemen_id'] !== null) {
+                    $agg[$name]['kompartemen_id'] = $meta['kompartemen_id'];
+                }
+                if ($prev['departemen_id'] === null && $meta['departemen_id'] !== null) {
+                    $agg[$name]['departemen_id'] = $meta['departemen_id'];
+                }
+            }
+
+            // Keep first non-null description from view if we do not have one yet
+            if (empty($agg[$name]['desc_view']) && !empty($r->composite_role_desc)) {
+                $agg[$name]['desc_view'] = trim((string)$r->composite_role_desc);
+            }
+        }
+
+        // 3. Combine final dataset (description preference: base table definisi -> view desc)
+        $finalDataset = [];
+        foreach ($agg as $name => $data) {
+            $desc = $baseDescMap[$name] ?? $data['desc_view'] ?? null;
+            $finalDataset[$name] = [
+                'nama'            => $name,
+                'deskripsi'       => $desc,
+                'company_id'      => $data['company_id'] ?? null,
+                'kompartemen_id'  => $data['kompartemen_id'] ?? null,
+                'departemen_id'   => $data['departemen_id'] ?? null,
+            ];
+        }
+
+        // Add any composite roles present only in base table (without metadata)
+        foreach ($baseDescMap as $name => $desc) {
+            if (!isset($finalDataset[$name])) {
+                $finalDataset[$name] = [
+                    'nama'            => $name,
+                    'deskripsi'       => $desc,
+                    'company_id'      => null,
+                    'kompartemen_id'  => null,
+                    'departemen_id'   => null,
+                ];
+            }
+        }
+
         $localTable = (new LocalCompositeRole)->getTable();
+
+        $summary = [
+            'mode'             => $fullRefresh ? 'full_refresh' : 'upsert',
+            'aggregated_total' => count($finalDataset),
+            'conflicts_meta'   => $conflicts,
+            'processed'        => 0,
+            'inserted'         => 0,
+            'updated'          => 0,
+            'skipped'          => 0,
+            'errors'           => 0,
+            'overwrite_desc'   => $overwrite,
+            'full_refresh'     => $fullRefresh,
+        ];
 
         DB::beginTransaction();
         try {
@@ -604,125 +693,107 @@ class ImportUAMController extends Controller
                 }
             }
 
-            // Build existing map (only needed for upsert mode to count inserts vs updates)
-            $existingMap = [];
+            // Existing map only needed for upsert
+            $existing = [];
             if (!$fullRefresh) {
-                $existingMap = DB::table($localTable)
+                $existing = DB::table($localTable)
                     ->select('id', 'nama', 'deskripsi', 'company_id', 'kompartemen_id', 'departemen_id')
                     ->get()
                     ->reduce(function ($c, $r) {
-                        $c[strtoupper($r->nama)] = $r;
+                        $c[$r->nama] = $r;
                         return $c;
                     }, []);
             }
 
+            $batch = [];
             $batchSize = 1000;
-            $batch     = [];
 
-            $this->chunkQuery($sourceQuery, $batchSize, function ($rows) use (&$summary, &$batch, $batchSize, $fullRefresh, $overwrite, $existingMap, $localTable, $actor, $now) {
-                foreach ($rows as $r) {
-                    $summary['processed']++;
+            foreach ($finalDataset as $name => $row) {
+                $summary['processed']++;
 
-                    $name = strtoupper(trim($r->composite_role ?? ''));
-                    if ($name === '') {
-                        $summary['skipped']++;
-                        continue;
+                $payload = [
+                    'nama'            => $row['nama'],
+                    'deskripsi'       => $row['deskripsi'],
+                    'company_id'      => $row['company_id'],
+                    'kompartemen_id'  => $row['kompartemen_id'],
+                    'departemen_id'   => $row['departemen_id'],
+                    'updated_by'      => $actor,
+                    'updated_at'      => $now,
+                ];
+
+                if ($fullRefresh) {
+                    $payload['created_by'] = $actor;
+                    $payload['created_at'] = $now;
+                    $batch[] = $payload;
+                    if (count($batch) === $batchSize) {
+                        DB::table($localTable)->insert($batch);
+                        $summary['inserted'] += count($batch);
+                        $batch = [];
                     }
+                    continue;
+                }
 
-                    $desc          = trim((string)$r->definisi) ?: null;
-                    $companyId     = $r->company_id ?? null;
-                    $kompartemenId = $r->kompartemen_id ?? null;
-                    $departemenId  = $r->departemen_id ?? null;
-
-                    // Prepare row for insert/upsert
-                    $row = [
-                        'nama'            => $name,
-                        'deskripsi'       => $desc,
-                        'company_id'      => $companyId,
-                        'kompartemen_id'  => $kompartemenId,
-                        'departemen_id'   => $departemenId,
-                        'updated_by'      => $actor,
-                        'updated_at'      => $now,
-                    ];
-
-                    if ($fullRefresh) {
-                        // Full refresh: treat all as inserts
-                        $row['created_by'] = $actor;
-                        $row['created_at'] = $now;
-                        $batch[] = $row;
-                        if (count($batch) === $batchSize) {
-                            DB::table($localTable)->insert($batch);
-                            $summary['inserted'] += count($batch);
-                            $batch = [];
-                        }
-                        continue;
+                if (!isset($existing[$name])) {
+                    $payload['created_by'] = $actor;
+                    $payload['created_at'] = $now;
+                    $batch[] = $payload;
+                    $summary['inserted']++;
+                    if (count($batch) === $batchSize) {
+                        DB::table($localTable)->insert($batch);
+                        $batch = [];
                     }
+                    continue;
+                }
 
-                    // Upsert path
-                    if (!isset($existingMap[$name])) {
-                        $row['created_by'] = $actor;
-                        $row['created_at'] = $now;
-                        $batch[] = $row;
-                        $summary['inserted']++;
-                        if (count($batch) === $batchSize) {
-                            DB::table($localTable)->insert($batch);
-                            $batch = [];
-                        }
-                        continue;
-                    }
+                $cur = $existing[$name];
 
-                    $current = $existingMap[$name];
+                $needsUpdate = false;
 
-                    $needsUpdate = false;
-
-                    // Description update rule
-                    if ($overwrite) {
-                        if ($current->deskripsi !== $desc) $needsUpdate = true;
-                    } else {
-                        if (($current->deskripsi === null || $current->deskripsi === '') && $desc !== null) {
-                            $needsUpdate = true;
-                        }
-                    }
-
-                    // Structural / meta changes (company / kompartemen / departemen)
-                    if (
-                        $current->company_id      != $row['company_id'] ||
-                        $current->kompartemen_id  != $row['kompartemen_id'] ||
-                        $current->departemen_id   != $row['departemen_id']
-                    ) {
+                // Description rule
+                if ($overwrite) {
+                    if ($cur->deskripsi !== $payload['deskripsi']) {
                         $needsUpdate = true;
                     }
-
-                    if ($needsUpdate) {
-                        DB::table($localTable)
-                            ->where('id', $current->id)
-                            ->update($row);
-                        $summary['updated']++;
-                    } else {
-                        $summary['skipped']++;
+                } else {
+                    if (($cur->deskripsi === null || $cur->deskripsi === '') && $payload['deskripsi'] !== null) {
+                        $needsUpdate = true;
                     }
                 }
-            });
+
+                // Metadata differences
+                if (
+                    $cur->company_id     != $payload['company_id'] ||
+                    $cur->kompartemen_id != $payload['kompartemen_id'] ||
+                    $cur->departemen_id  != $payload['departemen_id']
+                ) {
+                    $needsUpdate = true;
+                }
+
+                if ($needsUpdate) {
+                    DB::table($localTable)->where('id', $cur->id)->update($payload);
+                    $summary['updated']++;
+                } else {
+                    $summary['skipped']++;
+                }
+            }
 
             if ($batch) {
+                DB::table($localTable)->insert($batch);
                 if ($fullRefresh) {
-                    DB::table($localTable)->insert($batch);
                     $summary['inserted'] += count($batch);
-                } else {
-                    DB::table($localTable)->insert($batch);
                 }
             }
 
             DB::commit();
 
             return response()->json([
-                'message' => 'Composite Role sync (metadata) completed',
+                'message' => 'Composite Role metadata sync completed (view-enriched)',
                 'summary' => $summary
             ]);
         } catch (\Throwable $e) {
             DB::rollBack();
             $summary['errors']++;
-            Log::error('Composite Role sync failed', ['error' => $e->getMessage()]);
+            Log::error('Composite Role metadata sync failed', ['error' => $e->getMessage()]);
             return response()->json([
                 'message' => 'Composite Role sync failed',
                 'error'   => $e->getMessage(),
