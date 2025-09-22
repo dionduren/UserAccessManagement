@@ -21,6 +21,12 @@ use App\Models\middle_db\view\UAMCompositeSingle;
 
 class ImportUAMController extends Controller
 {
+
+    public function index()
+    {
+        return view('imports.uam.index');
+    }
+
     /* =============================================================
      |  GENERIC INTERNAL HELPERS (Reusable for future CompositeRole)
      * ============================================================= */
@@ -177,23 +183,25 @@ class ImportUAMController extends Controller
         $fullRefresh = $opts['fullRefresh'] ?? false;
         $viewQuery   = $opts['viewQuery'];
         $pivotTable  = $opts['pivotTable'];
-        $colA        = $opts['colA'];
-        $colB        = $opts['colB'];
-        $localA      = $opts['localMapA']; // [UPPER(name)=>id]
-        $localB      = $opts['localMapB'];
+        $colA        = $opts['colA'];          // FK column name in pivot for entity A
+        $colB        = $opts['colB'];          // FK column name in pivot for entity B
+        $localA      = $opts['localMapA'];     // [NORMALIZED_KEY => id]
+        $localB      = $opts['localMapB'];     // [NORMALIZED_KEY => id]
         $makeKeyA    = $opts['makeKeyA'] ?? fn($v) => strtoupper($v);
         $makeKeyB    = $opts['makeKeyB'] ?? fn($v) => strtoupper($v);
         $batchSize   = $opts['batchSize'] ?? 1000;
+        $fieldA      = $opts['fieldA'] ?? null; // REQUIRED: source field name for A
+        $fieldB      = $opts['fieldB'] ?? null; // REQUIRED: source field name for B
 
         $summary = [
-            'source_total'        => (clone $viewQuery)->count(),
-            'processed'           => 0,
-            'inserted'            => 0,
-            'skipped_missing_a'   => 0,
-            'skipped_missing_b'   => 0,
-            'skipped_exists'      => 0,
-            'errors'              => 0,
-            'full_refresh'        => $fullRefresh,
+            'source_total'      => (clone $viewQuery)->count(),
+            'processed'         => 0,
+            'inserted'          => 0,
+            'skipped_missing_a' => 0,
+            'skipped_missing_b' => 0,
+            'skipped_exists'    => 0,
+            'errors'            => 0,
+            'full_refresh'      => $fullRefresh,
         ];
         if ($summary['source_total'] === 0) return $summary;
 
@@ -219,16 +227,22 @@ class ImportUAMController extends Controller
             }
 
             $batch = [];
-            $this->chunkQuery($viewQuery, $batchSize, function ($rows) use (&$summary, &$batch, $batchSize, $pivotTable, $colA, $colB, $localA, $localB, $makeKeyA, $makeKeyB, $existingPairs, $fullRefresh, $actor, $now) {
+            $this->chunkQuery($viewQuery, $batchSize, function ($rows) use (&$summary, &$batch, $batchSize, $pivotTable, $colA, $colB, $localA, $localB, $makeKeyA, $makeKeyB, $existingPairs, $fullRefresh, $actor, $now, $fieldA, $fieldB) {
                 foreach ($rows as $r) {
                     $summary['processed']++;
-                    $rawA = $r->single_role ?? $r->composite_role ?? null; // flexible
-                    $rawB = $r->tcode ?? $r->single_role_child ?? null;
 
-                    if ($rawA === null || $rawB === null) {
+                    $rawA = $fieldA ? ($r->{$fieldA} ?? null) : null;
+                    $rawB = $fieldB ? ($r->{$fieldB} ?? null) : null;
+
+                    if ($rawA === null || trim($rawA) === '') {
                         $summary['skipped_missing_a']++;
                         continue;
                     }
+                    if ($rawB === null || trim($rawB) === '') {
+                        $summary['skipped_missing_b']++;
+                        continue;
+                    }
+
                     $kA = $makeKeyA($rawA);
                     $kB = $makeKeyB($rawB);
 
@@ -237,6 +251,7 @@ class ImportUAMController extends Controller
                         $summary['skipped_missing_a']++;
                         continue;
                     }
+
                     $idB = $localB[$kB] ?? null;
                     if (!$idB) {
                         $summary['skipped_missing_b']++;
@@ -513,15 +528,11 @@ class ImportUAMController extends Controller
             'colA'        => 'single_role_id',
             'colB'        => 'tcode_id',
             'fullRefresh' => $full,
+            'fieldA'      => 'single_role',   // IMPORTANT
+            'fieldB'      => 'tcode',         // IMPORTANT
         ]);
 
         return response()->json(['message' => 'Single Role - Tcode sync done', 'summary' => $summary]);
-    }
-
-    // Index page (buttons UI)
-    public function index()
-    {
-        return view('imports.uam.index');
     }
 
     // 5. Incremental Composite Role sync (similar to single roles)
@@ -581,8 +592,8 @@ class ImportUAMController extends Controller
             'colA'        => 'composite_role_id',
             'colB'        => 'single_role_id',
             'fullRefresh' => $full,
-            'makeKeyA'    => fn($v) => strtoupper($v),
-            'makeKeyB'    => fn($v) => strtoupper($v),
+            'fieldA'      => 'composite_role', // FIX: ensure composite_role used as A
+            'fieldB'      => 'single_role',    // FIX: single_role used as B
         ]);
 
         return response()->json([

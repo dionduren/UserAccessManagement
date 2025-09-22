@@ -165,92 +165,95 @@ class SingleTcodeController extends Controller
             ->toJson();
     }
 
-    // DataTables JSON – paginate by single roles (NOT by each tcode row)
+    // DataTables JSON – server-side (row = single_role + optional tcode)
     public function datatable(Request $request)
     {
         $user = auth()->user();
         $userCompanyCode = $user->loginDetail->company_code ?? null;
 
         $draw   = (int)$request->input('draw');
-        $length = (int)$request->input('length', 10);  // single roles per page
+        $length = (int)$request->input('length', 10);
         $start  = (int)$request->input('start', 0);
         $search = $request->input('search.value');
 
-        $base = SingleRole::query()
-            ->select('tr_single_roles.*')
-            ->with(['tcodes' => function ($q) {
-                $q->orderBy('code');
-            }])
-            ->orderBy('tr_single_roles.nama');
+        // Base (flattened) query: one row per SingleRole–Tcode (or single role with null tcode)
+        $base = DB::table('tr_single_roles as sr')
+            ->leftJoin('pt_single_role_tcode as pivot', 'pivot.single_role_id', '=', 'sr.id')
+            ->leftJoin('tr_tcodes as t', 'pivot.tcode_id', '=', 't.id') // FIX: pivot.tcode_id references tr_tcodes.id
+            ->selectRaw('
+                sr.id as single_role_id,
+                sr.nama as single_role,
+                t.code as tcode,
+                t.deskripsi as tcode_desc
+            ');
 
+        // Total rows (before search)
         $recordsTotal = (clone $base)->count();
 
         if ($search) {
             $driver = DB::getDriverName();
             $like = $driver === 'pgsql' ? 'ILIKE' : 'LIKE';
-            $base->where(function ($q) use ($search, $like) {
-                $q->where('tr_single_roles.nama', $like, "%$search%")
-                    ->orWhereHas('tcodes', function ($tq) use ($search, $like) {
-                        $tq->where('tr_tcodes.code', $like, "%$search%")
-                            ->orWhere('tr_tcodes.deskripsi', $like, "%$search%");
-                    });
+            $base->where(function ($q) use ($like, $search) {
+                $q->where('sr.nama', $like, "%{$search}%")
+                    ->orWhere('t.code', $like, "%{$search}%")
+                    ->orWhere('t.deskripsi', $like, "%{$search}%");
             });
         }
 
         $recordsFiltered = (clone $base)->count();
 
+        // Ordering
         if ($request->has('order')) {
             foreach ($request->input('order') as $ord) {
                 $idx = (int)$ord['column'];
                 $dir = $ord['dir'] === 'desc' ? 'desc' : 'asc';
                 switch ($idx) {
-                    case 0: // single role
-                        $base->orderBy('tr_single_roles.nama', $dir);
+                    case 0: // single_role
+                        $base->orderBy('sr.nama', $dir)->orderBy('t.code');
                         break;
-                    case 1: // tcode column – fallback to role then tcode implicitly
-                        $base->orderBy('tr_single_roles.nama', $dir);
+                    case 1: // tcode
+                        // Order by tcode with NULLS last (pgsql) / emulate for others
+                        if (DB::getDriverName() === 'pgsql') {
+                            $base->orderByRaw("t.code IS NULL")->orderBy('t.code', $dir);
+                        } else {
+                            $base->orderByRaw("(t.code IS NULL) asc")->orderBy('t.code', $dir);
+                        }
+                        break;
+                    case 2: // description
+                        if (DB::getDriverName() === 'pgsql') {
+                            $base->orderByRaw("t.deskripsi IS NULL")->orderBy('t.deskripsi', $dir);
+                        } else {
+                            $base->orderByRaw("(t.deskripsi IS NULL) asc")->orderBy('t.deskripsi', $dir);
+                        }
                         break;
                     default:
-                        $base->orderBy('tr_single_roles.nama');
+                        $base->orderBy('sr.nama')->orderBy('t.code');
                 }
             }
         } else {
-            $base->orderBy('tr_single_roles.nama');
+            $base->orderBy('sr.nama')->orderBy('t.code');
         }
 
-        $singleRoles = $base->skip($start)->take($length)->get();
+        // Pagination
+        $rows = $base->skip($start)->take($length)->get();
 
         $data = [];
-        foreach ($singleRoles as $sr) {
+        foreach ($rows as $r) {
             $canModify = $userCompanyCode === 'A000';
-
             $actionsHtml = $canModify
-                ? '<a href="' . route('single-tcode.edit', $sr->id) . '" class="btn btn-primary btn-sm mb-1 w-100">Edit</a>'
-                . '<form action="' . route('single-tcode.destroy', $sr->id) . '" method="POST" onsubmit="return confirm(\'Remove all tcodes for this Single Role?\')">'
+                ? '<a href="' . route('single-tcode.edit', $r->single_role_id) . '" class="btn btn-primary btn-sm mb-1 w-100">Edit</a>'
+                . '<form action="' . route('single-tcode.destroy', $r->single_role_id) . '" method="POST" onsubmit="return confirm(\'Remove all tcodes for this Single Role?\')">'
                 . csrf_field() . method_field('DELETE')
                 . '<button class="btn btn-danger btn-sm w-100">Delete</button></form>'
                 : '<span class="text-muted small">Read only</span>';
 
-            if ($sr->tcodes->isEmpty()) {
-                $data[] = [
-                    'single_role' => $sr->nama,
-                    'tcode'       => '-',
-                    'description' => '-',
-                    'group_key'   => $sr->id,
-                    'actions'     => $actionsHtml,
-                ];
-                continue;
-            }
-
-            foreach ($sr->tcodes as $t) {
-                $data[] = [
-                    'single_role' => $sr->nama,
-                    'tcode'       => $t->code,
-                    'description' => $t->deskripsi ?: '-',
-                    'group_key'   => $sr->id,
-                    'actions'     => $actionsHtml,
-                ];
-            }
+            $data[] = [
+                'single_role' => $r->single_role,
+                'tcode'       => $r->tcode ?: '-',
+                'description' => $r->tcode_desc ?: '-',
+                'group_key'   => $r->single_role_id,
+                'actions'     => $actionsHtml,
+            ];
         }
 
         return response()->json([

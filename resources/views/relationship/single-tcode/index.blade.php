@@ -92,20 +92,25 @@
                         className: 'actions-col'
                     },
                 ],
+                order: [
+                    [0, 'asc']
+                ],
                 drawCallback: function() {
                     applyRowSpans(this.api());
                 }
             });
 
             function applyRowSpans(api) {
-                groupColumn(api, 0); // single role
-                groupColumn(api, 3); // actions (group by single role)
+                // Group single_role (col 0) and actions (col 3)
+                groupColumn(api, 0);
+                groupColumn(api, 3);
             }
 
             function groupColumn(api, colIndex) {
                 let lastKey = null;
                 let rowspanCell = null;
                 let spanCount = 0;
+
                 api.rows({
                     page: 'current'
                 }).every(function(rowIdx) {
@@ -113,7 +118,7 @@
                     const key = data.group_key;
                     const cell = $(api.cell(rowIdx, colIndex).node());
 
-                    if (colIndex === 0 || colIndex === 1 || colIndex === 4) {
+                    if (colIndex === 0 || colIndex === 3) {
                         if (lastKey === key) {
                             cell.addClass('_grp-hidden');
                             spanCount++;
