@@ -603,6 +603,23 @@ class ImportUAMController extends Controller
     }
 
     // 7. Sync ALL (sequential)
+    /**
+     * Batch run all syncs in required priority (no AO in this composite flow order):
+     * 1. Tcodes (full refresh)
+     * 2. Single Roles (incremental)
+     * 3. SingleRole - Tcode pivot
+     * 4. Composite Roles (incremental)
+     * 5. CompositeRole - SingleRole pivot
+     *
+     * Query/body flags:
+     *  overwrite_single=1
+     *  overwrite_composite=1
+     *  all_patterns=1   (include all patterns for single & composite)
+     *  full_single_tcode=1  (truncate SR-TCODE pivot first)
+     *  full_composite_single=1 (truncate CR-SR pivot first)
+     *
+     * NOTE: Relationship syncs will NOT create missing parent rows; ensure parent syncs succeed first.
+     */
     public function sync_all(Request $request)
     {
         @set_time_limit(0);
@@ -615,40 +632,59 @@ class ImportUAMController extends Controller
 
         $results = [];
 
-        // Tcodes (full refresh)
-        $results['tcodes'] = json_decode($this->sync_tcodes(new Request())->getContent(), true);
+        // 1. Tcodes
+        $results['1_tcodes'] = json_decode(
+            $this->sync_tcodes(new Request())->getContent(),
+            true
+        );
 
-        // Single Roles
+        // 2. Single Roles
         $reqSingle = new Request([
             'overwrite' => $overwriteSingle,
             'all'       => $allPatterns
         ]);
-        $results['single_roles'] = json_decode($this->sync_single_roles($reqSingle)->getContent(), true);
+        $results['2_single_roles'] = json_decode(
+            $this->sync_single_roles($reqSingle)->getContent(),
+            true
+        );
 
-        // Composite Roles
+        // 3. SingleRole - Tcode pivot
+        $reqSRT = new Request([
+            'full_refresh' => $fullSingleTcode
+        ]);
+        $results['3_single_role_tcodes'] = json_decode(
+            $this->sync_single_role_tcodes($reqSRT)->getContent(),
+            true
+        );
+
+        // 4. Composite Roles
         $reqComposite = new Request([
             'overwrite' => $overwriteComposite,
             'all'       => $allPatterns
         ]);
-        $results['composite_roles'] = json_decode($this->sync_composite_roles($reqComposite)->getContent(), true);
+        $results['4_composite_roles'] = json_decode(
+            $this->sync_composite_roles($reqComposite)->getContent(),
+            true
+        );
 
-        // AO
-        $results['ao'] = json_decode($this->sync_ao(new Request())->getContent(), true);
-
-        // SingleRole - Tcodes pivot
-        $reqSRT = new Request([
-            'full_refresh' => $fullSingleTcode
-        ]);
-        $results['single_role_tcodes'] = json_decode($this->sync_single_role_tcodes($reqSRT)->getContent(), true);
-
-        // Composite Role - Single Role pivot
+        // 5. CompositeRole - SingleRole pivot
         $reqCRSR = new Request([
             'full_refresh' => $fullCompositeSingle
         ]);
-        $results['composite_role_single_roles'] = json_decode($this->sync_composite_role_single_roles($reqCRSR)->getContent(), true);
+        $results['5_composite_role_single_roles'] = json_decode(
+            $this->sync_composite_role_single_roles($reqCRSR)->getContent(),
+            true
+        );
 
         return response()->json([
-            'message' => 'All sync processes completed',
+            'message' => 'All sync processes (priority chain) completed',
+            'order'   => [
+                '1_tcodes',
+                '2_single_roles',
+                '3_single_role_tcodes',
+                '4_composite_roles',
+                '5_composite_role_single_roles'
+            ],
             'results' => $results
         ]);
     }
