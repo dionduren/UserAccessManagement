@@ -499,7 +499,7 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/unit-kerja/karyawan-sync', [ImportUnitKerjaController::class, 'karyawanSync'])->name('unit_kerja.karyawan.sync');
 
         Route::get('/uam', [ImportUAMController::class, 'index'])->name('uam.index');
-        Route::get('/uam/sync', [ImportUAMController::class, 'sync_all'])->name('uam.sync');
+        Route::post('/uam/sync', [ImportUAMController::class, 'sync_all'])->name('uam.sync');
         Route::post('/uam/composite-roles', [ImportUAMController::class, 'sync_composite_roles'])->name('uam.composite_roles');
         Route::post('/uam/composite_ao', [ImportUAMController::class, 'sync_ao'])->name('uam.composite_ao');
         Route::post('/uam/composite-role-single-roles', [ImportUAMController::class, 'sync_composite_role_single_roles'])->name('uam.composite_role_single_roles');
