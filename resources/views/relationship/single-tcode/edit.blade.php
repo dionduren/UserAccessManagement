@@ -73,16 +73,13 @@
                     <div class="mb-3">
                         <label for="single_role_id" class="form-label">Single Roles</label>
                         <select name="single_role_id" id="single_role_id" class="form-control select2" required>
-                            @foreach ($companies as $company)
-                                <optgroup label="{{ $company->nama }}">
-                                    @foreach ($company->singleRoles as $role)
-                                        <option value="{{ $role->id }}"
-                                            {{ $role->id == $singleRole->id ? 'selected' : '' }}>
-                                            {{ $role->nama }}
-                                        </option>
-                                    @endforeach
-                                </optgroup>
+
+                            @foreach ($singleRoles as $role)
+                                <option value="{{ $role->id }}" {{ $role->id == $singleRole->id ? 'selected' : '' }}>
+                                    {{ $role->nama }}
+                                </option>
                             @endforeach
+
                         </select>
                     </div>
 

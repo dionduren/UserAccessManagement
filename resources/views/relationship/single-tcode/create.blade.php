@@ -73,17 +73,6 @@
                 <form action="{{ route('single-tcode.store') }}" method="POST">
                     @csrf
 
-                    <!-- Company Dropdown -->
-                    <div class="mb-3">
-                        <label for="company_id" class="form-label">Company</label>
-                        <select name="company_id" id="company_id" class="form-control select2" required>
-                            <option value="">Pilih Perusahaan</option>
-                            @foreach ($companies as $company)
-                                <option value="{{ $company->company_code }}">{{ $company->nama }}</option>
-                            @endforeach
-                        </select>
-                    </div>
-
                     <!-- Single Role Dropdown -->
                     <div class="mb-3">
                         <label for="single_role_id" class="form-label">Single Role</label>

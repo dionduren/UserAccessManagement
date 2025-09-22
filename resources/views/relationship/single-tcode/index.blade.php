@@ -37,26 +37,6 @@
             </div>
             <div class="card-body">
                 <div class="d-flex flex-wrap align-items-end gap-2 mb-3">
-                    @if ($userCompanyCode === 'A000')
-                        <form id="filterForm" class="d-flex gap-2">
-                            <div>
-                                <label class="form-label mb-1 small">Company</label>
-                                <select id="companyFilter" name="company_id" class="form-select form-select-sm">
-                                    <option value="">-- All --</option>
-                                    @foreach ($companies as $c)
-                                        <option value="{{ $c->company_code }}" @selected($selectedCompany === $c->company_code)>
-                                            {{ $c->nama }}
-                                        </option>
-                                    @endforeach
-                                </select>
-                            </div>
-                        </form>
-                    @else
-                        <span class="badge bg-secondary">
-                            Company: {{ $companies->first()->nama }} ({{ $companies->first()->company_code }})
-                        </span>
-                    @endif
-
                     <a href="{{ route('single-tcode.create') }}" class="btn btn-success btn-sm">
                         <i class="bi bi-plus-lg"></i> Create
                     </a>
@@ -66,7 +46,6 @@
                     <table id="singleRoleTcodeTable" class="table table-sm table-bordered w-100">
                         <thead class="table-light">
                             <tr>
-                                <th width="15%">Company</th>
                                 <th width="20%">Single Role</th>
                                 <th width="20%">Tcode</th>
                                 <th>Description</th>
@@ -91,16 +70,8 @@
                 lengthMenu: [10, 25, 50, 100],
                 ajax: {
                     url: '{{ route('single-tcode.datatable') }}',
-                    data: function(d) {
-                        d.company_id = $('#companyFilter').val();
-                    }
                 },
                 columns: [{
-                        data: 'company',
-                        name: 'company',
-                        className: 'company-col'
-                    },
-                    {
                         data: 'single_role',
                         name: 'single_role',
                         className: 'single-col'
@@ -126,14 +97,9 @@
                 }
             });
 
-            $('#companyFilter').on('change', function() {
-                table.ajax.reload();
-            });
-
             function applyRowSpans(api) {
-                groupColumn(api, 0); // company
-                groupColumn(api, 1); // single role
-                groupColumn(api, 4); // actions (group by single role)
+                groupColumn(api, 0); // single role
+                groupColumn(api, 3); // actions (group by single role)
             }
 
             function groupColumn(api, colIndex) {

@@ -5,7 +5,6 @@ namespace App\Http\Controllers\Relationship;
 use App\Http\Controllers\Controller;
 
 use App\Models\Tcode;
-use App\Models\Company;
 use App\Models\SingleRole;
 
 use Yajra\DataTables\Facades\DataTables;
@@ -20,17 +19,10 @@ class SingleTcodeController extends Controller
      */
     public function index(Request $request)
     {
-        $user = auth()->user();
-        $userCompanyCode = $user->loginDetail->company_code ?? null;
-
-        $companies = $userCompanyCode === 'A000'
-            ? Company::orderBy('nama')->get()
-            : Company::where('company_code', $userCompanyCode)->get();
+        $userCompanyCode = auth()->user()->loginDetail->company_code ?? null;
 
         return view('relationship.single-tcode.index', [
-            'companies'       => $companies,
-            'userCompanyCode' => $userCompanyCode,
-            'selectedCompany' => $request->get('company_id')
+            'userCompanyCode' => $userCompanyCode
         ]);
     }
 
@@ -39,11 +31,10 @@ class SingleTcodeController extends Controller
      */
     public function create()
     {
-        $companies = Company::all();
         $singleRoles = SingleRole::all();
         $tcodes = Tcode::all();
 
-        return view('relationship.single-tcode.create', compact('companies', 'singleRoles', 'tcodes'));
+        return view('relationship.single-tcode.create', compact('singleRoles', 'tcodes'));
     }
 
     /**
@@ -83,25 +74,19 @@ class SingleTcodeController extends Controller
     {
         $singleRole = SingleRole::with('tcodes')->findOrFail($id);
 
-        $user = auth()->user();
-        $userCompanyCode = $user->loginDetail->company_code ?? null;
+        $userCompanyCode = auth()->user()->loginDetail->company_code ?? null;
 
-        if ($userCompanyCode !== 'A000' && $singleRole->company_id !== $userCompanyCode) {
+        if ($userCompanyCode !== 'A000') {
             return redirect()
                 ->route('single-tcode.index')
                 ->withErrors(['error' => 'You are not authorized to edit this single role.']);
         }
-
-        $companies = $userCompanyCode === 'A000'
-            ? Company::with('singleRoles')->get()
-            : Company::with('singleRoles')->where('company_code', $userCompanyCode)->get();
 
         $tcodes = Tcode::all();
         $selectedTcodes = $singleRole->tcodes->pluck('code')->toArray();
 
         return view('relationship.single-tcode.edit', compact(
             'singleRole',
-            'companies',
             'tcodes',
             'selectedTcodes'
         ));
@@ -180,21 +165,6 @@ class SingleTcodeController extends Controller
             ->toJson();
     }
 
-
-    /**
-     * Search the tcodes and single roles based on the company id
-     */
-    public function searchByCompany(Request $request)
-    {
-        $companyId = $request->input('company_id');
-        $tcodes = Tcode::whereHas('singleRoles', function ($query) use ($companyId) {
-            $query->where('company_id', $companyId);
-        })->get();
-        $singleRoles = SingleRole::where('company_id', $companyId)->get();
-
-        return response()->json(['tcodes' => $tcodes, 'singleRoles' => $singleRoles]);
-    }
-
     // DataTables JSON – paginate by single roles (NOT by each tcode row)
     public function datatable(Request $request)
     {
@@ -207,18 +177,11 @@ class SingleTcodeController extends Controller
         $search = $request->input('search.value');
 
         $base = SingleRole::query()
-            ->leftJoin('ms_company', 'ms_company.company_code', '=', 'tr_single_roles.company_id')
-            ->select('tr_single_roles.*', 'ms_company.nama as company_name')
+            ->select('tr_single_roles.*')
             ->with(['tcodes' => function ($q) {
                 $q->orderBy('code');
             }])
-            ->orderBy('tr_single_roles.company_id');
-
-        if ($userCompanyCode !== 'A000') {
-            $base->where('tr_single_roles.company_id', $userCompanyCode);
-        } elseif ($request->filled('company_id')) {
-            $base->where('tr_single_roles.company_id', $request->company_id);
-        }
+            ->orderBy('tr_single_roles.nama');
 
         $recordsTotal = (clone $base)->count();
 
@@ -227,8 +190,6 @@ class SingleTcodeController extends Controller
             $like = $driver === 'pgsql' ? 'ILIKE' : 'LIKE';
             $base->where(function ($q) use ($search, $like) {
                 $q->where('tr_single_roles.nama', $like, "%$search%")
-                    ->orWhere('tr_single_roles.company_id', $like, "%$search%")
-                    ->orWhere('ms_company.nama', $like, "%$search%")
                     ->orWhereHas('tcodes', function ($tq) use ($search, $like) {
                         $tq->where('tr_tcodes.code', $like, "%$search%")
                             ->orWhere('tr_tcodes.deskripsi', $like, "%$search%");
@@ -243,13 +204,10 @@ class SingleTcodeController extends Controller
                 $idx = (int)$ord['column'];
                 $dir = $ord['dir'] === 'desc' ? 'desc' : 'asc';
                 switch ($idx) {
-                    case 0: // company
-                        $base->orderBy('ms_company.nama', $dir)->orderBy('tr_single_roles.nama');
-                        break;
-                    case 1: // single role
+                    case 0: // single role
                         $base->orderBy('tr_single_roles.nama', $dir);
                         break;
-                    case 2: // tcode column – fallback to role then tcode implicitly
+                    case 1: // tcode column – fallback to role then tcode implicitly
                         $base->orderBy('tr_single_roles.nama', $dir);
                         break;
                     default:
@@ -257,15 +215,14 @@ class SingleTcodeController extends Controller
                 }
             }
         } else {
-            $base->orderBy('ms_company.nama')->orderBy('tr_single_roles.nama');
+            $base->orderBy('tr_single_roles.nama');
         }
 
         $singleRoles = $base->skip($start)->take($length)->get();
 
         $data = [];
         foreach ($singleRoles as $sr) {
-            $companyDisplay = $sr->company_name ?? '-';
-            $canModify = $userCompanyCode === 'A000' || $sr->company_id === $userCompanyCode;
+            $canModify = $userCompanyCode === 'A000';
 
             $actionsHtml = $canModify
                 ? '<a href="' . route('single-tcode.edit', $sr->id) . '" class="btn btn-primary btn-sm mb-1 w-100">Edit</a>'
@@ -276,7 +233,6 @@ class SingleTcodeController extends Controller
 
             if ($sr->tcodes->isEmpty()) {
                 $data[] = [
-                    'company'     => $companyDisplay,
                     'single_role' => $sr->nama,
                     'tcode'       => '-',
                     'description' => '-',
@@ -288,7 +244,6 @@ class SingleTcodeController extends Controller
 
             foreach ($sr->tcodes as $t) {
                 $data[] = [
-                    'company'     => $companyDisplay,
                     'single_role' => $sr->nama,
                     'tcode'       => $t->code,
                     'description' => $t->deskripsi ?: '-',
