@@ -325,8 +325,6 @@ class ImportUAMController extends Controller
                     $batch[] = [
                         'code'        => $code,
                         'deskripsi'   => trim((string)$r->definisi) ?: null,
-                        'company_id'  => null,
-                        'sap_module'  => null,
                         'created_by'  => $actor,
                         'updated_by'  => $actor,
                         'created_at'  => $now,
@@ -547,7 +545,7 @@ class ImportUAMController extends Controller
             'sourceDesc'   => fn($r) => $r->definisi,
             'uppercaseKey' => true,
             'overwrite'    => $overwrite,
-            'extraColumns' => [] // add company_id if needed
+            'extraColumns' => []
         ]);
 
         return response()->json([

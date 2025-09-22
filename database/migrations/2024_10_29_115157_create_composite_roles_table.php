@@ -10,7 +10,7 @@ class CreateCompositeRolesTable extends Migration
     {
         Schema::create('tr_composite_roles', function (Blueprint $table) {
             $table->id();
-            $table->string('company_id');
+            $table->string('company_id')->nullable();
             $table->string('kompartemen_id')->nullable();
             $table->string('departemen_id')->nullable();
             $table->unsignedBigInteger('jabatan_id')->nullable();
