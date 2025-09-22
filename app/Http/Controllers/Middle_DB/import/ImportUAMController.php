@@ -555,107 +555,120 @@ class ImportUAMController extends Controller
         $overwrite   = $request->boolean('overwrite', false);
         $all         = $request->boolean('all', false);
         $fullRefresh = $request->boolean('full_refresh', false);
+        $debug       = $request->boolean('debug', false);
 
         $actor = Auth::user()?->name ?? 'system';
         $now   = now();
 
-        // 1. Load base descriptions (optional pattern)
+        // Base descriptions (middle table)
         $baseDescQuery = MiddleCompositeRole::query()
             ->select(['composite_role', 'definisi'])
             ->when(!$all, fn($q) => $q->sapPattern());
 
-        $baseDescMap = $baseDescQuery
-            ->get()
-            ->reduce(function ($carry, $row) {
-                $carry[strtoupper($row->composite_role)] = trim((string)$row->definisi) ?: null;
-                return $carry;
+        $baseDescMap = $baseDescQuery->get()
+            ->reduce(function ($c, $r) {
+                $c[strtoupper($r->composite_role)] = trim((string)$r->definisi) ?: null;
+                return $c;
             }, []);
 
-        // 2. Aggregate metadata from the view
-        // Adjust column names below if your view differs (e.g. composite_role_desc -> definisi / description)
-        $viewQuery = UAMCompositeSingle::query()
-            ->select([
-                'composite_role',
-                'company_id',
-                'kompartemen_id',
-                'departemen_id',
-                DB::raw('COALESCE(composite_role_desc, NULL) as composite_role_desc')
-            ]);
+        // Detect available columns in the view (to avoid selecting non-existent columns)
+        $viewTable = (new UAMCompositeSingle)->getTable();
+        $schemaCols = [];
+        try {
+            $schemaCols = DB::getSchemaBuilder()->getColumnListing($viewTable);
+        } catch (\Throwable $e) {
+            if ($debug) Log::warning('Cannot list columns for view', ['view' => $viewTable, 'error' => $e->getMessage()]);
+        }
+        $schemaColsLower = array_map('strtolower', $schemaCols);
 
-        $rows = $viewQuery->get();
+        // Helper to pick first existing column out of candidates
+        $pick = function (array $candidates) use ($schemaColsLower) {
+            foreach ($candidates as $cand) {
+                if (in_array(strtolower($cand), $schemaColsLower, true)) return $cand;
+            }
+            return null;
+        };
 
-        if ($rows->isEmpty() && empty($baseDescMap)) {
+        $colCompany     = $pick(['company_id', 'company_code', 'company']);  // adapt if needed
+        $colKompartemen = $pick(['kompartemen_id', 'kompartemen_code', 'kompartemen']);
+        $colDepartemen  = $pick(['departemen_id', 'departemen_code', 'departemen']);
+        $colDescView    = $pick(['composite_role_desc', 'composite_role_deskripsi', 'deskripsi', 'definisi', 'description']);
+
+        // Build select list (only existing)
+        $selects = ['composite_role'];
+        if ($colCompany)     $selects[] = $colCompany;
+        if ($colKompartemen) $selects[] = $colKompartemen;
+        if ($colDepartemen)  $selects[] = $colDepartemen;
+        if ($colDescView)    $selects[] = $colDescView . ' as __view_desc';
+
+        $metadataAvailable = (bool)($colCompany || $colKompartemen || $colDepartemen);
+
+        $viewQuery = UAMCompositeSingle::query()->select($selects);
+
+        $viewRows = $viewQuery->get();
+
+        if ($viewRows->isEmpty() && empty($baseDescMap)) {
             return response()->json([
-                'message' => 'No composite role data found in sources (view & base table empty).',
+                'message' => 'No composite role data found (both sources empty).',
                 'summary' => ['source_total' => 0]
             ], 422);
         }
 
-        // Aggregate per composite_role
-        $agg = []; // key => ['desc'=>..., 'company_id'=>.., 'kompartemen_id'=>.., 'departemen_id'=>..]
+        // Aggregate
+        $agg = [];
         $conflicts = 0;
 
-        foreach ($rows as $r) {
+        foreach ($viewRows as $r) {
             $name = strtoupper(trim($r->composite_role ?? ''));
             if ($name === '') continue;
 
-            $meta = [
-                'company_id'     => $r->company_id,
-                'kompartemen_id' => $r->kompartemen_id,
-                'departemen_id'  => $r->departemen_id,
-            ];
+            $metaCompany     = $colCompany     ? $r->{$colCompany}     : null;
+            $metaKompartemen = $colKompartemen ? $r->{$colKompartemen} : null;
+            $metaDepartemen  = $colDepartemen  ? $r->{$colDepartemen}  : null;
+            $descView        = $colDescView    ? (trim((string)$r->__view_desc) ?: null) : null;
 
             if (!isset($agg[$name])) {
                 $agg[$name] = [
-                    'company_id'     => $meta['company_id'],
-                    'kompartemen_id' => $meta['kompartemen_id'],
-                    'departemen_id'  => $meta['departemen_id'],
-                    'desc_view'      => trim((string)$r->composite_role_desc) ?: null,
+                    'company_id'     => $metaCompany,
+                    'kompartemen_id' => $metaKompartemen,
+                    'departemen_id'  => $metaDepartemen,
+                    'desc_view'      => $descView,
                 ];
                 continue;
             }
 
-            // Conflict detection (metadata differs)
             $prev = $agg[$name];
             if (
-                ($prev['company_id']     ?? null) !== ($meta['company_id']     ?? null) ||
-                ($prev['kompartemen_id'] ?? null) !== ($meta['kompartemen_id'] ?? null) ||
-                ($prev['departemen_id']  ?? null) !== ($meta['departemen_id']  ?? null)
+                ($metaCompany     !== null && $prev['company_id']     !== null && $prev['company_id']     != $metaCompany) ||
+                ($metaKompartemen !== null && $prev['kompartemen_id'] !== null && $prev['kompartemen_id'] != $metaKompartemen) ||
+                ($metaDepartemen  !== null && $prev['departemen_id']  !== null && $prev['departemen_id']  != $metaDepartemen)
             ) {
                 $conflicts++;
-                // Keep first; optionally could choose non-null overrides
-                // Simple enrichment: fill nulls if previous were null
-                if ($prev['company_id'] === null && $meta['company_id'] !== null) {
-                    $agg[$name]['company_id'] = $meta['company_id'];
-                }
-                if ($prev['kompartemen_id'] === null && $meta['kompartemen_id'] !== null) {
-                    $agg[$name]['kompartemen_id'] = $meta['kompartemen_id'];
-                }
-                if ($prev['departemen_id'] === null && $meta['departemen_id'] !== null) {
-                    $agg[$name]['departemen_id'] = $meta['departemen_id'];
-                }
             }
 
-            // Keep first non-null description from view if we do not have one yet
-            if (empty($agg[$name]['desc_view']) && !empty($r->composite_role_desc)) {
-                $agg[$name]['desc_view'] = trim((string)$r->composite_role_desc);
+            // Fill nulls with non-null metadata
+            if ($prev['company_id'] === null     && $metaCompany     !== null) $agg[$name]['company_id']     = $metaCompany;
+            if ($prev['kompartemen_id'] === null && $metaKompartemen !== null) $agg[$name]['kompartemen_id'] = $metaKompartemen;
+            if ($prev['departemen_id'] === null  && $metaDepartemen  !== null) $agg[$name]['departemen_id']  = $metaDepartemen;
+
+            // Take first non-null view description if we don't already have one
+            if (empty($agg[$name]['desc_view']) && $descView) {
+                $agg[$name]['desc_view'] = $descView;
             }
         }
 
-        // 3. Combine final dataset (description preference: base table definisi -> view desc)
+        // Merge with baseDescMap (priority: base definisi > view desc)
         $finalDataset = [];
         foreach ($agg as $name => $data) {
-            $desc = $baseDescMap[$name] ?? $data['desc_view'] ?? null;
             $finalDataset[$name] = [
                 'nama'            => $name,
-                'deskripsi'       => $desc,
-                'company_id'      => $data['company_id'] ?? null,
+                'deskripsi'       => $baseDescMap[$name] ?? $data['desc_view'] ?? null,
+                'company_id'      => $data['company_id']     ?? null,
                 'kompartemen_id'  => $data['kompartemen_id'] ?? null,
-                'departemen_id'   => $data['departemen_id'] ?? null,
+                'departemen_id'   => $data['departemen_id']  ?? null,
             ];
         }
-
-        // Add any composite roles present only in base table (without metadata)
+        // Add those only in base descriptions
         foreach ($baseDescMap as $name => $desc) {
             if (!isset($finalDataset[$name])) {
                 $finalDataset[$name] = [
@@ -669,18 +682,24 @@ class ImportUAMController extends Controller
         }
 
         $localTable = (new LocalCompositeRole)->getTable();
-
         $summary = [
-            'mode'             => $fullRefresh ? 'full_refresh' : 'upsert',
-            'aggregated_total' => count($finalDataset),
-            'conflicts_meta'   => $conflicts,
-            'processed'        => 0,
-            'inserted'         => 0,
-            'updated'          => 0,
-            'skipped'          => 0,
-            'errors'           => 0,
-            'overwrite_desc'   => $overwrite,
-            'full_refresh'     => $fullRefresh,
+            'mode'               => $fullRefresh ? 'full_refresh' : 'upsert',
+            'aggregated_total'   => count($finalDataset),
+            'conflicts_meta'     => $conflicts,
+            'metadata_columns'   => [
+                'company'     => $colCompany,
+                'kompartemen' => $colKompartemen,
+                'departemen'  => $colDepartemen,
+                'view_desc'   => $colDescView,
+            ],
+            'metadata_available' => $metadataAvailable,
+            'processed'          => 0,
+            'inserted'           => 0,
+            'updated'            => 0,
+            'skipped'            => 0,
+            'errors'             => 0,
+            'overwrite_desc'     => $overwrite,
+            'full_refresh'       => $fullRefresh,
         ];
 
         DB::beginTransaction();
@@ -693,7 +712,6 @@ class ImportUAMController extends Controller
                 }
             }
 
-            // Existing map only needed for upsert
             $existing = [];
             if (!$fullRefresh) {
                 $existing = DB::table($localTable)
@@ -746,21 +764,16 @@ class ImportUAMController extends Controller
                 }
 
                 $cur = $existing[$name];
-
                 $needsUpdate = false;
 
-                // Description rule
                 if ($overwrite) {
-                    if ($cur->deskripsi !== $payload['deskripsi']) {
-                        $needsUpdate = true;
-                    }
+                    if ($cur->deskripsi !== $payload['deskripsi']) $needsUpdate = true;
                 } else {
                     if (($cur->deskripsi === null || $cur->deskripsi === '') && $payload['deskripsi'] !== null) {
                         $needsUpdate = true;
                     }
                 }
 
-                // Metadata differences
                 if (
                     $cur->company_id     != $payload['company_id'] ||
                     $cur->kompartemen_id != $payload['kompartemen_id'] ||
@@ -786,14 +799,18 @@ class ImportUAMController extends Controller
 
             DB::commit();
 
+            if ($debug) {
+                Log::info('Composite role sync debug', $summary);
+            }
+
             return response()->json([
-                'message' => 'Composite Role metadata sync completed (view-enriched)',
+                'message' => 'Composite Role metadata sync completed (dynamic view columns)',
                 'summary' => $summary
             ]);
         } catch (\Throwable $e) {
             DB::rollBack();
             $summary['errors']++;
-            Log::error('Composite Role metadata sync failed', ['error' => $e->getMessage()]);
+            Log::error('Composite Role sync failed', ['error' => $e->getMessage()]);
             return response()->json([
                 'message' => 'Composite Role sync failed',
                 'error'   => $e->getMessage(),
