@@ -82,19 +82,11 @@
                     type: "GET",
                 },
                 columns: [{
-                        data: 'company_code',
-                        title: 'Company Code'
-                    },
-                    // {
-                    //     data: 'company_name',
-                    //     title: 'Perusahaan'
-                    // },
-                    {
                         data: 'single_role',
                         title: 'Single Role'
                     },
                     {
-                        data: 'single_role_desc',
+                        data: 'single_role_description',
                         title: 'Description'
                     },
                     {
@@ -102,12 +94,8 @@
                         title: 'Tcode'
                     },
                     {
-                        data: 'tcode_desc',
+                        data: 'tcode_description',
                         title: 'Description'
-                    },
-                    {
-                        data: 'sap_module',
-                        title: 'Modul SAP'
                     },
                 ],
                 responsive: true,

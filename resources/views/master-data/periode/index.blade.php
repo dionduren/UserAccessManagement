@@ -4,16 +4,16 @@
     <div class="container-fluid">
         <h1>Master Data Periode</h1>
 
-        <a href="{{ route('periode.create') }}" target="_blank" class="btn btn-outline-primary mb-3">
-            {{-- <a class="btn btn-outline-secondary mb-3" disabled> --}}
-            <i class="bi bi-plus"></i> Buat Periode Baru
-        </a>
+        @if ($user_company === 'A000')
+            <a href="{{ route('periode.create') }}" target="_blank" class="btn btn-outline-primary mb-3">
+                <i class="bi bi-plus"></i> Buat Periode Baru
+            </a>
+        @endif
 
         @if (session('status'))
             <div class="alert alert-success">{{ session('status') }}</div>
         @endif
 
-        <!-- Success Message -->
         @if (session('success'))
             <div class="alert alert-success">
                 <h4>Success:</h4>
@@ -27,7 +27,9 @@
                     <th>id</th>
                     <th>Definisi</th>
                     <th>Tanggal Pembuatan</th>
-                    <th>Action</th>
+                    @if ($user_company === 'A000')
+                        <th>Action</th>
+                    @endif
                 </tr>
             </thead>
         </table>
@@ -37,31 +39,36 @@
 @section('scripts')
     <script>
         $(document).ready(function() {
-            let masterData = {}; // Store parsed JSON for efficient lookups
+            const showAction = @json($user_company === 'A000');
 
-            let periodeTable = $('#periode_table').DataTable({
+            let columns = [{
+                    data: 'id',
+                    name: 'id'
+                },
+                {
+                    data: 'definisi',
+                    name: 'definisi'
+                },
+                {
+                    data: 'tanggal_create_periode',
+                    name: 'tanggal_create_periode'
+                },
+            ];
+
+            if (showAction) {
+                columns.push({
+                    data: 'action',
+                    name: 'action',
+                    orderable: false,
+                    searchable: false
+                });
+            }
+
+            $('#periode_table').DataTable({
                 processing: true,
                 serverSide: false,
                 ajax: "{{ route('periode.index') }}",
-                columns: [{
-                        data: 'id',
-                        name: 'id'
-                    },
-                    {
-                        data: 'definisi',
-                        name: 'definisi'
-                    },
-                    {
-                        data: 'tanggal_create_periode',
-                        name: 'tanggal_create_periode'
-                    },
-                    {
-                        data: 'action',
-                        name: 'action',
-                        orderable: false,
-                        searchable: false
-                    }
-                ],
+                columns: columns,
                 responsive: true,
                 searching: true,
                 paging: true,
@@ -76,54 +83,6 @@
                     [2, 'asc']
                 ]
             });
-
         });
-
-        // ✅ SweetAlert2 Delete Confirmation
-        // function deletePeriode(id) {
-        //     Swal.fire({
-        //         title: "Apakah anda yakin?",
-        //         text: "Anda tidak bisa mengembalikan data yang dihapus!",
-        //         icon: "warning",
-        //         showCancelButton: true,
-        //         confirmButtonColor: "#d33",
-        //         cancelButtonColor: "#3085d6",
-        //         confirmButtonText: "Ya, hapus!",
-        //         cancelButtonText: "Tidak Jadi"
-        //     }).then((result) => {
-        //         if (result.isConfirmed) {
-        //             $.ajax({
-        //                 url: '/master_data/' + id,
-        //                 type: 'DELETE',
-        //                 data: {
-        //                     _token: '{{ csrf_token() }}'
-        //                 },
-        //                 success: function(response) {
-        //                     Swal.fire({
-        //                         title: "Deleted!",
-        //                         text: response.success,
-        //                         icon: "success",
-        //                         showConfirmButton: false,
-        //                         timer: 1500
-        //                     });
-
-        //                     // Find the row to remove
-        //                     let row = $('#user_nik_table').DataTable().row($(
-        //                         `button[data-id="${id}"]`).parents('tr'));
-
-        //                     // Remove the row and redraw the table
-        //                     row.remove().draw();
-        //                 },
-        //                 error: function(xhr) {
-        //                     Swal.fire({
-        //                         title: "Error!",
-        //                         text: "Failed to delete record.",
-        //                         icon: "error"
-        //                     });
-        //                 }
-        //             });
-        //         }
-        //     });
-        // }
     </script>
 @endsection

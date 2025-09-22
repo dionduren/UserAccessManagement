@@ -17,12 +17,10 @@
                             @endforeach
                         </select>
                     </div>
-                    <div class="col-md-auto">
-                        <button id="btn-load" class="btn btn-secondary">Tampilkan</button>
-                        <button id="btn-reset" class="btn btn-outline-secondary">Reset</button>
-                    </div>
                     <div class="col text-end">
                         <button id="btn-import-selected" class="btn btn-primary" disabled>Import Selected</button>
+                        <button id="btn-import-all" class="btn btn-outline-primary" disabled>Import All</button>
+                        <button id="btn-reset" class="btn btn-outline-secondary">Reset</button>
                     </div>
                 </div>
 
@@ -54,10 +52,21 @@
 @endsection
 
 @section('scripts')
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
         const csrf = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
-
         let table = null;
+
+        function toast(icon, title) {
+            Swal.fire({
+                icon,
+                title,
+                toast: true,
+                position: 'top-end',
+                timer: 2500,
+                showConfirmButton: false
+            });
+        }
 
         function selectedNiks() {
             const arr = [];
@@ -65,42 +74,40 @@
             return arr;
         }
 
-        function toggleImportButton() {
+        function toggleImportButtons() {
             document.getElementById('btn-import-selected').disabled = selectedNiks().length === 0;
+            const pid = $('#periode_id').val();
+            document.getElementById('btn-import-all').disabled = !pid;
         }
 
         function initTable() {
             if (table) {
                 table.destroy();
-                $('#grid').empty(); // clear header/body then rebuild
-                $('#grid').append(`
-                <thead>
-                    <tr>
-                        <th><input type="checkbox" id="chk-all" /></th>
-                        <th>NIK</th>
-                        <th>Nama</th>
-                        <th>Company</th>
-                        <th>Kompartemen ID</th>
-                        <th>Kompartemen</th>
-                        <th>Departemen ID</th>
-                        <th>Departemen</th>
-                        <th>Atasan</th>
-                        <th>Cost Center</th>
-                    </tr>
-                </thead>
-            `);
+                $('#grid').empty().append(`
+                    <thead>
+                        <tr>
+                            <th><input type="checkbox" id="chk-all" /></th>
+                            <th>Company</th>
+                            <th>NIK</th>
+                            <th>Nama</th>
+                            <th>Kompartemen ID</th>
+                            <th>Kompartemen</th>
+                            <th>Departemen ID</th>
+                            <th>Departemen</th>
+                            <th>Atasan</th>
+                            <th>Cost Center</th>
+                        </tr>
+                    </thead>
+                `);
             }
 
             table = $('#grid').DataTable({
-                ajax: function(data, callback) {
+                ajax: (data, callback) => {
                     const pid = $('#periode_id').val();
-                    if (!pid) {
-                        return callback({
-                            data: []
-                        });
-                    }
-                    fetch("{{ route('import.nik_unit_kerja.data') }}?periode_id=" + encodeURIComponent(
-                            pid), {
+                    if (!pid) return callback({
+                        data: []
+                    });
+                    fetch("{{ route('import.nik_unit_kerja.data') }}?periode_id=" + encodeURIComponent(pid), {
                             headers: {
                                 'Accept': 'application/json'
                             }
@@ -111,17 +118,17 @@
                 columns: [{
                         data: 'nik',
                         orderable: false,
-                        render: (nik) => `<input type="checkbox" class="row-chk" value="${nik}">`
+                        render: nik => `<input type="checkbox" class="row-chk" value="${nik}">`
+                    },
+                    {
+                        data: 'company_id',
+                        defaultContent: ''
                     },
                     {
                         data: 'nik'
                     },
                     {
                         data: 'nama',
-                        defaultContent: ''
-                    },
-                    {
-                        data: 'company_id',
                         defaultContent: ''
                     },
                     {
@@ -147,78 +154,137 @@
                     {
                         data: 'cost_center',
                         defaultContent: ''
-                    }
+                    },
                 ],
                 order: [
-                    [1, 'asc']
+                    [2, 'asc']
                 ],
-                deferRender: true,
-                pageLength: 25
+                pageLength: 25,
+                deferRender: true
             });
 
-            // Checkbox handlers
             $('#grid').on('change', '#chk-all', function() {
                 const checked = this.checked;
-                document.querySelectorAll('.row-chk').forEach(el => {
-                    el.checked = checked;
-                });
-                toggleImportButton();
+                document.querySelectorAll('.row-chk').forEach(el => el.checked = checked);
+                toggleImportButtons();
             });
-
-            $('#grid').on('change', '.row-chk', function() {
-                toggleImportButton();
-            });
+            $('#grid').on('change', '.row-chk', toggleImportButtons);
         }
 
         $(function() {
             initTable();
 
-            $('#btn-load').on('click', () => table.ajax.reload());
-            $('#periode_id').on('change', () => table.ajax.reload());
+            $('#periode_id').on('change', () => {
+                table.ajax.reload();
+                document.getElementById('chk-all').checked = false;
+                toggleImportButtons();
+            });
+
             $('#btn-reset').on('click', () => {
                 $('#periode_id').val('');
                 table.ajax.reload();
+                document.getElementById('chk-all').checked = false;
+                toggleImportButtons();
+                toast('info', 'Reset selesai');
             });
 
             $('#btn-import-selected').on('click', function() {
                 const pid = $('#periode_id').val();
                 const niks = selectedNiks();
                 if (!pid) {
-                    alert('Pilih Periode terlebih dahulu.');
+                    toast('warning', 'Pilih periode');
                     return;
                 }
                 if (niks.length === 0) {
-                    alert('Pilih minimal satu NIK.');
+                    toast('warning', 'Tidak ada NIK');
                     return;
                 }
 
-                if (!confirm(`Import ${niks.length} data?`)) return;
+                Swal.fire({
+                    title: 'Konfirmasi',
+                    text: `Import ${niks.length} NIK terpilih?`,
+                    icon: 'question',
+                    showCancelButton: true,
+                    confirmButtonText: 'Ya, import'
+                }).then(res => {
+                    if (!res.isConfirmed) return;
+                    Swal.showLoading();
 
-                fetch("{{ route('import.nik_unit_kerja.import') }}", {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'Accept': 'application/json',
-                            'X-CSRF-TOKEN': csrf
-                        },
-                        body: JSON.stringify({
-                            periode_id: pid,
-                            niks
+                    fetch("{{ route('import.nik_unit_kerja.import') }}", {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'Accept': 'application/json',
+                                'X-CSRF-TOKEN': csrf
+                            },
+                            body: JSON.stringify({
+                                periode_id: pid,
+                                niks
+                            })
                         })
-                    })
-                    .then(r => r.json())
-                    .then(res => {
-                        if (res.error) {
-                            alert('Import gagal: ' + res.error);
-                        } else {
-                            alert(`Selesai. Ditambahkan: ${res.inserted}`);
-                            table.ajax.reload(null, false);
-                            document.getElementById('chk-all').checked = false;
-                            toggleImportButton();
-                        }
-                    })
-                    .catch(err => alert('Terjadi kesalahan saat import.'));
+                        .then(r => r.json())
+                        .then(res => {
+                            if (res.error) {
+                                Swal.fire('Gagal', res.error, 'error');
+                            } else {
+                                Swal.fire('Sukses', `Ditambahkan: ${res.inserted}`, 'success');
+                                table.ajax.reload(null, false);
+                                document.getElementById('chk-all').checked = false;
+                                toggleImportButtons();
+                            }
+                        })
+                        .catch(() => Swal.fire('Error', 'Terjadi kesalahan', 'error'));
+                });
             });
+
+            $('#btn-import-all').on('click', function() {
+                const pid = $('#periode_id').val();
+                if (!pid) {
+                    toast('warning', 'Pilih periode');
+                    return;
+                }
+
+                Swal.fire({
+                    title: 'Konfirmasi',
+                    text: 'Import semua NIK baru periode ini (dengan data lengkap)?',
+                    icon: 'question',
+                    showCancelButton: true,
+                    confirmButtonText: 'Ya, import semua'
+                }).then(res => {
+                    if (!res.isConfirmed) return;
+                    Swal.fire({
+                        title: 'Memproses...',
+                        allowOutsideClick: false,
+                        didOpen: () => Swal.showLoading()
+                    });
+
+                    fetch("{{ route('import.nik_unit_kerja.import_all') }}", {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'Accept': 'application/json',
+                                'X-CSRF-TOKEN': csrf
+                            },
+                            body: JSON.stringify({
+                                periode_id: pid
+                            })
+                        })
+                        .then(r => r.json())
+                        .then(res => {
+                            if (res.error) {
+                                Swal.fire('Gagal', res.error, 'error');
+                            } else {
+                                Swal.fire('Sukses', `Ditambahkan: ${res.inserted}`, 'success');
+                                table.ajax.reload(null, false);
+                                document.getElementById('chk-all').checked = false;
+                                toggleImportButtons();
+                            }
+                        })
+                        .catch(() => Swal.fire('Error', 'Terjadi kesalahan', 'error'));
+                });
+            });
+
+            toggleImportButtons();
         });
     </script>
 @endsection

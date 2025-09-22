@@ -13,6 +13,11 @@
             </div>
         @endif
 
+        <!-- Status Messages -->
+        @if (session('status'))
+            <div class="alert alert-success">{{ session('status') }}</div>
+        @endif
+
         <div class="card shadow-sm">
             <div class="card-header">
                 <h2>Master Data Single Roles</h2>
@@ -20,31 +25,17 @@
             <div class="card-body">
 
                 <!-- Trigger button for Create Modal -->
-                <button type="button" id="triggerCreateModal" class="btn btn-primary mb-3">
-                    Buat Single Role Baru
-                </button>
-
-                <!-- Status Messages -->
-                @if (session('status'))
-                    <div class="alert alert-success">{{ session('status') }}</div>
+                @if (isset($userCompanyCode) && $userCompanyCode == 'A000')
+                    <button type="button" id="triggerCreateModal" class="btn btn-primary mb-3">
+                        Buat Single Role Baru
+                    </button>
                 @endif
 
-                <!-- Dropdowns for Filtering -->
-                <div class="form-group">
-                    <label for="companyDropdown">Pilih Perusahaan</label>
-                    <select id="companyDropdown" class="form-control select2">
-                        <option value="">-- Pilih Perusahaan --</option>
-                        @foreach ($companies as $company)
-                            <option value="{{ $company->company_code }}">{{ $company->nama }}</option>
-                        @endforeach
-                    </select>
-                </div>
 
                 <!-- Table for displaying Single Roles -->
                 <table id="single_roles_table" class="table table-bordered table-striped table-hover cell-border mt-3">
                     <thead>
                         <tr>
-                            <th>Perusahaan</th>
                             <th>Single Role</th>
                             <th>Deskripsi</th>
                             <th>Actions</th>
@@ -52,9 +43,9 @@
                     </thead>
                 </table>
             </div>
-            {{-- 
-    <!-- Modals -->
-    <div id="modalContainer"></div> <!-- Placeholder for loading modals dynamically --> --}}
+
+            <!-- Modals -->
+            {{-- <div id="modalContainer"></div> <!-- Placeholder for loading modals dynamically --> --}}
 
             <!-- Placeholder for modals -->
             <div class="modal fade" id="singleRoleModal" tabindex="-1" aria-labelledby="singleRoleModalLabel"
@@ -71,7 +62,7 @@
                             <!-- Content for create, edit, or show details will be loaded dynamically -->
                         </div>
                         <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                            <button type="button" class="btn btn-secondary close" data-dismiss="modal">Close</button>
                         </div>
                     </div>
                 </div>
@@ -90,17 +81,8 @@
                 serverSide: true,
                 ajax: {
                     url: '/single-roles/data',
-                    data: function(d) {
-                        d.company_id = $('#companyDropdown').val();
-                        // console.log('data company :', d.company_id);
-                    },
                 },
                 columns: [{
-                        data: 'company',
-                        name: 'company',
-                        title: 'Perusahaan'
-                    },
-                    {
                         data: 'nama',
                         name: 'nama',
                         title: 'Single Role'
@@ -126,16 +108,6 @@
                 ordering: true,
                 pageLength: 10,
                 lengthMenu: [5, 10, 25, 50, 100],
-            });
-
-            // Handle Company dropdown change
-            $('#companyDropdown').on('change', function() {
-                const companyId = $(this).val();
-
-                if (companyId) {
-                    // Reloads the data without resetting pagination
-                    table.ajax.reload(null, false);
-                }
             });
 
             // Function to load modal content dynamically

@@ -36,60 +36,56 @@ class HomeController extends Controller
         $user = Auth::user();
         $companyCode = optional($user->loginDetail)->company_code ?? 'A000';
 
-        // DASHBOARD PI - A000
+        // DASHBOARD PI - A000 (global)
         if ($companyCode === 'A000') {
             $data = [
-                'company' => Company::all(),
-                'kompartemen' => Kompartemen::count(),
-                'departemen' => Departemen::count(),
-                'jobRole' => JobRole::count(),
-                'compositeRole' => CompositeRole::count(),
-                'singleRole' => SingleRole::count(),
-                'tcode' => Tcode::count(),
-                'JobComp' => JobRole::has('compositeRole')->count(),
-                'JobCompEmpty' => JobRole::doesntHave('compositeRole')->count(),
-                'compJob' => CompositeRole::has('jobRole')->count(),
-                'compJobEmpty' => CompositeRole::doesntHave('jobRole')->count(),
-                'compSingle' => CompositeRole::has('singleRoles')->count(),
+                'company'         => Company::all(),
+                'kompartemen'     => Kompartemen::count(),
+                'departemen'      => Departemen::count(),
+                'jobRole'         => JobRole::count(),
+                'compositeRole'   => CompositeRole::count(),
+                // Single Role & Tcode are GLOBAL (no company relation)
+                'singleRole'      => SingleRole::count(),
+                'tcode'           => Tcode::count(),
+                'JobComp'         => JobRole::has('compositeRole')->count(),
+                'JobCompEmpty'    => JobRole::doesntHave('compositeRole')->count(),
+                'compJob'         => CompositeRole::has('jobRole')->count(),
+                'compJobEmpty'    => CompositeRole::doesntHave('jobRole')->count(),
+                'compSingle'      => CompositeRole::has('singleRoles')->count(),
                 'compSingleEmpty' => CompositeRole::doesntHave('singleRoles')->count(),
-                'singleComp' => SingleRole::has('compositeRoles')->count(),
+                'singleComp'      => SingleRole::has('compositeRoles')->count(),
                 'singleCompEmpty' => SingleRole::doesntHave('compositeRoles')->count(),
-                'singleTcode' => SingleRole::has('tcodes')->count(),
+                'singleTcode'     => SingleRole::has('tcodes')->count(),
                 'singleTcodeEmpty' => SingleRole::doesntHave('tcodes')->count(),
-                'tcodeSing' => Tcode::has('singleRoles')->count(),
-                'tcodeSingEmpty' => Tcode::doesntHave('singleRoles')->count(),
-                'groupedData' => $this->getGroupedData(), // all companies
+                'tcodeSing'       => Tcode::has('singleRoles')->count(),
+                'tcodeSingEmpty'  => Tcode::doesntHave('singleRoles')->count(),
+                'groupedData'     => $this->getGroupedData(), // company-scoped models only
             ];
-
             return view('dashboard.index', compact('data'));
         }
 
-        // DASHBOARD NON A000
+        // DASHBOARD NON A000 (company filtered where applicable; SingleRole & Tcode remain global)
         $data = [
-            'company' => Company::where('company_code', $companyCode)->get(),
-            'kompartemen' => Kompartemen::where('company_id', $companyCode)->count(),
-            'departemen' => Departemen::where('company_id', $companyCode)->count(),
-            'jobRole' => JobRole::where('company_id', $companyCode)->count(),
-            'compositeRole' => CompositeRole::where('company_id', $companyCode)->count(),
-            'singleRole' => SingleRole::where('company_id', $companyCode)->count(),
-            'tcode' => Tcode::count(), // global if tcodes are shared
-            'JobComp' => JobRole::where('company_id', $companyCode)->has('compositeRole')->count(),
-            'JobCompEmpty' => JobRole::where('company_id', $companyCode)->doesntHave('compositeRole')->count(),
-            'compJob' => CompositeRole::where('company_id', $companyCode)->has('jobRole')->count(),
-            'compJobEmpty' => CompositeRole::where('company_id', $companyCode)->doesntHave('jobRole')->count(),
-            'compSingle' => CompositeRole::where('company_id', $companyCode)->has('singleRoles')->count(),
+            'company'         => Company::where('company_code', $companyCode)->get(),
+            'kompartemen'     => Kompartemen::where('company_id', $companyCode)->count(),
+            'departemen'      => Departemen::where('company_id', $companyCode)->count(),
+            'jobRole'         => JobRole::where('company_id', $companyCode)->count(),
+            'compositeRole'   => CompositeRole::where('company_id', $companyCode)->count(),
+            // GLOBAL
+            'singleRole'      => SingleRole::count(),
+            'tcode'           => Tcode::count(),
+            'JobComp'         => JobRole::where('company_id', $companyCode)->has('compositeRole')->count(),
+            'JobCompEmpty'    => JobRole::where('company_id', $companyCode)->doesntHave('compositeRole')->count(),
+            'compJob'         => CompositeRole::where('company_id', $companyCode)->has('jobRole')->count(),
+            'compJobEmpty'    => CompositeRole::where('company_id', $companyCode)->doesntHave('jobRole')->count(),
+            'compSingle'      => CompositeRole::where('company_id', $companyCode)->has('singleRoles')->count(),
             'compSingleEmpty' => CompositeRole::where('company_id', $companyCode)->doesntHave('singleRoles')->count(),
-            'singleComp' => SingleRole::where('company_id', $companyCode)->has('compositeRoles')->count(),
-            'singleCompEmpty' => SingleRole::where('company_id', $companyCode)->doesntHave('compositeRoles')->count(),
-            'singleTcode' => SingleRole::where('company_id', $companyCode)->has('tcodes')->count(),
-            'singleTcodeEmpty' => SingleRole::where('company_id', $companyCode)->doesntHave('tcodes')->count(),
-            // 'tcodeSing' => Tcode::whereHas('singleRoles', function ($q) use ($companyCode) {
-            //     $q->where('single_roles.company_id', $companyCode);
-            // })->count(),
-            // 'tcodeSingEmpty' => Tcode::whereDoesntHave('singleRoles', function ($q) use ($companyCode) {
-            //     $q->where('single_roles.company_id', $companyCode);
-            // })->count(),
-            'groupedData' => $this->getGroupedData($companyCode), // filtered
+            // GLOBAL relationships
+            'singleComp'      => SingleRole::has('compositeRoles')->count(),
+            'singleCompEmpty' => SingleRole::doesntHave('compositeRoles')->count(),
+            'singleTcode'     => SingleRole::has('tcodes')->count(),
+            'singleTcodeEmpty' => SingleRole::doesntHave('tcodes')->count(),
+            'groupedData'     => $this->getGroupedData($companyCode),
         ];
 
         return view('dashboard.index_company', [
@@ -100,6 +96,8 @@ class HomeController extends Controller
 
     private function getGroupedData(?string $companyCode = null)
     {
+        // Only models that STILL have company_id
+        $models = ['Kompartemen', 'Departemen', 'JobRole', 'CompositeRole'];
         $filter = $companyCode && $companyCode !== 'A000';
 
         $companiesQuery = Company::select('company_code', 'nama');
@@ -108,47 +106,40 @@ class HomeController extends Controller
         }
         $companies = $companiesQuery->get();
 
-        $models = ['Kompartemen', 'Departemen', 'JobRole', 'CompositeRole', 'SingleRole'];
         $groupedData = [];
-
         foreach ($models as $model) {
             $q = app("App\\Models\\$model")::selectRaw('company_id, COUNT(*) as total')
-                ->with('company:company_code,nama')
                 ->groupBy('company_id');
-
             if ($filter) {
                 $q->where('company_id', $companyCode);
             }
-
-            $groupedData[strtolower($model)] = $q->get()->pluck('total', 'company_id')->toArray();
+            $groupedData[strtolower($model)] = $q->pluck('total', 'company_id')->toArray();
         }
 
+        // Empty metrics for company-scoped models
         $emptyMetrics = [
-            'JobCompEmpty' => JobRole::doesntHave('compositeRole')
+            'JobCompEmpty'     => JobRole::doesntHave('compositeRole')
                 ->when($filter, fn($q) => $q->where('company_id', $companyCode))
-                ->selectRaw('company_id, COUNT(*) as total')->groupBy('company_id')->get()->pluck('total', 'company_id')->toArray(),
+                ->selectRaw('company_id, COUNT(*) as total')->groupBy('company_id')->pluck('total', 'company_id')->toArray(),
+            'compJobEmpty'     => CompositeRole::doesntHave('jobRole')
+                ->when($filter, fn($q) => $q->where('company_id', $companyCode))
+                ->selectRaw('company_id, COUNT(*) as total')->groupBy('company_id')->pluck('total', 'company_id')->toArray(),
+            'compSingleEmpty'  => CompositeRole::doesntHave('singleRoles')
+                ->when($filter, fn($q) => $q->where('company_id', $companyCode))
+                ->selectRaw('company_id, COUNT(*) as total')->groupBy('company_id')->pluck('total', 'company_id')->toArray(),
+        ];
 
-            'compJobEmpty' => CompositeRole::doesntHave('jobRole')
-                ->when($filter, fn($q) => $q->where('company_id', $companyCode))
-                ->selectRaw('company_id, COUNT(*) as total')->groupBy('company_id')->get()->pluck('total', 'company_id')->toArray(),
-
-            'compSingleEmpty' => CompositeRole::doesntHave('singleRoles')
-                ->when($filter, fn($q) => $q->where('company_id', $companyCode))
-                ->selectRaw('company_id, COUNT(*) as total')->groupBy('company_id')->get()->pluck('total', 'company_id')->toArray(),
-
-            'singleCompEmpty' => SingleRole::doesntHave('compositeRoles')
-                ->when($filter, fn($q) => $q->where('company_id', $companyCode))
-                ->selectRaw('company_id, COUNT(*) as total')->groupBy('company_id')->get()->pluck('total', 'company_id')->toArray(),
-
-            'singleTcodeEmpty' => SingleRole::doesntHave('tcodes')
-                ->when($filter, fn($q) => $q->where('company_id', $companyCode))
-                ->selectRaw('company_id, COUNT(*) as total')->groupBy('company_id')->get()->pluck('total', 'company_id')->toArray(),
+        // Global (no company_id) SingleRole & Tcode empties kept separately
+        $globalNoCompany = [
+            'singleCompEmpty'  => SingleRole::doesntHave('compositeRoles')->count(),
+            'singleTcodeEmpty' => SingleRole::doesntHave('tcodes')->count(),
         ];
 
         return [
-            'companies' => $companies,
-            'data' => $groupedData,
-            'emptyMetrics' => $emptyMetrics,
+            'companies'     => $companies,
+            'data'          => $groupedData,
+            'emptyMetrics'  => $emptyMetrics,
+            'globalMetrics' => $globalNoCompany,
         ];
     }
 
@@ -187,49 +178,25 @@ class HomeController extends Controller
 
     public function getSingleRolesCompositeEmpty(Request $request)
     {
-        $companyCode = $request->query('company_code') ?? optional(Auth::user()->loginDetail)->company_code;
+        // Now global
         $singleRoles = SingleRole::doesntHave('compositeRoles')
-            ->when($companyCode && $companyCode !== 'A000', fn($q) => $q->where('company_id', $companyCode))
-            ->with('company:company_code,nama')
-            ->get(['id', 'nama', 'company_id']);
-
+            ->get(['id', 'nama']);
         return response()->json($singleRoles);
     }
 
     public function getSingleRolesTcodeEmpty(Request $request)
     {
-        $companyCode = $request->query('company_code') ?? optional(Auth::user()->loginDetail)->company_code;
         $singleRoles = SingleRole::doesntHave('tcodes')
-            ->when($companyCode && $companyCode !== 'A000', fn($q) => $q->where('company_id', $companyCode))
-            ->with('company:company_code,nama')
-            ->get(['id', 'nama', 'company_id']);
-
+            ->get(['id', 'nama']);
         return response()->json($singleRoles);
     }
 
     public function getTcodesSingleEmpty(Request $request)
     {
-        $companyCode = $request->query('company_code') ?? optional(Auth::user()->loginDetail)->company_code ?? 'A000';
-
-        $tcodes = Tcode::whereDoesntHave('singleRoles', function ($q) use ($companyCode) {
-            // If A000, this behaves like global "no single role at all"
-            if ($companyCode !== 'A000') {
-                $q->where('single_roles.company_id', $companyCode);
-            }
-        })
-            ->get(['id', 'code']);
-
-        $company = Company::where('company_code', $companyCode)->first(['company_code', 'nama']);
-
-        $tcodes->transform(function ($item) use ($company, $companyCode) {
-            return (object)[
-                'id' => $item->id,
-                'nama' => $item->code,
-                'company_id' => $companyCode,
-                'company' => $company,
-            ];
-        });
-
+        $tcodes = Tcode::doesntHave('singleRoles')
+            ->get(['id', 'nama'])   // use 'nama' (model has no 'code' column)
+            ->map(fn($t) => ['id' => $t->id, 'nama' => $t->nama])
+            ->values();
         return response()->json($tcodes);
     }
 }

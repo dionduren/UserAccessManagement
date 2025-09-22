@@ -90,13 +90,16 @@
                     }, {
                         data: 'composite_role',
                         title: 'Composite Role'
+                    }, {
+                        data: 'composite_role_description',
+                        title: 'Description'
                     },
                     {
                         data: 'single_role',
                         title: 'Single Role'
                     },
                     {
-                        data: 'single_role_desc',
+                        data: 'single_role_description',
                         title: 'Description'
                     },
                 ],

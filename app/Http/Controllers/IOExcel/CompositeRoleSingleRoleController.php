@@ -7,6 +7,7 @@ use App\Models\Company;
 use App\Models\CompositeRole;
 use App\Models\SingleRole;
 use App\Imports\CompositeRoleSingleRoleImport;
+use App\Exports\CompositeSingleRoleTemplateExport;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
@@ -14,7 +15,6 @@ use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Log;
 
 use Symfony\Component\HttpFoundation\StreamedResponse;
-
 use Maatwebsite\Excel\Facades\Excel;
 use Yajra\DataTables\Facades\DataTables;
 
@@ -45,10 +45,11 @@ class CompositeRoleSingleRoleController extends Controller
             foreach ($data as $index => $row) {
                 // Custom validation for each row (adjust rules as needed)
                 $validator = Validator::make($row->toArray(), [
-                    'company' => 'required|string',
+                    'company_code' => 'required|string',
                     'composite_role' => 'required|string',
+                    'composite_role_description' => 'nullable|string',
                     'single_role' => 'nullable|string',
-                    'single_role_desc' => 'nullable|string'
+                    'single_role_description' => 'nullable|string'
                 ]);
 
                 if ($validator->fails()) {
@@ -62,16 +63,17 @@ class CompositeRoleSingleRoleController extends Controller
                     Log::error('Validation failed for Composite-Single data', $errorDetails);
                 } else {
                     // Find the company name based on the company code
-                    $company = Company::where('company_code', $row['company'])->first();
+                    $company = Company::where('company_code', $row['company_code'])->first();
                     $companyName = $company ? $company->nama : 'N/A';
 
                     // Store validated data along with derived company name for preview
                     $parsedData[] = [
-                        'company_code' => $row['company'],
+                        'company_code' => $row['company_code'],
                         'company_name' => $companyName,
                         'composite_role' => $row['composite_role'],
+                        'composite_role_description' => $row['composite_role_description'] ?? 'None',
                         'single_role' => $row['single_role'],
-                        'single_role_desc' => $row['description'] ?? 'None'
+                        'single_role_description' => $row['single_role_description'] ?? 'None'
                     ];
                 }
             }
@@ -102,8 +104,9 @@ class CompositeRoleSingleRoleController extends Controller
                 'company_code' => $row['company_code'] ?? null,
                 'company_name' => $row['company_name'] ?? null,
                 'composite_role' => $row['composite_role'] ?? null,
+                'composite_role_description' => $row['composite_role_description'] ?? null,
                 'single_role' => $row['single_role'] ?? null,
-                'single_role_desc' => $row['single_role_desc'] ?? null
+                'single_role_description' => $row['single_role_description'] ?? null
             ];
         });
 
@@ -159,18 +162,29 @@ class CompositeRoleSingleRoleController extends Controller
                         continue;
                     }
 
-                    $compositeRole = CompositeRole::updateOrCreate(
-                        ['nama' => $row['composite_role'], 'company_id' => $company->company_code]
+                    // Composite Role: create if new; keep existing description
+                    $compositeRole = CompositeRole::firstOrCreate(
+                        [
+                            'nama' => $row['composite_role'],
+                            'company_id' => $company->company_code
+                        ],
+                        [
+                            'deskripsi' => $row['composite_role_description'] ?? null
+                        ]
                     );
 
-                    $singleRole = SingleRole::updateOrCreate(
-                        ['nama' => $row['single_role'], 'company_id' => $company->company_code],
-                        ['deskripsi' => $row['single_role_desc']]
+                    // Single Role: create if new; keep existing description
+                    $singleRole = SingleRole::firstOrCreate(
+                        [
+                            'nama' => $row['single_role'],
+                        ],
+                        [
+                            'deskripsi' => $row['single_role_description'] ?? null
+                        ]
                     );
 
-                    if (!$compositeRole->singleRoles()->where('single_role_id', $singleRole->id)->exists()) {
-                        $compositeRole->singleRoles()->attach($singleRole->id);
-                    }
+                    // Link (no duplicate)
+                    $compositeRole->singleRoles()->syncWithoutDetaching([$singleRole->id]);
 
                     $processedRows++;
                     if (microtime(true) - $lastUpdate >= 1 || $processedRows === $totalRows) {
@@ -198,5 +212,10 @@ class CompositeRoleSingleRoleController extends Controller
 
             return response()->json(['error' => 'Error during import: ' . $e->getMessage()], 500);
         }
+    }
+
+    public function downloadTemplate()
+    {
+        return Excel::download(new CompositeSingleRoleTemplateExport(), 'composite_single_role_template.xlsx');
     }
 }

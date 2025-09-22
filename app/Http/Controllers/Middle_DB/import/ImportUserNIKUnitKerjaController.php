@@ -28,6 +28,7 @@ class ImportUserNIKUnitKerjaController extends Controller
         $nukTable = (new UserNIKUnitKerja)->getTable();
 
         $query = DB::table('tr_user_ussm_nik as u')
+            ->where('u.periode_id', '=', $periodeId)
             ->whereNull('u.deleted_at');
 
         if (Schema::hasTable($nukTable)) {
@@ -128,6 +129,112 @@ class ImportUserNIKUnitKerjaController extends Controller
             DB::rollBack();
             return response()->json([
                 'message' => 'Import failed',
+                'error'   => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    public function importAll(Request $request)
+    {
+        $validated = $request->validate([
+            'periode_id' => ['required', 'integer', 'exists:ms_periode,id'],
+        ]);
+
+        $periodeId = (int)$validated['periode_id'];
+
+        $nukTable = (new UserNIKUnitKerja)->getTable();
+        if (!Schema::hasTable($nukTable)) {
+            return response()->json([
+                'message' => "Target table '{$nukTable}' not found."
+            ], 422);
+        }
+
+        // Ambil semua NIK yang belum masuk + punya company, kompartemen_id, departemen_id
+        $rows = DB::table('tr_user_ussm_nik as u')
+            ->where('u.periode_id', $periodeId)
+            ->whereNull('u.deleted_at')
+            ->leftJoin($nukTable . ' as nuk', function ($j) use ($periodeId) {
+                $j->on('nuk.nik', '=', 'u.user_code')
+                    ->where('nuk.periode_id', '=', $periodeId)
+                    ->whereNull('nuk.deleted_at');
+            })
+            ->whereNull('nuk.id')
+            ->leftJoin('mdb_master_data_karyawan as md', 'md.nik', '=', 'u.user_code')
+            ->whereNotNull('md.company')
+            ->whereNotNull('md.kompartemen_id')
+            ->whereNotNull('md.departemen_id')
+            ->selectRaw("
+                u.user_code as nik,
+                md.nama,
+                md.company as company_id,
+                md.direktorat_id,
+                md.kompartemen_id,
+                md.departemen_id,
+                md.atasan,
+                md.cost_center
+            ")
+            ->orderBy('u.user_code')
+            ->get();
+
+        if ($rows->isEmpty()) {
+            return response()->json([
+                'message'  => 'Tidak ada NIK baru yang memenuhi kriteria',
+                'inserted' => 0,
+                'skipped'  => 0,
+            ]);
+        }
+
+        $now = now();
+        $batch = [];
+        $batchSize = 1000;
+        $inserted = 0;
+        $skipped  = 0;
+
+        DB::beginTransaction();
+        try {
+            foreach ($rows as $r) {
+                // Safety skip (jika ada yang kosong karena data berubah setelah query)
+                if (!$r->company_id || !$r->kompartemen_id || !$r->departemen_id) {
+                    $skipped++;
+                    continue;
+                }
+
+                $batch[] = [
+                    'periode_id'     => $periodeId,
+                    'nik'            => $r->nik,
+                    'nama'           => $r->nama,
+                    'company_id'     => $r->company_id,
+                    'direktorat_id'  => $r->direktorat_id,
+                    'kompartemen_id' => $r->kompartemen_id,
+                    'departemen_id'  => $r->departemen_id,
+                    'atasan'         => $r->atasan,
+                    'cost_center'    => $r->cost_center,
+                    'created_at'     => $now,
+                    'updated_at'     => $now,
+                ];
+
+                if (count($batch) === $batchSize) {
+                    UserNIKUnitKerja::insert($batch);
+                    $inserted += count($batch);
+                    $batch = [];
+                }
+            }
+            if ($batch) {
+                UserNIKUnitKerja::insert($batch);
+                $inserted += count($batch);
+            }
+
+            DB::commit();
+
+            return response()->json([
+                'message'  => 'Import all selesai',
+                'inserted' => $inserted,
+                'skipped'  => $skipped,
+            ]);
+        } catch (\Throwable $e) {
+            DB::rollBack();
+            return response()->json([
+                'message' => 'Import gagal',
                 'error'   => $e->getMessage(),
             ], 500);
         }

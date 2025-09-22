@@ -87,23 +87,49 @@ class CompositeRole extends Model
     }
 
     // Sync from external SAP source (BASIS_AGR_TEXTS)
-    public static function syncFromExternal(string $like = 'ZM-%', string $exclude = '%-AO'): array
-    {
+    // Added inclusion of extra patterns: ZPU% and ZS-STKI%
+    public static function syncFromExternal(
+        string $like = 'ZM-%',
+        string $exclude = '%-AO',
+        array $extraPatterns = ['ZPU%', 'ZS-STKI%'],
+        bool $excludeAoForExtras = true
+    ): array {
         $connection = env('SYNC_CONNECTION', 'sqlsrv_ext');
         $table = (new self)->getTable();
 
-        $sql = <<<SQL
-                    SELECT 
-                        AGR_NAME AS composite_role,
-                        TEXT     AS description
-                    FROM BASIS_AGR_TEXTS
-                    WHERE SPRAS = 'E'
-                    AND AGR_NAME LIKE ?
-                    AND AGR_NAME NOT LIKE ?
-                    ORDER BY AGR_NAME
-                    SQL;
+        // Build dynamic OR clauses for extra patterns
+        $orClauses = [];
+        $bindings  = [$like, $exclude];
 
-        $rows = DB::connection($connection)->select($sql, [$like, $exclude]);
+        foreach ($extraPatterns as $p) {
+            if ($excludeAoForExtras) {
+                // (AGR_NAME LIKE ? AND AGR_NAME NOT LIKE ?)
+                $orClauses[] = '(AGR_NAME LIKE ? AND AGR_NAME NOT LIKE ?)';
+
+                $bindings[]  = $p;
+                $bindings[]  = $exclude; // reuse same exclusion pattern
+            } else {
+                $orClauses[] = '(AGR_NAME LIKE ?)';
+                $bindings[]  = $p;
+            }
+        }
+
+        $orSql = implode(' OR ', $orClauses);
+
+        $sql = <<<SQL
+SELECT DISTINCT
+    AGR_NAME AS composite_role,
+    TEXT     AS description
+FROM BASIS_AGR_TEXTS
+WHERE SPRAS = 'E'
+  AND (
+        (AGR_NAME LIKE ? AND AGR_NAME NOT LIKE ?)
+        OR $orSql
+      )
+ORDER BY AGR_NAME
+SQL;
+
+        $rows = DB::connection($connection)->select($sql, $bindings);
 
         DB::table($table)->truncate();
 
@@ -119,9 +145,9 @@ class CompositeRole extends Model
                 'created_at'     => $now,
                 'updated_at'     => $now,
             ];
-            if (count($buffer) >= $batch) {
+            if (count($buffer) === $batch) {
                 DB::table($table)->insert($buffer);
-                $inserted += count($buffer);
+                $inserted += $batch;
                 $buffer = [];
             }
         }

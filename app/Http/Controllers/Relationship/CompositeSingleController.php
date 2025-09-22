@@ -3,9 +3,12 @@
 namespace App\Http\Controllers\Relationship;
 
 use App\Http\Controllers\Controller;
+
 use App\Models\Company;
+use App\Models\CompositeAO;
 use App\Models\CompositeRole;
 use App\Models\SingleRole;
+
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Yajra\DataTables\Facades\DataTables;
@@ -247,7 +250,7 @@ class CompositeSingleController extends Controller
         // Build flattened row set (expanded single roles)
         $data = [];
         foreach ($composites as $comp) {
-            $companyDisplay = ($comp->company_name ?? '-');
+            $companyDisplay = ($comp->company_id ?? '-');
             $canModify = $userCompanyCode === 'A000' || $comp->company_id === $userCompanyCode;
 
             $actionsHtml = $canModify
@@ -288,5 +291,123 @@ class CompositeSingleController extends Controller
             'recordsFiltered' => $recordsFiltered,   // filtered composites
             'data'            => $data,              // expanded rows
         ]);
+    }
+
+    public function index_ao(Request $request)
+    {
+        $user  = auth()->user();
+        $userCompanyCode = $user->loginDetail->company_code ?? null;
+
+        $companies = $userCompanyCode === 'A000'
+            ? Company::orderBy('company_code')->get()
+            : Company::where('company_code', $userCompanyCode)->get();
+
+        return view('relationship.composite-ao.index', [
+            'companies'        => $companies,
+            'userCompanyCode'  => $userCompanyCode,
+            'selectedCompany'  => $request->get('company_id')
+        ]);
+    }
+
+    public function datatable_ao(Request $request)
+    {
+        $user = auth()->user();
+        $userCompanyCode = $user->loginDetail->company_code ?? null;
+
+        $draw   = (int)$request->input('draw');
+        $length = (int)$request->input('length', 10);
+        $start  = (int)$request->input('start', 0);
+        $search = $request->input('search.value');
+
+        // Base query: join to composite role (by name) to derive company, then to company table
+        $base = CompositeAO::query()
+            ->leftJoin('tr_composite_roles', 'tr_composite_roles.nama', '=', 'tr_composite_ao.composite_role')
+            ->leftJoin('ms_company', 'ms_company.company_code', '=', 'tr_composite_roles.company_id')
+            ->select([
+                'tr_composite_ao.id',
+                'tr_composite_ao.composite_role',
+                'tr_composite_ao.nama as ao_name',
+                'tr_composite_ao.deskripsi',
+                'tr_composite_roles.company_id',
+                'ms_company.nama as company_name',
+            ]);
+
+        // Scope by user company
+        if ($userCompanyCode !== 'A000') {
+            $base->where('tr_composite_roles.company_id', $userCompanyCode);
+        } elseif ($request->filled('company_id')) {
+            $base->where('tr_composite_roles.company_id', $request->company_id);
+        }
+
+        $recordsTotal = (clone $base)->count();
+
+        if ($search) {
+            $driver = DB::getDriverName();
+            $like = $driver === 'pgsql' ? 'ILIKE' : 'LIKE';
+            $base->where(function ($q) use ($search, $like) {
+                $q->where('tr_composite_ao.composite_role', $like, "%$search%")
+                    ->orWhere('tr_composite_ao.nama', $like, "%$search%")
+                    ->orWhere('tr_composite_ao.deskripsi', $like, "%$search%")
+                    ->orWhere('tr_composite_roles.company_id', $like, "%$search%")
+                    ->orWhere('ms_company.nama', $like, "%$search%");
+            });
+        }
+
+        $recordsFiltered = (clone $base)->count();
+
+        // Ordering
+        if ($request->has('order')) {
+            foreach ($request->input('order') as $ord) {
+                $idx = (int)$ord['column'];
+                $dir = $ord['dir'] === 'desc' ? 'desc' : 'asc';
+                switch ($idx) {
+                    case 0: // company
+                        $base->orderBy('ms_company.nama', $dir)->orderBy('tr_composite_ao.composite_role');
+                        break;
+                    case 1: // composite_role
+                        $base->orderBy('tr_composite_ao.composite_role', $dir);
+                        break;
+                    case 2: // ao name
+                        $base->orderBy('tr_composite_ao.nama', $dir);
+                        break;
+                    default:
+                        $base->orderBy('tr_composite_ao.id', $dir);
+                }
+            }
+        } else {
+            $base->orderBy('ms_company.nama')->orderBy('tr_composite_ao.composite_role')->orderBy('tr_composite_ao.nama');
+        }
+
+        $rows = $base->skip($start)->take($length)->get();
+
+        $data = [];
+        foreach ($rows as $r) {
+            $canModify = $userCompanyCode === 'A000' || $r->company_id === $userCompanyCode;
+            $actions = $canModify
+                ? '<button class="btn btn-sm btn-danger btn-delete" data-id="' . $r->id . '">Delete</button>'
+                : '<span class="text-muted small">Read only</span>';
+
+            $data[] = [
+                'company'        => $r->company_id ?? '-BELUM TERDAFTAR-',
+                'composite_role' => $r->composite_role,
+                'ao_name'        => $r->ao_name,
+                'description'    => $r->deskripsi ?: '-',
+                'actions'        => $actions,
+            ];
+        }
+
+        return response()->json([
+            'draw'            => $draw,
+            'recordsTotal'    => $recordsTotal,
+            'recordsFiltered' => $recordsFiltered,
+            'data'            => $data,
+        ]);
+    }
+
+    public function destroy_ao($id)
+    {
+        $ao = CompositeAO::findOrFail($id);
+        $ao->delete();
+        return response()->json(['status' => 'ok']);
     }
 }

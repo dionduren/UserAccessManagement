@@ -2,20 +2,20 @@
 
 namespace App\Http\Controllers\IOExcel;
 
-use App\Models\Company;
+use App\Http\Controllers\Controller;
+
+use App\Exports\SingleRoleTcodeTemplateExport;
 use App\Models\SingleRole;
+use App\Models\Tcode;
+use App\Imports\TcodeSingleRoleImport;
 
 use Illuminate\Http\Request;
-
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Log;
-use App\Http\Controllers\Controller;
-use Maatwebsite\Excel\Facades\Excel;
-
-use App\Imports\TcodeSingleRoleImport;
-use App\Models\Tcode;
-use Yajra\DataTables\Facades\DataTables;
 use Illuminate\Support\Facades\Validator;
+
+use Maatwebsite\Excel\Facades\Excel;
+use Yajra\DataTables\Facades\DataTables;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class SingleRoleTcodeController extends Controller
@@ -23,6 +23,11 @@ class SingleRoleTcodeController extends Controller
     public function uploadForm()
     {
         return view('imports.upload.tcode_single_role');
+    }
+
+    public function downloadTemplate()
+    {
+        return Excel::download(new SingleRoleTcodeTemplateExport(), 'single_role_tcode_template.xlsx');
     }
 
     // Preview the data from the uploaded Excel file
@@ -33,25 +38,19 @@ class SingleRoleTcodeController extends Controller
         ]);
 
         $filePath = $request->file('excel_file');
-        // $filePath = $request->file('excel_file')->getRealPath();
 
         try {
-            // Load the data into a collection
             $data = Excel::toCollection(new TcodeSingleRoleImport, $filePath)->first();
 
-            // Validate and parse each row
             $errors = [];
             $parsedData = [];
             foreach ($data as $index => $row) {
-                // Normalize and check for empty fields
                 $tcode = trim($row['tcode'] ?? '');
                 $singleRole = trim($row['single_role'] ?? '');
 
-                // Skip the row if 'tcode' or 'single_role' is empty
                 if ($tcode == null || $singleRole == null) {
                     Log::info('Skipping row due to missing required fields', [
                         'row_index' => $index + 1,
-                        'company_code' => $row['company'],
                         'tcode' => $row['tcode'] ?? 'null',
                         'single_role' => $row['single_role'] ?? 'null'
                     ]);
@@ -60,11 +59,10 @@ class SingleRoleTcodeController extends Controller
 
                 // Custom validation for each row (adjust rules as needed)
                 $validator = Validator::make($row->toArray(), [
-                    'company' => 'required|string',
                     'single_role' => 'required',
-                    'single_role_desc' => 'nullable',
+                    'single_role_description' => 'nullable',
                     'tcode' => 'required',
-                    'tcode_desc' => 'nullable',
+                    'tcode_description' => 'nullable',
                     'sap_module' => 'nullable|string'
                 ]);
 
@@ -78,18 +76,11 @@ class SingleRoleTcodeController extends Controller
                     // Log the validation errors with details
                     Log::error('Validation failed for Tcode-Single data', $errorDetails);
                 } else {
-                    // Find the company name based on the company code
-                    // $company = Company::where('company_code', $row['company'])->first();
-                    // $companyName = $company ? $company->nama : 'N/A';
-
-                    // Store validated data along with derived company name for preview
                     $parsedData[] = [
-                        'company_code' => $row['company'],
-                        // 'company_name' => $companyName,
                         'single_role' => $row['single_role'],
-                        'single_role_desc' => $row['single_role_desc'] ?? 'None',
+                        'single_role_description' => $row['single_role_description'] ?? 'None',
                         'tcode' => $row['tcode'],
-                        'tcode_desc' => $row['tcode_desc'] ?? 'None',
+                        'tcode_description' => $row['tcode_description'] ?? 'None',
                         'sap_module' => $row['sap_module'] ?? 'None'
                     ];
                 }
@@ -119,13 +110,10 @@ class SingleRoleTcodeController extends Controller
         $formattedData = collect($data)->map(function ($row, $key) {
             return [
                 'id' => $key + 1, // Assign a unique ID
-                'company_code' => $row['company_code'] ?? null,
-                // 'company_name' => $row['company_name'] ?? null,
                 'single_role' => $row['single_role'] ?? null,
-                'single_role_desc' => $row['single_role_desc'] ?? null,
+                'single_role_description' => $row['single_role_description'] ?? null,
                 'tcode' => $row['tcode'] ?? null,
-                'tcode_desc' => $row['tcode_desc'] ?? null,
-                'sap_module' => $row['sap_module'] ?? null
+                'tcode_description' => $row['tcode_description'] ?? null
             ];
         });
 
@@ -176,22 +164,15 @@ class SingleRoleTcodeController extends Controller
                         continue;
                     }
 
-                    $company = Company::where('company_code', $row['company_code'])->first();
-                    if (!$company) {
-                        Log::warning('Company not found for row', ['row' => $row]);
-                        continue;
-                    }
-
                     $singleRole = SingleRole::updateOrCreate(
-                        ['nama' => $row['single_role'], 'company_id' => $company->company_code],
-                        ['deskripsi' => $row['single_role_desc']]
+                        ['nama' => $row['single_role']],
+                        ['deskripsi' => $row['single_role_description']]
                     );
 
                     $tCode = Tcode::updateOrCreate(
                         ['code' => $row['tcode']],
                         [
-                            'deskripsi' => $row['tcode_desc'],
-                            'sap_module' => $row['sap_module'],
+                            'deskripsi' => $row['tcode_description'],
                         ]
                     );
 

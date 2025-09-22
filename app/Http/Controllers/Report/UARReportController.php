@@ -295,8 +295,13 @@ class UARReportController extends Controller
                 ->whereNull('deleted_at')
                 ->latest()
                 ->first();
-            $nomorSurat = $penomoranUAR->number ?? 'XXX (Belum terdaftar)';
-            $cost_center = $penomoranUAR->departemen->cost_center;
+            if ($penomoranUAR) {
+                $nomorSurat = $penomoranUAR->number;
+                $cost_center = $penomoranUAR->departemen->cost_center;
+            } else {
+                $nomorSurat = 'XXX (Belum terdaftar)';
+                $cost_center = Departemen::where('departemen_id', $departemenId)->first()?->cost_center ?? 'Belum terdaftar';
+            }
         } elseif ($kompartemenId) {
             $kompartemen = Kompartemen::find($kompartemenId);
             $displayName = $kompartemen ? $kompartemen->nama : '';
@@ -317,8 +322,13 @@ class UARReportController extends Controller
                 ->whereNull('deleted_at')
                 ->latest()
                 ->first();
-            $nomorSurat = $penomoranUAR->number ?? 'XXX (Belum terdaftar)';
-            $cost_center = $penomoranUAR->kompartemen->cost_center;
+            if ($penomoranUAR) {
+                $nomorSurat = $penomoranUAR->number;
+                $cost_center = $penomoranUAR->kompartemen->cost_center;
+            } else {
+                $nomorSurat = 'XXX (Belum terdaftar)';
+                $cost_center = Kompartemen::where('kompartemen_id', $kompartemenId)->first()?->cost_center ?? 'Belum terdaftar';
+            }
         } elseif ($companyId) {
             $company = Company::where('company_code', $companyId)->first();
             $displayName = $company ? $company->nama : '-';

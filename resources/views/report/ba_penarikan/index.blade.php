@@ -12,7 +12,7 @@
                 <select name="company_id" id="company_id" class="form-select">
                     <option value="">-- All Companies --</option>
                     @foreach ($companies as $c)
-                        <option value="{{ $c->shortname }}" @selected($selectedCompany == $c->shortname)>
+                        <option value="{{ $c->shortname }}">
                             {{ $c->company_code }} - {{ $c->nama }}
                         </option>
                     @endforeach

@@ -70,31 +70,6 @@
             <div class="col-md-3 mb-3">
                 <div class="card bg-success text-white text-center shadow-sm">
                     <div class="card-body">
-                        <h5 class="card-title">JobRoles dengan Composite Roles</h5>
-                        <p class="card-text">
-                            {{ $data['JobCompPerCompany'][$userCompany] ?? ($data['JobComp'] ?? 0) }}
-                        </p>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-3 mb-3">
-                <a href="#" id="btnJobCompEmpty" data-metric="jobRolesComposite" class="text-decoration-none">
-                    <div class="card bg-danger text-white text-center shadow-sm" style="cursor:pointer;">
-                        <div class="card-body">
-                            <h5 class="card-title">JobRoles tanpa Composite</h5>
-                            <p class="card-text fw-bold">
-                                {{ $data['groupedData']['emptyMetrics']['JobCompEmpty'][$userCompany] ?? ($data['JobCompEmpty'] ?? 0) }}
-                            </p>
-                        </div>
-                    </div>
-                </a>
-            </div>
-        </div>
-
-        <div class="row pb-5">
-            <div class="col-md-3 mb-3">
-                <div class="card bg-success text-white text-center shadow-sm">
-                    <div class="card-body">
                         <h5 class="card-title">CompositeRole dengan Job Role</h5>
                         <p class="card-text">
                             {{ $data['compJobPerCompany'][$userCompany] ?? ($data['compJob'] ?? 0) }}
@@ -185,7 +160,7 @@
             </div>
         </div>
 
-        <div class="row pb-5">
+        {{-- <div class="row pb-2">
             <div class="col-md-3 mb-3">
                 <div class="card bg-success text-white text-center shadow-sm">
                     <div class="card-body">
@@ -203,6 +178,34 @@
                             <h5 class="card-title">tCode tanpa Single Role</h5>
                             <p class="card-text">
                                 {{ $data['groupedData']['emptyMetrics']['tcodeSingEmpty'][$userCompany] ?? ($data['tcodeSingEmpty'] ?? 0) }}
+                            </p>
+                        </div>
+                    </div>
+                </a>
+            </div>
+        </div> --}}
+
+        <hr width="90%" class="my-1 mx-auto">
+
+        <div class="row pt-3 pb-5">
+            <div class="col-3"></div>
+            <div class="col-md-3 mb-3">
+                <div class="card bg-success text-white text-center shadow-sm">
+                    <div class="card-body">
+                        <h5 class="card-title">JobRoles dengan Composite Roles</h5>
+                        <p class="card-text">
+                            {{ $data['JobCompPerCompany'][$userCompany] ?? ($data['JobComp'] ?? 0) }}
+                        </p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3 mb-3">
+                <a href="#" id="btnJobCompEmpty" data-metric="jobRolesComposite" class="text-decoration-none">
+                    <div class="card bg-danger text-white text-center shadow-sm" style="cursor:pointer;">
+                        <div class="card-body">
+                            <h5 class="card-title">JobRoles tanpa Composite</h5>
+                            <p class="card-text fw-bold">
+                                {{ $data['groupedData']['emptyMetrics']['JobCompEmpty'][$userCompany] ?? ($data['JobCompEmpty'] ?? 0) }}
                             </p>
                         </div>
                     </div>
@@ -319,7 +322,7 @@
     <script>
         const companyCode = @json($userCompany);
 
-        function showEmptyMetricModal(url, title) {
+        function showEmptyMetricModal(url, title, isGlobal = false) {
             $('#emptyMetricModalLabel').text(title);
             $('#emptyMetricModal').modal('show');
 
@@ -328,9 +331,37 @@
                 $('#emptyMetricTable tbody').empty();
             }
 
-            // Append company_code so backend can filter
-            const sep = url.includes('?') ? '&' : '?';
-            const finalUrl = url + sep + 'company_code=' + encodeURIComponent(companyCode);
+            // Decide final URL (no company filter for global SingleRole / Tcode endpoints)
+            let finalUrl = url;
+            if (!isGlobal) {
+                const sep = url.includes('?') ? '&' : '?';
+                finalUrl = url + sep + 'company_code=' + encodeURIComponent(companyCode);
+            }
+
+            // Build columns depending on scope
+            let columns = [{
+                    data: null,
+                    render: (d, t, r, m) => m.row + 1
+                },
+                {
+                    data: 'nama'
+                }
+            ];
+
+            if (isGlobal) {
+                // For global endpoints (SingleRole / Tcode) there is no company column returned.
+                // Show a placeholder '-' so table layout stays consistent.
+                columns.push({
+                    data: null,
+                    render: () => '-'
+                });
+            } else {
+                // Company-scoped endpoints still return company relation
+                columns.push({
+                    data: 'company.nama',
+                    defaultContent: '-'
+                });
+            }
 
             $('#emptyMetricTable').DataTable({
                 processing: true,
@@ -339,44 +370,39 @@
                     url: finalUrl,
                     dataSrc: ''
                 },
-                columns: [{
-                        data: null,
-                        render: (d, t, r, m) => m.row + 1
-                    },
-                    {
-                        data: 'nama'
-                    },
-                    {
-                        data: 'company.nama'
-                    }
-                ]
+                columns: columns
             });
         }
 
+        // Company–scoped (still filtered by company)
         $('#btnJobCompEmpty').on('click', function(e) {
             e.preventDefault();
-            showEmptyMetricModal("{{ route('home.empty.jobRolesComposite') }}", "JobRoles tanpa Composite");
+            showEmptyMetricModal("{{ route('home.empty.jobRolesComposite') }}", "JobRoles tanpa Composite", false);
         });
         $('#btnCompJobEmpty').on('click', function(e) {
             e.preventDefault();
-            showEmptyMetricModal("{{ route('home.empty.compositeRolesJob') }}", "CompositeRole tanpa JobRole");
+            showEmptyMetricModal("{{ route('home.empty.compositeRolesJob') }}", "CompositeRole tanpa JobRole",
+                false);
         });
         $('#btnCompSingleEmpty').on('click', function(e) {
             e.preventDefault();
             showEmptyMetricModal("{{ route('home.empty.compositeRolesSingle') }}",
-                "CompositeRole tanpa Single Role");
+                "CompositeRole tanpa Single Role", false);
         });
+
+        // GLOBAL (SingleRole & Tcode no longer tied to company)
         $('#btnSingleCompEmpty').on('click', function(e) {
             e.preventDefault();
-            showEmptyMetricModal("{{ route('home.empty.singleRolesComposite') }}", "SingleRole tanpa JobRole");
+            showEmptyMetricModal("{{ route('home.empty.singleRolesComposite') }}", "SingleRole tanpa JobRole",
+                true);
         });
         $('#btnSingleTcodeEmpty').on('click', function(e) {
             e.preventDefault();
-            showEmptyMetricModal("{{ route('home.empty.singleRolesTcode') }}", "SingleRole tanpa tCode");
+            showEmptyMetricModal("{{ route('home.empty.singleRolesTcode') }}", "SingleRole tanpa tCode", true);
         });
         $('#btnTcodeSingEmpty').on('click', function(e) {
             e.preventDefault();
-            showEmptyMetricModal("{{ route('home.empty.tcodesSingle') }}", "tCode tanpa Single Role");
+            showEmptyMetricModal("{{ route('home.empty.tcodesSingle') }}", "tCode tanpa Single Role", true);
         });
     </script>
 @endsection

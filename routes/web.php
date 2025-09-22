@@ -44,6 +44,7 @@ use App\Http\Controllers\MasterData\UserGenericController;
 use App\Http\Controllers\MasterData\UserNIKController;
 use App\Http\Controllers\MasterData\UIDNIKUnitKerjaController;
 use App\Http\Controllers\MasterData\UIDGenericUnitKerjaController;
+use App\Http\Controllers\MasterData\MasterDataKaryawanLocalController;
 
 use App\Http\Controllers\MasterData\Compare\UnitKerjaCompareController;
 use App\Http\Controllers\MasterData\Compare\UAMCompareController;
@@ -61,6 +62,8 @@ use App\Http\Controllers\Middle_DB\UAMComponentController;
 use App\Http\Controllers\Middle_DB\raw\UAMRelationshipRawController;
 use App\Http\Controllers\Middle_DB\raw\GenericKaryawanMappingRawController;
 use App\Http\Controllers\Middle_DB\import\ImportUserNIKUnitKerjaController;
+use App\Http\Controllers\Middle_DB\import\ImportUnitKerjaController;
+use App\Http\Controllers\Middle_DB\import\ImportUAMController;
 
 use App\Http\Controllers\Relationship\CompositeSingleController;
 use App\Http\Controllers\Relationship\JobCompositeController;
@@ -253,6 +256,7 @@ Route::middleware(['auth'])->group(function () {
 
     Route::get('/upload/unit-kerja', [CompanyMasterDataController::class, 'showForm'])->name('unit-kerja.upload-form');
     Route::post('/upload/unit-kerja', [CompanyMasterDataController::class, 'upload'])->name('unit-kerja.upload');
+    Route::get('/company-master-data/export', [CompanyMasterDataController::class, 'downloadMasterData'])->name('company_master_data.export');
 
 
     // In routes/web.php
@@ -297,6 +301,12 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/relationship/composite-single/data-filter-company', [CompositeSingleController::class, 'searchByCompany'])->name('composite-single.filter-company');
     Route::resource('/relationship/composite-single', CompositeSingleController::class);
 
+    Route::prefix('/relationship/composite-ao')->name('composite_ao.')->group(function () {
+        Route::get('/', [CompositeSingleController::class, 'index_ao'])->name('index');
+        Route::get('/datatable', [CompositeSingleController::class, 'datatable_ao'])->name('datatable');
+        Route::delete('/{id}', [CompositeSingleController::class, 'destroy_ao'])->name('destroy');
+    });
+
     // Route::get('/relationship/single-tcode/data-set', [SingleTcodeController::class, 'jsonIndex'])->name('single-tcode.jsonIndex');
     Route::get('single-tcode/datatable', [SingleTcodeController::class, 'datatable'])->name('single-tcode.datatable');
     Route::get('/relationship/single-tcode/data-filter-company', [SingleTcodeController::class, 'searchByCompany'])->name('single-tcode.filter-company');
@@ -330,16 +340,19 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/company-kompartemen/preview', [CompanyKompartemenController::class, 'preview'])->name('company_kompartemen.preview');
     Route::get('/company-kompartemen/preview-data', [CompanyKompartemenController::class, 'getPreviewData'])->name('company_kompartemen.preview_data');
     Route::post('/company-kompartemen/confirm', [CompanyKompartemenController::class, 'confirmImport'])->name('company_kompartemen.confirm');
+    Route::get('/company-kompartemen/template', [CompanyKompartemenController::class, 'downloadTemplate'])->name('company_kompartemen.template');
 
     Route::get('/composite-role-single-role/upload', [CompositeRoleSingleRoleController::class, 'uploadForm'])->name('composite_single.upload');
     Route::post('/composite-role-single-role/preview', [CompositeRoleSingleRoleController::class, 'preview'])->name('composite_single.preview');
     Route::get('/composite-role-single-role/preview-data', [CompositeRoleSingleRoleController::class, 'getPreviewData'])->name('composite_single.preview_data');
     Route::post('/composite-role-single-role/confirm', [CompositeRoleSingleRoleController::class, 'confirmImport'])->name('composite_single.confirm');
+    Route::get('/composite-role-single-role/template', [CompositeRoleSingleRoleController::class, 'downloadTemplate'])->name('composite_single.template');
 
     Route::get('/tcode-single-role/upload', [SingleRoleTcodeController::class, 'uploadForm'])->name('tcode_single_role.upload');
     Route::post('/tcode-single-role/preview', [SingleRoleTcodeController::class, 'preview'])->name('tcode_single_role.preview');
     Route::get('/tcode-single-role/preview-data', [SingleRoleTcodeController::class, 'getPreviewData'])->name('tcode_single_role.preview_data');
     Route::post('/tcode-single-role/confirm', [SingleRoleTcodeController::class, 'confirmImport'])->name('tcode_single_role.confirm');
+    Route::get('/tcode-single-role/template', [SingleRoleTcodeController::class, 'downloadTemplate'])->name('tcode_single_role.template');
 
 
     // ------------------ NEW MASTER DATA ------------------
@@ -415,6 +428,16 @@ Route::middleware(['auth'])->group(function () {
     Route::get('relationship/nik-job/without-job-role', [NIKJobController::class, 'indexWithoutJobRole'])->name('nik-job.null-relationship');
     Route::resource('relationship/nik-job', NIKJobController::class);
 
+    Route::prefix('karyawan-unit-kerja')->name('karyawan_unit_kerja.')->group(function () {
+        Route::get('/', [MasterDataKaryawanLocalController::class, 'index'])->name('index');
+        Route::get('/data', [MasterDataKaryawanLocalController::class, 'data'])->name('data');
+        Route::get('/create', [MasterDataKaryawanLocalController::class, 'create'])->name('create');
+        Route::post('/', [MasterDataKaryawanLocalController::class, 'store'])->name('store');
+        Route::get('/{id}/edit', [MasterDataKaryawanLocalController::class, 'edit'])->name('edit');
+        Route::put('/{id}', [MasterDataKaryawanLocalController::class, 'update'])->name('update');
+        Route::delete('/{id}', [MasterDataKaryawanLocalController::class, 'destroy'])->name('destroy');
+    });
+
     Route::prefix('unit-kerja')->name('unit_kerja.')->group(function () {
         // User NIK
         Route::get('user-nik', [UIDNIKUnitKerjaController::class, 'index'])->name('user_nik.index');
@@ -465,10 +488,24 @@ Route::middleware(['auth'])->group(function () {
     });
 
     // ------------------ IMPORT DATA MIDDLE DB ------------------
-    Route::prefix('import/user-nik-unit-kerja')->name('import.nik_unit_kerja.')->group(function () {
-        Route::get('/', [ImportUserNIKUnitKerjaController::class, 'index'])->name('index');
-        Route::get('/data', [ImportUserNIKUnitKerjaController::class, 'data'])->name('data'); // expects ?periode_id=
-        Route::post('/import', [ImportUserNIKUnitKerjaController::class, 'import'])->name('import');
+    Route::prefix('import')->name('import.')->group(function () {
+        Route::get('/user-nik-unit-kerja', [ImportUserNIKUnitKerjaController::class, 'index'])->name('nik_unit_kerja.index');
+        Route::get('/user-nik-unit-kerja/data', [ImportUserNIKUnitKerjaController::class, 'data'])->name('nik_unit_kerja.data'); // expects ?periode_id=
+        Route::post('/user-nik-unit-kerja/import', [ImportUserNIKUnitKerjaController::class, 'import'])->name('nik_unit_kerja.import');
+        Route::post('/nik-unit-kerja/import-all', [ImportUserNIKUnitKerjaController::class, 'importAll'])->name('nik_unit_kerja.import_all');
+
+        Route::get('/unit-kerja', [ImportUnitKerjaController::class, 'index'])->name('unit_kerja.index');
+        Route::post('/unit-kerja/sync', [ImportUnitKerjaController::class, 'sync'])->name('unit_kerja.sync');
+        Route::post('/unit-kerja/karyawan-sync', [ImportUnitKerjaController::class, 'karyawanSync'])->name('unit_kerja.karyawan.sync');
+
+        Route::get('/uam', [ImportUAMController::class, 'index'])->name('uam.index');
+        Route::get('/uam/sync', [ImportUAMController::class, 'sync_all'])->name('uam.sync');
+        Route::post('/uam/composite-roles', [ImportUAMController::class, 'sync_composite_roles'])->name('uam.composite_roles');
+        Route::post('/uam/composite_ao', [ImportUAMController::class, 'sync_ao'])->name('uam.composite_ao');
+        Route::post('/uam/composite-role-single-roles', [ImportUAMController::class, 'sync_composite_role_single_roles'])->name('uam.composite_role_single_roles');
+        Route::post('/uam/single-roles', [ImportUAMController::class, 'sync_single_roles'])->name('uam.single_roles');
+        Route::post('/uam/single-role-tcodes', [ImportUAMController::class, 'sync_single_role_tcodes'])->name('uam.single_role_tcodes');
+        Route::post('/uam/tcodes', [ImportUAMController::class, 'sync_tcodes'])->name('uam.tcodes');
     });
     // ------------------ UPLOAD DATA ------------------
 

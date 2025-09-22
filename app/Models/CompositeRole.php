@@ -60,6 +60,11 @@ class CompositeRole extends Model
             ->withTimestamps();
     }
 
+    public function ao()
+    {
+        return $this->hasMany(CompositeAO::class, 'composite_role', 'nama');
+    }
+
     /**
      * Breakdown of connected Single Roles and Tcodes.
      * Sources combined:

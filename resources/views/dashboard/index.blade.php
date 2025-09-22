@@ -19,7 +19,7 @@
                                         <th>Departemen</th>
                                         <th>Job Role</th>
                                         <th>Composite Role</th>
-                                        <th>Single Role</th>
+                                        <th>Single Role (Global)</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -35,8 +35,7 @@
                                             </td>
                                             <td>{{ $data['groupedData']['data']['compositerole'][$company->company_code] ?? 0 }}
                                             </td>
-                                            <td>{{ $data['groupedData']['data']['singlerole'][$company->company_code] ?? 0 }}
-                                            </td>
+                                            <td>-</td> {{-- Single Role is now global (no company split) --}}
                                         </tr>
                                     @endforeach
                                     <tr class="text-center fw-bold " style="background-color: rgb(176, 176, 176)">
@@ -45,7 +44,7 @@
                                         <td>{{ $data['departemen'] }}</td>
                                         <td>{{ $data['jobRole'] }}</td>
                                         <td>{{ $data['compositeRole'] }}</td>
-                                        <td>{{ $data['singleRole'] }}</td>
+                                        <td>{{ $data['singleRole'] }}</td> {{-- Global total --}}
                                     </tr>
                                 </tbody>
                             </table>
@@ -369,7 +368,13 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
         let companies = @json($data['groupedData']['companies']);
-        let groupedData = @json($data['groupedData']['data']);
+        let groupedData = @json($data['groupedData']['data']); // no singlerole distribution now
+
+        // Remove any accidental singlerole dataset (global now)
+        if (groupedData.singlerole) {
+            delete groupedData.singlerole;
+        }
+
         let companyColorMap = {
             'PT Pupuk Indonesia (Persero)': 'LavenderBlush',
             'PT Petrokimia Gresik': 'YellowGreen',
@@ -386,19 +391,20 @@
         };
 
         Object.keys(groupedData).forEach(function(key) {
-            let ctx = document.getElementById('chart_' + key).getContext('2d');
-            let myLabels = companies.map(company => company.nama);
-            let myData = companies.map(company => groupedData[key][company.company_code] ?? 0);
-            let myColors = companies.map(company => companyColorMap[company.nama] || '#000000');
+            let ctx = document.getElementById('chart_' + key)?.getContext('2d');
+            if (!ctx) return;
+            let labels = companies.map(c => c.nama);
+            let values = companies.map(c => groupedData[key][c.company_code] ?? 0);
+            let colors = companies.map(c => companyColorMap[c.nama] || '#4e73df');
 
             new Chart(ctx, {
                 type: 'bar',
                 data: {
-                    labels: myLabels,
+                    labels: labels,
                     datasets: [{
                         label: key,
-                        data: myData,
-                        backgroundColor: myColors,
+                        data: values,
+                        backgroundColor: colors,
                         borderColor: 'black',
                         borderWidth: 2
                     }]
@@ -406,22 +412,7 @@
                 options: {
                     responsive: true,
                     animation: {
-                        duration: 0,
-                        onComplete: function() {
-                            let chartInstance = this;
-                            let ctx = chartInstance.ctx;
-                            ctx.textAlign = 'center';
-                            ctx.textBaseline = 'bottom';
-                            ctx.fillStyle = 'black';
-
-                            chartInstance.data.datasets.forEach((dataset, i) => {
-                                let meta = chartInstance.getDatasetMeta(i);
-                                meta.data.forEach((bar, index) => {
-                                    let data = dataset.data[index];
-                                    ctx.fillText(data, bar.x, bar.y - 5);
-                                });
-                            });
-                        }
+                        duration: 0
                     },
                     plugins: {
                         legend: {
@@ -430,9 +421,6 @@
                         title: {
                             display: true,
                             text: key + ' Data'
-                        },
-                        tooltip: {
-                            enabled: true
                         }
                     },
                     scales: {
@@ -445,9 +433,7 @@
         });
 
         $(document).ready(function() {
-            let modalTable;
-
-            function showEmptyMetricModal(url, title) {
+            function showEmptyMetricModal(url, title, isGlobal = false) {
                 $('#emptyMetricModalLabel').text(title);
                 $('#emptyMetricModal').modal('show');
 
@@ -456,79 +442,72 @@
                     $('#emptyMetricTable tbody').empty();
                 }
 
-                modalTable = $('#emptyMetricTable').DataTable({
+                let columns = [{
+                        data: null,
+                        render: (d, t, r, m) => m.row + 1
+                    },
+                    {
+                        data: 'nama'
+                    }
+                ];
+
+                if (isGlobal) {
+                    // Add placeholder company column
+                    columns.push({
+                        data: null,
+                        render: () => '-',
+                        defaultContent: '-'
+                    });
+                } else {
+                    columns.push({
+                        data: 'company.nama',
+                        defaultContent: '-'
+                    });
+                }
+
+                $('#emptyMetricTable').DataTable({
                     processing: true,
                     serverSide: false,
                     ajax: {
                         url: url,
                         dataSrc: ''
                     },
-                    columns: [{
-                            data: null,
-                            render: (data, type, row, meta) => meta.row + 1
-                        },
-                        {
-                            data: 'nama'
-                        },
-                        {
-                            data: 'company.nama'
-                        }
-                    ]
+                    columns: columns
                 });
             }
 
-            // JobRoles tanpa Composite
-            $('#btnJobCompEmpty').on('click', function(e) {
+            // Company-scoped
+            $('#btnJobCompEmpty').on('click', e => {
                 e.preventDefault();
-                showEmptyMetricModal(
-                    "{{ route('home.empty.jobRolesComposite') }}",
-                    "JobRoles tanpa Composite"
-                );
+                showEmptyMetricModal("{{ route('home.empty.jobRolesComposite') }}",
+                    "JobRoles tanpa Composite", false);
+            });
+            $('#btnCompJobEmpty').on('click', e => {
+                e.preventDefault();
+                showEmptyMetricModal("{{ route('home.empty.compositeRolesJob') }}",
+                    "CompositeRole tanpa JobRole", false);
+            });
+            $('#btnCompSingleEmpty').on('click', e => {
+                e.preventDefault();
+                showEmptyMetricModal("{{ route('home.empty.compositeRolesSingle') }}",
+                    "CompositeRole tanpa Single Role", false);
             });
 
-            // CompositeRole tanpa JobRole
-            $('#btnCompJobEmpty').on('click', function(e) {
+            // Global (no company relation)
+            $('#btnSingleCompEmpty').on('click', e => {
                 e.preventDefault();
-                showEmptyMetricModal(
-                    "{{ route('home.empty.compositeRolesJob') }}",
-                    "CompositeRole tanpa JobRole"
-                );
+                showEmptyMetricModal("{{ route('home.empty.singleRolesComposite') }}",
+                    "SingleRole tanpa JobRole", true);
             });
-
-            // CompositeRole tanpa Single Role
-            $('#btnCompSingleEmpty').on('click', function(e) {
+            $('#btnSingleTcodeEmpty').on('click', e => {
                 e.preventDefault();
-                showEmptyMetricModal(
-                    "{{ route('home.empty.compositeRolesSingle') }}",
-                    "CompositeRole tanpa Single Role"
-                );
+                showEmptyMetricModal("{{ route('home.empty.singleRolesTcode') }}",
+                    "SingleRole tanpa tCode", true);
             });
-
-            // SingleRole tanpa JobRole
-            $('#btnSingleCompEmpty').on('click', function(e) {
+            $('#btnTcodeSingEmpty').on('click', e => {
                 e.preventDefault();
-                showEmptyMetricModal(
-                    "{{ route('home.empty.singleRolesComposite') }}",
-                    "SingleRole tanpa JobRole"
-                );
-            });
-
-            // SingleRole tanpa tCode
-            $('#btnSingleTcodeEmpty').on('click', function(e) {
-                e.preventDefault();
-                showEmptyMetricModal(
-                    "{{ route('home.empty.singleRolesTcode') }}",
-                    "SingleRole tanpa tCode"
-                );
-            });
-
-            // tCode tanpa Single Role
-            $('#btnTcodeSingEmpty').on('click', function(e) {
-                e.preventDefault();
-                showEmptyMetricModal(
-                    "{{ route('home.empty.tcodesSingle') }}",
-                    "tCode tanpa Single Role"
-                );
+                showEmptyMetricModal("{{ route('home.empty.tcodesSingle') }}", "tCode tanpa Single Role",
+                    true);
             });
         });
     </script>

@@ -76,26 +76,22 @@
         $modules = config('dynamic_uploads.modules');
         $nikJobRoleModule = $modules['nik_job_role'] ?? null;
 
-        $isUploadMasterNikActive =
-            request()->routeIs('dynamic_upload.upload') && request()->route('module') === 'master_nik';
-        $isUploadUserNikActive =
-            request()->routeIs('dynamic_upload.upload') && request()->route('module') === 'user_nik';
+        // $isUploadMasterNikActive =
+        //     request()->routeIs('dynamic_upload.upload') && request()->route('module') === 'master_nik';
+        // $isUploadUserNikActive =
+        //     request()->routeIs('dynamic_upload.upload') && request()->route('module') === 'user_nik';
         $isUserGenericUnitUploadActive = request()->routeIs([
             'user-generic-unit-kerja.upload',
             'user-generic-unit-kerja.previewPage',
         ]);
         $isUserGenericUnitActive = request()->routeIs('unit_kerja.user_generic.*');
         $isUserDetailActive = request()->routeIs('user-detail.*');
-        $isMiddleDbActive = request()->routeIs('middle_db.master_data_karyawan.*');
         $isImportNIKUnitActive = request()->routeIs('import.nik_unit_kerja.*');
 
         $isUserIdUnitActive =
-            $isUploadMasterNikActive ||
-            $isUploadUserNikActive ||
-            $isUserGenericUnitUploadActive ||
-            $isUserGenericUnitActive ||
-            $isUserDetailActive ||
-            $isMiddleDbActive;
+            // $isUploadMasterNikActive ||
+            // $isUploadUserNikActive ||
+            $isUserGenericUnitUploadActive || $isUserGenericUnitActive || $isUserDetailActive;
     @endphp
 
     <div class="dropdown">
@@ -118,13 +114,12 @@
             @endcan
             <div class="mx-3 text-white text-end"><strong>Local Data</strong></div>
 
-
+            {{-- 
             <li>
                 <a href="javascript:void(0)" class="nav-link text-danger disabled">
                     <i class="bi bi-file-earmark-spreadsheet me-2"></i>Upload User ID NIK - Unit Kerja
                 </a>
-            </li>
-
+            </li> --}}
 
             <li class="nav-item">
                 <a href="{{ route('user-generic-unit-kerja.upload') }}"
@@ -224,7 +219,7 @@
     <div class="dropdown">
         @php
             $isMappingActive = request()->routeIs(
-                'dynamic_upload.upload',
+                // 'dynamic_upload.upload',
                 'nik_job_role',
                 'user-generic-job-role.*',
                 'nik-job*',
@@ -250,6 +245,7 @@
                     <i class="bi bi-file-earmark-spreadsheet me-2"></i>Upload User ID - Job Role
                 </a>
             </li>
+
             <li class="nav-item">
                 <a href="{{ route('nik-job.index') }}"
                     class="nav-link {{ request()->routeIs('nik-job*') && !request()->routeIs('nik-job.null-relationship') ? 'active' : 'text-white' }}">

@@ -36,7 +36,7 @@ class CostCenter extends Model
     // CostCenter belongs to a Company
     public function company()
     {
-        return $this->belongsTo(Company::class, 'company_code', 'company_id');
+        return $this->belongsTo(Company::class, 'company_id', 'company_code'); // FIXED
     }
 
     public function userNIK()

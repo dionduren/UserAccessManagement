@@ -637,6 +637,7 @@ class UAMReportController extends Controller
                     return [
                         'id' => $role->id,
                         'nama' => $role->nama,
+                        'deskripsi' => $role->deskripsi,
                     ];
                 })->toArray(),
             ];
@@ -663,23 +664,96 @@ class UAMReportController extends Controller
                     $uniqueSingleRoles[$sr['id']] = [
                         'id' => $sr['id'],
                         'nama' => $sr['nama'],
+                        'deskripsi' => $sr['deskripsi'],
                         'tcodes' => $tcodes,
                     ];
                 }
             }
         }
-        // Initialize PhpWord and create main section
-        $phpWord = new PhpWord();
-        $section = $phpWord->addSection();
-
         // Calculate total unique tcodes for display limit
         $uniqueTcodeCount = array_reduce(array_values($uniqueSingleRoles), function ($carry, $sr) {
             return $carry + (isset($sr['tcodes']) && is_array($sr['tcodes']) ? count($sr['tcodes']) : 0);
         }, 0);
 
-        // Build document info table
-        $docInfoTable = $section->addTable(['borderSize' => 6, 'borderColor' => '000000', 'cellMargin' => 80]);
-        $docInfoTable = $section->addTable(['borderSize' => 6, 'borderColor' => '000000', 'cellMargin' => 80]);
+
+        // Initialize PhpWord and create main section
+        $phpWord = new PhpWord();
+
+        // COVER PAGE SECTION (no header/footer)
+        $coverSection = $phpWord->addSection([
+            'headerHeight' => 0,
+            'footerHeight' => 0,
+            'marginTop' => 1200,
+            'marginBottom' => 1200,
+            'marginLeft' => 1200,
+            'marginRight' => 1200,
+            'colsNum' => 1,
+            'breakType' => 'continuous',
+            'titlePg' => true,
+        ]);
+
+
+        // Add cover page title
+        $coverTable = $coverSection->addTable(['borderSize' => 6, 'borderColor' => '000000', 'cellMargin' => 20]);
+
+        // Add empty rows for spacing
+        // for ($i = 0; $i < 6; $i++) $coverTable->addRow(300);
+
+        $coverTable->addRow(8000, [
+            'valign' => 'center',
+        ]);
+        $coverTable->addCell(9000, ['gridSpan' => 3, 'valign' => 'center'])->addText(
+            'USER ACCESS MATRIX <w:br/> ' . mb_strtoupper(($unitKerja ? "$unitKerja" : '-'), 'UTF-8') . '<w:br/><w:br/>',
+            ['bold' => true, 'size' => 20],
+            ['alignment' => Jc::CENTER, 'spaceAfter' => 0]
+        );
+        // Name row
+        $coverTable->addRow();
+        $coverTable->addCell(10200, ['gridSpan' => 3])->addText('DISUSUN OLEH', ['bold' => true, 'size' => 10], ['alignment' => Jc::CENTER, 'spaceAfter' => 0]);
+        // Signature row
+        $coverTable->addRow(1000, ['exactHeight' => true]);
+        $coverTable->addCell(3400)->addText('', ['size' => 10], ['alignment' => Jc::CENTER, 'spaceAfter' => 0]);
+        $coverTable->addCell(3400)->addText('', ['size' => 10], ['alignment' => Jc::CENTER, 'spaceAfter' => 0]);
+        $coverTable->addCell(3400)->addText('', ['size' => 10], ['alignment' => Jc::CENTER, 'spaceAfter' => 0]);
+        $coverTable->addRow(250, ['exactHeight' => true]);
+        $coverTable->addCell(3400)->addText('', ['size' => 10], ['alignment' => Jc::CENTER, 'spaceAfter' => 0]);
+        $coverTable->addCell(3400)->addText('', ['size' => 10], ['alignment' => Jc::CENTER, 'spaceAfter' => 0]);
+        $coverTable->addCell(3400)->addText('', ['size' => 10], ['alignment' => Jc::CENTER, 'spaceAfter' => 0]);
+        // Position row
+        $coverTable->addRow(250, ['exactHeight' => true]);
+        $coverTable->addCell(3400)->addText('Staf Operasional TI', ['bold' => true, 'size' => 9], ['alignment' => Jc::CENTER, 'spaceAfter' => 0]);
+        $coverTable->addCell(3400)->addText('Junior Officer Tata Kelola TI', ['bold' => true, 'size' => 9], ['alignment' => Jc::CENTER, 'spaceAfter' => 0]);
+        $coverTable->addCell(3400)->addText('Key User', ['bold' => true, 'size' => 9], ['alignment' => Jc::CENTER, 'spaceAfter' => 0]);
+
+        // Header row: "DISETUJUI OLEH"
+        // Name row
+        $coverTable->addRow();
+        $coverTable->addCell(9000, ['gridSpan' => 3])->addText('DISETUJUI OLEH', ['bold' => true, 'size' => 10], ['alignment' => Jc::CENTER, 'spaceAfter' => 0]);
+        // Signature row
+        $coverTable->addRow(1000, ['exactHeight' => true]);
+        $coverTable->addCell(3400)->addText('', ['size' => 10], ['alignment' => Jc::CENTER, 'spaceAfter' => 0]);
+        $coverTable->addCell(3400)->addText('', ['size' => 10], ['alignment' => Jc::CENTER, 'spaceAfter' => 0]);
+        $coverTable->addCell(3400)->addText('', ['size' => 10], ['alignment' => Jc::CENTER, 'spaceAfter' => 0]);
+        // Name row
+        $coverTable->addRow(250, ['exactHeight' => true]);
+        $coverTable->addCell(3400)->addText('Abdul Muhyi Marakarma', ['size' => 10], ['alignment' => Jc::CENTER, 'spaceBefore' => 0, 'spaceAfter' => 0]);
+        $coverTable->addCell(3400)->addText('Sony Candra Dirganto', ['size' => 10], ['alignment' => Jc::CENTER, 'spaceBefore' => 0, 'spaceAfter' => 0]);
+        $coverTable->addCell(3400)->addText('', ['size' => 10], ['alignment' => Jc::CENTER, 'spaceBefore' => 0, 'spaceAfter' => 0]);
+
+        // Position row
+        $coverTable->addRow(250, ['exactHeight' => true]);
+        $coverTable->addCell(3400)->addText('VP Operasional Sistem TI', ['bold' => true, 'size' => 9], ['alignment' => Jc::CENTER, 'spaceBefore' => 0, 'spaceAfter' => 0]);
+        $coverTable->addCell(3400)->addText('VP Strategi dan Tata Kelola TI', ['bold' => true, 'size' => 9], ['alignment' => Jc::CENTER, 'spaceBefore' => 0, 'spaceAfter' => 0]);
+        $coverTable->addCell(3400)->addText($jabatanUnitKerja . ' ' . $unitKerjaName, ['bold' => true, 'size' => 9], ['alignment' => Jc::CENTER, 'spaceBefore' => 0, 'spaceAfter' => 0]);
+        $coverTable->addRow(250, ['exactHeight' => true]);
+        $coverTable->addCell(3400);
+        $coverTable->addCell(3400);
+        $coverTable->addCell(3400);
+
+        // Add a new table for document info (logo, nomor, tanggal, disclaimer)
+        $docInfoTable = $coverSection->addTable(['borderSize' => 6, 'borderColor' => '000000', 'cellMargin' => 20]);
+        $docInfoTable = $coverSection->addTable(['borderSize' => 6, 'borderColor' => '000000', 'cellMargin' => 80]);
+        $docInfoTable = $coverSection->addTable(['borderSize' => 6, 'borderColor' => '000000', 'cellMargin' => 80]);
         $docInfoTable->addRow(500, ['exactHeight' => true]);
         $docInfoTable->addCell(3400, ['valign' => 'center', 'vMerge' => 'restart',])->addImage(
             public_path('logo_pupuk_indonesia.png'),
@@ -703,10 +777,11 @@ class UAMReportController extends Controller
             ['alignment' => Jc::CENTER, 'spaceAfter' => 0]
         );
         $docInfoTable->addRow(1200, ['exactHeight' => true]);
-        // Main section with header/footer
-        $header = $section->addHeader(['gridSpan' => 2]);
-
-        $header->addText(
+        $docInfoTable->addCell(null, ['vMerge' => 'continue']);
+        $docInfoTable->addCell(6000, [
+            'valign' => 'center',
+            'gridSpan' => 2,
+        ])->addText(
             "PupukIndonesia@" . Carbon::today()->year . " Dokumen ini milik PT Pupuk Indonesia (Persero). Segala informasi yang tercantum dalam dokumen ini bersifat rahasia dan terbatas, serta tidak diperkenankan untuk didistribusikan kembali, baik dalam bentuk cetakan maupun elektronik, tanpa persetujuan dari PT Pupuk Indonesia (Persero).",
             ['size' => 8],
             ['alignment' => Jc::CENTER, 'spaceAfter' => 0]
@@ -760,7 +835,6 @@ class UAMReportController extends Controller
 
         $header->addTextBreak(1);
 
-
         $section->addText(
             '1. TABEL MAPPING JOB FUNCTION DAN COMPOSITE ROLE',
             ['bold' => true, 'size' => 12],
@@ -776,7 +850,7 @@ class UAMReportController extends Controller
         $table->addCell(750)->addText('No', ['bold' => true, 'color' => '000000', 'size' => 8], ['alignment' => Jc::CENTER, 'spaceAfter' => 0]);
         $table->addCell(3750)->addText('Job Role', ['bold' => true, 'color' => '000000', 'size' => 8], ['alignment' => Jc::CENTER, 'spaceAfter' => 0]);
         $table->addCell(3750)->addText('Composite Role', ['bold' => true, 'color' => '000000', 'size' => 8], ['alignment' => Jc::CENTER, 'spaceAfter' => 0]);
-        $table->addCell(3750)->addText('Deskripsi', ['bold' => true, 'color' => '000000', 'size' => 8], ['alignment' => Jc::CENTER, 'spaceAfter' => 0]);
+        $table->addCell(3750)->addText('Authorization Object', ['bold' => true, 'color' => '000000', 'size' => 8], ['alignment' => Jc::CENTER, 'spaceAfter' => 0]);
 
         $no = 1;
         // Loop through jobRoles and add rows to the table
@@ -788,8 +862,8 @@ class UAMReportController extends Controller
                 ['space' => ['after' => 0], 'alignment' => Jc::CENTER]
             );
             $table->addCell(3750, ['valign' => 'top'])->addText($this->sanitizeForDocx($jobRole->nama ?? '-'), ['size' => 8], ['spaceAfter' => 0]);
-            $table->addCell(3750, ['valign' => 'top'])->addText($this->sanitizeForDocx($jobRole->compositeRole->nama ?? '-'), ['size' => 8], ['spaceAfter' => 0]);
-            $table->addCell(3750, ['valign' => 'top'])->addText($this->sanitizeForDocx($jobRole->compositeRole->deskripsi ?? '-'), ['size' => 8], ['spaceAfter' => 0]);
+            $table->addCell(3750, ['valign' => 'top'])->addText($this->sanitizeForDocx($jobRole->compositeRole->nama ? $jobRole->compositeRole->nama . '<br>' . $jobRole->compositeRole->deskripsi : '-'), ['size' => 8], ['spaceAfter' => 0]);
+            $table->addCell(3750, ['valign' => 'top'])->addText($this->sanitizeForDocx($jobRole->compositeRole->authorizationObject ? $jobRole->compositeRole->authorizationObject . '<br>' . $jobRole->compositeRole->authorizationObject->deskripsi : '-'), ['size' => 8], ['spaceAfter' => 0]);
         }
 
         // If no data row was added, add an empty row

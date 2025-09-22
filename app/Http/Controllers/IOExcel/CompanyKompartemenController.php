@@ -8,6 +8,7 @@ use App\Models\Company;
 
 use App\Imports\CompanyKompartemenPreviewImport;
 use App\Services\CompanyKompartemenService;
+use App\Exports\JobRoleCompositeTemplateExport;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
@@ -198,5 +199,10 @@ class CompanyKompartemenController extends Controller
                 ],
             ], 500);
         }
+    }
+
+    public function downloadTemplate()
+    {
+        return Excel::download(new JobRoleCompositeTemplateExport(), 'job_role_composite_role_template.xlsx');
     }
 }

@@ -10,7 +10,7 @@ class CreateSingleRolesTable extends Migration
     {
         Schema::create('tr_single_roles', function (Blueprint $table) {
             $table->id();
-            $table->string('company_id');
+            // $table->string('company_id');
             $table->string('nama'); // Single Role Name
             $table->text('deskripsi')->nullable();
             $table->timestamps();
@@ -19,7 +19,7 @@ class CreateSingleRolesTable extends Migration
             $table->text('updated_by')->nullable();
             $table->text('deleted_by')->nullable();
 
-            $table->index('company_id');
+            // $table->index('company_id');
             $table->index('nama');
             $table->index('deleted_at');
 

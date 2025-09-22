@@ -9,6 +9,8 @@ use App\Models\Kompartemen;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use PhpOffice\PhpSpreadsheet\IOFactory;
+use App\Exports\CompanyMasterDataTemplateExport;
+use Maatwebsite\Excel\Facades\Excel;
 
 class CompanyMasterDataController extends Controller
 {
@@ -201,5 +203,10 @@ class CompanyMasterDataController extends Controller
 
             $send(['success' => 'Upload complete']);
         }, 200, ['Content-Type' => 'text/event-stream']);
+    }
+
+    public function downloadMasterData()
+    {
+        return Excel::download(new CompanyMasterDataTemplateExport(), 'master_unit_kerja.xlsx');
     }
 }

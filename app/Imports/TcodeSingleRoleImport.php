@@ -18,7 +18,6 @@ class TcodeSingleRoleImport implements ToModel, WithHeadingRow, WithChunkReading
 
         if ($singleRoleName !== '') {
             $singleRole = SingleRole::firstOrCreate([
-                'company_id' => $row['company_code'] ?? null,
                 'nama' => $singleRoleName,
                 'deskripsi' => $row['single_role_desc'] ?? null,
             ]);

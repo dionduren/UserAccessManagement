@@ -18,13 +18,19 @@ class BAPenarikanDataController extends Controller
 {
     public function index(Request $request)
     {
-        $companies = Company::select('company_code', 'shortname', 'nama')
-            ->orderBy('company_code')
-            ->get();
+        $user_company = auth()->user()?->loginDetail?->company_code ?? null;
+        if ($user_company && $user_company == 'A000') {
 
-        $selectedCompany = $request->get('company_id');
+            $companies = Company::select('company_code', 'shortname', 'nama')
+                ->orderBy('company_code')
+                ->get();
+        } else {
+            $companies = Company::select('company_code', 'shortname', 'nama')
+                ->where('company_code', $user_company)
+                ->get();
+        }
 
-        return view('report.ba_penarikan.index', compact('companies', 'selectedCompany'));
+        return view('report.ba_penarikan.index', compact('companies'));
     }
 
     public function data(Request $request)

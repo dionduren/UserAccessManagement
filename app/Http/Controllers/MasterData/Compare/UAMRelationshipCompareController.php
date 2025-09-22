@@ -40,7 +40,7 @@ class UAMRelationshipCompareController extends Controller
         $local = DB::table('pt_single_role_tcode as srt')
             ->join('tr_single_roles as sr', 'sr.id', '=', 'srt.single_role_id')
             ->join('tr_tcodes as tc', 'tc.id', '=', 'srt.tcode_id')
-            ->select('sr.company_id', 'sr.nama as left_val', 'tc.code as right_val')
+            ->select('sr.nama as left_val', 'tc.code as right_val')
             ->get();
 
         // Middle pairs

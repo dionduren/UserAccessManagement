@@ -9,6 +9,7 @@ use App\Models\Tcode as LocalTcode;
 use App\Models\middle_db\CompositeRole as MidCompositeRole;
 use App\Models\middle_db\SingleRole as MidSingleRole;
 use App\Models\middle_db\Tcode as MidTcode;
+use App\Models\CompositeAO; // ADD
 
 class UAMCompareController extends Controller
 {
@@ -58,11 +59,44 @@ class UAMCompareController extends Controller
 
     public function singleRole()
     {
+        // Middle (authoritative)
         $middle = MidSingleRole::sapPattern()->ordered()->get(['single_role', 'definisi']);
-        $local  = LocalSingleRole::select('company_id', 'nama', 'deskripsi')->get();
+
+        // Local Single Roles
+        $localSingles = LocalSingleRole::select('nama', 'deskripsi')->get();
+
+        // Local AO (treated as additional single roles)
+        $localAOs = CompositeAO::select('nama', 'deskripsi')->get();
+
+        // Combine (priority: real SingleRole description over AO; fill missing desc from AO if empty)
+        $combined = [];
+        foreach ($localSingles as $sr) {
+            $key = strtoupper(trim($sr->nama));
+            if ($key === '') continue;
+            $combined[$key] = [
+                'nama' => $sr->nama,
+                'deskripsi' => $sr->deskripsi
+            ];
+        }
+        foreach ($localAOs as $ao) {
+            $key = strtoupper(trim($ao->nama));
+            if ($key === '') continue;
+            if (!isset($combined[$key])) {
+                $combined[$key] = [
+                    'nama' => $ao->nama,
+                    'deskripsi' => $ao->deskripsi
+                ];
+            } else {
+                // If existing description empty, fill from AO
+                if (empty($combined[$key]['deskripsi']) && !empty($ao->deskripsi)) {
+                    $combined[$key]['deskripsi'] = $ao->deskripsi;
+                }
+            }
+        }
+        $localCombined = collect(array_values($combined));
 
         $middleIds = $middle->pluck('single_role')->filter()->map(fn($v) => strtoupper(trim($v)))->unique();
-        $localIds  = $local->pluck('nama')->filter()->map(fn($v) => strtoupper(trim($v)))->unique();
+        $localIds  = $localCombined->pluck('nama')->filter()->map(fn($v) => strtoupper(trim($v)))->unique();
 
         $localOnly  = $localIds->diff($middleIds);
         $middleOnly = $middleIds->diff($localIds);
@@ -70,14 +104,13 @@ class UAMCompareController extends Controller
         $middleIndex = $middle->keyBy(fn($r) => strtoupper(trim($r->single_role)));
 
         $localMissing = [];
-        foreach ($local as $row) {
-            $key = strtoupper(trim($row->nama));
+        foreach ($localCombined as $row) {
+            $key = strtoupper(trim($row['nama']));
             if ($localOnly->contains($key)) {
                 $localMissing[] = [
-                    'company' => $row->company_id ?? '',
-                    // 'level'   => 'Single Role',
-                    'id'      => $row->nama,
-                    'value'   => $row->deskripsi ?? $row->nama,
+                    'company' => '',
+                    'id'      => $row['nama'],
+                    'value'   => $row['deskripsi'] ?? $row['nama'],
                 ];
             }
         }
@@ -87,7 +120,6 @@ class UAMCompareController extends Controller
             $r = $middleIndex->get($key);
             $middleMissing[] = [
                 'company' => '',
-                // 'level'   => 'Single Role',
                 'id'      => $r->single_role ?? $key,
                 'value'   => $r->definisi ?? ($r->single_role ?? $key),
             ];
@@ -118,7 +150,7 @@ class UAMCompareController extends Controller
             $key = strtoupper(trim($row->code));
             if ($localOnly->contains($key)) {
                 $localMissing[] = [
-                    'company' => $row->company_id ?? '',
+                    'company' => '',
                     // 'level'   => 'Tcode',
                     'id'      => $row->code,
                     'value'   => $row->deskripsi ?? $row->code,
@@ -173,24 +205,52 @@ class UAMCompareController extends Controller
     public function singleRoleExist()
     {
         $middle = MidSingleRole::sapPattern()->ordered()->get(['single_role', 'definisi']);
-        $local  = LocalSingleRole::select('company_id', 'nama', 'deskripsi')->get();
+
+        $localSingles = LocalSingleRole::select('nama', 'deskripsi')->get();
+        $localAOs     = CompositeAO::select('nama', 'deskripsi')->get();
+
+        $combined = [];
+        foreach ($localSingles as $sr) {
+            $key = strtoupper(trim($sr->nama));
+            if ($key === '') continue;
+            $combined[$key] = [
+                'nama' => $sr->nama,
+                'deskripsi' => $sr->deskripsi
+            ];
+        }
+        foreach ($localAOs as $ao) {
+            $key = strtoupper(trim($ao->nama));
+            if ($key === '') continue;
+            if (!isset($combined[$key])) {
+                $combined[$key] = [
+                    'nama' => $ao->nama,
+                    'deskripsi' => $ao->deskripsi
+                ];
+            } else {
+                if (empty($combined[$key]['deskripsi']) && !empty($ao->deskripsi)) {
+                    $combined[$key]['deskripsi'] = $ao->deskripsi;
+                }
+            }
+        }
+        $localCombined = collect(array_values($combined));
 
         $middleIds = $middle->pluck('single_role')->filter()->map(fn($v) => strtoupper(trim($v)))->unique();
-        $localIds  = $local->pluck('nama')->filter()->map(fn($v) => strtoupper(trim($v)))->unique();
+        $localIds  = $localCombined->pluck('nama')->filter()->map(fn($v) => strtoupper(trim($v)))->unique();
 
         $bothIds = $localIds->intersect($middleIds);
 
-        $localIndex = $local->keyBy(fn($r) => strtoupper(trim($r->nama)));
+        $localIndex = $localCombined->keyBy(fn($r) => strtoupper(trim($r['nama'])));
+
         $rows = [];
         foreach ($bothIds as $id) {
             $lr = $localIndex->get($id);
             $rows[] = [
-                'company' => $lr->company_id ?? '',
-                // 'level'   => 'Single Role',
-                'id'      => $lr->nama,
-                'value'   => $lr->deskripsi ?? $lr->nama,
+                'company' => '',
+                'id'      => $lr['nama'],
+                'value'   => $lr['deskripsi'] ?? $lr['nama'],
             ];
         }
+
         $this->sort($rows);
         $scope = 'single_role';
         return view('master-data.compare.uam.exist', compact('rows', 'scope'));
@@ -211,7 +271,7 @@ class UAMCompareController extends Controller
         foreach ($bothIds as $id) {
             $lr = $localIndex->get($id);
             $rows[] = [
-                'company' => $lr->company_id ?? '',
+                'company' => '',
                 // 'level'   => 'Tcode',
                 'id'      => $lr->code,
                 'value'   => $lr->deskripsi ?? $lr->code,

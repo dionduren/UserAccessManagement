@@ -17,7 +17,7 @@ class SingleRole extends Model
     protected $primaryKey = 'id';
 
     protected $fillable = [
-        'company_id',
+        // 'company_id',
         'nama',
         'deskripsi',
         'created_by',
@@ -26,10 +26,10 @@ class SingleRole extends Model
 
     protected $dates = ['deleted_at'];
 
-    public function company()
-    {
-        return $this->belongsTo(Company::class, 'company_id', 'company_code');
-    }
+    // public function company()
+    // {
+    //     return $this->belongsTo(Company::class, 'company_id', 'company_code');
+    // }
 
     // A single role belongs to a composite role
     public function compositeRoles()

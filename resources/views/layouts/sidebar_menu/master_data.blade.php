@@ -12,18 +12,20 @@
     <h5>MASTER DATA - UAM</h5>
 </div>
 
-@php
-    $isMasterDataOrganisasiActive = request()->routeIs(
-        'companies.*',
-        'kompartemens.*',
-        'departemens.*',
-        'cost-center.*',
-        'middle_db.unit_kerja.*',
-        'middle_db.master_dat_karyawan.*',
-        'compare.unit_kerja', // Added compare routes
-    );
-@endphp
+
 <div class="dropdown">
+    @php
+        $isMasterDataOrganisasiActive = request()->routeIs(
+            'companies.*',
+            'kompartemens.*',
+            'departemens.*',
+            'cost-center.*',
+            'middle_db.unit_kerja.*',
+            'middle_db.master_dat_karyawan.*',
+            'compare.unit_kerja', // Added compare routes
+            'import.unit_kerja.*',
+        );
+    @endphp
     <a href="javascript:void(0)"
         class="mb-1 nav-link text-white dropdown-toggle {{ $isMasterDataOrganisasiActive ? 'active' : 'text-white' }}"
         aria-expanded="{{ $isMasterDataOrganisasiActive ? 'true' : 'false' }}">
@@ -55,10 +57,9 @@
 
         <div class="mx-3 text-white text-end"><strong>Local Data</strong></div>
         <li>
-            <a href="javascript:void(0)" class="nav-link">
-                <span class="text-danger">
-                    <i class="bi bi-cloud-download me-2"></i>Import Data Organisasi
-                </span>
+            <a href="{{ route('import.unit_kerja.index') }}"
+                class="nav-link {{ request()->routeIs('import.unit_kerja.index') ? 'active' : 'text-white' }}">
+                <i class="bi bi-cloud-download me-2"></i>Import Data Organisasi
             </a>
         </li>
         <li>
@@ -93,10 +94,9 @@
             </a>
         </li>
         <li>
-            <a href="javascript:void(0)" class="nav-link">
-                <span class="text-danger">
-                    <i class="bi bi-cloud-download me-2"></i>Unit Kerja - Karyawan
-                </span>
+            <a href="{{ route('karyawan_unit_kerja.index') }}"
+                class="nav-link {{ request()->routeIs('karyawan_unit_kerja.*') ? 'active' : 'text-white' }}">
+                <i class="bi bi-people-fill me-2"></i>Unit Kerja - Karyawan
             </a>
         </li>
     </div>
@@ -109,16 +109,33 @@
 <!-- MASTER DATA ROLE -->
 <div class="dropdown">
     @php
+        // Include every related route pattern so the parent dropdown stays open/highlighted
         $isMasterRoleActive = request()->routeIs(
-            'composite-roles.*',
-            'single-roles.*',
+            // Local data (base entities & relationships)
             'tcodes.*',
-            'middle_db.uam.composite_role.*',
-            'middle_db.uam.single_role.*',
+            'single-roles.*',
+            'single-tcode*',
+            'composite-roles.*',
+            'composite-single*',
+            'composite_single*',
+            'tcode_single_role*',
+            // Upload pages (often share same prefix patterns above)
+            // Middle DB base entities
             'middle_db.uam.tcode.*',
-            'compare.uam.composite_single.*',
-            'compare.uam.single.*',
+            'middle_db.uam.single_role.*',
+            'middle_db.uam.composite_role.*',
+            // Middle DB relationship views
+            'middle_db.view.uam.single_tcode.*',
+            'middle_db.view.uam.composite_single.*',
+            'middle_db.view.uam.composite_ao.*',
+            // Compare (entity & relationship)
             'compare.uam.tcode.*',
+            'compare.uam.single.*',
+            'compare.uam.composite*',
+            'compare.uam.relationship.single_tcode*',
+            'compare.uam.relationship.composite_single*',
+            // Import Master Data Role
+            'import.uam.*',
         );
     @endphp
     <a class="mb-1 nav-link dropdown-toggle {{ $isMasterRoleActive ? 'active' : 'text-white' }}"
@@ -169,12 +186,12 @@
             </li>
             <hr width="80%" class="my-1" style="margin-left: auto">
         @endcan
+
         <div class="mx-3 text-white text-end"><strong>Local Data</strong></div>
         <li>
-            <a href="javascript:void(0)" class="nav-link">
-                <span class="text-danger">
-                    <i class="bi bi-cloud-download me-2"></i>Import Master Data Role
-                </span>
+            <a href="{{ route('import.uam.index') }}"
+                class="nav-link {{ request()->routeIs('import.uam.*') ? 'active' : 'text-white' }}">
+                <i class="bi bi-cloud-download me-2"></i>Import Master Data Role
             </a>
         </li>
         <li class="nav-item">
@@ -208,7 +225,6 @@
                 <i class="bi bi-link-45deg me-2"></i>Single Role - Tcode
             </a>
         </li>
-
         <li>
             <a href="{{ route('composite-roles.index') }}"
                 class="nav-link {{ request()->routeIs('composite-roles.*') ? 'active' : 'text-white' }}">
@@ -222,10 +238,9 @@
             </a>
         </li>
         <li>
-            <a href="javascript:void(0)" class="nav-link">
-                <span class="text-danger">
-                    <i class="bi bi-link-45deg me-2"></i>Composite Role - AO
-                </span>
+            <a href="{{ route('composite_ao.index') }}"
+                class="nav-link {{ request()->routeIs('composite_ao*') ? 'active' : 'text-white' }}">
+                <i class="bi bi-link-45deg me-2"></i>Composite Role - AO
             </a>
         </li>
         <li>
@@ -253,7 +268,7 @@
             'user-generic.*',
             'user-generic.upload',
             'user-generic.previewPage',
-            'dynamic_upload.upload',
+            'dynamic_upload.*',
             'company_kompartemen.*',
             'middle_db.view.uam.user_composite.*',
             'compare.uam.relationship.user_composite*',
@@ -298,7 +313,7 @@
             </li>
             <li class="nav-item">
                 <a href="{{ route('dynamic_upload.upload', ['module' => 'user_nik']) }}"
-                    class="nav-link {{ request()->routeIs('dynamic_upload.upload') && request()->route('module') === 'user_nik' ? 'active' : 'text-white' }}">
+                    class="nav-link {{ request()->routeIs('dynamic_upload.*') && request()->route('module') === 'user_nik' ? 'active' : 'text-white' }}">
                     <i class="bi bi-file-earmark-spreadsheet me-2"></i>Upload {{ $modules['user_nik']['name'] }}
                 </a>
             </li>
@@ -314,13 +329,13 @@
         <li>
             <a href="{{ route('job-roles.index') }}"
                 class="nav-link {{ request()->routeIs('job-roles.*') ? 'active' : 'text-white' }}">
-                <i class="bi bi-person-badge me-2"></i>Job Roles
+                <i class="bi bi-person-badge me-2"></i>Unit Kerja - Job Roles
             </a>
         </li>
         <li>
             <a href="{{ route('job-composite.index') }}"
                 class="nav-link {{ request()->routeIs('job-composite*') ? 'active' : 'text-white' }}">
-                <i class="bi bi-link-45deg me-2"></i>Job Role - Composite
+                <i class="bi bi-link-45deg me-2"></i>Job Role - Composite Role
             </a>
         </li>
 
@@ -330,6 +345,7 @@
                 <i class="bi bi-person-badge me-2"></i>User ID NIK
             </a>
         </li>
+
         @php
             $isUserGenericIndexActive =
                 request()->routeIs('user-generic.*') &&

@@ -1,4 +1,3 @@
-{{-- filepath: c:\Kerja\Project\2024\05. User Access Management\UserAccessManagement\resources\views\master-data\single_roles\partials\actions.blade.php --}}
 @php
     $userCompanyCode = auth()->user()->loginDetail->company_code ?? null;
     $canModify = $userCompanyCode === 'A000' || $role->company_id === $userCompanyCode;
@@ -20,5 +19,5 @@
     @endif
 </div>
 @if (!$canModify)
-    <small class="text-muted d-block">Tidak dapat diedit (perusahaan berbeda)</small>
+    {{-- <small class="text-muted d-block">Tidak dapat diedit (perusahaan berbeda)</small> --}}
 @endif

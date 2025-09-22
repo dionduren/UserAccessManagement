@@ -20,6 +20,7 @@ class PeriodeController extends Controller
      */
     public function index(Request $request)
     {
+        $user_company = auth()->user()?->loginDetail?->company_code ?? null;
 
         if ($request->ajax()) {
             $periodes = Periode::select('id', 'definisi', 'tanggal_create_periode');
@@ -36,7 +37,7 @@ class PeriodeController extends Controller
                 ->make(true);
         }
 
-        return view('master-data.periode.index');
+        return view('master-data.periode.index', compact('user_company'));
     }
 
     /**
