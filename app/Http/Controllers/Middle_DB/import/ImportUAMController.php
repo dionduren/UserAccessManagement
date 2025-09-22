@@ -536,34 +536,199 @@ class ImportUAMController extends Controller
     }
 
     // 5. Incremental Composite Role sync (similar to single roles)
+    /**
+     * Composite Role sync with full metadata (company_id, kompartemen_id, departemen_id).
+     *
+     * Modes:
+     *  - full_refresh=1  : TRUNCATE + insert all (overwrite everything)
+     *  - upsert (default): Upsert rows (update all metadata & deskripsi if changed)
+     *
+     * Params:
+     *  overwrite=1        -> force overwrite deskripsi even if same/non-empty
+     *  all=1              -> skip sapPattern() filter
+     *  full_refresh=1     -> destructive rebuild
+     */
     public function sync_composite_roles(Request $request)
     {
         @set_time_limit(0);
-        $overwrite = $request->boolean('overwrite', false);
-        $all       = $request->boolean('all', false);
 
+        $overwrite   = $request->boolean('overwrite', false);
+        $all         = $request->boolean('all', false);
+        $fullRefresh = $request->boolean('full_refresh', false);
+
+        $actor = Auth::user()?->name ?? 'system';
+        $now   = now();
+
+        // Select extended columns from middle DB (adjust names if different)
         $sourceQuery = MiddleCompositeRole::query()
-            ->select(['composite_role', 'definisi'])
+            ->select([
+                'composite_role',
+                'definisi',
+                'company_id',
+                'kompartemen_id',
+                'departemen_id',
+            ])
             ->when(!$all, fn($q) => $q->sapPattern())
             ->ordered();
 
-        $summary = $this->syncFlatEntity([
-            'sourceQuery'  => $sourceQuery,
-            'localTable'   => (new LocalCompositeRole)->getTable(),
-            'keyField'     => 'nama',
-            'descField'    => 'deskripsi',
-            'sourceKey'    => fn($r) => $r->composite_role,
-            'sourceDesc'   => fn($r) => $r->definisi,
-            'uppercaseKey' => true,
-            'overwrite'    => $overwrite,
-            'extraColumns' => []
-        ]);
+        $total = (clone $sourceQuery)->count();
 
-        return response()->json([
-            'message'   => 'Composite Role sync done',
-            'overwrite' => $overwrite,
-            'summary'   => $summary
-        ]);
+        $summary = [
+            'mode'              => $fullRefresh ? 'full_refresh' : 'upsert',
+            'source_total'      => $total,
+            'processed'         => 0,
+            'inserted'          => 0,
+            'updated'           => 0,
+            'skipped'           => 0,
+            'errors'            => 0,
+            'overwrite_desc'    => $overwrite,
+            'full_refresh'      => $fullRefresh,
+        ];
+
+        if ($total === 0) {
+            return response()->json([
+                'message' => 'No composite roles found (check filters).',
+                'summary' => $summary
+            ], 422);
+        }
+
+        $localTable = (new LocalCompositeRole)->getTable();
+
+        DB::beginTransaction();
+        try {
+            if ($fullRefresh) {
+                if (DB::getDriverName() === 'pgsql') {
+                    DB::statement("TRUNCATE TABLE {$localTable} RESTART IDENTITY CASCADE");
+                } else {
+                    DB::table($localTable)->truncate();
+                }
+            }
+
+            // Build existing map (only needed for upsert mode to count inserts vs updates)
+            $existingMap = [];
+            if (!$fullRefresh) {
+                $existingMap = DB::table($localTable)
+                    ->select('id', 'nama', 'deskripsi', 'company_id', 'kompartemen_id', 'departemen_id')
+                    ->get()
+                    ->reduce(function ($c, $r) {
+                        $c[strtoupper($r->nama)] = $r;
+                        return $c;
+                    }, []);
+            }
+
+            $batchSize = 1000;
+            $batch     = [];
+
+            $this->chunkQuery($sourceQuery, $batchSize, function ($rows) use (&$summary, &$batch, $batchSize, $fullRefresh, $overwrite, $existingMap, $localTable, $actor, $now) {
+                foreach ($rows as $r) {
+                    $summary['processed']++;
+
+                    $name = strtoupper(trim($r->composite_role ?? ''));
+                    if ($name === '') {
+                        $summary['skipped']++;
+                        continue;
+                    }
+
+                    $desc          = trim((string)$r->definisi) ?: null;
+                    $companyId     = $r->company_id ?? null;
+                    $kompartemenId = $r->kompartemen_id ?? null;
+                    $departemenId  = $r->departemen_id ?? null;
+
+                    // Prepare row for insert/upsert
+                    $row = [
+                        'nama'            => $name,
+                        'deskripsi'       => $desc,
+                        'company_id'      => $companyId,
+                        'kompartemen_id'  => $kompartemenId,
+                        'departemen_id'   => $departemenId,
+                        'updated_by'      => $actor,
+                        'updated_at'      => $now,
+                    ];
+
+                    if ($fullRefresh) {
+                        // Full refresh: treat all as inserts
+                        $row['created_by'] = $actor;
+                        $row['created_at'] = $now;
+                        $batch[] = $row;
+                        if (count($batch) === $batchSize) {
+                            DB::table($localTable)->insert($batch);
+                            $summary['inserted'] += count($batch);
+                            $batch = [];
+                        }
+                        continue;
+                    }
+
+                    // Upsert path
+                    if (!isset($existingMap[$name])) {
+                        $row['created_by'] = $actor;
+                        $row['created_at'] = $now;
+                        $batch[] = $row;
+                        $summary['inserted']++;
+                        if (count($batch) === $batchSize) {
+                            DB::table($localTable)->insert($batch);
+                            $batch = [];
+                        }
+                        continue;
+                    }
+
+                    $current = $existingMap[$name];
+
+                    $needsUpdate = false;
+
+                    // Description update rule
+                    if ($overwrite) {
+                        if ($current->deskripsi !== $desc) $needsUpdate = true;
+                    } else {
+                        if (($current->deskripsi === null || $current->deskripsi === '') && $desc !== null) {
+                            $needsUpdate = true;
+                        }
+                    }
+
+                    // Structural / meta changes (company / kompartemen / departemen)
+                    if (
+                        $current->company_id      != $row['company_id'] ||
+                        $current->kompartemen_id  != $row['kompartemen_id'] ||
+                        $current->departemen_id   != $row['departemen_id']
+                    ) {
+                        $needsUpdate = true;
+                    }
+
+                    if ($needsUpdate) {
+                        DB::table($localTable)
+                            ->where('id', $current->id)
+                            ->update($row);
+                        $summary['updated']++;
+                    } else {
+                        $summary['skipped']++;
+                    }
+                }
+            });
+
+            if ($batch) {
+                if ($fullRefresh) {
+                    DB::table($localTable)->insert($batch);
+                    $summary['inserted'] += count($batch);
+                } else {
+                    DB::table($localTable)->insert($batch);
+                }
+            }
+
+            DB::commit();
+
+            return response()->json([
+                'message' => 'Composite Role sync (metadata) completed',
+                'summary' => $summary
+            ]);
+        } catch (\Throwable $e) {
+            DB::rollBack();
+            $summary['errors']++;
+            Log::error('Composite Role sync failed', ['error' => $e->getMessage()]);
+            return response()->json([
+                'message' => 'Composite Role sync failed',
+                'error'   => $e->getMessage(),
+                'summary' => $summary
+            ], 500);
+        }
     }
 
     // 6. Composite Role - Single Role pivot sync
