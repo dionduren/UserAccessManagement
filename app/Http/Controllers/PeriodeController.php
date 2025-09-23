@@ -2,15 +2,16 @@
 
 namespace App\Http\Controllers;
 
-use \App\Models\NIKJobRole;
-
-use \App\Models\UserGenericUnitKerja;
-use App\Http\Controllers\Controller;
-
 use App\Models\Periode;
+use App\Models\NIKJobRole;
+use App\Models\userGeneric;
+use App\Models\UserGenericUnitKerja;
+
+use App\Models\userNIK;
+use App\Models\UserNIKUnitKerja;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
-use Illuminate\Validation\Rule;
+use Illuminate\Support\Facades\DB;
 use Yajra\DataTables\DataTables;
 
 class PeriodeController extends Controller
@@ -29,9 +30,9 @@ class PeriodeController extends Controller
                     return Carbon::createFromFormat('Y-m-d H:i:s', $row->tanggal_create_periode)->format('d M Y');
                 })
                 ->addColumn('action', function ($row) {
-                    return '<a href="' . route('periode.edit', $row->id) . '" target="_blank" class="btn btn-sm btn-warning" disabled>Edit</a>';
-                    // return '<a target="_blank" class="btn btn-sm btn-outline-warning" disabled>Edit</a>';
-                    // <button onclick="deletePeriode(' . $row->id . ')" class="btn btn-sm btn-danger" disabled>Delete</button>';
+                    return '<a href="' . route('periode.edit', $row->id) . '" target="_blank" class="btn btn-sm btn-warning me-2" >Edit</a>'
+                        // return '<a target="_blank" class="btn btn-sm btn-outline-warning" disabled>Edit</a>';
+                        . '<button onclick=\'deletePeriode(' . $row->id . ', ' . json_encode($row->definisi) . ')\' class="btn btn-sm btn-danger">Delete</button>';
                 })
                 ->rawColumns(['action'])
                 ->make(true);
@@ -95,9 +96,9 @@ class PeriodeController extends Controller
             }
 
             if ($USSMJobRoles->isEmpty()) {
-                $message .= '<li>Tidak ada data Mapping User Cost Center - Job Role sebelumnya untuk diduplikat.</li></ul>';
+                $message .= '<li>Tidak ada data Mapping User Generic - Job Role sebelumnya untuk diduplikat.</li></ul>';
             } else if ($USSMJobRoles->count() > 0) {
-                $message .= '<li>Mapping User Cost Center - Job Role berhasil diduplikat dari ' . $previousPeriode->definisi . '</li></ul>';
+                $message .= '<li>Mapping User Generic - Job Role berhasil diduplikat dari ' . $previousPeriode->definisi . '</li></ul>';
             }
         } else {
             $message .= '<br><ul><li>Tidak ada data UAR sebelumnya untuk diduplikat.</li></ul>';
@@ -145,8 +146,61 @@ class PeriodeController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(Periode $periode)
+    public function destroy(Request $request, Periode $periode)
     {
-        //
+        if (!$request->ajax()) {
+            return response()->json(['message' => 'Invalid request'], 400);
+        }
+
+        $force = $request->boolean('force', false);
+
+        // Opsional: larang hapus periode aktif kecuali pakai force
+        if ($periode->is_active && !$force) {
+            return response()->json([
+                'message' => 'Periode aktif tidak boleh dihapus tanpa konfirmasi lanjutan.',
+                'need_force' => true
+            ], 422);
+        }
+
+        $pid = $periode->id;
+
+        $summary = [
+            'periode_id' => $pid,
+            'periode_definisi' => $periode->definisi,
+            'deleted' => [
+                'user_generic' => 0,
+                'user_nik' => 0,
+                'user_generic_unit_kerja' => 0,
+                'user_nik_unit_kerja' => 0,
+                'nik_job_role' => 0,
+                'periode' => 0,
+            ]
+        ];
+
+        DB::beginTransaction();
+        try {
+            $summary['deleted']['nik_job_role'] = NIKJobRole::where('periode_id', $pid)->delete();
+            $summary['deleted']['user_generic_unit_kerja'] = UserGenericUnitKerja::where('periode_id', $pid)->delete();
+            $summary['deleted']['user_nik_unit_kerja'] = UserNIKUnitKerja::where('periode_id', $pid)->delete();
+            $summary['deleted']['user_generic'] = userGeneric::where('periode_id', $pid)->delete();
+            $summary['deleted']['user_nik'] = userNIK::where('periode_id', $pid)->delete();
+
+            $periode->delete();
+            $summary['deleted']['periode'] = 1;
+
+            DB::commit();
+
+            return response()->json([
+                'message' => 'Periode & data terkait berhasil dihapus.',
+                'summary' => $summary
+            ]);
+        } catch (\Throwable $e) {
+            DB::rollBack();
+            return response()->json([
+                'message' => 'Gagal hapus periode',
+                'error' => $e->getMessage(),
+                'summary' => $summary
+            ], 500);
+        }
     }
 }

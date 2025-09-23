@@ -3,40 +3,54 @@
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="userNIKModalLabel">User NIK Details - Data Periode
-                    {{ $userNIK->periode->definisi }}</h5>
+                <h5 class="modal-title" id="userNIKModalLabel">
+                    User NIK Details - Data Periode {{ $userNIK->periode->definisi ?? 'N/A' }}
+                </h5>
             </div>
             <div class="modal-body">
+
+                @if (!$userNIK->unitKerja)
+                    <div class="alert alert-warning small">
+                        Detail Unit Kerja tidak ditemukan untuk NIK <strong>{{ $userNIK->user_code }}</strong>.
+                        Pastikan tabel <code>user_nik_unit_kerja</code> sudah terisi (kolom nik =
+                        {{ $userNIK->user_code }}).
+                    </div>
+                @endif
+
                 <dl class="row">
                     <dt class="col-sm-3">NIK</dt>
                     <dd class="col-sm-9">{{ $userNIK->user_code ?? 'N/A' }}</dd>
 
                     <dt class="col-sm-3">Nama</dt>
-                    <dd class="col-sm-9">{{ $userNIK->userDetail->nama ?? 'N/A' }}</dd>
+                    <dd class="col-sm-9">{{ $userNIK->unitKerja->nama ?? 'N/A' }}</dd>
 
                     <dt class="col-sm-3">Perusahaan</dt>
-                    <dd class="col-sm-9">{{ $userNIK->userDetail->company_data->nama ?? 'N/A' }}</dd>
+                    <dd class="col-sm-9">{{ $userNIK->unitKerja->company->nama ?? 'N/A' }}</dd>
 
                     <dt class="col-sm-3">Direktorat</dt>
-                    <dd class="col-sm-9">{{ $userNIK->userDetail->direktorat ?? 'N/A' }}</dd>
+                    <dd class="col-sm-9">{{ $userNIK->unitKerja->direktorat->direktorat ?? 'N/A' }}</dd>
 
                     <dt class="col-sm-3">Kompartemen</dt>
-                    <dd class="col-sm-9">
-                        {{ $userNIK->userDetail->kompartemen ? $userNIK->userDetail->kompartemen->nama : 'N/A' }}</dd>
+                    <dd class="col-sm-9">{{ $userNIK->unitKerja->kompartemen->nama ?? 'N/A' }}</dd>
 
                     <dt class="col-sm-3">Departemen</dt>
+                    <dd class="col-sm-9">{{ $userNIK->unitKerja->departemen->nama ?? 'N/A' }}</dd>
+
+                    {{-- <dt class="col-sm-3">UserNIKUnitKerja</dt>
                     <dd class="col-sm-9">
-                        {{ $userNIK->userDetail->departemen ? $userNIK->userDetail->departemen->nama : 'N/A' }}</dd>
+                        {{ $userNIK }}
+                    </dd> --}}
+
 
 
                     {{-- <dt class="col-sm-3">Cost Center</dt>
-                    <dd class="col-sm-9">{{ $userNIK->userDetail->cost_center ?? 'N/A' }}</dd>
+                    <dd class="col-sm-9">{{ $userNIK->UserNIKUnitKerja->cost_center ?? 'N/A' }}</dd>
 
                     <dt class="col-sm-3">Jabatan</dt>
-                    <dd class="col-sm-9">{{ $userNIK->userDetail->jabatan ?? 'N/A' }}</dd>
+                    <dd class="col-sm-9">{{ $userNIK->UserNIKUnitKerja->jabatan ?? 'N/A' }}</dd>
 
                     <dt class="col-sm-3">Email</dt>
-                    <dd class="col-sm-9">{{ $userNIK->userDetail->email ?? 'N/A' }}</dd> --}}
+                    <dd class="col-sm-9">{{ $userNIK->UserNIKUnitKerja->email ?? 'N/A' }}</dd> --}}
                 </dl>
             </div>
             <div class="modal-footer">

@@ -38,7 +38,7 @@
                         <table class="table table-bordered mt-3" id="nik_job_role_table">
                             <thead>
                                 <tr>
-                                    <th style="background-color: red;color:white">Periode (TO BE DELETED)</th>
+                                    {{-- <th style="background-color: red;color:white">Periode (TO BE DELETED)</th> --}}
                                     <th style="background-color: greenyellow">Perusahaan</th>
                                     <th>NIK</th>
                                     <th>Nama</th>
@@ -68,10 +68,11 @@
                             d.periode_id = $('#periode').val();
                         },
                     },
-                    columns: [{
-                            data: 'periode',
-                            name: 'periode'
-                        },
+                    columns: [
+                        // {
+                        //     data: 'periode',
+                        //     name: 'periode'
+                        // },
                         {
                             data: 'company',
                             name: 'company'

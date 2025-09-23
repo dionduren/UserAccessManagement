@@ -3,13 +3,16 @@
 namespace App\Models;
 
 use App\Models\Company;
-use App\Models\Periode;
 use App\Models\CostCenter;
-use App\Models\CostPrevUser;
 use App\Models\CostCurrentUser;
+use App\Models\CostPrevUser;
+use App\Models\NIKJobRole;
+use App\Models\Periode;
+use App\Models\UserGenericUnitKerja;
+use App\Models\UserNIKUnitKerja;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class userGeneric extends Model
 {
@@ -50,9 +53,15 @@ class userGeneric extends Model
     {
         return $this->hasOne(Company::class, 'shortname', 'group');
     }
-    public function userDetail()
+
+    public function unitKerja()
     {
-        return $this->hasOne(UserDetail::class, 'nik', 'nik');
+        return $this->hasOne(UserNIKUnitKerja::class, 'nik', 'nik');
+    }
+
+    public function UserNIKUnitKerja()
+    {
+        return $this->unitKerja();
     }
 
     // public function kompartemen()

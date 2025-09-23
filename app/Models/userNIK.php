@@ -2,10 +2,10 @@
 
 namespace App\Models;
 
+use \App\Models\UserNIKUnitKerja;
 use App\Models\Company;
 use App\Models\NIKJobRole;
 use App\Models\Periode;
-use App\Models\UserDetail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -34,9 +34,15 @@ class userNIK extends Model
 
     protected $dates = ['deleted_at'];
 
-    public function userDetail()
+    public function unitKerja()
     {
-        return $this->hasOne(UserDetail::class, 'nik', 'user_code');
+        return $this->hasOne(UserNIKUnitKerja::class, 'nik', 'user_code');
+        // ->where('periode_id', $this->periode_id);
+    }
+
+    public function UserNIKUnitKerja()
+    {
+        return $this->unitKerja();
     }
 
     public function Company()

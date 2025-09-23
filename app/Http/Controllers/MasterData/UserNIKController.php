@@ -5,7 +5,7 @@ namespace App\Http\Controllers\MasterData;
 use Excel;
 use App\Models\Periode;
 use App\Models\userNIK;
-use App\Models\UserDetail;
+use App\Models\UserNIKUnitKerja;
 use Illuminate\Http\Request;
 use App\Exports\UserNIKExport;
 use Illuminate\Support\Carbon;
@@ -31,7 +31,7 @@ class UserNIKController extends Controller
 
             return DataTables::of($userNik)
                 ->addColumn('user_detail_exists', function ($row) {
-                    return $row->userDetail ? true : false;
+                    return $row->UserNIKUnitKerja ? true : false;
                 })
                 ->editColumn('last_login', function ($row) {
                     return $row->last_login ? Carbon::createFromFormat('Y-m-d H:i:s', $row->last_login)->format('d M Y - H:i') : '-';
@@ -70,7 +70,7 @@ class UserNIKController extends Controller
     public function index_mixed(Request $request)
     {
         if ($request->ajax()) {
-            $userNik = UserNIK::with(['userDetail.kompartemen']) // Join UserDetail and Kompartemen
+            $userNik = UserNIK::with(['UserNIKUnitKerja']) // Join UserNIKUnitKerja and Kompartemen
                 ->select('id', 'group', 'user_code', 'user_type', 'license_type', 'valid_from', 'valid_to');
 
             return DataTables::of($userNik)
@@ -81,19 +81,22 @@ class UserNIKController extends Controller
                     return $row->valid_to ? Carbon::createFromFormat('Y-m-d', $row->valid_to)->format('d M Y') : '-';
                 })
                 ->addColumn('nama', function ($row) {
-                    return $row->userDetail->nama ?? 'N/A'; // Get User's Name
+                    return $row->UserNIKUnitKerja->nama ?? 'N/A'; // Get User's Name
                 })
                 ->addColumn('kompartemen_name', function ($row) {
-                    return $row->userDetail->kompartemen->nama ?? 'N/A'; // Get Kompartemen Name
+                    return $row->UserNIKUnitKerja->kompartemen->nama ?? 'N/A'; // Get Kompartemen Name
+                })
+                ->addColumn('departemen_name', function ($row) {
+                    return $row->UserNIKUnitKerja->departemen->nama ?? 'N/A'; // Get Departemen Name
                 })
                 ->addColumn('direktorat', function ($row) {
-                    return $row->userDetail->direktorat ?? 'N/A'; // Get Direktorat
+                    return $row->UserNIKUnitKerja->direktorat ?? 'N/A'; // Get Direktorat
                 })
                 ->addColumn('cost_center', function ($row) {
-                    return $row->userDetail->cost_center ?? 'N/A'; // Get Direktorat
+                    return $row->UserNIKUnitKerja->cost_center ?? 'N/A'; // Get Direktorat
                 })
                 // ->addColumn('grade', function ($row) {
-                //     return $row->userDetail->grade ?? 'N/A'; // Get Direktorat
+                //     return $row->UserNIKUnitKerja->grade ?? 'N/A'; // Get Direktorat
                 // })
                 ->addColumn('action', function ($row) {
                     // return '<a href="' . route('user-nik.edit', $row->id) . '" target="_blank" class="btn btn-sm btn-warning" disabled>Edit</a> 
@@ -130,7 +133,13 @@ class UserNIKController extends Controller
      */
     public function show($id)
     {
-        $userNIK = UserNIK::with('userDetail.kompartemen', 'userDetail.departemen', 'periode')->findOrFail($id);
+        $userNIK = UserNIK::with([
+            'unitKerja.company',
+            'unitKerja.direktorat',
+            'unitKerja.kompartemen',
+            'unitKerja.departemen',
+            'periode'
+        ])->findOrFail($id);
 
         return view('master-data.user_nik.show', compact('userNIK'));
     }
@@ -192,7 +201,7 @@ class UserNIKController extends Controller
     {
         $userCode = $request->input('user_code');
 
-        $userDetail = UserDetail::with(['company', 'kompartemen', 'departemen'])
+        $userDetail = UserNIKUnitKerja::with(['company', 'direktorat', 'kompartemen', 'departemen'])
             ->where('nik', $userCode)
             ->first();
 

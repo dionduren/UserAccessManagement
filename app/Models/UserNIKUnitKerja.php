@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Company;
 use App\Models\Departemen;
 use App\Models\Kompartemen;
 use App\Models\NIKJobRole;
@@ -48,6 +49,16 @@ class UserNIKUnitKerja extends Model
     public function periode()
     {
         return $this->belongsTo(Periode::class, 'periode_id');
+    }
+
+    public function company()
+    {
+        return $this->hasOne(Company::class, 'company_code', 'company_id');
+    }
+
+    public function direktorat()
+    {
+        return $this->belongsTo(MasterDataKaryawanLocal::class, 'direktorat_id', 'direktorat_id');
     }
 
     public function kompartemen()

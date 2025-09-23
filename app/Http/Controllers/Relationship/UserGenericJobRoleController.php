@@ -19,10 +19,10 @@ class UserGenericJobRoleController extends Controller
         $periodes = Periode::select('id', 'definisi')->get();
 
         if ($request->ajax()) {
-            // Only load data if periode is selected
             if (!$request->filled('periode')) {
                 return DataTables::of(collect([]))->make(true);
             }
+            $periodeId = (int)$request->input('periode');
 
             $query = userGeneric::query()
                 ->select([
@@ -34,40 +34,24 @@ class UserGenericJobRoleController extends Controller
                     'keterangan_flagged',
                     'user_profile as definisi'
                 ])
-                ->with(['periode', 'NIKJobRole'])
-                ->where('periode_id', $request->input('periode'));
+                ->with(['periode', 'NIKJobRole' => function ($q) use ($periodeId) {
+                    $q->where('periode_id', $periodeId)->with('jobRole');
+                }])
+                ->where('periode_id', $periodeId)
+                ->whereHas('NIKJobRole', function ($q) use ($periodeId) {
+                    $q->where('periode_id', $periodeId);
+                });
 
             return DataTables::eloquent($query)
-                ->addColumn('periode', function ($row) {
-                    return $row->periode ? $row->periode->definisi : '-';
-                })
-                ->addColumn('job_role_id', function ($row) {
-                    return $row->NIKJobRole->pluck('job_role_id')->implode(', ');
-                })
-                ->addColumn('job_role_name', function ($row) {
-                    return $row->NIKJobRole->map(function ($nikJobRole) {
-                        return $nikJobRole->jobRole ? $nikJobRole->jobRole->nama : '-';
-                    })->implode(', ');
-                })
+                ->addColumn('periode', fn($row) => $row->periode?->definisi ?? '-')
+                ->addColumn('job_role_id', fn($row) => $row->NIKJobRole->pluck('job_role_id')->unique()->implode(', '))
+                ->addColumn('job_role_name', fn($row) => $row->NIKJobRole->map(
+                    fn($r) => $r->jobRole?->nama ?? '-'
+                )->unique()->implode(', '))
                 ->addColumn('flagged', function ($row) {
-                    $flaggedValues = $row->NIKJobRole->map(function ($nikJobRole) {
-                        return $nikJobRole->flagged ?? false;
-                    });
-
-                    // If all flagged values are false, check $row->flagged
-                    if ($flaggedValues->every(fn($value) => !$value)) {
-                        return $row->flagged ? 'true' : 'false';
-                    }
+                    $flags = $row->NIKJobRole->pluck('flagged')->filter();
+                    return $flags->count() ? 'true' : 'false';
                 })
-                // ->addColumn('action', function ($row) {
-                //     return '<a href="' . route('user-generic-job-role.edit', $row->id) . '" class="btn btn-sm btn-outline-warning">
-                // <i class="fas fa-edit"></i> Edit
-                // </a>
-                // <button onclick="deleteRelationship(' . $row->id . ')" class="btn btn-sm btn-outline-danger">
-                // <i class="fas fa-trash"></i> Delete
-                // </button>';
-                // })
-                ->rawColumns(['action'])
                 ->make(true);
         }
 
@@ -87,18 +71,29 @@ class UserGenericJobRoleController extends Controller
     {
         $request->validate([
             'user_generic_id' => 'required|exists:tr_user_generic,id',
-            'job_role_id' => 'required|string',
-            'job_role_name' => 'required|string',
-            'periode_id' => 'required|exists:ms_periode,id',
+            'job_role_id'     => 'required|string',
+            'periode_id'      => 'required|exists:ms_periode,id',
         ]);
 
-        $userGeneric = userGeneric::findOrFail($request->user_generic_id);
-        $userGeneric->job_role_id = $request->job_role_id;
-        $userGeneric->job_role_name = $request->job_role_name;
-        $userGeneric->periode_id = $request->periode_id;
-        $userGeneric->save();
+        $ug = userGeneric::findOrFail($request->user_generic_id);
 
-        return redirect()->route('user-generic-job-role.index')->with('success', 'Relasi User Generic - Job Role berhasil ditambahkan.');
+        // Cegah duplikat (nik + job_role_id + periode_id)
+        $exists = NIKJobRole::where('nik', $ug->user_code)
+            ->where('job_role_id', $request->job_role_id)
+            ->where('periode_id', $request->periode_id)
+            ->exists();
+
+        if (!$exists) {
+            NIKJobRole::create([
+                'nik'         => $ug->user_code,
+                'job_role_id' => $request->job_role_id,
+                'periode_id'  => $request->periode_id,
+            ]);
+        }
+
+        return redirect()
+            ->route('user-generic-job-role.index')
+            ->with('success', 'Relasi berhasil ditambahkan.');
     }
 
     public function edit($id)
@@ -119,36 +114,32 @@ class UserGenericJobRoleController extends Controller
 
     public function update(Request $request, $id)
     {
-        try {
-            $request->validate([
-                'user_generic_id' => 'required|exists:tr_user_generic,user_code',
-                'job_role_id' => 'required|string',
-                'job_role_name' => 'required|string',
-                'periode_id' => 'required|exists:ms_periode,id',
+        $request->validate([
+            'user_generic_id' => 'required|exists:tr_user_generic,user_code', // user_code sekarang
+            'job_role_id'     => 'required|string',
+            'periode_id'      => 'required|exists:ms_periode,id',
+        ]);
+
+        $nik = $request->user_generic_id;
+
+        $record = NIKJobRole::where('nik', $nik)
+            ->where('periode_id', $request->periode_id)
+            ->first();
+
+        if ($record) {
+            $record->job_role_id = $request->job_role_id;
+            $record->save();
+        } else {
+            NIKJobRole::create([
+                'nik'         => $nik,
+                'job_role_id' => $request->job_role_id,
+                'periode_id'  => $request->periode_id,
             ]);
-
-
-            $userGeneric = userGeneric::with(['NIKJobRole.jobRole'])->where('user_code', $request->user_generic_id)->first();
-            $NIKJobRole = $userGeneric->NIKJobRole->first();
-
-            if ($NIKJobRole && $NIKJobRole->nik === $request->user_generic_id) {
-                // Update existing
-                $NIKJobRole->job_role_id = $request->job_role_id;
-                $NIKJobRole->periode_id = $request->periode_id;
-                $NIKJobRole->save();
-            } else {
-                // Create new
-                NIKJobRole::create([
-                    'nik' => $request->user_generic_id,
-                    'job_role_id' => $request->job_role_id,
-                    'periode_id' => $request->periode_id,
-                ]);
-            }
-
-            return redirect()->route('user-generic-job-role.index')->with('success', 'Relasi User Generic - Job Role berhasil diperbarui.');
-        } catch (\Exception $e) {
-            return redirect()->back()->withInput()->with('error', 'Terjadi kesalahan: ' . $e->getMessage());
         }
+
+        return redirect()
+            ->route('user-generic-job-role.index')
+            ->with('success', 'Relasi berhasil diperbarui.');
     }
 
     public function destroy($id)

@@ -36,10 +36,14 @@ class NIKJobRole extends Model
 
     protected $dates = ['deleted_at'];
 
-    public function userDetail()
+    public function unitKerja()
     {
-        // Change from hasOne to belongsTo since UserDetail is the parent table
-        return $this->belongsTo(UserDetail::class, 'nik', 'nik');
+        return $this->hasOne(UserNIKUnitKerja::class, 'nik', 'nik');
+    }
+
+    public function UserNIKUnitKerja()
+    {
+        return $this->unitKerja();
     }
 
     public function jobRole()

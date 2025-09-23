@@ -19,7 +19,7 @@ class UserGenericUnitKerjaController extends Controller
 {
     public function uploadForm()
     {
-        $periodes = Periode::orderBy('id')->get();
+        $periodes = Periode::orderBy('id')->whereNull('deleted_at')->get();
         return view('imports.upload.user_generic_unit_kerja', compact('periodes'));
     }
 

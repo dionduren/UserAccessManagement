@@ -64,6 +64,7 @@ use App\Http\Controllers\Middle_DB\raw\GenericKaryawanMappingRawController;
 use App\Http\Controllers\Middle_DB\import\ImportUserNIKUnitKerjaController;
 use App\Http\Controllers\Middle_DB\import\ImportUnitKerjaController;
 use App\Http\Controllers\Middle_DB\import\ImportUAMController;
+use App\Http\Controllers\Middle_DB\import\ImportUserIDController;
 
 use App\Http\Controllers\Relationship\CompositeSingleController;
 use App\Http\Controllers\Relationship\JobCompositeController;
@@ -356,6 +357,7 @@ Route::middleware(['auth'])->group(function () {
 
 
     // ------------------ NEW MASTER DATA ------------------
+    Route::delete('/periode/{periode}', [PeriodeController::class, 'destroy'])->name('periode.destroy');
     Route::resource('periode', PeriodeController::class);
 
     // Route::get('user-nik/upload', [UserNIKController::class, 'upload'])->name('user-nik.upload.form');
@@ -506,6 +508,9 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/uam/single-roles', [ImportUAMController::class, 'sync_single_roles'])->name('uam.single_roles');
         Route::post('/uam/single-role-tcodes', [ImportUAMController::class, 'sync_single_role_tcodes'])->name('uam.single_role_tcodes');
         Route::post('/uam/tcodes', [ImportUAMController::class, 'sync_tcodes'])->name('uam.tcodes');
+
+        Route::get('/user-id', [ImportUserIDController::class, 'index'])->name('user_id.index');
+        Route::post('/user-id/sync', [ImportUserIDController::class, 'sync'])->name('user_id.sync');
     });
     // ------------------ UPLOAD DATA ------------------
 

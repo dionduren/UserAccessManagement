@@ -54,7 +54,7 @@
                                         </tr>
                                     @empty
                                         <tr>
-                                            <td colspan="4" class="text-center text-muted">No local-only differences.
+                                            <td colspan="3" class="text-center text-muted">No local-only differences.
                                             </td>
                                         </tr>
                                     @endforelse
@@ -98,7 +98,7 @@
                                         </tr>
                                     @empty
                                         <tr>
-                                            <td colspan="4" class="text-center text-muted">No middle-only differences.
+                                            <td colspan="3" class="text-center text-muted">No middle-only differences.
                                             </td>
                                         </tr>
                                     @endforelse
@@ -122,28 +122,72 @@
 @endsection
 
 @section('scripts')
-    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
-    <script src="https://cdn.datatables.net/v/bs5/dt-1.13.8/datatables.min.js"></script>
     <script>
         (function() {
-            const options = {
-                lengthMenu: [25, 50, 100],
-                pageLength: 25,
-                order: [
-                    [0, 'asc'],
-                    [1, 'asc'],
-                    [2, 'asc']
-                ],
-            };
+            if (typeof $.fn.DataTable === 'undefined') {
+                console.error('DataTables not loaded');
+                return;
+            }
 
-            const localDT = $('#local-missing-table').DataTable(options);
-            const middleDT = $('#middle-missing-table').DataTable(options);
+            function padRows(tableId) {
+                const thCount = document.querySelectorAll('#' + tableId + ' thead th').length;
+                document.querySelectorAll('#' + tableId + ' tbody tr').forEach(tr => {
+                    const hasColspan = tr.querySelector('td[colspan]');
+                    if (hasColspan) return; // placeholder row OK
+                    let tds = tr.querySelectorAll('td');
+                    while (tds.length < thCount) {
+                        tr.appendChild(document.createElement('td'));
+                        tds = tr.querySelectorAll('td');
+                    }
+                    if (tds.length > thCount) {
+                        // Extra cells (unlikely) – trim
+                        for (let i = thCount; i < tds.length; i++) {
+                            tds[i].remove();
+                        }
+                    }
+                });
+            }
 
-            document.querySelectorAll('[data-dt-filter]').forEach(input => {
-                const targetId = input.dataset.targetTable;
-                const dt = $('#' + targetId).DataTable();
-                input.addEventListener('input', () => dt.search(input.value).draw());
+            ['local-missing-table', 'middle-missing-table'].forEach(padRows);
+
+            function init(sel) {
+                if (!document.querySelector(sel)) return;
+                if ($.fn.DataTable.isDataTable(sel)) return;
+
+                $(sel).DataTable({
+                    autoWidth: false,
+                    deferRender: true,
+                    pageLength: 25,
+                    lengthMenu: [25, 50, 100],
+                    order: [
+                        [0, 'asc']
+                    ],
+                    columnDefs: [{
+                            targets: '_all',
+                            defaultContent: ''
+                        } // fill missing cells
+                    ]
+                });
+            }
+
+            init('#local-missing-table');
+            init('#middle-missing-table');
+
+            // Filter inputs
+            document.querySelectorAll('[data-dt-filter]').forEach(inp => {
+                inp.addEventListener('input', () => {
+                    const tableSel = '#' + inp.dataset.targetTable;
+                    if ($.fn.DataTable.isDataTable(tableSel)) {
+                        $(tableSel).DataTable().search(inp.value).draw();
+                    }
+                });
             });
+
+            // Debug counts
+            console.debug('TH counts',
+                $('#local-missing-table thead th').length,
+                $('#middle-missing-table thead th').length
+            );
         })();
     </script>
 @endsection

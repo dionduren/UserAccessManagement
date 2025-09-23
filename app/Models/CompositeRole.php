@@ -62,7 +62,8 @@ class CompositeRole extends Model
 
     public function ao()
     {
-        return $this->hasMany(CompositeAO::class, 'composite_role', 'nama');
+        // was hasMany -> change to hasOne
+        return $this->hasOne(CompositeAO::class, 'composite_role', 'nama');
     }
 
     /**

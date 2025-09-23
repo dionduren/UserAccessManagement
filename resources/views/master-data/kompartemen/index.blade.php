@@ -116,6 +116,7 @@
                     paging: true,
                     searching: true,
                     ordering: true,
+                    order: [],
                     columnDefs: [{
                             width: '20%',
                             targets: [0]

@@ -37,7 +37,107 @@
 @endsection
 
 @section('scripts')
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
+        function deletePeriode(id, definisi) {
+            Swal.fire({
+                title: 'Hapus Periode?',
+                html: 'Periode: <strong>' + definisi +
+                    '</strong><br>Akan menghapus SEMUA data dengan periode ini (User Generic, User NIK, Mapping, Job Role).',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: 'Ya, hapus',
+                cancelButtonText: 'Batal',
+                reverseButtons: true
+            }).then(result => {
+                if (!result.isConfirmed) return;
+
+                fetch("{{ url('/periode') }}/" + id, {
+                        method: 'DELETE',
+                        headers: {
+                            'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]').content,
+                            'Accept': 'application/json',
+                            'X-Requested-With': 'XMLHttpRequest'
+                        }
+                    })
+                    .then(r => r.json().then(j => ({
+                        ok: r.ok,
+                        data: j
+                    })))
+                    .then(res => {
+                        if (!res.ok && res.data.need_force) {
+                            // Periode aktif, minta konfirmasi force
+                            Swal.fire({
+                                title: 'Periode Aktif',
+                                html: 'Periode ini masih aktif.<br>Lanjut hapus pakai FORCE?',
+                                icon: 'question',
+                                showCancelButton: true,
+                                confirmButtonText: 'Force Delete',
+                                cancelButtonText: 'Batal',
+                            }).then(f2 => {
+                                if (!f2.isConfirmed) return;
+                                forceDelete(id, definisi);
+                            });
+                            return;
+                        }
+
+                        if (!res.ok) {
+                            Swal.fire('Gagal', res.data.message || 'Gagal hapus', 'error');
+                            return;
+                        }
+
+                        showResult(res.data);
+                    })
+                    .catch(e => Swal.fire('Error', e.message, 'error'));
+            });
+        }
+
+        function forceDelete(id, definisi) {
+            fetch("{{ url('/periode') }}/" + id + "?force=1", {
+                    method: 'DELETE',
+                    headers: {
+                        'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]').content,
+                        'Accept': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                })
+                .then(r => r.json().then(j => ({
+                    ok: r.ok,
+                    data: j
+                })))
+                .then(res => {
+                    if (!res.ok) {
+                        Swal.fire('Gagal', res.data.message || 'Force delete gagal', 'error');
+                        return;
+                    }
+                    showResult(res.data);
+                })
+                .catch(e => Swal.fire('Error', e.message, 'error'));
+        }
+
+        function showResult(payload) {
+            const s = payload.summary || {};
+            Swal.fire({
+                title: 'Berhasil',
+                icon: 'success',
+                html: `
+                    <div class="text-start small">
+                        <div><strong>Periode:</strong> ${s.periode_definisi} (ID ${s.periode_id})</div>
+                        <hr class="my-1">
+                        <ul class="mb-0">
+                            <li>User Generic: <code>${s.deleted?.user_generic ?? 0}</code></li>
+                            <li>User NIK: <code>${s.deleted?.user_nik ?? 0}</code></li>
+                            <li>Mapping Generic Unit Kerja: <code>${s.deleted?.user_generic_unit_kerja ?? 0}</code></li>
+                            <li>Mapping NIK Unit Kerja: <code>${s.deleted?.user_nik_unit_kerja ?? 0}</code></li>
+                            <li>NIK Job Role: <code>${s.deleted?.nik_job_role ?? 0}</code></li>
+                        </ul>
+                    </div>
+                `
+            }).then(() => {
+                $('#periode_table').DataTable().ajax.reload(null, false);
+            });
+        }
+
         $(document).ready(function() {
             const showAction = @json($user_company === 'A000');
 

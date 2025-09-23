@@ -243,13 +243,13 @@
                 <i class="bi bi-link-45deg me-2"></i>Composite Role - AO
             </a>
         </li>
-        <li>
+        {{-- <li>
             <a href="javascript:void(0)" class="nav-link">
                 <span class="text-danger">
                     <i class="bi bi-file-earmark-spreadsheet me-2"></i>Upload Company - Composite
                 </span>
             </a>
-        </li>
+        </li> --}}
     </div>
 </div>
 
@@ -311,6 +311,12 @@
                     <i class="bi bi-file-earmark-spreadsheet me-2"></i>Upload Job Role - Composite
                 </a>
             </li>
+            <li>
+                <a href="{{ route('import.user_id.index') }}"
+                    class="nav-link {{ request()->routeIs('import.user_id.*') ? 'active' : 'text-white' }}">
+                    <i class="bi bi-cloud-download me-2"></i>Import User ID
+                </a>
+            </li>
             <li class="nav-item">
                 <a href="{{ route('dynamic_upload.upload', ['module' => 'user_nik']) }}"
                     class="nav-link {{ request()->routeIs('dynamic_upload.*') && request()->route('module') === 'user_nik' ? 'active' : 'text-white' }}">
@@ -341,7 +347,7 @@
 
         <li class="nav-item">
             <a href="{{ route('user-nik.index') }}"
-                class="nav-link {{ request()->routeIs('user-nik.index') ? 'active' : 'text-white' }}">
+                class="nav-link {{ request()->routeIs('user-nik.*') ? 'active' : 'text-white' }}">
                 <i class="bi bi-person-badge me-2"></i>User ID NIK
             </a>
         </li>

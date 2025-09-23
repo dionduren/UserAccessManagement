@@ -8,9 +8,8 @@
             <div class="mb-3">
                 <label for="periode_id" class="form-label">Periode</label>
                 <select name="periode_id" id="periode_id" class="form-control" required>
+                    <option value="">Pilih Periode</option>
                     @foreach ($periodes as $periode)
-                        <option value="">Pilih Periode</option>
-                        {{-- Ensure the first option is empty for selection --}}
                         <option value="{{ $periode->id }}">{{ $periode->definisi }}</option>
                     @endforeach
                 </select>

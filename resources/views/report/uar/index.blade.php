@@ -22,6 +22,17 @@
         <h3>User Access Review Report</h3>
         <div class="row mb-3">
             <div class="col">
+                <label>Periode</label>
+                <select name="periode_id" id="periode_id" class="form-control">
+                    <option value="">-- Pilih Periode --</option>
+                    @foreach ($periodes as $p)
+                        <option value="{{ $p->id }}" {{ $selectedPeriodeId == $p->id ? 'selected' : '' }}>
+                            {{ $p->definisi }}
+                        </option>
+                    @endforeach
+                </select>
+            </div>
+            <div class="col">
                 <label>Company</label>
                 <select name="company" id="company" class="form-control">
                     <option value="">-- Select Company --</option>
@@ -122,7 +133,8 @@
 @section('scripts')
     <script>
         $(document).ready(function() {
-            // Cascading dropdowns
+
+            // Cascading dropdowns (tidak berubah)
             $('#company').on('change', function() {
                 let companyId = $(this).val();
                 $('#kompartemen').html('<option value="">-- Pilih Kompartemen --</option>');
@@ -174,167 +186,101 @@
                 }
             });
 
-            $('#departemen').on('change', function() {
-                console.log($(this).val());
-            });
-
-            // Initialize DataTable without ajax
-            var jobRoleTable = $('#job-role-table').DataTable({
+            let jobRoleTable = $('#job-role-table').DataTable({
                 processing: true,
                 serverSide: false,
                 data: [],
                 columns: [{
                         data: null,
-                        name: 'index',
-                        render: function(data, type, row, meta) {
-                            return meta.row + 1;
-                        }
+                        render: (d, t, r, m) => m.row + 1
                     },
                     {
-                        data: 'user_nik',
-                        name: 'user_nik'
+                        data: 'user_nik'
                     },
                     {
-                        data: 'user_definisi',
-                        name: 'user_definisi'
+                        data: 'user_definisi'
                     },
                     {
-                        data: 'job_role',
-                        name: 'job_role'
-                    },
-                    // {
-                    //     data: 'kompartemen',
-                    //     name: 'kompartemen'
-                    // },
-                    // {
-                    //     data: 'departemen',
-                    //     name: 'departemen'
-                    // },
-                    {
-                        data: 'karyawan_nik',
-                        name: 'karyawan_nik'
+                        data: 'job_role'
                     },
                     {
-                        data: 'mdb_usmm.sap_user_id',
-                        name: 'mdb_usmm.sap_user_id'
+                        data: 'karyawan_nik'
                     },
                     {
-                        data: 'mdb_usmm.nama',
-                        name: 'mdb_usmm.nama'
+                        data: 'mdb_usmm.sap_user_id'
                     },
                     {
-                        data: 'mdb_usmm.nik',
-                        name: 'mdb_usmm.nik'
+                        data: 'mdb_usmm.nama'
+                    },
+                    {
+                        data: 'mdb_usmm.nik'
                     },
                 ],
-                tooltips: true,
-                responsive: true,
-                searching: true,
-                paging: true,
-                ordering: true,
                 pageLength: 15,
-                lengthMenu: [10, 15, 25, 50, 100],
                 order: [
                     [1, 'asc']
-                ],
-                rowCallback: function(row, data) {
-                    if (!data.user_definisi || data.user_definisi == "-") {
-                        $(row).css('background-color', '#f8d7da');
-                        $(row).attr('title',
-                            'Tidak ada user NIK / user Cost Center pada Periode terakhir');
-                    }
-                }
+                ]
             });
 
-            // Load data on button click
             $('#load').on('click', function() {
-                // Check if latestPeriode is null before proceeding
-                @if (is_null($latestPeriode))
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Gagal',
-                        text: 'Periode belum dibuat, Laporan tidak bisa digenerate',
-                    });
+                let periodeId = $('#periode_id').val();
+                if (!periodeId) {
+                    Swal.fire('Periode belum dipilih', 'Silakan pilih periode terlebih dahulu', 'warning');
                     return;
-                @endif
+                }
 
-                // Show tables
                 $('#review-table-container').show();
                 $('#job-role-table-container').show();
                 $('#export-word').show();
 
-                // Get selected values
                 let companyId = $('#company').val();
-                let companyName = $('#company option:selected').text();
                 let kompartemenId = $('#kompartemen').val();
-                let kompartemenName = $('#kompartemen option:selected').text();
                 let departemenId = $('#departemen').val();
-                let departemenName = $('#departemen option:selected').text();
 
-                // Determine Unit Kerja
+                // Tentukan Unit Kerja
                 let unitKerja = '-';
                 if (departemenId) {
-                    let displayName = departemenName;
-                    if (displayName.startsWith('Dep.')) {
-                        displayName = displayName.replace(/^Dep\.\s*/, '');
-                        unitKerja = 'Departemen ' + displayName;
-                    } else {
-                        unitKerja = departemenName;
-                    }
+                    unitKerja = $('#departemen option:selected').text();
                 } else if (kompartemenId) {
-                    let displayName = kompartemenName;
-                    // Remove "Komp." if present at the start
-                    if (displayName.startsWith('Komp.')) {
-                        displayName = displayName.replace(/^Komp\.\s*/, '');
-                        unitKerja = 'Kompartemen ' + displayName;
-                    } else if (displayName.startsWith('Fungs.')) {
-                        displayName = displayName.replace(/^Fungs\.\s*/, '');
-                        unitKerja = 'Fungsional ' + displayName;
-                    } else {
-                        unitKerja = displayName;
-                    }
+                    unitKerja = $('#kompartemen option:selected').text();
                 } else if (companyId) {
-                    unitKerja = companyName;
+                    unitKerja = $('#company option:selected').text();
                 }
-
                 $('#unit-kerja-cell').text(unitKerja);
 
-                // Load job roles and count users
                 $.ajax({
                     url: "{{ route('report.uar.job-roles') }}",
                     data: {
+                        periode_id: periodeId,
                         company_id: companyId,
                         kompartemen_id: kompartemenId,
                         departemen_id: departemenId
                     },
-                    success: function(response) {
+                    success: function(resp) {
                         jobRoleTable.clear();
-                        let totalUser = 0;
-                        if (response.data) {
-                            jobRoleTable.rows.add(response.data).draw();
-                            // Sum user count from response
-                            totalUser = response.data.length;
-                            cost_center = response.cost_center;
-                            // Update nomor surat cell
-                            if (response.nomorSurat) {
-                                $('#nomor-surat-cell').text(response.nomorSurat);
-                            } else {
-                                $('#nomor-surat-cell').text('XXX - Belum terdaftar');
-                            }
+                        if (resp.data) {
+                            jobRoleTable.rows.add(resp.data).draw();
+                            $('#jumlah-awal-user-cell').html('<strong>' + resp.data.length +
+                                '</strong>');
                         } else {
                             jobRoleTable.draw();
+                            $('#jumlah-awal-user-cell').html('<strong>0</strong>');
                         }
-                        $('#jumlah-awal-user-cell').html('<strong>' + totalUser +
-                            '</strong>');
-                        $('#cost-center-cell').text(cost_center);
+                        $('#nomor-surat-cell').text(resp.nomorSurat || 'XXX - Belum terdaftar');
+                        $('#cost-center-cell').text(resp.cost_center || '-');
                     }
                 });
             });
 
             $('#export-word').on('click', function(e) {
                 e.preventDefault();
-                // Pass current filter as query string
+                let periodeId = $('#periode_id').val();
+                if (!periodeId) {
+                    Swal.fire('Periode belum dipilih', 'Silakan pilih periode terlebih dahulu', 'warning');
+                    return;
+                }
                 let params = $.param({
+                    periode_id: periodeId,
                     company_id: $('#company').val(),
                     kompartemen_id: $('#kompartemen').val(),
                     departemen_id: $('#departemen').val()

@@ -107,7 +107,7 @@
                 <li>
                     <a href="{{ route('import.nik_unit_kerja.index') }}"
                         class="nav-link text-white {{ $isImportNIKUnitActive ? 'active' : 'text-white' }}">
-                        <i class="bi bi-file-earmark-spreadsheet me-2"></i>Import User ID NIK - Unit Kerja
+                        <i class="bi bi-cloud-download me-2"></i>Import User ID NIK - Unit Kerja
                     </a>
                 </li>
                 <hr width="80%" class="my-1" style="margin-left: auto">

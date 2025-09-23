@@ -65,8 +65,8 @@ class BAPenarikanDataController extends Controller
                 $w->whereNull('valid_to')
                     ->orWhere('valid_to', '00000000')
                     ->orWhereRaw("to_date(valid_to,'YYYYMMDD') >= current_date");
-            })
-            ->whereRaw("sap_user_id ~* '^[A-K]'");
+            });
+        // ->whereRaw("sap_user_id ~* '^[A-K]'");
 
         $recordsTotal = (clone $base)->count(); // total before company filter
 

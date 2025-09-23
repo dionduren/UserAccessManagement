@@ -103,13 +103,13 @@
                         const userDetail = response.userDetail; // access nested property here
                         const userDetailInfo =
                             `Nama: ${userDetail.nama ?? 'N/A'}\n` +
-                            `Perusahaan: ${userDetail.company.name ?? 'N/A'}\n` +
-                            `Direktorat: ${userDetail.direktorat ?? 'N/A'}\n` +
-                            `Kompartemen: ${userDetail.kompartemen.name ?? 'N/A'}\n` +
-                            `Departemen: ${userDetail.departemen.name ?? 'N/A'}\n` +
-                            `Cost Center: ${userDetail.cost_center ?? 'N/A'}\n` +
-                            `Jabatan: ${userDetail.jabatan ?? 'N/A'}\n` +
-                            `Email: ${userDetail.email ?? 'N/A'}`;
+                            `Perusahaan: ${userDetail.company.nama ?? 'N/A'}\n` +
+                            `Direktorat: ${userDetail.direktorat.direktorat ?? 'N/A'}\n` +
+                            `Kompartemen: ${userDetail.kompartemen.nama ?? 'N/A'}\n` +
+                            `Departemen: ${userDetail.departemen.nama ?? 'N/A'}\n` +
+                            `Cost Center: ${userDetail.cost_center ?? 'N/A'}\n`;
+                        // `Jabatan: ${userDetail.jabatan ?? 'N/A'}\n` +
+                        // `Email: ${userDetail.email ?? 'N/A'}`;
                         $('#user_detail_info').val(userDetailInfo);
                     },
                     error: function(xhr) {

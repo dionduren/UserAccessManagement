@@ -116,14 +116,24 @@ class UAMReportController extends Controller
         return response()->json($departemen);
     }
 
+    private function unwrapComposite($rel)
+    {
+        if ($rel instanceof \Illuminate\Support\Collection) {
+            return $rel->first();
+        }
+        return $rel; // already a model or null
+    }
+
+
     public function jobRolesData(Request $request)
     {
-        $companyId = $request->company_id;
-        $kompartemenId = $request->kompartemen_id;
-        $departemenId = $request->departemen_id;
-        $latestPeriode = Periode::latest()->first();
-        $latestPeriodeYear = $latestPeriode ? date('Y', strtotime($latestPeriode->created_at)) : null;
-        $nomorSurat = 'XXX - Belum terdaftar';
+        $companyId      = $request->company_id;
+        $kompartemenId  = $request->kompartemen_id;
+        $departemenId   = $request->departemen_id;
+        $latestPeriode  = Periode::latest()->first();
+        $latestYear     = $latestPeriode ? date('Y', strtotime($latestPeriode->created_at)) : null;
+        $nomorSurat     = 'XXX - Belum terdaftar';
+        $usedMDBSingles = false;
 
         $query = JobRole::query()
             ->with([
@@ -131,228 +141,217 @@ class UAMReportController extends Controller
                 'kompartemen',
                 'departemen',
                 'compositeRole' => function ($q) {
-                    $q->whereNull('deleted_at');
+                    $q->whereNull('deleted_at')
+                        ->with(['singleRoles' => function ($qq) {
+                            $qq->whereNull('tr_single_roles.deleted_at');
+                        }, 'ao']); // assume rel authorizationObject exists
                 }
             ]);
 
-        if ($companyId) {
-            $query->where('company_id', $companyId);
-        }
-        if ($kompartemenId) {
-            $query->where('kompartemen_id', $kompartemenId);
-        }
-        if ($departemenId) {
-            $query->where('departemen_id', $departemenId);
-        }
+        if ($companyId)     $query->where('company_id', $companyId);
+        if ($kompartemenId) $query->where('kompartemen_id', $kompartemenId);
+        if ($departemenId)  $query->where('departemen_id', $departemenId);
 
+        // Determine nomor surat (unchanged logic)
         if ($departemenId) {
             $penomoranUAM = PenomoranUAM::where('unit_kerja_id', $departemenId)
-                ->whereNull('deleted_at')
-                ->latest()
-                ->first();
+                ->whereNull('deleted_at')->latest()->first();
             $nomorSurat = $penomoranUAM->number ?? 'XXX (Belum terdaftar)';
         } elseif ($kompartemenId) {
             $penomoranUAM = PenomoranUAM::where('unit_kerja_id', $kompartemenId)
-                ->whereNull('deleted_at')
-                ->latest()
-                ->first() ?? null;
+                ->whereNull('deleted_at')->latest()->first();
             $nomorSurat = $penomoranUAM->number ?? 'XXX (Belum terdaftar)';
         }
 
         $jobRoles = $query->get();
         $data = [];
 
-        $nomorSurat = "PI-TIN-UAM-{$latestPeriodeYear}-{$nomorSurat}";
+        $nomorSurat = "PI-TIN-UAM-{$latestYear}-{$nomorSurat}";
 
-        // Prefetch middle-db composite role descriptions by name to avoid N+1
-        $middleDescriptions = [];
+        // Collect composite names (for possible middle-db fallback)
         $compositeNames = $jobRoles
-            ->filter(function ($jr) {
-                return $jr->compositeRole && !empty($jr->compositeRole->nama);
-            })
+            ->filter(fn($jr) => $jr->compositeRole && !empty($jr->compositeRole->nama))
             ->pluck('compositeRole.nama')
-            ->filter()
             ->unique()
             ->values();
 
+        // Middle-db composite descriptions (fallback only)
+        $middleDescriptions = [];
         if ($compositeNames->isNotEmpty()) {
             $middleDescriptions = MiddleCompositeRole::whereIn('composite_role', $compositeNames)
                 ->pluck('definisi', 'composite_role')
                 ->toArray();
         }
 
-        // Prefetch AO per composite role from middle-db (AO Single Role rows)
+        // Middle-db AO fallback (single_role = composite_role-AO)
         $aoByComposite = [];
         if ($compositeNames->isNotEmpty()) {
-            $aoQueryNames = $compositeNames->map(fn($name) => $name . '-AO')->all();
-            $aoRows = MiddleSingleRole::whereIn('single_role', $aoQueryNames)
-                ->get(['single_role', 'definisi']); // only fields available per dd()
-
+            $aoQueryNames = $compositeNames->map(fn($n) => $n . '-AO')->all();
+            $aoRows = MiddleSingleRole::whereIn('single_role', $aoQueryNames)->get(['single_role', 'definisi']);
             foreach ($aoRows as $row) {
-                // Map back to composite name by removing "-AO"
+                // BUG FIX: Str::of(...)->beforeLast() returns Stringable (illegal offset as array key). Cast to string.
                 $comp = (string) Str::of($row->single_role)->beforeLast('-AO');
-                if ($comp === '') {
-                    continue;
-                }
-                // Build display text: "AO Single Role - definisi"
-                $aoByComposite[$comp] = trim(($row->single_role ? '<strong>' . $row->single_role . '</strong>' : '-') . ($row->definisi ? '<br>' . $row->definisi : '-'));
+                if ($comp === '') continue;
+                $aoByComposite[$comp] = trim(
+                    '<strong>' . e($row->single_role) . '</strong>' .
+                        ($row->definisi ? '<br>' . e($row->definisi) : '')
+                );
             }
         }
 
-        // Build data based on jobRole and its compositeRole relationship
+        // Build rows (Job Role mapping) LOCAL FIRST
         $compositeRoles = [];
         foreach ($jobRoles as $jobRole) {
-            if ($jobRole->compositeRole && $jobRole->compositeRole->count() > 0) {
-                $compositeName = $jobRole->compositeRole->nama ?? null;
-                $effectiveDescription = $compositeName && isset($middleDescriptions[$compositeName])
-                    ? $middleDescriptions[$compositeName]
-                    : ($jobRole->compositeRole->deskripsi ?? '-');
+            $compModel = $this->unwrapComposite($jobRole->compositeRole);
+            if (!$compModel) continue;
 
-                // Mark composite name as (MDB) when description comes from middle_db
-                $isCompositeFromMDB = $compositeName && isset($middleDescriptions[$compositeName]);
-                $displayCompositeName = $compositeName
-                    ? ($compositeName . ($isCompositeFromMDB ? ' <span style="color: green;"><strong><italic>{MDB}</italic></strong></span>' : ''))
-                    : '-';
+            $compositeName = $compModel->nama ?? null;
+            if (!$compositeName) continue;
 
-                // Compose composite role label as "nama <br> deskripsi"
-                $compositeLabel = '<strong>' . $displayCompositeName . '</strong>'
-                    . ($effectiveDescription ? '<br>' . $effectiveDescription : '-');
+            $localDesc  = $compModel->deskripsi;
+            $mdbDesc    = $middleDescriptions[$compositeName] ?? null;
+            $descUsed   = $localDesc ?: $mdbDesc;
+            $usedMDB    = !$localDesc && $mdbDesc;
 
-                // Use prebuilt AO text from the AO Single Role row
-                $aoText = $compositeName && isset($aoByComposite[$compositeName])
-                    ? $aoByComposite[$compositeName]
-                    : '-';
+            $displayCompositeName = $compositeName . ($usedMDB ? ' <span style="color:red;"><strong><i>{MDB}</i></strong></span>' : '');
+            $compositeLabel = '<strong>' . $displayCompositeName . '</strong>' . ($descUsed ? '<br>' . e($descUsed) : '');
 
-                $data[] = [
-                    'company' => $jobRole->company ? $jobRole->company->nama : '-',
-                    'kompartemen' => $jobRole->kompartemen ? $jobRole->kompartemen->nama : '-',
-                    'departemen' => $jobRole->departemen ? $jobRole->departemen->nama : '-',
-                    'job_role' => $jobRole->nama ?? '-',
-                    'composite_role' => $compositeLabel,
-                    'authorization_object' => $aoText,
-                ];
-
-                $compositeRoles[$jobRole->compositeRole->id] = $jobRole->compositeRole;
-            }
-        }
-
-        // Fetch single roles for each composite role (MDB-first, then local)
-        $compositeRolesWithSingles = [];
-        foreach ($compositeRoles as $compositeRole) {
-            $mappedSingles = collect();
-            $compositeDisplayName = $compositeRole->nama;
-
-            // Try middle_db first by composite name
-            $usedMDBComposite = false;
-            $compositeDisplayNameRaw = $compositeRole->nama; // raw
-            $compositeDisplayNameHtml = $compositeDisplayNameRaw;
-            if (!empty($compositeRole->nama)) {
-                $mdbComposite = MiddleCompositeRole::where('composite_role', $compositeRole->nama)->first();
-                if ($mdbComposite) {
-                    $usedMDBComposite = true;
-                    $mdbSingles = $mdbComposite->singleRoles()->get(['mdb_single_role.single_role', 'mdb_single_role.definisi']);
-                    $mappedSingles = $mdbSingles->map(function ($r) {
-                        $raw = $r->single_role;
-                        return [
-                            'id' => null, // no local id
-                            'nama' => $raw, // RAW for lookups
-                            'nama_display' => $raw . ' <span style="color: green;"><strong><italic>{MDB}</italic></strong></span>', // UI only
-                            'deskripsi' => $r->definisi,
-                        ];
-                    });
-                    // mark composite display as MDB (keep raw untouched)
-                    $compositeDisplayNameHtml = $compositeDisplayNameRaw . ' <span style="color: green;"><strong><italic>{MDB}</italic></strong></span>';
+            $aoLocalRel = $compModel->ao ?? null;
+            if ($aoLocalRel) {
+                $aoText = '<strong>' . e($aoLocalRel->nama ?? '-') . '</strong>' .
+                    (($aoLocalRel->deskripsi ?? null) ? '<br>' . e($aoLocalRel->deskripsi) : '');
+            } else {
+                $aoText = $aoByComposite[$compositeName] ?? '-';
+                if ($aoText !== '-' && !$aoLocalRel) {
+                    $aoText .= ' <span style="color:red;"><strong><i>{MDB}</i></strong></span>';
                 }
             }
-            // If not found in middle_db, fall back to local
-            if (!$usedMDBComposite) {
-                $singleRoles = $compositeRole->singleRoles()
-                    ->whereNull('tr_single_roles.deleted_at')
-                    ->get(['tr_single_roles.id', 'tr_single_roles.nama', 'tr_single_roles.deskripsi']);
 
-                $mappedSingles = $singleRoles->map(function ($role) {
-                    return [
-                        'id' => $role->id,
-                        'nama' => $role->nama,         // RAW
-                        'nama_display' => $role->nama, // UI == raw (no MDB)
-                        'deskripsi' => $role->deskripsi,
-                    ];
-                });
-                $compositeDisplayNameHtml = $compositeDisplayNameRaw; // no MDB
+            $data[] = [
+                'company'              => $jobRole->company?->nama ?? '-',
+                'kompartemen'          => $jobRole->kompartemen?->nama ?? '-',
+                'departemen'           => $jobRole->departemen?->nama ?? '-',
+                'job_role'             => $jobRole->nama ?? '-',
+                'composite_role'       => $compositeLabel,
+                'authorization_object' => $aoText,
+            ];
+
+            $compositeRoles[$compModel->id] = $compModel;
+        }
+
+        // Build compositeRolesWithSingles (local singles first, fallback to middle)
+        $compositeRolesWithSingles = [];
+        foreach ($compositeRoles as $comp) {
+            $comp = $this->unwrapComposite($comp);
+            if (!$comp) continue;
+            $compNameRaw = $comp->nama;
+            $localSingles = $comp->singleRoles ?? collect();
+
+            if ($localSingles && $localSingles->count() > 0) {
+                // LOCAL singles
+                $mappedSingles = $localSingles->map(fn($r) => [
+                    'id'          => $r->id,
+                    'nama'        => $r->nama,
+                    'nama_display' => $r->nama, // local no tag
+                    'deskripsi'   => $r->deskripsi,
+                    'source'      => 'LOCAL',
+                ]);
+            } else {
+                // Fallback to middle-db only if local empty
+                $mdbComposite = MiddleCompositeRole::where('composite_role', $compNameRaw)->first();
+                if ($mdbComposite && method_exists($mdbComposite, 'singleRoles')) {
+                    $mdbSingles = $mdbComposite->singleRoles()->get(['mdb_single_role.single_role', 'mdb_single_role.definisi']);
+                    $mappedSingles = $mdbSingles->map(fn($r) => [
+                        'id'          => null,
+                        'nama'        => $r->single_role,
+                        'nama_display' => $r->single_role . ' <span style="color:red;"><strong><i>{MDB}</i></strong></span>',
+                        'deskripsi'   => $r->definisi,
+                        'source'      => 'MDB',
+                    ]);
+                    $usedMDBSingles = true;
+                }
+            }
+
+            $compDisplay = $compNameRaw;
+            if ($usedMDBSingles && ($comp->deskripsi === null || $comp->deskripsi === '')) {
+                // Mark composite if singles are from MDB and no local desc
+                $compDisplay .= ' <span style="color:red;"><strong><i>{MDB}</i></strong></span>';
             }
 
             $compositeRolesWithSingles[] = [
-                'id' => $compositeRole->id,
-                'nama' => $compositeDisplayNameRaw,         // RAW
-                'nama_display' => $compositeDisplayNameHtml, // UI
+                'id'           => $comp->id,
+                'nama'         => $compNameRaw,
+                'nama_display' => $compDisplay,
                 'single_roles' => $mappedSingles->toArray(),
             ];
         }
 
-        // Compile unique single roles (MDB-first for tcodes, then local)
+        // Unique single roles (LOCAL tcodes first, fallback to middle)
         $uniqueSingleRoles = [];
         foreach ($compositeRolesWithSingles as $cr) {
             foreach ($cr['single_roles'] as $sr) {
-                $key = $sr['id'] ?? $sr['nama']; // use id when available, otherwise RAW name
-                if (!isset($uniqueSingleRoles[$key])) {
-                    $tcodes = [];
+                $key = $sr['id'] ?? $sr['nama'];
+                if (isset($uniqueSingleRoles[$key])) continue;
 
-                    // Try middle_db first by RAW SR name
-                    $srNameLookup = $sr['nama'] ?? '';
-                    $mdbSingle = $srNameLookup
-                        ? MiddleSingleRole::where('single_role', $srNameLookup)->first()
-                        : null;
+                $srId      = $sr['id'];
+                $srNameRaw = $sr['nama'];
+                $tcodes    = [];
+                $usedMDBT  = false;
 
+                // LOCAL first if we have local id
+                if ($srId) {
+                    $singleRoleModel = SingleRole::find($srId);
+                    if ($singleRoleModel && method_exists($singleRoleModel, 'tcodes')) {
+                        $tcodesLocal = $singleRoleModel->tcodes()
+                            ->whereNull('tr_tcodes.deleted_at')
+                            ->get(['tr_tcodes.code', 'tr_tcodes.deskripsi']);
+                        $tcodes = $tcodesLocal->map(fn($t) => [
+                            'tcode'         => $t->code,
+                            'tcode_display' => $t->code,
+                            'deskripsi'     => $t->deskripsi,
+                            'source'        => 'LOCAL',
+                        ])->toArray();
+                    }
+                }
+
+                // Fallback middle if no local tcodes (or no local ID)
+                if (empty($tcodes)) {
+                    $mdbSingle = MiddleSingleRole::where('single_role', $srNameRaw)->first();
                     if ($mdbSingle && method_exists($mdbSingle, 'tcodes')) {
-                        $tcodes = $mdbSingle->tcodes()
-                            ->get(['mdb_tcode.tcode', 'mdb_tcode.definisi'])
-                            ->map(function ($t) {
-                                return [
-                                    'tcode' => $t->tcode, // RAW for lookups
-                                    'tcode_display' => $t->tcode . ' <span style="color: green;"><strong><italic>{MDB}</italic></strong></span>',
-                                    'deskripsi' => $t->definisi,
-                                ];
-                            })->toArray();
-                    } elseif (!empty($sr['id'])) {
-                        // Fall back to local tcodes by local SR id
-                        $singleRoleModel = \App\Models\SingleRole::find($sr['id']);
-                        if ($singleRoleModel && method_exists($singleRoleModel, 'tcodes')) {
-                            $tcodes = $singleRoleModel->tcodes()
-                                ->whereNull('tr_tcodes.deleted_at')
-                                ->get(['tr_tcodes.code', 'tr_tcodes.deskripsi'])
-                                ->map(function ($t) {
-                                    return [
-                                        'tcode' => $t->code,          // RAW
-                                        'tcode_display' => $t->code,  // UI == raw
-                                        'deskripsi' => $t->deskripsi,
-                                    ];
-                                })->toArray();
+                        $mdbTcodes = $mdbSingle->tcodes()->get(['mdb_tcode.tcode', 'mdb_tcode.definisi']);
+                        if ($mdbTcodes->count()) {
+                            $tcodes = $mdbTcodes->map(fn($t) => [
+                                'tcode'         => $t->tcode,
+                                'tcode_display' => $t->tcode . ' <span style="color:red;"><strong><i>{MDB}</i></strong></span>',
+                                'deskripsi'     => $t->definisi,
+                                'source'        => 'MDB',
+                            ])->toArray();
+                            $usedMDBT = true;
                         }
                     }
-
-                    // Determine display name for SR (use provided display, or build it)
-                    $srNameDisplay = $sr['nama_display'] ?? $sr['nama'] ?? '-';
-                    if ($mdbSingle && empty($sr['nama_display'])) {
-                        $srNameDisplay = ($sr['nama'] ?? '-') . ' <span style="color: green;"><strong><italic>{MDB}</italic></strong></span>';
-                    }
-
-                    $uniqueSingleRoles[$key] = [
-                        'id' => $sr['id'] ?? null,
-                        'nama' => $sr['nama'] ?? '-',               // RAW
-                        'nama_display' => $srNameDisplay,           // UI
-                        'deskripsi' => $sr['deskripsi'] ?? null,
-                        'tcodes' => $tcodes,                        // each has tcode + tcode_display
-                    ];
                 }
+
+                $nameDisplay = $sr['nama_display'] ?? $srNameRaw;
+                // If no local id and came from middle fallback ensure display tag
+                if (!$srId && str_contains($nameDisplay, '{MDB}') === false && ($sr['source'] ?? null) === 'MDB') {
+                    $nameDisplay .= ' <span style="color:red;"><strong><i>{MDB}</i></strong></span>';
+                }
+
+                $uniqueSingleRoles[$key] = [
+                    'id'           => $srId,
+                    'nama'         => $srNameRaw,
+                    'nama_display' => $nameDisplay,
+                    'deskripsi'    => $sr['deskripsi'] ?? null,
+                    'tcodes'       => $tcodes,
+                ];
             }
         }
 
-        // Now return after finishing the loops
         return response()->json([
-            'data' => $data,
-            'nomorSurat' => $nomorSurat,
-            'composite_roles' => $compositeRolesWithSingles,             // each has nama + nama_display
-            'single_roles' => array_values($uniqueSingleRoles),          // each has nama + nama_display + tcodes
+            'data'             => $data,
+            'nomorSurat'       => $nomorSurat,
+            'composite_roles'  => $compositeRolesWithSingles,
+            'single_roles'     => array_values($uniqueSingleRoles),
         ]);
     }
 
@@ -384,42 +383,24 @@ class UAMReportController extends Controller
 
     public function exportSingleExcel(Request $request)
     {
-        $companyId = $request->company_id;
-        $kompartemenId = $request->kompartemen_id;
-        $departemenId = $request->departemen_id;
-        $company = Company::where('company_code', $companyId)->first();
-        $kompartemen = Kompartemen::where('kompartemen_id', $kompartemenId)->first();
-        $departemen = Departemen::where('departemen_id', $departemenId)->first();
         $uniqueSingleRoles = [];
         $uniqueTcodeCount = [];
 
         $query = JobRole::query()
             ->with([
-                'company',
-                'kompartemen',
-                'departemen',
                 'compositeRole' => function ($q) {
                     $q->whereNull('deleted_at');
                 }
             ]);
-
-        if ($companyId) {
-            $query->where('company_id', $companyId);
-        }
-        if ($kompartemenId) {
-            $query->where('kompartemen_id', $kompartemenId);
-        }
-        if ($departemenId) {
-            $query->where('departemen_id', $departemenId);
-        }
 
         $jobRoles = $query->get();
 
         // Build compositeRolesWithSingles
         $compositeRoles = [];
         foreach ($jobRoles as $jobRole) {
-            if ($jobRole->compositeRole && $jobRole->compositeRole->count() > 0) {
-                $compositeRoles[$jobRole->compositeRole->id] = $jobRole->compositeRole;
+            $comp = $this->unwrapComposite($jobRole->compositeRole);
+            if ($comp) {
+                $compositeRoles[$comp->id] = $comp;
             }
         }
 
@@ -440,6 +421,7 @@ class UAMReportController extends Controller
                 })->toArray(),
             ];
         }
+
 
         // Compile unique single roles
         $uniqueSingleRoles = [];
@@ -462,6 +444,7 @@ class UAMReportController extends Controller
                     $uniqueSingleRoles[$sr['id']] = [
                         'id' => $sr['id'],
                         'nama' => $sr['nama'],
+                        'deskripsi' => $sr['deskripsi'],
                         'tcodes' => $tcodes,
                     ];
                 }
@@ -472,12 +455,8 @@ class UAMReportController extends Controller
         $exportData = [];
         $exportData[] = [
             'No',
-            'Perusahaan',
-            'Kompartemen_id',
-            'Kompartemen',
-            'Departemen_id',
-            'Departemen',
             'Single Role',
+            'Deskripsi Single Role',
             'Tcode',
             'Deskripsi Tcode'
         ];
@@ -488,28 +467,20 @@ class UAMReportController extends Controller
                 foreach ($sr['tcodes'] as $tc) {
                     $exportData[] = [
                         $rowNumber,
-                        $company ? $company->company_code : '-',
-                        $kompartemen ? $kompartemen->kompartemen_id : '-',
-                        $kompartemen ? $kompartemen->nama : '-',
-                        $departemen ? $departemen->departemen_id : '-',
-                        $departemen ? $departemen->nama : '-',
                         $sr['nama'],
+                        $sr['deskripsi'] ?? '',
                         $tc['tcode'],
-                        $tc['deskripsi'],
+                        $tc['deskripsi'] ?? '',
                     ];
                     $rowNumber++;
                 }
             } else {
                 $exportData[] = [
                     $rowNumber,
-                    $company ? $company->company_code : '-',
-                    $kompartemen ? $kompartemen->kompartemen_id : '-',
-                    $kompartemen ? $kompartemen->nama : '-',
-                    $departemen ? $departemen->departemen_id : '-',
-                    $departemen ? $departemen->nama : '-',
                     $sr['nama'],
-                    '-',
-                    '-',
+                    $sr['deskripsi'] ?? '',
+                    '',
+                    '',
                 ];
                 $rowNumber++;
             }
@@ -620,13 +591,16 @@ class UAMReportController extends Controller
         // Calculate unique single roles and unique tcodes
         $compositeRoles = [];
         foreach ($jobRoles as $jobRole) {
-            if ($jobRole->compositeRole && $jobRole->compositeRole->count() > 0) {
-                $compositeRoles[$jobRole->compositeRole->id] = $jobRole->compositeRole;
+            $comp = $this->unwrapComposite($jobRole->compositeRole);
+            if ($comp) {
+                $compositeRoles[$comp->id] = $comp;
             }
         }
 
         $compositeRolesWithSingles = [];
         foreach ($compositeRoles as $compositeRole) {
+            $compositeRole = $this->unwrapComposite($compositeRole);
+            if (!$compositeRole) continue;
             $singleRoles = $compositeRole->singleRoles()
                 ->whereNull('tr_single_roles.deleted_at')
                 ->get(['tr_single_roles.id', 'tr_single_roles.nama', 'tr_single_roles.deskripsi']);
@@ -855,6 +829,29 @@ class UAMReportController extends Controller
         $no = 1;
         // Loop through jobRoles and add rows to the table
         foreach ($jobRoles as $jobRole) {
+            $comp = $this->unwrapComposite($jobRole->compositeRole);
+            if ($comp instanceof \Illuminate\Support\Collection) {
+                $comp = $comp->first();
+            }
+
+            $compName = $comp?->nama;
+            $compDesc = $comp?->deskripsi;
+            $compParts = [];
+            if ($compName) $compParts[] = $compName;
+            if ($compDesc) $compParts[] = $compDesc;
+            $compText = $compParts ? implode("\n", $compParts) : '-';
+
+            $ao = $comp?->ao ?? null;
+            if ($ao instanceof \Illuminate\Support\Collection) {
+                $ao = $ao->first();
+            }
+            $aoName = $ao?->nama;
+            $aoDesc = $ao?->deskripsi;
+            $aoParts = [];
+            if ($aoName) $aoParts[] = $aoName;
+            if ($aoDesc) $aoParts[] = $aoDesc;
+            $aoText = $aoParts ? implode("\n", $aoParts) : '-';
+
             $table->addRow();
             $table->addCell(750, ['valign' => 'top'])->addText(
                 $no++,
@@ -862,8 +859,8 @@ class UAMReportController extends Controller
                 ['space' => ['after' => 0], 'alignment' => Jc::CENTER]
             );
             $table->addCell(3750, ['valign' => 'top'])->addText($this->sanitizeForDocx($jobRole->nama ?? '-'), ['size' => 8], ['spaceAfter' => 0]);
-            $table->addCell(3750, ['valign' => 'top'])->addText($this->sanitizeForDocx($jobRole->compositeRole->nama ? $jobRole->compositeRole->nama . '<br>' . $jobRole->compositeRole->deskripsi : '-'), ['size' => 8], ['spaceAfter' => 0]);
-            $table->addCell(3750, ['valign' => 'top'])->addText($this->sanitizeForDocx($jobRole->compositeRole->authorizationObject ? $jobRole->compositeRole->authorizationObject . '<br>' . $jobRole->compositeRole->authorizationObject->deskripsi : '-'), ['size' => 8], ['spaceAfter' => 0]);
+            $table->addCell(3750, ['valign' => 'top'])->addText($this->sanitizeForDocx($compText), ['size' => 8], ['spaceAfter' => 0]);
+            $table->addCell(3750, ['valign' => 'top'])->addText($this->sanitizeForDocx($aoText), ['size' => 8], ['spaceAfter' => 0]);
         }
 
         // If no data row was added, add an empty row

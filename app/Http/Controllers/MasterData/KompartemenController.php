@@ -28,7 +28,6 @@ class KompartemenController extends Controller
             $kompartemens = Kompartemen::where('company_id', $userCompanyCode)->get();
         }
 
-        $kompartemens = Kompartemen::where('company_id', $userCompanyCode)->get();
         return view('master-data.kompartemen.index', compact('companies', 'kompartemens'));
     }
 

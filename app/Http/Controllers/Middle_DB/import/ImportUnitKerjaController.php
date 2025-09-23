@@ -24,6 +24,11 @@ class ImportUnitKerjaController extends Controller
 
     /**
      * Replace (rebuild) hierarchy from middle DB table mdb_unit_kerja.
+     * Fixes:
+     *  - Preserve kompartemen cost_center from pure kompartemen rows (departemen_id NULL) with priority.
+     *  - Allow later upgrade if a better (priority 1) row appears after a fallback (priority 2) row.
+     *  - Infer missing kompartemen referenced only via departemen.
+     *  - Keep departemen rows intact.
      */
     public function sync(Request $request)
     {
@@ -35,14 +40,17 @@ class ImportUnitKerjaController extends Controller
         DB::connection()->disableQueryLog();
 
         $summary = [
-            'refreshed'          => false,
-            'rows_source'        => 0,
-            'companies_created'  => 0,
-            'companies_existing' => 0,
-            'direktorat_cc'      => 0,
-            'kompartemen_new'    => 0,
-            'departemen_new'     => 0,
-            'cc_new'             => 0,
+            'refreshed'              => false,
+            'rows_source'            => 0,
+            'companies_created'      => 0,
+            'companies_existing'     => 0,
+            'direktorat_cc'          => 0,
+            'kompartemen_new'        => 0,
+            'departemen_new'         => 0,
+            'cc_new'                 => 0,
+            'kompartemen_inferred'   => 0,
+            'kompartemen_skipped_blank' => 0,
+            'kompartemen_cc_upgraded'   => 0,
         ];
 
         try {
@@ -68,16 +76,15 @@ class ImportUnitKerjaController extends Controller
                 $newCompanies = [];
 
                 $direktorats  = [];
-                $kompartemens = [];
+                $kompartemens = []; // kompartemen_id => [fields..., _cc_priority]
                 $departemens  = [];
 
+                $kompartemenSkippedBlank = 0;
+                $kompCcUpgraded          = 0;
 
                 foreach ($rows as $r) {
-                    // if ($r->kompartemen_id == '50000690') {
-                    //     dd($r);
-                    // }
 
-                    // Fungsi pengumpulan data company
+                    // Companies
                     if (!isset($existingCompanies[$r->company])) {
                         $newCompanies[$r->company] = [
                             'company_code' => $r->company,
@@ -90,96 +97,154 @@ class ImportUnitKerjaController extends Controller
                         $existingCompanies[$r->company] = true;
                     }
 
-                    // Fungsi pengumpulan data direktorat
-                    if ($r->direktorat_id && !isset($direktorats[$r->direktorat_id]) && $r->departemen_id == null && $r->kompartemen_id == null) {
+                    // Direktorat (only pure level row)
+                    if (
+                        $r->direktorat_id && !isset($direktorats[$r->direktorat_id]) &&
+                        $r->kompartemen_id == null && $r->departemen_id == null
+                    ) {
                         $direktorats[$r->direktorat_id] = [
-                            'company_id' => $r->company,
-                            'level'      => 'Direktorat',
-                            'level_id'   => $r->direktorat_id,
-                            'level_name' => $r->direktorat,
-                            'cost_center' => $r->cost_center ?: null, // fallback
+                            'company_id'  => $r->company,
+                            'level'       => 'Direktorat',
+                            'level_id'    => $r->direktorat_id,
+                            'level_name'  => $r->direktorat,
+                            'cost_center' => $r->cost_center ?: null,
                         ];
                     }
 
-                    // Fungsi pengumpulan data kompartemen
-                    if ($r->kompartemen_id && !isset($kompartemens[$r->kompartemen_id]) && $r->departemen_id == null) {
-                        $kompartemens[$r->kompartemen_id] = [
-                            'kompartemen_id' => $r->kompartemen_id,
-                            'company_id'     => $r->company,
-                            'nama'           => $r->kompartemen,
-                            'cost_center'    => $r->cost_center ?: null, // fallback
-                        ];
+                    // Kompartemen with priority:
+                    // priority 1 = pure kompartemen row (departemen_id NULL)
+                    // priority 2 = derived from a row that also has departemen_id (fallback)
+                    if ($r->kompartemen_id) {
+                        $namaKomp   = $r->kompartemen ? trim($r->kompartemen) : null;
+                        $ccIncoming = $r->cost_center ? trim($r->cost_center) : null;
+                        $priority   = ($r->departemen_id === null) ? 1 : 2;
+
+                        if (!isset($kompartemens[$r->kompartemen_id])) {
+                            if ($namaKomp === '' || $namaKomp === '-' || $namaKomp === null) {
+                                $kompartemenSkippedBlank++;
+                            } else {
+                                $kompartemens[$r->kompartemen_id] = [
+                                    'kompartemen_id' => $r->kompartemen_id,
+                                    'company_id'     => $r->company,
+                                    'nama'           => $namaKomp,
+                                    'cost_center'    => $ccIncoming ?: null,
+                                    '_cc_priority'   => $ccIncoming ? $priority : 999, // 999 = unknown (no cost center yet)
+                                ];
+                            }
+                        } else {
+                            // Existing: maybe update name if placeholder was set previously (inference step happens later)
+                            if (
+                                !empty($namaKomp) &&
+                                str_starts_with($kompartemens[$r->kompartemen_id]['nama'], 'KOMP-')
+                            ) {
+                                $kompartemens[$r->kompartemen_id]['nama'] = $namaKomp;
+                            }
+
+                            if ($ccIncoming) {
+                                $currentPriority = $kompartemens[$r->kompartemen_id]['_cc_priority'];
+                                $haveCurrentCC   = !empty($kompartemens[$r->kompartemen_id]['cost_center']);
+
+                                // Overwrite rules:
+                                //  - No current CC
+                                //  - Better priority (lower number)
+                                //  - Same priority but value differs and current was blank
+                                if (
+                                    !$haveCurrentCC ||
+                                    $priority < $currentPriority ||
+                                    ($priority === $currentPriority && !$haveCurrentCC)
+                                ) {
+                                    if ($haveCurrentCC && $priority < $currentPriority) {
+                                        $kompCcUpgraded++;
+                                    }
+                                    $kompartemens[$r->kompartemen_id]['cost_center']  = $ccIncoming;
+                                    $kompartemens[$r->kompartemen_id]['_cc_priority'] = $priority;
+                                }
+                            }
+                        }
                     }
 
-                    // Fungsi pengumpulan data departemen
+                    // Departemen
                     if ($r->departemen_id && !isset($departemens[$r->departemen_id])) {
                         $departemens[$r->departemen_id] = [
                             'departemen_id'  => $r->departemen_id,
                             'company_id'     => $r->company,
                             'kompartemen_id' => $r->kompartemen_id ?: null,
                             'nama'           => $r->departemen,
-                            'cost_center'    => $r->cost_center ?: null, // fallback
+                            'cost_center'    => $r->cost_center ?: null,
                         ];
                     }
                 }
 
-                // Insert apabila ada company baru
+                // Infer kompartemen missing but referenced by departemen
+                $kompartemenInferred = 0;
+                foreach ($departemens as $d) {
+                    $kid = $d['kompartemen_id'];
+                    if ($kid && !isset($kompartemens[$kid])) {
+                        $kompartemens[$kid] = [
+                            'kompartemen_id' => $kid,
+                            'company_id'     => $d['company_id'],
+                            'nama'           => 'KOMP-' . $kid, // placeholder (will be replaced if later pure row found)
+                            'cost_center'    => null,
+                            '_cc_priority'   => 999,
+                        ];
+                        $kompartemenInferred++;
+                    }
+                }
+
+                // Insert new companies
                 if ($newCompanies) {
                     Company::insert(array_values($newCompanies));
                     $summary['companies_created'] = count($newCompanies);
                 }
                 $summary['companies_existing'] = count($existingCompanies) - $summary['companies_created'];
 
-                // Persiapan Fungsi Cost Center untuk Kompartemen tanpa Cost Center
-                // Rule: ambil 5 karakter alfanumerik pertama dari cost center departemen 
+                // Derive kompartemen cost centers (only if still empty)
                 $kompDerivedCodes = [];
-
                 $deriveKomCode = function ($deptCc) {
                     if (!$deptCc || $deptCc === '-') return null;
                     $clean = preg_replace('/[^A-Za-z0-9]/', '', $deptCc);
                     if ($clean === '') return null;
                     $prefix = substr(str_pad($clean, 5, '0'), 0, 5);
-                    return $prefix . '00000'; // 5 chars + 5 zeros
+                    return $prefix . '00000';
                 };
 
-                // 1. Prefill with existing kompartemen cost_center (only if not empty)
+                // Pre-fill existing cost centers
                 foreach ($kompartemens as $kompId => $k) {
                     if (!empty($k['cost_center'])) {
                         $kompDerivedCodes[$kompId] = $k['cost_center'];
                     }
                 }
 
-                // 2. Derive ONLY for kompartemen that do NOT have a cost_center
+                // Derive from departemen where missing
                 foreach ($departemens as $d) {
-                    if (empty($d['kompartemen_id'])) {
-                        continue;
-                    }
                     $kid = $d['kompartemen_id'];
-
-                    // Skip if kompartemen already has its own cost_center (existing) or already derived
-                    if (!empty($kompartemens[$kid]['cost_center']) || isset($kompDerivedCodes[$kid])) {
-                        continue;
-                    }
-
+                    if (!$kid) continue;
+                    if (isset($kompDerivedCodes[$kid])) continue;
+                    if (!empty($kompartemens[$kid]['cost_center'])) continue;
                     $candidate = $deriveKomCode($d['cost_center']);
                     if ($candidate) {
                         $kompDerivedCodes[$kid] = $candidate;
                     }
                 }
 
-                // Hapus data lama
+                // Clean helper keys before insert
+                foreach ($kompartemens as $id => $k) {
+                    unset($kompartemens[$id]['_cc_priority']);
+                }
+
+                // Truncate old data
                 DB::table('ms_kompartemen')->truncate();
                 DB::table('ms_departemen')->truncate();
                 DB::table('ms_cost_center')->truncate();
 
                 $now = now();
 
+                // Insert kompartemen
                 if ($kompartemens) {
                     $insertK = [];
                     foreach ($kompartemens as $k) {
-
                         $insertK[] = array_merge($k, [
-                            'cost_center' => $kompDerivedCodes[$k['kompartemen_id']],
+                            'cost_center' => $kompDerivedCodes[$k['kompartemen_id']] ?? $k['cost_center'] ?? '-',
                             'created_by'  => $user,
                             'updated_by'  => $user,
                             'created_at'  => $now,
@@ -190,6 +255,7 @@ class ImportUnitKerjaController extends Controller
                     $summary['kompartemen_new'] = count($insertK);
                 }
 
+                // Insert departemen
                 if ($departemens) {
                     $insertD = [];
                     foreach ($departemens as $d) {
@@ -204,7 +270,7 @@ class ImportUnitKerjaController extends Controller
                     $summary['departemen_new'] = count($insertD);
                 }
 
-                // 1. Direktorat cost centers
+                // Cost centers: Direktorat
                 $ccDirektorat = [];
                 foreach ($direktorats as $dirId => $d) {
                     $code = $d['cost_center'] ?: '-';
@@ -222,7 +288,6 @@ class ImportUnitKerjaController extends Controller
                         'updated_at'  => $now,
                     ];
                 }
-
                 if ($ccDirektorat) {
                     DB::table('ms_cost_center')->insert($ccDirektorat);
                     $summary['direktorat_cc'] = count($ccDirektorat);
@@ -233,16 +298,13 @@ class ImportUnitKerjaController extends Controller
                     ->pluck('id', 'level_id')
                     ->toArray();
 
-                // 2. Kompartemen cost centers
+                // Cost centers: Kompartemen
                 $ccKompartemen = [];
                 foreach ($kompartemens as $kompId => $k) {
-
                     $rowSample = $rows->firstWhere('kompartemen_id', $kompId);
                     $parentDir = $rowSample?->direktorat_id;
                     $parentId  = $parentDir && isset($dirIdMap[$parentDir]) ? $dirIdMap[$parentDir] : null;
-
-                    // Use derived code if available else '-'
-                    $kompCode = $kompDerivedCodes[$kompId] ?? '-';
+                    $kompCode  = $kompDerivedCodes[$kompId] ?? $k['cost_center'] ?? '-';
 
                     $ccKompartemen[] = [
                         'company_id'  => $k['company_id'],
@@ -258,7 +320,6 @@ class ImportUnitKerjaController extends Controller
                         'updated_at'  => $now,
                     ];
                 }
-
                 if ($ccKompartemen) {
                     DB::table('ms_cost_center')->insert($ccKompartemen);
                 }
@@ -268,17 +329,13 @@ class ImportUnitKerjaController extends Controller
                     ->pluck('id', 'level_id')
                     ->toArray();
 
-                // 3. Departemen cost centers
+                // Cost centers: Departemen
                 $ccDepartemen = [];
                 foreach ($departemens as $deptId => $d) {
                     $parentKomp = $d['kompartemen_id'];
                     $parentId   = $parentKomp && isset($kompIdMap[$parentKomp])
                         ? $kompIdMap[$parentKomp]
-                        : ($rows->firstWhere('departemen_id', $deptId)?->direktorat_id
-                            && isset($dirIdMap[$rows->firstWhere('departemen_id', $deptId)->direktorat_id])
-                            ? $dirIdMap[$rows->firstWhere('departemen_id', $deptId)->direktorat_id]
-                            : null
-                        );
+                        : null;
 
                     $code = $d['cost_center'] ?: '-';
                     $ccDepartemen[] = [
@@ -299,7 +356,10 @@ class ImportUnitKerjaController extends Controller
                     DB::table('ms_cost_center')->insert($ccDepartemen);
                 }
 
-                $summary['cc_new'] = $summary['direktorat_cc'] + count($ccKompartemen) + count($ccDepartemen);
+                $summary['cc_new']                   = $summary['direktorat_cc'] + count($ccKompartemen) + count($ccDepartemen);
+                $summary['kompartemen_inferred']     = $kompartemenInferred;
+                $summary['kompartemen_skipped_blank'] = $kompartemenSkippedBlank;
+                $summary['kompartemen_cc_upgraded']  = $kompCcUpgraded;
             });
 
             return response()->json([
@@ -357,9 +417,9 @@ class ImportUnitKerjaController extends Controller
             DB::transaction(function () use ($rows, $user, &$summary) {
                 DB::table((new MasterDataKaryawanLocal)->getTable())->truncate();
 
-                $now     = now();
-                $buffer  = [];
-                $batch   = 1000;
+                $now      = now();
+                $buffer   = [];
+                $batch    = 1000;
                 $inserted = 0;
 
                 foreach ($rows as $r) {

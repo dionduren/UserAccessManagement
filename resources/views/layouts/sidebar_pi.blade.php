@@ -6,24 +6,15 @@
     </div>
     <div class="mx-3 text-white text-end"><strong>DATA UAM</strong></div>
     <li>
+        <a href="{{ route('import.unit_kerja.index') }}"
+            class="nav-link {{ request()->routeIs('import.unit_kerja.index') ? 'active' : 'text-white' }}">
+            <i class="bi bi-cloud-download me-2"></i>Import Data Organisasi
+        </a>
+    </li>
+    <li>
         <a href="{{ route('import.uam.index') }}"
             class="nav-link {{ request()->routeIs('import.uam.*') ? 'active' : 'text-white' }}">
             <i class="bi bi-cloud-download me-2"></i>Import Master Data Role
-        </a>
-    </li>
-
-    <li>
-        <a href="javascript:void(0)" class="nav-link">
-            <span class="text-danger">
-                <i class="bi bi-cloud-download me-2"></i>Import Composite Role - Single Role
-            </span>
-        </a>
-    </li>
-
-    <li class="nav-item">
-        <a href="{{ route('composite_single.upload') }}"
-            class="nav-link {{ request()->routeIs('composite_single*') ? 'active' : 'text-white' }}">
-            <i class="bi bi-file-earmark-spreadsheet me-2"></i>Upload Composite - Single Role
         </a>
     </li>
 
@@ -34,6 +25,7 @@
         </a>
     </li>
 
+
     <hr width="80%" class="my-1" style="margin-left: auto">
     <div class="mx-3 text-white text-end"><strong>DATA UAR</strong></div>
     @php
@@ -41,9 +33,27 @@
             'user-generic-unit-kerja.upload',
             'user-generic-unit-kerja.previewPage',
         ]);
-
+        $isImportNIKUnitActive = request()->routeIs('import.nik_unit_kerja.*');
     @endphp
 
+
+    <li class="nav-item">
+        <a href="{{ route('periode.index') }}" class="nav-link text-white">
+            <i class="bi bi-calendar-event me-2"></i>Set Periode
+        </a>
+    </li>
+    <li>
+        <a href="{{ route('import.user_id.index') }}"
+            class="nav-link {{ request()->routeIs('import.user_id.*') ? 'active' : 'text-white' }}">
+            <i class="bi bi-cloud-download me-2"></i>Import User ID
+        </a>
+    </li>
+    <li>
+        <a href="{{ route('import.nik_unit_kerja.index') }}"
+            class="nav-link text-white {{ $isImportNIKUnitActive ? 'active' : 'text-white' }}">
+            <i class="bi bi-cloud-download me-2"></i>Import User ID NIK - Unit Kerja
+        </a>
+    </li>
     <li class="nav-item">
         <a href="{{ route('user-generic-unit-kerja.upload') }}"
             class="nav-link {{ $isUserGenericUnitUploadActive ? 'active' : 'text-white' }}">
@@ -113,6 +123,19 @@
             <span class="me-auto">2. Validasi Data Role</span>
         </a>
         <div class="dropdown-content {{ $isMasterRoleActive ? 'show' : '' }}">
+
+            <li class="nav-item">
+                <a href="{{ route('composite_single.upload') }}"
+                    class="nav-link {{ request()->routeIs('composite_single*') ? 'active' : 'text-white' }}">
+                    <i class="bi bi-file-earmark-spreadsheet me-2"></i>Upload Composite - Single Role
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="{{ route('tcode_single_role.upload') }}"
+                    class="nav-link {{ request()->routeIs('tcode_single_role*') ? 'active' : 'text-white' }}">
+                    <i class="bi bi-file-earmark-spreadsheet me-2"></i>Upload Single Role - Tcode
+                </a>
+            </li>
             <li>
                 <a href="{{ route('tcodes.index') }}"
                     class="nav-link {{ request()->routeIs('tcodes.*') ? 'active' : 'text-white' }}">
@@ -191,7 +214,7 @@
         <a class="mb-1 nav-link dropdown-toggle {{ request()->routeIs('periode*') ? 'active' : 'text-white' }}"
             data-bs-toggle="dropdown" href="#" role="button"
             aria-expanded="{{ request()->routeIs('periode*') ? 'true' : 'false' }}">
-            <span class="me-auto">1. Cek Info Periode</span>
+            <span class="me-auto">1. Buat & Cek Info Periode</span>
         </a>
         <div class="dropdown-content {{ request()->routeIs('periode*') ? 'show' : '' }}">
             <li class="nav-item">

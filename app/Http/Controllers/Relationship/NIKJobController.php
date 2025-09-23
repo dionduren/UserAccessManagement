@@ -102,7 +102,7 @@ class NIKJobController extends Controller
     {
         $nikJobRole = NIKJobRole::with([
             'periode',
-            'userNIK.userDetail',
+            'userNIK.unitKerja',
             'jobRole.company',
             'jobRole.kompartemen',
             'jobRole.departemen'
@@ -182,17 +182,17 @@ class NIKJobController extends Controller
                 'periode' => function ($query) {
                     $query->select('id', 'definisi');
                 },
-                'userDetail' => function ($query) {
+                'unitKerja' => function ($query) {
                     $query->select('nik', 'nama');
                 }
             ])
             ->where('periode_id', $periodeId)
-            ->whereHas('userDetail') // Only records with related userDetail
+            ->whereHas('unitKerja') // Only records with related userDetail
             ->get();
 
         return DataTables::of($nikJobRoles)
             ->addColumn('nama', function ($row) {
-                return $row->userDetail ? $row->userDetail->nama : '-';
+                return $row->unitKerja ? $row->unitKerja->nama : '-';
             })
             ->addColumn('job_role', function ($row) {
                 return $row->jobRole ? $row->jobRole->nama : '-';

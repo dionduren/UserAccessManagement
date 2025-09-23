@@ -24,8 +24,8 @@ class CompositeAO extends Model
 
     protected $dates = ['deleted_at'];
 
-    public function compositeRoles()
+    public function compositeRole()
     {
-        return $this->belongsToMany(CompositeRole::class,  'nama', 'composite_role');
+        return $this->belongsTo(CompositeRole::class, 'composite_role', 'nama');
     }
 }
