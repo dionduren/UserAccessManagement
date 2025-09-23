@@ -78,13 +78,27 @@
 
     <div class="dropdown">
         @php
-            $isMasterDataOrganisasiActive = request()->routeIs('kompartemens.*', 'departemens.*', 'cost-center.*');
+            $isMasterDataOrganisasiActive = request()->routeIs(
+                'companies.*',
+                'kompartemens.*',
+                'departemens.*',
+                'cost-center.*',
+                'karyawan_unit_kerja.*',
+            );
         @endphp
-        <a class="mb-1 nav-link dropdown-toggle {{ '' ? 'active' : 'text-white' }}" data-bs-toggle="dropdown"
-            href="#" role="button" aria-expanded="{{ '' ? 'true' : 'false' }}">
+        <a class="mb-1 nav-link dropdown-toggle {{ $isMasterDataOrganisasiActive ? 'active' : 'text-white' }}"
+            data-bs-toggle="dropdown" href="#" role="button"
+            aria-expanded="{{ $isMasterDataOrganisasiActive ? 'true' : 'false' }}">
             <span class="me-auto">1. Validasi Data Organisasi</span>
         </a>
         <div class="dropdown-content">
+
+            <li>
+                <a href="{{ route('companies.index') }}"
+                    class="nav-link {{ request()->routeIs('companies.*') ? 'active' : 'text-white' }}">
+                    <i class="bi bi-building me-2"></i> Company
+                </a>
+            </li>
             <li>
                 <a href="{{ route('kompartemens.index') }}"
                     class="nav-link {{ request()->routeIs('kompartemens.*') ? 'active' : 'text-white' }}">
@@ -102,6 +116,12 @@
                 <a href="{{ route('cost-center.index') }}"
                     class="nav-link {{ request()->routeIs('cost-center.*') ? 'active' : 'text-white' }}">
                     <i class="bi bi-cash-stack me-2"></i> Cost Center
+                </a>
+            </li>
+            <li>
+                <a href="{{ route('karyawan_unit_kerja.index') }}"
+                    class="nav-link {{ request()->routeIs('karyawan_unit_kerja.*') ? 'active' : 'text-white' }}">
+                    <i class="bi bi-people-fill me-2"></i>Unit Kerja - Karyawan
                 </a>
             </li>
         </div>
@@ -243,11 +263,43 @@
     </div>
 
     <div class="dropdown">
-        <a class="mb-1 nav-link dropdown-toggle {{ '' ? 'active' : 'text-white' }}" data-bs-toggle="dropdown"
-            href="#" role="button" aria-expanded="{{ '' ? 'true' : 'false' }}">
+        @php
+            $isUploadMasterNikActive =
+                request()->routeIs('dynamic_upload.upload') && request()->route('module') === 'user_nik';
+            $isUserGenericUnitUploadActive = request()->routeIs([
+                'user-generic-unit-kerja.upload',
+                'user-generic-unit-kerja.previewPage',
+            ]);
+
+            $isValidateUserIDActive = $isUploadMasterNikActive || $isUserGenericUnitUploadActive;
+            $modules = config('dynamic_uploads.modules');
+
+        @endphp
+        <a class="mb-1 nav-link dropdown-toggle {{ $isValidateUserIDActive ? 'active' : 'text-white' }}"
+            data-bs-toggle="dropdown" href="#" role="button"
+            aria-expanded="{{ $isValidateUserIDActive ? 'true' : 'false' }}">
             <span class="me-auto">3. Validasi Data User ID</span>
         </a>
         <div class="dropdown-content">
+            <li class="nav-item">
+                <a href="{{ route('dynamic_upload.upload', ['module' => 'user_nik']) }}"
+                    class="nav-link {{ request()->route('module') === 'user_nik' ? 'active' : 'text-white' }}">
+                    <i class="bi bi-file-earmark-spreadsheet me-2"></i>Upload {{ $modules['user_nik']['name'] }}
+                </a>
+            </li>
+            @php
+                $isUserGenericUnitUploadActive = request()->routeIs([
+                    'user-generic-unit-kerja.upload',
+                    'user-generic-unit-kerja.previewPage',
+                ]);
+            @endphp
+            <li class="nav-item">
+                <a href="{{ route('user-generic-unit-kerja.upload') }}"
+                    class="nav-link {{ $isUserGenericUnitUploadActive ? 'active' : 'text-white' }}">
+                    <i class="bi bi-file-earmark-spreadsheet me-2"></i>Upload User ID Generic - Unit Kerja
+                </a>
+            </li>
+
             <li class="nav-item">
                 <a href="{{ route('user-nik.index') }}"
                     class="nav-link {{ request()->routeIs('user-nik.index') ? 'active' : 'text-white' }}">

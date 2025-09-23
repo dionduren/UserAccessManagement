@@ -30,8 +30,8 @@
                         <tr class="filters">
                             <th><input data-col="0" class="form-control form-control-sm" placeholder="Company"></th>
                             {{-- <th><input data-col="1" class="form-control form-control-sm" placeholder="Level"></th> --}}
-                            <th><input data-col="2" class="form-control form-control-sm" placeholder="ID"></th>
-                            <th><input data-col="3" class="form-control form-control-sm" placeholder="Description"></th>
+                            <th><input data-col="1" class="form-control form-control-sm" placeholder="ID"></th>
+                            <th><input data-col="2" class="form-control form-control-sm" placeholder="Description"></th>
                         </tr>
                     </thead>
                     <tbody>
@@ -61,7 +61,6 @@
                 order: [
                     [0, 'asc'],
                     [1, 'asc'],
-                    // [2, 'asc']
                 ],
                 language: {
                     emptyTable: 'No data available',

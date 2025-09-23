@@ -1,6 +1,13 @@
 {{-- filepath: resources/views/master-data/compare/unit_kerja.blade.php --}}
 @extends('layouts.app')
 
+@section('styles')
+    <!-- DataTables Core + Bootstrap 5 -->
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css">
+    <!-- Buttons Extension -->
+    <link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.4.1/css/buttons.bootstrap5.min.css">
+@endsection
+
 @section('content')
     <div class="container-fluid">
         @php
@@ -28,7 +35,13 @@
                 <div class="card h-100">
                     <div class="card-header d-flex justify-content-between align-items-center">
                         <strong>Local only</strong>
-                        <span class="badge bg-primary">{{ count($localMissing) }}</span>
+                        <div class="d-flex align-items-center gap-2">
+                            <a href="{{ route('compare.uam.export', [$scope, 'local']) }}"
+                                class="btn btn-sm btn-outline-success">
+                                Excel
+                            </a>
+                            <span class="badge bg-primary">{{ count($localMissing) }}</span>
+                        </div>
                     </div>
                     <div class="card-body">
                         <input type="text" class="form-control form-control-sm mb-2" placeholder="Filter..."
@@ -72,7 +85,13 @@
                 <div class="card h-100">
                     <div class="card-header d-flex justify-content-between align-items-center">
                         <strong>Middle only</strong>
-                        <span class="badge bg-warning text-dark">{{ count($middleMissing) }}</span>
+                        <div class="d-flex align-items-center gap-2">
+                            <a href="{{ route('compare.uam.export', [$scope, 'middle']) }}"
+                                class="btn btn-sm btn-outline-success">
+                                Excel
+                            </a>
+                            <span class="badge bg-warning text-dark">{{ count($middleMissing) }}</span>
+                        </div>
                     </div>
                     <div class="card-body">
                         <input type="text" class="form-control form-control-sm mb-2" placeholder="Filter..."
@@ -121,39 +140,32 @@
     </div>
 @endsection
 
+@push('scripts')
+    <!-- jQuery (pastikan hanya sekali di layout; hapus jika sudah ada) -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <!-- DataTables Core + Bootstrap 5 -->
+    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
+    <!-- Buttons + dependencies -->
+    <script src="https://cdn.datatables.net/buttons/2.4.1/js/dataTables.buttons.min.js"></script>
+    <script src="https://cdn.datatables.net/buttons/2.4.1/js/buttons.bootstrap5.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <script src="https://cdn.datatables.net/buttons/2.4.1/js/buttons.html5.min.js"></script>
+@endpush
+
 @section('scripts')
     <script>
         (function() {
             if (typeof $.fn.DataTable === 'undefined') {
-                console.error('DataTables not loaded');
+                console.error('DataTables core belum termuat.');
                 return;
             }
-
-            function padRows(tableId) {
-                const thCount = document.querySelectorAll('#' + tableId + ' thead th').length;
-                document.querySelectorAll('#' + tableId + ' tbody tr').forEach(tr => {
-                    const hasColspan = tr.querySelector('td[colspan]');
-                    if (hasColspan) return; // placeholder row OK
-                    let tds = tr.querySelectorAll('td');
-                    while (tds.length < thCount) {
-                        tr.appendChild(document.createElement('td'));
-                        tds = tr.querySelectorAll('td');
-                    }
-                    if (tds.length > thCount) {
-                        // Extra cells (unlikely) – trim
-                        for (let i = thCount; i < tds.length; i++) {
-                            tds[i].remove();
-                        }
-                    }
-                });
+            if (typeof $.fn.dataTable.Buttons === 'undefined') {
+                console.error('DataTables Buttons plugin belum termuat.');
             }
 
-            ['local-missing-table', 'middle-missing-table'].forEach(padRows);
-
-            function init(sel) {
-                if (!document.querySelector(sel)) return;
+            function init(sel, side) {
                 if ($.fn.DataTable.isDataTable(sel)) return;
-
                 $(sel).DataTable({
                     autoWidth: false,
                     deferRender: true,
@@ -162,18 +174,34 @@
                     order: [
                         [0, 'asc']
                     ],
+                    dom: 'Bfrtip',
+                    buttons: [{
+                        extend: 'excelHtml5',
+                        text: 'Export Filtered',
+                        className: 'btn btn-sm btn-outline-secondary',
+                        filename: function() {
+                            return 'FILTERED_{{ strtoupper($scope) }}_' + side + '_' + (new Date())
+                                .toISOString().replace(/[:\-T]/g, '').slice(0, 14);
+                        },
+                        title: null,
+                        exportOptions: {
+                            columns: [0, 1, 2],
+                            modifier: {
+                                search: 'applied',
+                                order: 'applied'
+                            }
+                        }
+                    }],
                     columnDefs: [{
-                            targets: '_all',
-                            defaultContent: ''
-                        } // fill missing cells
-                    ]
+                        targets: '_all',
+                        defaultContent: ''
+                    }]
                 });
             }
 
-            init('#local-missing-table');
-            init('#middle-missing-table');
+            init('#local-missing-table', 'LOCAL');
+            init('#middle-missing-table', 'MIDDLE');
 
-            // Filter inputs
             document.querySelectorAll('[data-dt-filter]').forEach(inp => {
                 inp.addEventListener('input', () => {
                     const tableSel = '#' + inp.dataset.targetTable;
@@ -182,12 +210,6 @@
                     }
                 });
             });
-
-            // Debug counts
-            console.debug('TH counts',
-                $('#local-missing-table thead th').length,
-                $('#middle-missing-table thead th').length
-            );
         })();
     </script>
 @endsection

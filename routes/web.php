@@ -673,6 +673,7 @@ Route::middleware(['auth'])->group(function () {
             Route::get('/single-role-exist', [UAMCompareController::class, 'singleRoleExist'])->name('single.exist');
             Route::get('/tcode', [UAMCompareController::class, 'tcode'])->name('tcode');
             Route::get('/tcode-exist', [UAMCompareController::class, 'tcodeExist'])->name('tcode.exist');
+            Route::get('/compare/uam/export/{scope}/{side}', [UAMCompareController::class, 'export'])->name('compare.uam.export');
 
             // Relationship compares
             Route::prefix('/relationship')->name('relationship.')->group(function () {

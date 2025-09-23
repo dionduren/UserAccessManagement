@@ -94,7 +94,7 @@
                             <option value="">Pilih Composite Role yang belum memiliki Job Role</option>
                             <!-- Options will be dynamically populated based on selected Company -->
                             @foreach ($compositeRoles as $composite)
-                                <option value="{{ $composite->id }}">{{ $composite->company->shortname }} -
+                                <option value="{{ $composite->id }}">{{ $composite->company?->shortname ?? '' }} -
                                     {{ $composite->nama }}</option>
                             @endforeach
                         </select>

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\MasterData\Compare;
 
 use App\Http\Controllers\Controller;
+
 use App\Models\CompositeRole as LocalCompositeRole;
 use App\Models\SingleRole as LocalSingleRole;
 use App\Models\Tcode as LocalTcode;
@@ -10,6 +11,9 @@ use App\Models\middle_db\CompositeRole as MidCompositeRole;
 use App\Models\middle_db\SingleRole as MidSingleRole;
 use App\Models\middle_db\Tcode as MidTcode;
 use App\Models\CompositeAO; // ADD
+use App\Exports\CompareDiffExport;
+
+use Maatwebsite\Excel\Facades\Excel;
 
 class UAMCompareController extends Controller
 {
@@ -293,5 +297,134 @@ class UAMCompareController extends Controller
             // $b['level'],
             $b['id']
         ]);
+    }
+
+    public function export(string $scope, string $side)
+    {
+        // side: local | middle
+        $scope = strtolower($scope);
+        $side  = strtolower($side);
+
+        switch ($scope) {
+            case 'composite_role':
+                $middle = MidCompositeRole::sapPattern()->ordered()->get(['composite_role', 'definisi']);
+                $local  = LocalCompositeRole::select('company_id', 'nama', 'deskripsi')->get();
+                $middleIds = $middle->pluck('composite_role')->filter()->map(fn($v) => strtoupper(trim($v)))->unique();
+                $localIds  = $local->pluck('nama')->filter()->map(fn($v) => strtoupper(trim($v)))->unique();
+                $middleIndex = $middle->keyBy(fn($r) => strtoupper(trim($r->composite_role)));
+                $localIndex  = $local->keyBy(fn($r) => strtoupper(trim($r->nama)));
+                if ($side === 'local') {
+                    $only = $localIds->diff($middleIds);
+                    $rows = [];
+                    foreach ($only as $k) {
+                        $r = $localIndex->get($k);
+                        $rows[] = [
+                            'company' => $r->company_id ?? '',
+                            'id'      => $r->nama,
+                            'value'   => $r->deskripsi ?? $r->nama,
+                        ];
+                    }
+                } else { // middle
+                    $only = $middleIds->diff($localIds);
+                    $rows = [];
+                    foreach ($only as $k) {
+                        $r = $middleIndex->get($k);
+                        $rows[] = [
+                            'company' => '',
+                            'id'      => $r->composite_role ?? $k,
+                            'value'   => $r->definisi ?? ($r->composite_role ?? $k),
+                        ];
+                    }
+                }
+                $title = ($side === 'local' ? 'LOCAL_ONLY' : 'MIDDLE_ONLY') . '_COMPOSITE_ROLE';
+                break;
+
+            case 'single_role':
+                $middle = MidSingleRole::sapPattern()->ordered()->get(['single_role', 'definisi']);
+                $localSingles = LocalSingleRole::select('nama', 'deskripsi')->get();
+                $localAOs     = CompositeAO::select('nama', 'deskripsi')->get();
+                $combined = [];
+                foreach ($localSingles as $sr) {
+                    $k = strtoupper(trim($sr->nama));
+                    if ($k === '') continue;
+                    $combined[$k] = ['nama' => $sr->nama, 'deskripsi' => $sr->deskripsi];
+                }
+                foreach ($localAOs as $ao) {
+                    $k = strtoupper(trim($ao->nama));
+                    if ($k === '') continue;
+                    if (!isset($combined[$k])) $combined[$k] = ['nama' => $ao->nama, 'deskripsi' => $ao->deskripsi];
+                    else if (empty($combined[$k]['deskripsi']) && !empty($ao->deskripsi)) $combined[$k]['deskripsi'] = $ao->deskripsi;
+                }
+                $localCombined = collect(array_values($combined));
+                $middleIds = $middle->pluck('single_role')->filter()->map(fn($v) => strtoupper(trim($v)))->unique();
+                $localIds  = $localCombined->pluck('nama')->filter()->map(fn($v) => strtoupper(trim($v)))->unique();
+                $middleIndex = $middle->keyBy(fn($r) => strtoupper(trim($r->single_role)));
+                $localIndex  = $localCombined->keyBy(fn($r) => strtoupper(trim($r['nama'])));
+                if ($side === 'local') {
+                    $only = $localIds->diff($middleIds);
+                    $rows = [];
+                    foreach ($only as $k) {
+                        $r = $localIndex->get($k);
+                        $rows[] = [
+                            'company' => '',
+                            'id' => $r['nama'],
+                            'value' => $r['deskripsi'] ?? $r['nama'],
+                        ];
+                    }
+                } else {
+                    $only = $middleIds->diff($localIds);
+                    $rows = [];
+                    foreach ($only as $k) {
+                        $r = $middleIndex->get($k);
+                        $rows[] = [
+                            'company' => '',
+                            'id' => $r->single_role ?? $k,
+                            'value' => $r->definisi ?? ($r->single_role ?? $k),
+                        ];
+                    }
+                }
+                $title = ($side === 'local' ? 'LOCAL_ONLY' : 'MIDDLE_ONLY') . '_SINGLE_ROLE';
+                break;
+
+            case 'tcode':
+                $middle = MidTcode::ordered()->get(['tcode', 'definisi']);
+                $local  = LocalTcode::select('code', 'deskripsi')->get();
+                $middleIds = $middle->pluck('tcode')->filter()->map(fn($v) => strtoupper(trim($v)))->unique();
+                $localIds  = $local->pluck('code')->filter()->map(fn($v) => strtoupper(trim($v)))->unique();
+                $middleIndex = $middle->keyBy(fn($r) => strtoupper(trim($r->tcode)));
+                $localIndex  = $local->keyBy(fn($r) => strtoupper(trim($r->code)));
+                if ($side === 'local') {
+                    $only = $localIds->diff($middleIds);
+                    $rows = [];
+                    foreach ($only as $k) {
+                        $r = $localIndex->get($k);
+                        $rows[] = [
+                            'company' => '',
+                            'id' => $r->code,
+                            'value' => $r->deskripsi ?? $r->code,
+                        ];
+                    }
+                } else {
+                    $only = $middleIds->diff($localIds);
+                    $rows = [];
+                    foreach ($only as $k) {
+                        $r = $middleIndex->get($k);
+                        $rows[] = [
+                            'company' => '',
+                            'id' => $r->tcode ?? $k,
+                            'value' => $r->definisi ?? ($r->tcode ?? $k),
+                        ];
+                    }
+                }
+                $title = ($side === 'local' ? 'LOCAL_ONLY' : 'MIDDLE_ONLY') . '_TCODE';
+                break;
+
+            default:
+                abort(404, 'Invalid scope');
+        }
+
+        $this->sort($rows);
+        $file = $title . '_' . now()->format('Ymd_His') . '.xlsx';
+        return Excel::download(new CompareDiffExport($rows, $title), $file);
     }
 }
