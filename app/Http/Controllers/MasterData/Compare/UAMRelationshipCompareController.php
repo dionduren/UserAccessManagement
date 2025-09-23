@@ -7,29 +7,61 @@ use Illuminate\Support\Facades\DB;
 use App\Models\middle_db\view\UAMSingleTcode;
 use App\Models\middle_db\view\UAMCompositeSingle;
 use App\Models\middle_db\view\UAMUserComposite;
+use App\Models\CompositeAO;
+use App\Models\middle_db\view\UAMCompositeAO;
 
 class UAMRelationshipCompareController extends Controller
 {
-    // Composite Role - Single Role
+    // Composite Role - Single Role (+ Authorization Object)
     public function compositeSingle()
     {
-        // Local pairs
-        $local = DB::table('pt_composite_role_single_role as crsr')
+        // Map composite role -> company for later enrichment
+        $companyMap = DB::table('tr_composite_roles')
+            ->select('nama', 'company_id')
+            ->get()
+            ->reduce(fn($c, $r) => ($c[strtoupper($r->nama)] = $r->company_id) ? $c : $c, []);
+
+        // Local: composite_role - single_role (pivot)
+        $localPivot = DB::table('pt_composite_role_single_role as crsr')
             ->join('tr_composite_roles as cr', 'cr.id', '=', 'crsr.composite_role_id')
             ->join('tr_single_roles as sr', 'sr.id', '=', 'crsr.single_role_id')
             ->select('cr.company_id', 'cr.nama as left_val', 'sr.nama as right_val')
             ->get();
 
-        // Middle pairs
-        $middle = UAMCompositeSingle::query()
+        // Local: composite_role - authorization object (AO) from composite AO table
+        $localAO = DB::table((new CompositeAO)->getTable() . ' as cao')
+            ->select('cao.composite_role as left_val', 'cao.nama as right_val')
+            ->get()
+            ->map(function ($r) use ($companyMap) {
+                $obj = new \stdClass();
+                $obj->left_val  = $r->left_val;
+                $obj->right_val = $r->right_val;
+                $obj->company_id = $companyMap[strtoupper($r->left_val)] ?? null;
+                return $obj;
+            });
+
+        // Merge local collections
+        $local = $localPivot->concat($localAO);
+
+        // Middle: composite_role - single_role (non-AO)
+        $middleCS = UAMCompositeSingle::query()
             ->select('composite_role as left_val', 'single_role as right_val')
+            ->where('single_role', 'NOT LIKE', '%-AO')
             ->get();
+
+        // Middle: composite_role - authorization object (AO)
+        $middleAO = UAMCompositeAO::query()
+            ->select('composite_role as left_val', 'single_role as right_val')
+            ->where('single_role', 'LIKE', '%-AO')
+            ->get();
+
+        $middle = $middleCS->concat($middleAO);
 
         [$localOnly, $middleOnly] = $this->diffPairs($local, $middle);
 
         $scope      = 'composite_single';
         $leftLabel  = 'Composite Role';
-        $rightLabel = 'Single Role';
+        $rightLabel = 'Single Role / Authorization Object';
 
         return view('master-data.compare.uam.relationship_missing', compact('localOnly', 'middleOnly', 'scope', 'leftLabel', 'rightLabel'));
     }
@@ -103,23 +135,51 @@ class UAMRelationshipCompareController extends Controller
         return view('master-data.compare.uam.relationship_exist', compact('rows', 'scope', 'leftLabel', 'rightLabel'));
     }
 
-    // Existing in both: Composite Role - Single Role
+    // Existing in both: Composite Role - Single Role (+ Authorization Object)
     public function compositeSingleExist()
     {
-        $local = DB::table('pt_composite_role_single_role as crsr')
+        $companyMap = DB::table('tr_composite_roles')
+            ->select('nama', 'company_id')
+            ->get()
+            ->reduce(fn($c, $r) => ($c[strtoupper($r->nama)] = $r->company_id) ? $c : $c, []);
+
+        $localPivot = DB::table('pt_composite_role_single_role as crsr')
             ->join('tr_composite_roles as cr', 'cr.id', '=', 'crsr.composite_role_id')
             ->join('tr_single_roles as sr', 'sr.id', '=', 'crsr.single_role_id')
             ->select('cr.company_id', 'cr.nama as left_val', 'sr.nama as right_val')
             ->get();
 
-        $middle = UAMCompositeSingle::query()
+        $localAO = DB::table((new CompositeAO)->getTable() . ' as cao')
+            ->select('cao.composite_role as left_val', 'cao.nama as right_val')
+            ->get()
+            ->map(function ($r) use ($companyMap) {
+                $obj = new \stdClass();
+                $obj->left_val  = $r->left_val;
+                $obj->right_val = $r->right_val;
+                $obj->company_id = $companyMap[strtoupper($r->left_val)] ?? null;
+                return $obj;
+            });
+
+        $local = $localPivot->concat($localAO);
+
+        $middleCS = UAMCompositeSingle::query()
             ->select('composite_role as left_val', 'single_role as right_val')
+            ->where('single_role', 'NOT LIKE', '%-AO')
             ->get();
 
+        $middleAO = UAMCompositeAO::query()
+            ->select('composite_role as left_val', 'single_role as right_val')
+            ->where('single_role', 'LIKE', '%-AO')
+            ->get();
+
+        $middle = $middleCS->concat($middleAO);
+
         $rows = $this->intersectionPairs($local, $middle);
-        $scope = 'composite_single';
-        $leftLabel = 'Composite Role';
-        $rightLabel = 'Single Role';
+
+        $scope      = 'composite_single';
+        $leftLabel  = 'Composite Role';
+        $rightLabel = 'Single Role / Authorization Object';
+
         return view('master-data.compare.uam.relationship_exist', compact('rows', 'scope', 'leftLabel', 'rightLabel'));
     }
 
