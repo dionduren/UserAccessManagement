@@ -174,9 +174,9 @@ class CompanyKompartemenService
             $compositeRole = CompositeRole::updateOrCreate(
                 [
                     'nama'            => trim($row['composite_role']),
-                    'jabatan_id'      => $jobRole->id,
                 ],
                 [
+                    'jabatan_id'      => $jobRole->id,
                     'company_id'      => trim($company->company_code),
                     'kompartemen_id'  => $row['kompartemen_id'] ?: null,
                     'departemen_id'   => $row['departemen_id'] ?: null,
