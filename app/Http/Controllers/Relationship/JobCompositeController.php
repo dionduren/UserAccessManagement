@@ -87,7 +87,7 @@ class JobCompositeController extends Controller
     {
         // $compositeRoles = CompositeRole::whereNull('jabatan_id')->get();
         $companyId = $request->get('company_id');
-        $compositeRoles = CompositeRole::where('company_id', $companyId)->whereNull('jabatan_id')->get();
+        $compositeRoles = CompositeRole::whereNull('jabatan_id')->get();
 
         return response()->json($compositeRoles);
     }
