@@ -117,6 +117,11 @@ class UARReportController extends Controller
             ->where('is_active', true)
             ->where('periode_id', $periode->id);
 
+        if (!$companyId && !$kompartemenId && !$departemenId) {
+            $query->whereHas('jobRole');
+        }
+
+
         if ($companyId) {
             $query->whereHas('jobRole', fn($q) => $q->where('company_id', $companyId));
         }

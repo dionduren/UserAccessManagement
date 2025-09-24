@@ -19,10 +19,11 @@
                 <tr>
                     <th>ID</th>
                     <th>Perusahaan</th>
+                    <th>User Code</th>
                     <th>Kompartemen</th>
                     <th>Departemen</th>
-                    <th>User Generic</th>
                     <th>Last Login</th>
+                    <th>Wrong Job Role ID</th>
                 </tr>
             </thead>
         </table>
@@ -31,11 +32,11 @@
 
 @section('scripts')
     <script>
-        $(document).ready(function() {
+        $(function() {
             var table = $('#user_generic_no_jobrole_table').DataTable({
                 processing: true,
                 serverSide: false,
-                ajax: false, // Don't load data initially
+                ajax: false,
                 columns: [{
                         data: 'id',
                         name: 'id',
@@ -46,16 +47,16 @@
                         name: 'group'
                     },
                     {
+                        data: 'user_code',
+                        name: 'user_code'
+                    },
+                    {
                         data: 'kompartemen',
                         name: 'kompartemen'
                     },
                     {
                         data: 'departemen',
                         name: 'departemen'
-                    },
-                    {
-                        data: 'user_code',
-                        name: 'user_code'
                     },
                     {
                         data: 'last_login',
@@ -78,6 +79,11 @@
                             var year = date.getFullYear();
                             return day + ' ' + month + ' ' + year;
                         }
+                    },
+                    {
+                        data: 'wrong_job_role_id',
+                        name: 'wrong_job_role_id',
+                        defaultContent: ''
                     }
                 ],
                 responsive: true,

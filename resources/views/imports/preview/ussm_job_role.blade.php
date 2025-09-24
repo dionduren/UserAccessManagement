@@ -31,6 +31,9 @@
 @endsection
 
 @section('scripts')
+    <!-- SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
     <script>
         $(document).ready(function() {
             $('#previewTable').DataTable({
@@ -119,12 +122,29 @@
                         }
                         if (data.success) {
                             progressBar.css('width', '100%').attr('aria-valuenow', 100).text('100%');
-                            $('<div class="alert alert-success mt-4"><h4>' + data.message +
-                                '</h4></div>').insertAfter(confirmForm);
-                            $('<div class="d-flex justify-content-between mt-4">' +
-                                '<a href="{{ route('ussm-job-role.upload') }}" class="btn btn-primary">Back to Upload Page</a>' +
-                                '<a href="{{ route('home') }}" class="btn btn-secondary">Go to Home Page</a>' +
-                                '</div>').insertAfter(confirmForm);
+
+                            // Build ordered list for skipped items
+                            const skippedCount = data.skipped_count || 0;
+                            const uploadedCount = data.uploaded_count || 0;
+                            const items = (data.skipped_items || []).map(item => `<li>${item}</li>`)
+                                .join('');
+                            const html = `
+                                <p><strong>Uploaded:</strong> ${uploadedCount}</p>
+                                <p><strong>Skipped:</strong> ${skippedCount}</p>
+                                ${skippedCount > 0 ? `<ol>${items}</ol>` : ''}
+                            `;
+
+                            Swal.fire({
+                                title: 'Import Completed',
+                                html: html,
+                                icon: 'info',
+                                width: 700,
+                                confirmButtonText: 'OK'
+                            }).then(() => {
+                                // Optional: redirect after OK
+                                window.location.href = data.redirect ||
+                                    '{{ route('ussm-job-role.upload') }}';
+                            });
                         }
                     } catch (error) {
                         // ignore parse errors for partial responses
@@ -142,18 +162,18 @@
                     if (xhr.status >= 400) {
                         try {
                             const errorResponse = JSON.parse(xhr.responseText);
-                            const errorMsg = `<div class="alert alert-danger">
-                        <h4>Error:</h4>
-                        <ul>
-                            <li>${errorResponse.message || 'An unexpected error occurred.'}</li>
-                            <li>Details: ${errorResponse.details?.error_message || 'No additional details.'}</li>
-                        </ul>
-                    </div>`;
-                            $('#confirm-form').before(errorMsg);
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Error',
+                                html: `<p>${errorResponse.message || 'An unexpected error occurred.'}</p>
+                                       <p>Details: ${errorResponse.details?.error_message || 'No additional details.'}</p>`
+                            });
                         } catch (error) {
-                            const errorMsg =
-                                '<div class="alert alert-danger">An unexpected error occurred. Please try again or contact support.</div>';
-                            $('#confirm-form').before(errorMsg);
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Error',
+                                text: 'An unexpected error occurred. Please try again.'
+                            });
                         }
                     }
                 };

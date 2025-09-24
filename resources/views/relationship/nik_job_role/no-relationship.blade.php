@@ -23,6 +23,7 @@
                     <th>Nama</th>
                     <th>Kompartemen</th>
                     <th>Departemen</th>
+                    <th>Wrong Job Role ID</th>
                 </tr>
             </thead>
         </table>
@@ -52,15 +53,20 @@
                     {
                         data: 'nama',
                         name: 'user_details.nama'
-                    }, // assuming join
+                    },
                     {
                         data: 'kompartemen',
                         name: 'kompartemen.nama'
-                    }, // assuming join
+                    },
                     {
                         data: 'departemen',
                         name: 'departemen.nama'
-                    } // assuming join
+                    },
+                    {
+                        data: 'wrong_job_role_id',
+                        name: 'wrong_job_role_id',
+                        defaultContent: ''
+                    }
                 ],
                 responsive: true,
                 searching: true,

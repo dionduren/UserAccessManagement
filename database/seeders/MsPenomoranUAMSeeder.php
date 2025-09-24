@@ -25,6 +25,8 @@ class MsPenomoranUAMSeeder extends Seeder
             ['company_id' => 'A000', 'kompartemen_id' => '50019459', 'departemen_id' => '50019461',  'unit_kerja_id' => '50019461', 'number' => 309],
             ['company_id' => 'A000', 'kompartemen_id' => '50078236', 'departemen_id' => '50039727',  'unit_kerja_id' => '50039727', 'number' => 310],
             ['company_id' => 'A000', 'kompartemen_id' => '50078236', 'departemen_id' => '50015100',  'unit_kerja_id' => '50015100', 'number' => 311],
+            ['company_id' => 'A000', 'kompartemen_id' => '50000706', 'departemen_id' => null,        'unit_kerja_id' => '50000706', 'number' => 312],
+            ['company_id' => 'A000', 'kompartemen_id' => '50110856', 'departemen_id' => '50110858',  'unit_kerja_id' => '50110858', 'number' => 313],
             ['company_id' => 'A000', 'kompartemen_id' => '50039338', 'departemen_id' => '50039341',  'unit_kerja_id' => '50039341', 'number' => 401],
             ['company_id' => 'A000', 'kompartemen_id' => '50039338', 'departemen_id' => '50039339',  'unit_kerja_id' => '50039339', 'number' => 402],
             ['company_id' => 'A000', 'kompartemen_id' => '50039338', 'departemen_id' => '50039343',  'unit_kerja_id' => '50039343', 'number' => 403],
@@ -39,6 +41,7 @@ class MsPenomoranUAMSeeder extends Seeder
             ['company_id' => 'A000', 'kompartemen_id' => '50039675', 'departemen_id' => '50110883',  'unit_kerja_id' => '50110883', 'number' => 602],
             ['company_id' => 'A000', 'kompartemen_id' => '50039675', 'departemen_id' => '50039676',  'unit_kerja_id' => '50039676', 'number' => 603],
             ['company_id' => 'A000', 'kompartemen_id' => '50097200', 'departemen_id' => '50110875',  'unit_kerja_id' => '50110875', 'number' => 604],
+            ['company_id' => 'A000', 'kompartemen_id' => '50097200', 'departemen_id' => null,        'unit_kerja_id' => '50097200', 'number' => 605],
             ['company_id' => 'A000', 'kompartemen_id' => '50111089', 'departemen_id' => '50111213',  'unit_kerja_id' => '50111213', 'number' => 704],
             ['company_id' => 'A000', 'kompartemen_id' => '50111091', 'departemen_id' => '50111233',  'unit_kerja_id' => '50111233', 'number' => 717],
             ['company_id' => 'A000', 'kompartemen_id' => '50111090', 'departemen_id' => '50111194',  'unit_kerja_id' => '50111194', 'number' => 718],
@@ -47,6 +50,7 @@ class MsPenomoranUAMSeeder extends Seeder
             ['company_id' => 'A000', 'kompartemen_id' => '50111088', 'departemen_id' => '50111175',  'unit_kerja_id' => '50111175', 'number' => 721],
             ['company_id' => 'A000', 'kompartemen_id' => '50111088', 'departemen_id' => '50110947',  'unit_kerja_id' => '50110947', 'number' => 722],
             ['company_id' => 'A000', 'kompartemen_id' => '50111088', 'departemen_id' => '50110949',  'unit_kerja_id' => '50110949', 'number' => 723],
+            ['company_id' => 'A000', 'kompartemen_id' => '50097200', 'departemen_id' => null,        'unit_kerja_id' => '50097200', 'number' => 724],
         ];
 
 

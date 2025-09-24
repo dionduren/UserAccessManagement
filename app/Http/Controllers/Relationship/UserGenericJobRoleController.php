@@ -194,20 +194,57 @@ class UserGenericJobRoleController extends Controller
                 return DataTables::of(collect([]))->make(true);
             }
 
+            $periodeId = (int) $request->input('periode');
+
             $query = userGeneric::query()
                 ->select([
                     'id',
                     'group',
                     'user_code',
-                    'last_login'
+                    'last_login',
                 ])
+                // Collect wrong job_role_id(s) (not found in tr_job_roles or soft-deleted)
+                ->selectSub(function ($sub) use ($periodeId) {
+                    $sub->from('tr_ussm_job_role as jr')
+                        ->leftJoin('tr_job_roles as j', function ($join) {
+                            $join->on('jr.job_role_id', '=', 'j.job_role_id')
+                                ->whereNull('j.deleted_at'); // treat soft-deleted as missing
+                        })
+                        // PostgreSQL string_agg with DISTINCT + ORDER BY must match argument
+                        ->selectRaw("string_agg(DISTINCT jr.job_role_id::text, ',' ORDER BY jr.job_role_id::text)")
+                        ->whereColumn('jr.nik', 'tr_user_generic.user_code')
+                        ->where('jr.periode_id', $periodeId)
+                        ->whereNull('jr.deleted_at')
+                        ->whereNull('j.job_role_id');
+                }, 'wrong_job_role_id')
                 ->with(['periode', 'userGenericUnitKerja.kompartemen', 'userGenericUnitKerja.departemen'])
-                ->where('periode_id', $request->input('periode'))
-                ->whereDoesntHave('NIKJobRole');
+                ->where('periode_id', $periodeId)
+                ->where(function ($q) use ($periodeId) {
+                    // Users with NO assignment in this period
+                    $q->whereNotExists(function ($q1) use ($periodeId) {
+                        $q1->selectRaw(1)
+                            ->from('tr_ussm_job_role as jr')
+                            ->whereColumn('jr.nik', 'tr_user_generic.user_code')
+                            ->where('jr.periode_id', $periodeId)
+                            ->whereNull('jr.deleted_at');
+                    })
+                        // OR users with at least one invalid assignment (job_role_id not present in tr_job_roles)
+                        ->orWhereExists(function ($q2) use ($periodeId) {
+                            $q2->selectRaw(1)
+                                ->from('tr_ussm_job_role as jr2')
+                                ->leftJoin('tr_job_roles as j', function ($join) {
+                                    $join->on('jr2.job_role_id', '=', 'j.job_role_id')
+                                        ->whereNull('j.deleted_at');
+                                })
+                                ->whereColumn('jr2.nik', 'tr_user_generic.user_code')
+                                ->where('jr2.periode_id', $periodeId)
+                                ->whereNull('jr2.deleted_at')
+                                ->whereNull('j.job_role_id');
+                        });
+                });
 
             return DataTables::eloquent($query)
                 ->addColumn('kompartemen', function ($row) {
-                    // Assuming userGenericUnitKerja is a hasOne or belongsTo relationship
                     return $row->userGenericUnitKerja && $row->userGenericUnitKerja->kompartemen
                         ? $row->userGenericUnitKerja->kompartemen->nama
                         : '-';
@@ -222,5 +259,4 @@ class UserGenericJobRoleController extends Controller
 
         return view('relationship.generic-job_role.no-relationship', compact('periodes'));
     }
-    // ...existing code...
 }

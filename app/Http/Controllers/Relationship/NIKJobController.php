@@ -11,6 +11,7 @@ use App\Models\userNIK;
 use App\Models\NIKJobRole;
 use Illuminate\Http\Request;
 use Yajra\DataTables\DataTables;
+use Illuminate\Support\Facades\DB;
 
 class NIKJobController extends Controller
 {
@@ -231,6 +232,8 @@ class NIKJobController extends Controller
                 return DataTables::of(collect([]))->make(true);
             }
 
+            $periode = $request->input('periode');
+
             $query = userNIK::query()
                 ->select([
                     'tr_user_ussm_nik.id',
@@ -238,17 +241,47 @@ class NIKJobController extends Controller
                     'tr_user_ussm_nik.user_code',
                     'user_details.nama as nama',
                     'kompartemen.nama as kompartemen',
-                    'departemen.nama as departemen'
+                    'departemen.nama as departemen',
                 ])
-                ->leftJoin('ms_user_detail as user_details', 'tr_user_ussm_nik.user_code', '=', 'user_details.nik')
+                // Aggregate any wrong job_role_id(s) for this user+periode (comma-separated)
+                ->selectSub(function ($sub) use ($periode) {
+                    $sub->from('tr_ussm_job_role as jr')
+                        ->leftJoin('tr_job_roles as j', function ($join) {
+                            $join->on('jr.job_role_id', '=', 'j.job_role_id')
+                                ->whereNull('j.deleted_at'); // treat soft-deleted as missing
+                        })
+                        ->selectRaw("string_agg(DISTINCT jr.job_role_id::text, ',' ORDER BY jr.job_role_id::text)")
+                        ->whereColumn('jr.nik', 'tr_user_ussm_nik.user_code')
+                        ->where('jr.periode_id', $periode)
+                        ->whereNull('jr.deleted_at')
+                        ->whereNull('j.job_role_id');
+                }, 'wrong_job_role_id')
+                ->leftJoin('ms_master_data_karyawan as user_details', 'tr_user_ussm_nik.user_code', '=', 'user_details.nik')
                 ->leftJoin('ms_kompartemen as kompartemen', 'user_details.kompartemen_id', '=', 'kompartemen.kompartemen_id')
                 ->leftJoin('ms_departemen as departemen', 'user_details.departemen_id', '=', 'departemen.departemen_id')
-                ->where('tr_user_ussm_nik.periode_id', $request->input('periode'))
-                ->whereNotExists(function ($q) use ($request) {
-                    $q->selectRaw(1)
-                        ->from('tr_ussm_job_role')
-                        ->whereRaw('tr_ussm_job_role.nik = tr_user_ussm_nik.user_code')
-                        ->where('tr_ussm_job_role.periode_id', $request->input('periode'));
+                ->where('tr_user_ussm_nik.periode_id', $periode)
+                ->where(function ($q) use ($periode) {
+                    // Include users with no assignment in this period
+                    $q->whereNotExists(function ($q1) use ($periode) {
+                        $q1->selectRaw(1)
+                            ->from('tr_ussm_job_role as jr')
+                            ->whereColumn('jr.nik', 'tr_user_ussm_nik.user_code')
+                            ->where('jr.periode_id', $periode)
+                            ->whereNull('jr.deleted_at');
+                    })
+                        // OR users that have at least one invalid assignment (job_role_id not found in JobRole)
+                        ->orWhereExists(function ($q2) use ($periode) {
+                            $q2->selectRaw(1)
+                                ->from('tr_ussm_job_role as jr2')
+                                ->leftJoin('tr_job_roles as j', function ($join) {
+                                    $join->on('jr2.job_role_id', '=', 'j.job_role_id')
+                                        ->whereNull('j.deleted_at');
+                                })
+                                ->whereColumn('jr2.nik', 'tr_user_ussm_nik.user_code')
+                                ->where('jr2.periode_id', $periode)
+                                ->whereNull('jr2.deleted_at')
+                                ->whereNull('j.job_role_id');
+                        });
                 });
 
             return DataTables::of($query)->make(true);

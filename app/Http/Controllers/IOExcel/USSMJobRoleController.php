@@ -4,8 +4,8 @@ namespace App\Http\Controllers\IOExcel;
 
 use App\Http\Controllers\Controller;
 
-use \App\Models\UserDetail;
-use \App\Models\userGeneric;
+use App\Models\UserNIKUnitKerja;
+use App\Models\userGeneric;
 use App\Models\JobRole;
 use App\Models\Periode;
 use App\Models\TempUploadSession;
@@ -105,7 +105,7 @@ class USSMJobRoleController extends Controller
                 if ($userGeneric && !empty($userGeneric->user_profile)) {
                     $userProfile = $userGeneric->user_profile;
                 } else {
-                    $userNIK = UserDetail::where('nik', $row['nik'] ?? null)->first();
+                    $userNIK = UserNIKUnitKerja::where('nik', $row['nik'] ?? null)->first();
                     $userProfile = $userNIK ? $userNIK->nama : '-';
                 }
                 return $userProfile ?: '-';
@@ -115,8 +115,8 @@ class USSMJobRoleController extends Controller
                 return $jobRole ? $jobRole->nama : '-';
             })
             ->addColumn('unit_kerja', function ($row) {
-                // 1. If nik exists in userNIK, get userDetail->kompartemen->nama
-                $userNIK = UserDetail::where('nik', $row['nik'] ?? null)->first();
+                // 1. If nik exists in userNIK, get UserNIKUnitKerja->kompartemen->nama
+                $userNIK = UserNIKUnitKerja::where('nik', $row['nik'] ?? null)->first();
                 if ($userNIK && $userNIK->kompartemen && !empty($userNIK->kompartemen->nama)) {
                     return $userNIK->kompartemen->nama;
                 }
@@ -190,13 +190,27 @@ class USSMJobRoleController extends Controller
                 $total = count($data);
                 $lastUpdate = microtime(true);
 
+                // Track results
+                $uploadedCount = 0;
+                $skipped = []; // each item as "NIK - job_role_id"
+
                 $send(['progress' => 0]);
 
                 foreach ($data as $row) {
                     try {
-                        $service->handleRow($row);
+                        $result = $service->handleRow($row);
+
+                        if (!empty($result['uploaded'])) {
+                            $uploadedCount++;
+                        } else {
+                            $nik = $result['nik'] ?? ($row['nik'] ?? '-');
+                            $jr  = $result['job_role_id'] ?? ($row['job_role_id'] ?? '-');
+                            $skipped[] = "{$nik} - {$jr}";
+                        }
                     } catch (\Exception $e) {
-                        Log::error('Row import failed', ['row' => $row, 'error' => $e->getMessage()]);
+                        // Treat unexpected errors as skipped
+                        \Log::error('Row import failed', ['row' => $row, 'error' => $e->getMessage()]);
+                        $skipped[] = ($row['nik'] ?? '-') . ' - ' . ($row['job_role_id'] ?? '-');
                     }
 
                     $processed++;
@@ -207,9 +221,12 @@ class USSMJobRoleController extends Controller
                 }
 
                 $send([
-                    'success' => true,
-                    'message' => 'Data imported successfully',
-                    'redirect' => route('ussm-job-role.upload')
+                    'success'        => true,
+                    'message'        => 'Data imported successfully',
+                    'uploaded_count' => $uploadedCount,
+                    'skipped_count'  => count($skipped),
+                    'skipped_items'  => $skipped,
+                    'redirect'       => route('ussm-job-role.upload')
                 ]);
             });
 
@@ -222,7 +239,7 @@ class USSMJobRoleController extends Controller
 
             return $response;
         } catch (\Exception $e) {
-            Log::error('Error occurred', [
+            \Log::error('Error occurred', [
                 'message' => $e->getMessage(),
                 'file' => $e->getFile(),
                 'line' => $e->getLine(),
