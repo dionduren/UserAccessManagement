@@ -542,6 +542,7 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/preview-page', [USSMJobRoleController::class, 'previewPage'])->name('previewPage');
         Route::get('/preview-data', [USSMJobRoleController::class, 'getPreviewData'])->name('previewData');
         Route::post('/confirm-import', [USSMJobRoleController::class, 'confirmImport'])->name('confirmImport');
+        Route::get('/imports/ussm-job-role/template', [USSMJobRoleController::class, 'downloadTemplate'])->name('template');
     });
 
     // ------------------ SYNC DATA - MIDDLE DB ------------------

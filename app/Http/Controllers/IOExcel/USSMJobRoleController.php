@@ -3,18 +3,17 @@
 namespace App\Http\Controllers\IOExcel;
 
 use App\Http\Controllers\Controller;
-
 use App\Models\UserNIKUnitKerja;
 use App\Models\userGeneric;
 use App\Models\JobRole;
 use App\Models\Periode;
 use App\Models\TempUploadSession;
-
 use App\Imports\USSMJobRolePreviewImport;
 use App\Services\USSMJobRoleService;
-
+use App\Exports\USSMJobRoleTemplateExport;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Auth; // add
 use Maatwebsite\Excel\Facades\Excel;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 use Yajra\DataTables\Facades\DataTables;
@@ -254,6 +253,13 @@ class USSMJobRoleController extends Controller
                 ],
             ], 500);
         }
+    }
+
+    public function downloadTemplate()
+    {
+        $companyCode = Auth::user()?->loginDetail?->company_code ?? 'A000';
+
+        return Excel::download(new USSMJobRoleTemplateExport($companyCode), 'User_ID_Job_Role_Template.xlsx');
     }
 
     // private function validateName($name, &$seenSet = [])
