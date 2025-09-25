@@ -2,9 +2,9 @@
     <hr>
 
     <div>
-        <h5>UPLOAD DATA MAPPING</h5>
+        <h5>UAM MANAGEMENT</h5>
     </div>
-    <div class="mx-3 text-white text-end"><strong>DATA UAM</strong></div>
+    <div class="mx-3 text-white text-end"><strong>UPLOAD DATA MAPPING</strong></div>
     <li class="nav-item">
         <a href="{{ route('composite_single.upload') }}"
             class="nav-link {{ request()->routeIs('composite_single*') ? 'active' : 'text-white' }}">
@@ -20,36 +20,7 @@
     </li>
 
     <hr width="80%" class="my-1" style="margin-left: auto">
-    <div class="mx-3 text-white text-end"><strong>DATA UAR</strong></div>
-    @php
-        $isUserGenericUnitUploadActive = request()->routeIs([
-            'user-generic-unit-kerja.upload',
-            'user-generic-unit-kerja.previewPage',
-        ]);
-
-    @endphp
-
-    <li class="nav-item">
-        <a href="{{ route('user-generic-unit-kerja.upload') }}"
-            class="nav-link {{ $isUserGenericUnitUploadActive ? 'active' : 'text-white' }}">
-            <i class="bi bi-file-earmark-spreadsheet me-2"></i>Upload User ID Generic - Unit Kerja
-        </a>
-    </li>
-
-    <li class="nav-item">
-        <a href="{{ route('ussm-job-role.upload') }}"
-            class="nav-link {{ request()->routeIs('ussm-job-role.*') ? 'active' : 'text-white' }}">
-            <i class="bi bi-file-earmark-spreadsheet me-2"></i>Upload User ID - Job Role
-        </a>
-    </li>
-
-    {{--   =======================================================  --}}
-
-    <hr>
-
-    <div>
-        <h5>PROSES - UAM</h5>
-    </div>
+    <div class="mx-3 text-white text-end"><strong>Proses UAM</strong></div>
 
     <div class="dropdown">
         @php
@@ -162,15 +133,37 @@
             <i class="bi bi-file-earmark-text me-2"></i> Report UAM
         </a>
     </li>
-
-
     {{--   =======================================================  --}}
 
     <hr>
-
     <div>
-        <h5>PROSES - UAR</h5>
+        <h5>UAR MANAGEMENT</h5>
     </div>
+    <div class="mx-3 text-white text-end"><strong>DATA UAR</strong></div>
+    @php
+        $isUserGenericUnitUploadActive = request()->routeIs([
+            'user-generic-unit-kerja.upload',
+            'user-generic-unit-kerja.previewPage',
+        ]);
+
+    @endphp
+
+    <li class="nav-item">
+        <a href="{{ route('user-generic-unit-kerja.upload') }}"
+            class="nav-link {{ $isUserGenericUnitUploadActive ? 'active' : 'text-white' }}">
+            <i class="bi bi-file-earmark-spreadsheet me-2"></i>Upload User ID Generic - Unit Kerja
+        </a>
+    </li>
+
+    <li class="nav-item">
+        <a href="{{ route('ussm-job-role.upload') }}"
+            class="nav-link {{ request()->routeIs('ussm-job-role.*') ? 'active' : 'text-white' }}">
+            <i class="bi bi-file-earmark-spreadsheet me-2"></i>Upload User ID - Job Role
+        </a>
+    </li>
+
+    <hr width="80%" class="my-1" style="margin-left: auto">
+    <div class="mx-3 text-white text-end"><strong>Proses UAM</strong></div>
 
     <div class="dropdown">
         <a class="mb-1 nav-link dropdown-toggle {{ request()->routeIs('periode*') ? 'active' : 'text-white' }}"

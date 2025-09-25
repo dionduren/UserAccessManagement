@@ -37,6 +37,13 @@ class UserSeeder extends Seeder
             ['name' => 'D000 Admin', 'email' => 'd.admin@example.com', 'role' => 'Admin'],
             ['name' => 'D000 Editor', 'email' => 'd.editor@example.com', 'role' => 'Editor'],
             ['name' => 'D000 Viewer', 'email' => 'd.viewer@example.com', 'role' => 'Viewer'],
+
+            ['name' => 'E000 Admin', 'email' => 'e.admin@example.com', 'role' => 'Admin'],
+            ['name' => 'F000 Admin', 'email' => 'f.admin@example.com', 'role' => 'Admin'],
+            ['name' => 'G000 Admin', 'email' => 'g.admin@example.com', 'role' => 'Admin'],
+            ['name' => 'H000 Admin', 'email' => 'h.admin@example.com', 'role' => 'Admin'],
+            ['name' => 'I000 Admin', 'email' => 'i.admin@example.com', 'role' => 'Admin'],
+            ['name' => 'J000 Admin', 'email' => 'j.admin@example.com', 'role' => 'Admin'],
         ];
 
         foreach ($users as $u) {
