@@ -81,6 +81,18 @@ class UserSeeder extends Seeder
                 $companyCode = 'C000';
             } elseif ($u['name'] === 'D000 Editor' || $u['name'] === 'D000 Viewer' || $u['name'] === 'D000 Admin') {
                 $companyCode = 'D000';
+            } elseif ($u['name'] === 'E000 Admin') {
+                $companyCode = 'E000';
+            } elseif ($u['name'] === 'F000 Admin') {
+                $companyCode = 'F000';
+            } elseif ($u['name'] === 'G000 Admin') {
+                $companyCode = 'G000';
+            } elseif ($u['name'] === 'H000 Admin') {
+                $companyCode = 'H000';
+            } elseif ($u['name'] === 'I000 Admin') {
+                $companyCode = 'I000';
+            } elseif ($u['name'] === 'J000 Admin') {
+                $companyCode = 'J000';
             } else {
                 $companyCode = 'A000';
             }
