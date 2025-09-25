@@ -2,21 +2,22 @@
 
 namespace App\Http\Controllers\IOExcel;
 
-use App\Http\Controllers\Controller;
-
-use App\Models\Company;
-
-use App\Imports\CompanyKompartemenPreviewImport;
-use App\Services\CompanyKompartemenService;
 use App\Exports\JobRoleCompositeTemplateExport;
 
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Validator;
+use App\Http\Controllers\Controller;
 
+use App\Imports\CompanyKompartemenPreviewImport;
+use App\Models\Company;
+use App\Services\CompanyKompartemenService;
+
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
+
+use Illuminate\Support\Facades\Validator;
+use Maatwebsite\Excel\Facades\Excel;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 use Yajra\DataTables\Facades\DataTables;
-use Maatwebsite\Excel\Facades\Excel;
 
 class CompanyKompartemenController extends Controller
 {
@@ -203,6 +204,8 @@ class CompanyKompartemenController extends Controller
 
     public function downloadTemplate()
     {
-        return Excel::download(new JobRoleCompositeTemplateExport(), 'job_role_composite_role_template.xlsx');
+        $companyCode = Auth::user()?->loginDetail?->company_code ?? 'A000';
+
+        return Excel::download(new JobRoleCompositeTemplateExport($companyCode), 'job_role_composite_role_template.xlsx');
     }
 }

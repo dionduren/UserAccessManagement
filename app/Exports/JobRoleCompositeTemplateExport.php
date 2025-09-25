@@ -18,11 +18,13 @@ use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 
 class JobRoleCompositeTemplateExport implements WithMultipleSheets
 {
+    public function __construct(private ?string $companyCode = null) {}
+
     public function sheets(): array
     {
         return [
             new TemplateSheet(),          // Sheet title set inside class
-            new HierarchyMasterSheet(),   // Renamed & joined master sheet
+            new HierarchyMasterSheet($this->companyCode),   // Renamed & joined master sheet
         ];
     }
 }
@@ -30,6 +32,11 @@ class JobRoleCompositeTemplateExport implements WithMultipleSheets
 class TemplateSheet implements FromCollection, WithHeadings, WithTitle, ShouldAutoSize, WithStyles, WithEvents
 {
     private array $rows;
+
+    public function title(): string
+    {
+        return 'UPLOAD_TEMPLATE';
+    }
 
     public function __construct()
     {
@@ -46,10 +53,6 @@ class TemplateSheet implements FromCollection, WithHeadings, WithTitle, ShouldAu
         ];
     }
 
-    public function title(): string
-    {
-        return 'UPLOAD_TEMPLATE';
-    }
 
     public function collection()
     {
@@ -128,6 +131,8 @@ class TemplateSheet implements FromCollection, WithHeadings, WithTitle, ShouldAu
 
 class HierarchyMasterSheet implements FromCollection, WithHeadings, WithTitle, ShouldAutoSize
 {
+    public function __construct(private ?string $companyCode = null) {}
+
     public function title(): string
     {
         return 'MASTER_UNIT_KERJA';
@@ -136,7 +141,7 @@ class HierarchyMasterSheet implements FromCollection, WithHeadings, WithTitle, S
     public function collection()
     {
         // Eager load kompartemen and their departemen
-        $companies = Company::with([
+        $companies = Company::where('company_code', $this->companyCode)->with([
             'kompartemen.departemen' => function ($q) {
                 $q->select('departemen_id', 'kompartemen_id', 'company_id', 'nama');
             },

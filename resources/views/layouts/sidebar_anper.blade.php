@@ -5,12 +5,6 @@
         <h5>UAM MANAGEMENT</h5>
     </div>
     <div class="mx-3 text-white text-end"><strong>UPLOAD DATA MAPPING</strong></div>
-    <li class="nav-item">
-        <a href="{{ route('composite_single.upload') }}"
-            class="nav-link {{ request()->routeIs('composite_single*') ? 'active' : 'text-white' }}">
-            <i class="bi bi-file-earmark-spreadsheet me-2"></i>Upload Composite - Single Role
-        </a>
-    </li>
 
     <li class="nav-item">
         <a href="{{ route('company_kompartemen.upload') }}"
@@ -69,16 +63,16 @@
             <span class="me-auto">2. Validasi Data Role</span>
         </a>
         <div class="dropdown-content {{ $isMasterRoleActive ? 'show' : '' }}">
+            <li class="nav-item">
+                <a href="{{ route('composite_single.upload') }}"
+                    class="nav-link {{ request()->routeIs('composite_single*') ? 'active' : 'text-white' }}">
+                    <i class="bi bi-file-earmark-spreadsheet me-2"></i>Upload Composite - Single Role
+                </a>
+            </li>
             <li>
                 <a href="{{ route('tcodes.index') }}"
                     class="nav-link {{ request()->routeIs('tcodes.*') ? 'active' : 'text-white' }}">
                     <i class="bi bi-code-slash me-2"></i>Tcodes
-                </a>
-            </li>
-            <li>
-                <a href="{{ route('single-roles.index') }}"
-                    class="nav-link {{ request()->routeIs('single-roles.*') ? 'active' : 'text-white' }}">
-                    <i class="bi bi-person-fill me-2"></i>Single Roles
                 </a>
             </li>
             <li>
@@ -88,15 +82,27 @@
                 </a>
             </li>
             <li>
-                <a href="{{ route('composite-roles.index') }}"
-                    class="nav-link {{ request()->routeIs('composite-roles.*') ? 'active' : 'text-white' }}">
-                    <i class="bi bi-people-fill me-2"></i>Composite Roles
+                <a href="{{ route('single-roles.index') }}"
+                    class="nav-link {{ request()->routeIs('single-roles.*') ? 'active' : 'text-white' }}">
+                    <i class="bi bi-person-fill me-2"></i>Single Roles
                 </a>
             </li>
             <li>
                 <a href="{{ route('composite-single.index') }}"
                     class="nav-link {{ request()->routeIs('composite-single*') ? 'active' : 'text-white' }}">
                     <i class="bi bi-link-45deg me-2"></i>Composite - Single Role
+                </a>
+            </li>
+            <li>
+                <a href="{{ route('composite-roles.index') }}"
+                    class="nav-link {{ request()->routeIs('composite-roles.*') ? 'active' : 'text-white' }}">
+                    <i class="bi bi-people-fill me-2"></i>Composite Roles
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="{{ route('middle_db.view.uam.composite_ao.index') }}"
+                    class="mb-1 nav-link {{ request()->routeIs('middle_db.view.uam.composite_ao.*') ? 'active' : 'text-white' }}">
+                    <i class="bi bi-database-fill-gear me-2"></i>Composite Role - AO
                 </a>
             </li>
         </div>

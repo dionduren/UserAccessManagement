@@ -116,15 +116,21 @@
                 </a>
             </li>
             <li>
+                <a href="{{ route('single-tcode.index') }}"
+                    class="nav-link {{ request()->routeIs('single-tcode*') ? 'active' : 'text-white' }}">
+                    <i class="bi bi-link-45deg me-2"></i>Single Role - Tcode
+                </a>
+            </li>
+            <li>
                 <a href="{{ route('single-roles.index') }}"
                     class="nav-link {{ request()->routeIs('single-roles.*') ? 'active' : 'text-white' }}">
                     <i class="bi bi-person-fill me-2"></i>Single Roles
                 </a>
             </li>
             <li>
-                <a href="{{ route('single-tcode.index') }}"
-                    class="nav-link {{ request()->routeIs('single-tcode*') ? 'active' : 'text-white' }}">
-                    <i class="bi bi-link-45deg me-2"></i>Single Role - Tcode
+                <a href="{{ route('composite-single.index') }}"
+                    class="nav-link {{ request()->routeIs('composite-single*') ? 'active' : 'text-white' }}">
+                    <i class="bi bi-link-45deg me-2"></i>Composite - Single Role
                 </a>
             </li>
             <li>
@@ -134,9 +140,9 @@
                 </a>
             </li>
             <li>
-                <a href="{{ route('composite-single.index') }}"
-                    class="nav-link {{ request()->routeIs('composite-single*') ? 'active' : 'text-white' }}">
-                    <i class="bi bi-link-45deg me-2"></i>Composite - Single Role
+                <a href="{{ route('composite_ao.index') }}"
+                    class="nav-link {{ request()->routeIs('composite_ao*') ? 'active' : 'text-white' }}">
+                    <i class="bi bi-link-45deg me-2"></i>Composite Role - AO
                 </a>
             </li>
         </div>
