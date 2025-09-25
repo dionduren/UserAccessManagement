@@ -54,6 +54,8 @@ class SingleRoleController extends Controller
             'deskripsi' => 'nullable|string',
         ]);
 
+        $request->merge(['source' => 'manual']);
+
         $singleRole = SingleRole::create($request->all());
 
         // Check if the request is an AJAX request
@@ -95,6 +97,8 @@ class SingleRoleController extends Controller
             'deskripsi' => 'nullable|string',
         ]);
 
+        $request->merge(['source' => 'edit']);
+
         $singleRole->update($request->all());
 
         if ($request->ajax()) {
@@ -132,7 +136,8 @@ class SingleRoleController extends Controller
             $searchValue = $request->input('search.value');
             $query->where(function ($q) use ($searchValue) {
                 $q->where('tr_single_roles.nama', 'like', "%{$searchValue}%")
-                    ->orWhere('tr_single_roles.deskripsi', 'like', "%{$searchValue}%");
+                    ->orWhere('tr_single_roles.deskripsi', 'like', "%{$searchValue}%")
+                    ->orWhere('tr_single_roles.source', 'like', "%{$searchValue}%");
             });
         }
 
@@ -141,7 +146,7 @@ class SingleRoleController extends Controller
 
         // Ordering (may add join)
         if ($request->filled('order.0.column')) {
-            $orderableColumns = ['tr_single_roles.nama', 'tr_single_roles.deskripsi'];
+            $orderableColumns = ['tr_single_roles.nama', 'tr_single_roles.deskripsi', 'tr_single_roles.source'];
             $columnIndex      = $request->input('order.0.column');
             $columnDirection  = $request->input('order.0.dir', 'asc');
             $columnName       = $orderableColumns[$columnIndex] ?? 'tr_single_roles.nama';
@@ -164,6 +169,7 @@ class SingleRoleController extends Controller
             return [
                 'nama'      => $role->nama,
                 'deskripsi' => $role->deskripsi,
+                'source'    => $role->source,
                 'actions'   => view('master-data.single_roles.partials.actions', ['role' => $role])->render(),
             ];
         });

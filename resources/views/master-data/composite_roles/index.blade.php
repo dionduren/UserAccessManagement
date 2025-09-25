@@ -72,6 +72,7 @@
                             <th>Company</th>
                             <th>Composite Role</th>
                             <th>Deskripsi</th>
+                            <th width="10%">Sumber</th>
                             {{-- <th>Job Role</th> --}}
                             {{-- <th>Single Roles</th> --}}
                             <th>Actions</th>
@@ -152,6 +153,20 @@
                     {
                         data: 'deskripsi',
                         name: 'Deskripsi'
+                    },
+                    {
+                        data: 'source',
+                        name: 'source',
+                        title: 'Sumber',
+                        render: function(data, type, row, meta) {
+                            if (type === 'display' || type === 'filter') {
+                                if (data === 'import') return 'MDB';
+                                if (data === 'manual' || data === 'edit') return 'SYS';
+                                if (data === 'upload') return 'UPL';
+                                return data ?? '';
+                            }
+                            return data;
+                        }
                     },
                     // {
                     //     data: 'job_role',

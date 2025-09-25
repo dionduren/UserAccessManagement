@@ -119,6 +119,7 @@
                         <th>Job Role</th>
                         <th width="30%">Composite Role</th>
                         <th width="30%">Authorization Object</th>
+                        <th width="10%">Sumber</th>
                     </tr>
                 </thead>
             </table>
@@ -141,6 +142,7 @@
                             <th>Composite Role</th>
                             <th>Single Roles</th>
                             <th>Deskripsi</th>
+                            <th width="10%">Sumber</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -259,6 +261,20 @@
                         data: 'authorization_object',
                         name: 'authorization_object'
                     },
+                    {
+                        data: 'source',
+                        name: 'source',
+                        title: 'Sumber',
+                        render: function(data, type, row, meta) {
+                            if (type === 'display' || type === 'filter') {
+                                if (data === 'import') return 'MDB';
+                                if (data === 'manual' || data === 'edit') return 'SYS';
+                                if (data === 'upload') return 'UPL';
+                                return data ?? '';
+                            }
+                            return data;
+                        }
+                    }
                 ],
                 tooltips: true,
                 responsive: true,
@@ -370,6 +386,22 @@
                                     }
                                     tbody += `<td>${sr.nama_display}</td>`;
                                     tbody += `<td>${sr.deskripsi}</td>`;
+                                    let srcDisplay;
+                                    switch (sr.source) {
+                                        case 'import':
+                                            srcDisplay = 'MDB';
+                                            break;
+                                        case 'manual':
+                                        case 'edit':
+                                            srcDisplay = 'SYS';
+                                            break;
+                                        case 'upload':
+                                            srcDisplay = 'UPL';
+                                            break;
+                                        default:
+                                            srcDisplay = sr.source || 'CLOUD';
+                                    }
+                                    tbody += `<td>${srcDisplay}</td>`;
                                     tbody += '</tr>';
                                 });
                             });

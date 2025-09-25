@@ -16,6 +16,7 @@ class CreateCompositeRolesTable extends Migration
             $table->unsignedBigInteger('jabatan_id')->nullable();
             $table->string('nama'); // Composite Role Name
             $table->text('deskripsi')->nullable();
+            $table->string('source')->nullable(); // e.g., 'SAP', 'Manual'
             $table->timestamps();
             $table->softDeletes();
             $table->text('created_by')->nullable();

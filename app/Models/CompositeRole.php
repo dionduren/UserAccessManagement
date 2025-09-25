@@ -24,6 +24,7 @@ class CompositeRole extends Model
         'jabatan_id',
         'nama',
         'deskripsi',
+        'source',
         'created_by',
         'updated_by',
     ];

@@ -97,37 +97,57 @@ class CompositeRole extends Model
         $connection = env('SYNC_CONNECTION', 'sqlsrv_ext');
         $table = (new self)->getTable();
 
-        // Build dynamic OR clauses for extra patterns
-        $orClauses = [];
-        $bindings  = [$like, $exclude];
+        // Exclude both %-AO and %-AO-% by default
+        $excludePatterns = array_values(array_unique([$exclude, '%-AO-%']));
 
+        // Helper to build a clause with variable NOT LIKEs and capture bindings
+        $makeClause = function (string $likePattern, array $excludes) {
+            $clause = '(AGR_NAME LIKE ?';
+            $bindings = [$likePattern];
+            foreach ($excludes as $ex) {
+                $clause   .= ' AND AGR_NAME NOT LIKE ?';
+                $bindings[] = $ex;
+            }
+            $clause .= ')';
+            return [$clause, $bindings];
+        };
+
+        // Base clause (e.g., ZM-% with NOT LIKE excludes)
+        [$baseClause, $baseBindings] = $makeClause($like, $excludePatterns);
+
+        // Build dynamic OR clauses for extra patterns
+        $extraClauses   = [];
+        $extraBindings  = [];
         foreach ($extraPatterns as $p) {
             if ($excludeAoForExtras) {
-                // (AGR_NAME LIKE ? AND AGR_NAME NOT LIKE ?)
-                $orClauses[] = '(AGR_NAME LIKE ? AND AGR_NAME NOT LIKE ?)';
-
-                $bindings[]  = $p;
-                $bindings[]  = $exclude; // reuse same exclusion pattern
+                [$cl, $bd] = $makeClause($p, $excludePatterns);
             } else {
-                $orClauses[] = '(AGR_NAME LIKE ?)';
-                $bindings[]  = $p;
+                // Only LIKE (no excludes)
+                $cl = '(AGR_NAME LIKE ?)';
+
+                $bd = [$p];
             }
+            $extraClauses[]  = $cl;
+            $extraBindings[] = $bd;
         }
 
-        $orSql = implode(' OR ', $orClauses);
+        $orSql = implode(' OR ', $extraClauses);
 
         $sql = <<<SQL
-SELECT DISTINCT
-    AGR_NAME AS composite_role,
-    TEXT     AS description
-FROM BASIS_AGR_TEXTS
-WHERE SPRAS = 'E'
-  AND (
-        (AGR_NAME LIKE ? AND AGR_NAME NOT LIKE ?)
-        OR $orSql
-      )
-ORDER BY AGR_NAME
-SQL;
+            SELECT DISTINCT
+                AGR_NAME AS composite_role,
+                TEXT     AS description
+            FROM BASIS_AGR_TEXTS
+            WHERE SPRAS = 'E'
+              AND (
+                    {$baseClause}
+                    OR {$orSql}
+                  )
+            ORDER BY AGR_NAME
+            SQL;
+
+        // Merge bindings in the same order as clauses
+        $bindings = array_merge($baseBindings, ...$extraBindings);
 
         $rows = DB::connection($connection)->select($sql, $bindings);
 

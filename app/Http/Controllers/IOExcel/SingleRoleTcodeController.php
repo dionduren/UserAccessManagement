@@ -166,7 +166,10 @@ class SingleRoleTcodeController extends Controller
 
                     $singleRole = SingleRole::updateOrCreate(
                         ['nama' => $row['single_role']],
-                        ['deskripsi' => $row['single_role_description']]
+                        [
+                            'deskripsi' => $row['single_role_description'],
+                            'source' => 'manual'
+                        ]
                     );
 
                     $tCode = Tcode::updateOrCreate(

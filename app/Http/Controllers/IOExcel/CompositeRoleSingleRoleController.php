@@ -169,7 +169,8 @@ class CompositeRoleSingleRoleController extends Controller
                             'company_id' => $company->company_code
                         ],
                         [
-                            'deskripsi' => $row['composite_role_description'] ?? null
+                            'deskripsi' => $row['composite_role_description'] ?? null,
+                            'source' => 'upload'
                         ]
                     );
 
@@ -179,7 +180,8 @@ class CompositeRoleSingleRoleController extends Controller
                             'nama' => $row['single_role'],
                         ],
                         [
-                            'deskripsi' => $row['single_role_description'] ?? null
+                            'deskripsi' => $row['single_role_description'] ?? null,
+                            'source' => 'upload'
                         ]
                     );
 

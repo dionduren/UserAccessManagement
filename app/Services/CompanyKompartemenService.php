@@ -180,6 +180,7 @@ class CompanyKompartemenService
                     'company_id'      => trim($company->company_code),
                     'kompartemen_id'  => $row['kompartemen_id'] ?: null,
                     'departemen_id'   => $row['departemen_id'] ?: null,
+                    'source'          => 'upload',
                     'created_by'      => $user,
                     'updated_by'      => $user,
                 ]

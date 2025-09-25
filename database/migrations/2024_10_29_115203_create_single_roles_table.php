@@ -13,6 +13,7 @@ class CreateSingleRolesTable extends Migration
             // $table->string('company_id');
             $table->string('nama'); // Single Role Name
             $table->text('deskripsi')->nullable();
+            $table->string('source')->nullable(); // e.g., 'SAP', 'Manual'
             $table->timestamps();
             $table->softDeletes();
             $table->text('created_by')->nullable();

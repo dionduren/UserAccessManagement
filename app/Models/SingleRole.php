@@ -20,6 +20,7 @@ class SingleRole extends Model
         // 'company_id',
         'nama',
         'deskripsi',
+        'source',
         'created_by',
         'updated_by'
     ];

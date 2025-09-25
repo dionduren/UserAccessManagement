@@ -254,7 +254,7 @@ class UAMReportController extends Controller
                     'nama'        => $r->nama,
                     'nama_display' => $r->nama, // local no tag
                     'deskripsi'   => $r->deskripsi,
-                    'source'      => 'LOCAL',
+                    'source'      => $r->source ? $r->source : 'CLOUD',
                 ]);
             } else {
                 // Fallback to middle-db only if local empty
@@ -283,6 +283,7 @@ class UAMReportController extends Controller
                 'nama'         => $compNameRaw,
                 'nama_display' => $compDisplay,
                 'single_roles' => $mappedSingles->toArray(),
+                'source'       => $comp->source ? $comp->source : 'CLOUD',
             ];
         }
 
@@ -309,7 +310,7 @@ class UAMReportController extends Controller
                             'tcode'         => $t->code,
                             'tcode_display' => $t->code,
                             'deskripsi'     => $t->deskripsi,
-                            'source'        => 'LOCAL',
+                            'source'        => $t->source ? $t->source : 'CLOUD',
                         ])->toArray();
                     }
                 }
@@ -342,6 +343,7 @@ class UAMReportController extends Controller
                     'nama'         => $srNameRaw,
                     'nama_display' => $nameDisplay,
                     'deskripsi'    => $sr['deskripsi'] ?? null,
+                    'source'       => $sr['source'] ?? 'MDB',
                     'tcodes'       => $tcodes,
                 ];
             }

@@ -24,6 +24,7 @@ class CompositeRoleSingleRoleImport implements ToModel, WithHeadingRow, WithChun
             ], [
                 'deskripsi' => $row['composite_description'] ?? null,
                 'company_id' => $row['company_id'] ?? null,
+                'source' => 'upload',
             ]);
 
             // Step 2: Validate or create Single Role
@@ -33,6 +34,7 @@ class CompositeRoleSingleRoleImport implements ToModel, WithHeadingRow, WithChun
                     'company_id' => $row['company_id'] ?? null,
                 ], [
                     'deskripsi' => $row['single_description'] ?? null,
+                    'source' => 'upload'
                 ]);
 
                 // Step 3: Link Single Role to Composite Role

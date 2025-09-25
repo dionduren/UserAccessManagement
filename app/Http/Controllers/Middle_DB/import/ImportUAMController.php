@@ -89,11 +89,11 @@ class ImportUAMController extends Controller
 
         // Build existing map if not provided
         $existingMap = $opts['existingMap'] ?? DB::table($localTable)
-            ->select('id', $keyField . ' as key_val', $descField . ' as desc_val')
+            ->select('id', $keyField . ' as key_val', $descField . ' as desc_val', 'source as src_val') // include source
             ->get()
             ->reduce(function ($carry, $r) use ($uppercase) {
                 $k = $uppercase ? strtoupper($r->key_val) : $r->key_val;
-                $carry[$k] = ['id' => $r->id, 'desc' => $r->desc_val];
+                $carry[$k] = ['id' => $r->id, 'desc' => $r->desc_val, 'source' => $r->src_val];
                 return $carry;
             }, []);
 
@@ -130,21 +130,33 @@ class ImportUAMController extends Controller
                     }
 
                     $current = $existingMap[$key];
-                    $shouldUpdate = false;
+                    $shouldUpdateDesc = false;
                     if ($overwrite && $desc !== null && $desc !== $current['desc']) {
-                        $shouldUpdate = true;
+                        $shouldUpdateDesc = true;
                     } elseif (($current['desc'] === null || $current['desc'] === '') && $desc !== null) {
-                        $shouldUpdate = true;
+                        $shouldUpdateDesc = true;
                     }
 
-                    if ($shouldUpdate && $current['id']) {
+                    // ALWAYS overwrite source if provided in extraCols
+                    $desiredSource = $extraCols['source'] ?? null;
+                    $shouldUpdateSource = $desiredSource !== null && $desiredSource !== $current['source'];
+
+                    if (($shouldUpdateDesc || $desiredSource !== null) && $current['id']) {
+                        $updateData = [
+                            'updated_by' => $actor,
+                            'updated_at' => $now,
+                        ];
+                        if ($shouldUpdateDesc) {
+                            $updateData[$descField] = $desc;
+                        }
+                        if ($desiredSource !== null) {
+                            $updateData['source'] = $desiredSource;
+                        }
+
                         DB::table($localTable)
                             ->where('id', $current['id'])
-                            ->update([
-                                $descField   => $desc,
-                                'updated_by' => $actor,
-                                'updated_at' => $now,
-                            ]);
+                            ->update($updateData);
+
                         $summary['updated']++;
                     } else {
                         $summary['skipped']++;
@@ -175,6 +187,8 @@ class ImportUAMController extends Controller
      *  - fullRefresh (bool)
      *  - makeKeyA / makeKeyB (callable for normalization)
      *  - colA / colB pivot FK names
+     *  - fieldA / fieldB source field names
+     *  - extraColumns (array) additional static columns for insert (e.g., ['source' => 'import'])
      */
     private function syncPivotGeneric(array $opts): array
     {
@@ -183,15 +197,16 @@ class ImportUAMController extends Controller
         $fullRefresh = $opts['fullRefresh'] ?? false;
         $viewQuery   = $opts['viewQuery'];
         $pivotTable  = $opts['pivotTable'];
-        $colA        = $opts['colA'];          // FK column name in pivot for entity A
-        $colB        = $opts['colB'];          // FK column name in pivot for entity B
-        $localA      = $opts['localMapA'];     // [NORMALIZED_KEY => id]
-        $localB      = $opts['localMapB'];     // [NORMALIZED_KEY => id]
+        $colA        = $opts['colA'];
+        $colB        = $opts['colB'];
+        $localA      = $opts['localMapA'];
+        $localB      = $opts['localMapB'];
         $makeKeyA    = $opts['makeKeyA'] ?? fn($v) => strtoupper($v);
         $makeKeyB    = $opts['makeKeyB'] ?? fn($v) => strtoupper($v);
         $batchSize   = $opts['batchSize'] ?? 1000;
-        $fieldA      = $opts['fieldA'] ?? null; // REQUIRED: source field name for A
-        $fieldB      = $opts['fieldB'] ?? null; // REQUIRED: source field name for B
+        $fieldA      = $opts['fieldA'] ?? null;
+        $fieldB      = $opts['fieldB'] ?? null;
+        $extraCols   = $opts['extraColumns'] ?? []; // <-- add
 
         $summary = [
             'source_total'      => (clone $viewQuery)->count(),
@@ -227,7 +242,7 @@ class ImportUAMController extends Controller
             }
 
             $batch = [];
-            $this->chunkQuery($viewQuery, $batchSize, function ($rows) use (&$summary, &$batch, $batchSize, $pivotTable, $colA, $colB, $localA, $localB, $makeKeyA, $makeKeyB, $existingPairs, $fullRefresh, $actor, $now, $fieldA, $fieldB) {
+            $this->chunkQuery($viewQuery, $batchSize, function ($rows) use (&$summary, &$batch, $batchSize, $pivotTable, $colA, $colB, $localA, $localB, $makeKeyA, $makeKeyB, $existingPairs, $fullRefresh, $actor, $now, $fieldA, $fieldB, $extraCols) {
                 foreach ($rows as $r) {
                     $summary['processed']++;
 
@@ -264,14 +279,14 @@ class ImportUAMController extends Controller
                         continue;
                     }
 
-                    $batch[] = [
+                    $batch[] = array_merge($extraCols, [ // <-- add
                         $colA        => $idA,
                         $colB        => $idB,
                         'created_at' => $now,
                         'updated_at' => $now,
                         'created_by' => $actor,
                         'updated_by' => $actor,
-                    ];
+                    ]);
                     $summary['inserted']++;
 
                     if (!$fullRefresh) {
@@ -390,6 +405,7 @@ class ImportUAMController extends Controller
             'sourceDesc'  => fn($r) => $r->definisi,
             'uppercaseKey' => true,
             'overwrite'   => $overwrite,
+            'extraColumns' => ['source' => 'import'], // <-- add
         ]);
 
         return response()->json(['message' => 'Single Role sync done', 'summary' => $summary, 'overwrite' => $overwrite]);
@@ -556,7 +572,7 @@ class ImportUAMController extends Controller
             'sourceDesc'   => fn($r) => $r->definisi,
             'uppercaseKey' => true,
             'overwrite'    => $overwrite,
-            'extraColumns' => []
+            'extraColumns' => ['source' => 'import'], // <-- add
         ]);
 
         return response()->json([
@@ -592,8 +608,9 @@ class ImportUAMController extends Controller
             'colA'        => 'composite_role_id',
             'colB'        => 'single_role_id',
             'fullRefresh' => $full,
-            'fieldA'      => 'composite_role', // FIX: ensure composite_role used as A
-            'fieldB'      => 'single_role',    // FIX: single_role used as B
+            'fieldA'      => 'composite_role',
+            'fieldB'      => 'single_role',
+            'extraColumns' => ['source' => 'import'], // <-- add
         ]);
 
         return response()->json([
@@ -610,6 +627,7 @@ class ImportUAMController extends Controller
      * 3. SingleRole - Tcode pivot
      * 4. Composite Roles (incremental)
      * 5. CompositeRole - SingleRole pivot
+     * 6. CompositeRole - AO (incremental)
      *
      * Query/body flags:
      *  overwrite_single=1
@@ -676,6 +694,12 @@ class ImportUAMController extends Controller
             true
         );
 
+        //6. CompositeRole - AO
+        $results['6_composite_ao'] = json_decode(
+            $this->sync_ao(new Request())->getContent(),
+            true
+        );
+
         return response()->json([
             'message' => 'All sync processes (priority chain) completed',
             'order'   => [
@@ -683,7 +707,8 @@ class ImportUAMController extends Controller
                 '2_single_roles',
                 '3_single_role_tcodes',
                 '4_composite_roles',
-                '5_composite_role_single_roles'
+                '5_composite_role_single_roles',
+                '6_composite_ao'
             ],
             'results' => $results
         ]);

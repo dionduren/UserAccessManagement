@@ -54,6 +54,9 @@ class CompositeSingleController extends Controller
             'single_role_id.*' => 'exists:tr_single_roles,id',
         ]);
 
+
+        $validatedData->merge(['source' => 'manual']);
+
         $compositeRole = CompositeRole::findOrFail($validatedData['composite_role_id']);
         $compositeRole->singleRoles()->syncWithoutDetaching($validatedData['single_role_id']);
 
@@ -99,6 +102,8 @@ class CompositeSingleController extends Controller
             'single_role_id' => 'required|array',
             'single_role_id.*' => 'exists:tr_single_roles,id',
         ]);
+
+        $validatedData->merge(['source' => 'edit']);
 
         $compositeRole = CompositeRole::findOrFail($id);
         $compositeRole->singleRoles()->sync($validatedData['single_role_id']);

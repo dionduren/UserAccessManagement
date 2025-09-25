@@ -15,6 +15,7 @@ return new class extends Migration
             $table->id();
             $table->unsignedBigInteger('single_role_id')->nullable();
             $table->unsignedBigInteger('composite_role_id')->nullable();
+            $table->string('source')->nullable(); // e.g., 'SAP', 'Manual'
             $table->timestamps();
             $table->softDeletes();
             $table->text('created_by')->nullable();

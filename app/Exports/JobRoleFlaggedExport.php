@@ -14,7 +14,7 @@ class JobRoleFlaggedExport implements FromCollection, WithHeadings, ShouldAutoSi
 
     public function collection()
     {
-        $q = JobRole::with(['company', 'kompartemen', 'departemen'])
+        $q = JobRole::with(['company', 'kompartemen', 'departemen', 'compositeRole'])
             ->where('flagged', true);
 
         if (!empty($this->companyCode)) {
@@ -37,6 +37,7 @@ class JobRoleFlaggedExport implements FromCollection, WithHeadings, ShouldAutoSi
                 'departemen_nama'   => $r->departemen->nama ?? '',
                 'job_role_id'       => $r->job_role_id,
                 'job_role_nama'     => $r->nama,
+                'composite_roles'   => $r->compositeRole->nama ?? '',
                 'keterangan'        => $r->keterangan,
                 'error_komp_id'     => $r->error_kompartemen_id,
                 'error_komp_name'   => $r->error_kompartemen_name,
@@ -57,6 +58,7 @@ class JobRoleFlaggedExport implements FromCollection, WithHeadings, ShouldAutoSi
             'departemen_nama',
             'job_role_id',
             'job_role_nama',
+            'composite_roles',
             'keterangan',
             'error_komp_id',
             'error_komp_name',
