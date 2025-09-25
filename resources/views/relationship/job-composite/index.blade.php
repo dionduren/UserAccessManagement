@@ -35,6 +35,9 @@
                 <a href="{{ route('job-composite.create') }}" class="btn btn-primary mb-3">
                     <i class="bi bi-plus"></i> Buat Relationship Baru
                 </a>
+                {{-- <a href="#" id="downloadFlaggedBtn" class="btn btn-outline-danger mb-3 ms-2">
+                    <i class="bi bi-download"></i> Download Flagged
+                </a> --}}
 
                 <!-- Dropdowns for Filtering -->
                 <div class="form-group">
@@ -395,6 +398,15 @@
             $(document).on('click', '.close', function() {
                 $('#CompositeRoleModal').modal('hide');
             });
+
+            // // Download flagged using selected company
+            // $('#downloadFlaggedBtn').on('click', function(e) {
+            //     e.preventDefault();
+            //     const company = $('#companyDropdown').val() || '';
+            //     const url = new URL("{{ route('job-composite.export-flagged') }}", window.location.origin);
+            //     if (company) url.searchParams.set('company_code', company);
+            //     window.location.href = url.toString();
+            // });
         });
     </script>
 @endsection

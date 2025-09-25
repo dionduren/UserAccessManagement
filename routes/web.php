@@ -246,6 +246,7 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/job-roles/{job_role}/flagged', [JobRoleController::class, 'updateFlagged'])->name('job-roles.update-flagged');
     Route::post('/job-roles/update-flagged-status', [JobRoleController::class, 'updateFlaggedStatus'])->name('job-roles.update-flagged-status');
     Route::get('/job-roles/generate-job-role-id', [JobRoleController::class, 'generateJobRoleId'])->name('job-roles.generate-job-role-id');
+    Route::get('/master-data/job-roles/export-flagged', [JobRoleController::class, 'exportFlagged'])->name('job-roles.export-flagged');
     Route::resource('job-roles', JobRoleController::class);
 
     Route::get('/get-kompartemen', [KompartemenController::class, 'getKompartemenByCompany']);
@@ -292,6 +293,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/relationship/job-composite/data', [JobCompositeController::class, 'getCompositeRoles'])->name('job-composite.data');
     Route::get('/relationship/job-composite/empty-composite', [JobCompositeController::class, 'getEmptyCompositeRole'])->name('job-composite.empty-composite');
     Route::get('/relationship/job-composite/company-composite', [JobCompositeController::class, 'getCompositeFilterCompany'])->name('job-composite.company-composite');
+    Route::get('/relationship/job-composite/flagged/export', [JobCompositeController::class, 'exportFlagged'])->name('job-composite.export-flagged');
     Route::resource('/relationship/job-composite', JobCompositeController::class);
 
     // Route::get('/relationship/composite-single/data', [CompositeSingleController::class, 'getSingleRoles'])->name('composite-single.jsonIndex');

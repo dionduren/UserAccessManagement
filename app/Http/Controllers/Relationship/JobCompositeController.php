@@ -2,13 +2,18 @@
 
 namespace App\Http\Controllers\Relationship;
 
+use App\Http\Controllers\Controller;
+
 use App\Models\Company;
 use App\Models\JobRole;
-use Illuminate\Http\Request;
 use App\Models\CompositeRole;
+use App\Exports\JobCompositeFlaggedExport; // added
+
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\DB;
-use App\Http\Controllers\Controller;
+use Illuminate\Http\Request;
+
+use Maatwebsite\Excel\Facades\Excel; // added
 
 class JobCompositeController extends Controller
 {
@@ -346,5 +351,21 @@ class JobCompositeController extends Controller
             'recordsFiltered' => $recordsFiltered,
             'data' => $data,
         ]);
+    }
+
+    public function exportFlagged(Request $request)
+    {
+        $user = auth()->user();
+        $userCompany = $user->loginDetail->company_code ?? null;
+
+        // Use selected company if provided; enforce user restriction (non-A000 forced to own)
+        $requested = $request->query('company_code');
+        $companyCode = ($userCompany === 'A000') ? ($requested ?: null) : $userCompany;
+
+        $filename = 'Flagged_JobRole_Composite'
+            . ($companyCode ? "_{$companyCode}" : '')
+            . '_' . now()->format('Ymd_His') . '.xlsx';
+
+        return Excel::download(new JobCompositeFlaggedExport($companyCode), $filename);
     }
 }

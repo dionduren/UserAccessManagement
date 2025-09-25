@@ -19,6 +19,9 @@
             <div class="card-body">
 
                 <a href="{{ route('job-roles.create') }}" class="btn btn-primary mb-3">Buat Job Role</a>
+                <a href="#" id="downloadFlaggedBtn" class="btn btn-outline-danger mb-3 ms-2">
+                    <i class="bi bi-download"></i> Download Flagged Data
+                </a>
 
                 <!-- Success Message -->
                 @if (session('status'))
@@ -402,6 +405,14 @@
                         btn.prop('disabled', false);
                     }
                 });
+            });
+
+            $('#downloadFlaggedBtn').on('click', function(e) {
+                e.preventDefault();
+                const company = $('#companyDropdown').val() || '';
+                const url = new URL("{{ route('job-roles.export-flagged') }}", window.location.origin);
+                if (company) url.searchParams.set('company_code', company);
+                window.location.href = url.toString();
             });
         });
     </script>

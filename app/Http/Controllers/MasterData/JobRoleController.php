@@ -11,6 +11,8 @@ use App\Models\JobRole;
 use App\Models\Kompartemen;
 use App\Models\PenomoranJobRole;
 use App\Services\JSONService; // <-- Add this at the top
+use Maatwebsite\Excel\Facades\Excel; // add
+use App\Exports\JobRoleFlaggedExport; // add
 
 use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
@@ -452,5 +454,31 @@ class JobRoleController extends Controller
         } catch (\Exception $e) {
             return response()->json(['error' => $e->getMessage()], 500);
         }
+    }
+
+    public function exportFlagged(Request $request)
+    {
+        $user = auth()->user();
+        $userCompany = $user->loginDetail->company_code ?? null;
+
+        $requested = $request->query('company_code');
+        $companyCode = ($userCompany === 'A000') ? ($requested ?: null) : $userCompany;
+
+        $filename = 'Flagged_JobRoles'
+            . ($companyCode ? "_{$companyCode}" : '')
+            . '_' . now()->format('Ymd_His') . '.xlsx';
+
+        return Excel::download(new JobRoleFlaggedExport($companyCode), $filename);
+    }
+
+    // Scopes
+    public function scopeFlagged($q, bool $flag = true)
+    {
+        return $q->where('flagged', $flag);
+    }
+
+    public function scopeCompany($q, string $companyCode)
+    {
+        return $q->where('company_id', $companyCode);
     }
 }
