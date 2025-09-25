@@ -234,6 +234,7 @@ class UAMReportController extends Controller
                 'job_role'             => $jobRole->nama ?? '-',
                 'composite_role'       => $compositeLabel,
                 'authorization_object' => $aoText,
+                'source'               => $compModel->source ? $compModel->source : 'UPL',
             ];
 
             $compositeRoles[$compModel->id] = $compModel;
