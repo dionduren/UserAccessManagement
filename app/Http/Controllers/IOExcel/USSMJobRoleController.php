@@ -35,7 +35,18 @@ class USSMJobRoleController extends Controller
 
         try {
             $import = new USSMJobRolePreviewImport();
+
+            // Try named sheet first
+            $import->onlySheets('UPLOAD_TEMPLATE');
             Excel::import($import, $request->file('excel_file'));
+
+            // Fallback to first sheet if nothing was read
+            if ($import->rows->isEmpty()) {
+                $import = new USSMJobRolePreviewImport();
+                $import->onlySheets(0);
+                Excel::import($import, $request->file('excel_file'));
+            }
+
             $data = $import->rows->map(fn($row) => $row->toArray())->toArray();
 
             $parsedData = [];
@@ -53,12 +64,6 @@ class USSMJobRoleController extends Controller
                 if (empty($row['job_role_id'])) {
                     $row['_row_errors'][] = 'Job Role ID kosong.';
                 }
-
-                // // Definisi validation
-                // $definisiError = $this->validateName($row['definisi'] ?? '', $seenDefinisi);
-                // if ($definisiError) {
-                //     $row['_row_warnings'][] = $definisiError;
-                // }
 
                 $row['_row_issues_count'] = count($row['_row_errors']) + count($row['_row_warnings']);
                 $parsedData[] = $row;

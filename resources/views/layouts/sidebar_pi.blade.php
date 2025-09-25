@@ -272,12 +272,13 @@
         @php
             $isUploadMasterNikActive =
                 request()->routeIs('dynamic_upload.upload') && request()->route('module') === 'user_nik';
-            $isUserGenericUnitUploadActive = request()->routeIs([
-                'user-generic-unit-kerja.upload',
-                'user-generic-unit-kerja.previewPage',
-            ]);
+            // $isUserGenericUnitUploadActive = request()->routeIs([
+            //     'user-generic-unit-kerja.upload',
+            //     'user-generic-unit-kerja.previewPage',
+            // ]);
 
-            $isValidateUserIDActive = $isUploadMasterNikActive || $isUserGenericUnitUploadActive;
+            $isValidateUserIDActive = $isUploadMasterNikActive;
+            // || $isUserGenericUnitUploadActive;
             $modules = config('dynamic_uploads.modules');
 
         @endphp
@@ -293,7 +294,7 @@
                     <i class="bi bi-file-earmark-spreadsheet me-2"></i>Upload {{ $modules['user_nik']['name'] }}
                 </a>
             </li>
-            @php
+            {{-- @php
                 $isUserGenericUnitUploadActive = request()->routeIs([
                     'user-generic-unit-kerja.upload',
                     'user-generic-unit-kerja.previewPage',
@@ -304,7 +305,7 @@
                     class="nav-link {{ $isUserGenericUnitUploadActive ? 'active' : 'text-white' }}">
                     <i class="bi bi-file-earmark-spreadsheet me-2"></i>Upload User ID Generic - Unit Kerja
                 </a>
-            </li>
+            </li> --}}
 
             <li class="nav-item">
                 <a href="{{ route('user-nik.index') }}"
