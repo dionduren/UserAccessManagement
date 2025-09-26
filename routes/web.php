@@ -446,6 +446,7 @@ Route::middleware(['auth'])->group(function () {
         // User NIK
         Route::get('user-nik', [UIDNIKUnitKerjaController::class, 'index'])->name('user_nik.index');
         Route::get('user-nik/data', [UIDNIKUnitKerjaController::class, 'index'])->name('user_nik.data'); // returns JSON when requested via Accept: application/json
+        Route::get('user-nik/without', [UIDNIKUnitKerjaController::class, 'withoutUnitKerja'])->name('user_nik.without');
         Route::get('user-nik/create', [UIDNIKUnitKerjaController::class, 'create'])->name('user_nik.create');
         Route::post('user-nik', [UIDNIKUnitKerjaController::class, 'store'])->name('user_nik.store');
         Route::get('user-nik/{userNIKUnitKerja}', [UIDNIKUnitKerjaController::class, 'show'])->name('user_nik.show');
@@ -455,11 +456,9 @@ Route::middleware(['auth'])->group(function () {
 
         // User Generic
         // --- STATIC AJAX ENDPOINTS FIRST (avoid collision with {userGenericUnitKerja}) ---
-        Route::get('user-generic/company-structure', [UIDGenericUnitKerjaController::class, 'companyStructure'])
-            ->name('user_generic.company_structure');
-
-        Route::get('user-generic/search-users', [UIDGenericUnitKerjaController::class, 'searchUsers'])
-            ->name('user_generic.search_users');
+        Route::get('user-generic/company-structure', [UIDGenericUnitKerjaController::class, 'companyStructure'])->name('user_generic.company_structure');
+        Route::get('user-generic/search-users', [UIDGenericUnitKerjaController::class, 'searchUsers'])->name('user_generic.search_users');
+        Route::get('user-generic/without', [UIDGenericUnitKerjaController::class, 'without'])->name('user_generic.without');
 
         // --- LIST/JSON INDEX ---
         Route::get('user-generic', [UIDGenericUnitKerjaController::class, 'index'])

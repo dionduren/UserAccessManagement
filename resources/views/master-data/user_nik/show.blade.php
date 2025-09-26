@@ -21,27 +21,34 @@
                     <dt class="col-sm-3">NIK</dt>
                     <dd class="col-sm-9">{{ $userNIK->user_code ?? 'N/A' }}</dd>
 
-                    <dt class="col-sm-3">Nama</dt>
-                    <dd class="col-sm-9">{{ $userNIK->unitKerja->nama ?? 'N/A' }}</dd>
+                    @if ($userNIK->unitKerja)
+                        <dt class="col-sm-3">Nama</dt>
+                        <dd class="col-sm-9">{{ $userNIK->unitKerja->nama ?? 'N/A' }}</dd>
 
-                    <dt class="col-sm-3">Perusahaan</dt>
-                    <dd class="col-sm-9">{{ $userNIK->unitKerja->company->nama ?? 'N/A' }}</dd>
+                        <dt class="col-sm-3">Perusahaan</dt>
+                        <dd class="col-sm-9">
+                            {{ $userNIK->unitKerja ? $userNIK->unitKerja->company->shortname . ' - ' . $userNIK->unitKerja->company->nama : 'N/A' }}
+                        </dd>
+                    @endif
+                    <dt class="col-sm-3">User ID Group</dt>
+                    <dd class="col-sm-9">
+                        {{ $userNIK->group ?? 'N/A' }}
+                    </dd>
 
-                    <dt class="col-sm-3">Direktorat</dt>
-                    <dd class="col-sm-9">{{ $userNIK->unitKerja->direktorat->direktorat ?? 'N/A' }}</dd>
+                    @if ($userNIK->unitKerja)
+                        <dt class="col-sm-3">Direktorat</dt>
+                        <dd class="col-sm-9">{{ $userNIK->unitKerja->direktorat->direktorat ?? 'N/A' }}</dd>
 
-                    <dt class="col-sm-3">Kompartemen</dt>
-                    <dd class="col-sm-9">{{ $userNIK->unitKerja->kompartemen->nama ?? 'N/A' }}</dd>
+                        <dt class="col-sm-3">Kompartemen</dt>
+                        <dd class="col-sm-9">{{ $userNIK->unitKerja->kompartemen->nama ?? 'N/A' }}</dd>
 
-                    <dt class="col-sm-3">Departemen</dt>
-                    <dd class="col-sm-9">{{ $userNIK->unitKerja->departemen->nama ?? 'N/A' }}</dd>
-
+                        <dt class="col-sm-3">Departemen</dt>
+                        <dd class="col-sm-9">{{ $userNIK->unitKerja->departemen->nama ?? 'N/A' }}</dd>
+                    @endif
                     {{-- <dt class="col-sm-3">UserNIKUnitKerja</dt>
                     <dd class="col-sm-9">
                         {{ $userNIK }}
                     </dd> --}}
-
-
 
                     {{-- <dt class="col-sm-3">Cost Center</dt>
                     <dd class="col-sm-9">{{ $userNIK->UserNIKUnitKerja->cost_center ?? 'N/A' }}</dd>

@@ -84,14 +84,20 @@
             'user-generic-unit-kerja.upload',
             'user-generic-unit-kerja.previewPage',
         ]);
-        $isUserGenericUnitActive = request()->routeIs('unit_kerja.user_generic.*');
-        $isUserDetailActive = request()->routeIs('user-detail.*');
+        $isUserGenericUnitActive =
+            request()->routeIs('unit_kerja.user_generic.*') && !request()->routeIs('unit_kerja.user_generic.without');
         $isImportNIKUnitActive = request()->routeIs('import.nik_unit_kerja.*');
+        $userNIKWithoutUnitActive = request()->routeIs('unit_kerja.user_nik.without');
+        $userGenericWithoutUnitActive = request()->routeIs('unit_kerja.user_generic.without');
 
         $isUserIdUnitActive =
             // $isUploadMasterNikActive ||
             // $isUploadUserNikActive ||
-            $isUserGenericUnitUploadActive || $isUserGenericUnitActive || $isUserDetailActive;
+            $isUserGenericUnitUploadActive ||
+            $isUserGenericUnitActive ||
+            $isImportNIKUnitActive ||
+            $userNIKWithoutUnitActive ||
+            $userGenericWithoutUnitActive;
     @endphp
 
     <div class="dropdown">
@@ -128,6 +134,14 @@
                 </a>
             </li>
 
+
+            <li class="nav-item">
+                <a href="{{ route('unit_kerja.user_nik.index') }}"
+                    class="nav-link text-white {{ request()->routeIs('unit_kerja.user_nik.index') ? 'active' : '' }}">
+                    <i class="bi bi-person-lines-fill me-2"></i>User ID NIK - Unit Kerja
+                </a>
+            </li>
+
             <li class="nav-item">
                 <a href="{{ route('unit_kerja.user_generic.index') }}"
                     class="nav-link text-white {{ $isUserGenericUnitActive ? 'active' : '' }}">
@@ -136,9 +150,17 @@
             </li>
 
             <li class="nav-item">
-                <a href="{{ route('unit_kerja.user_nik.index') }}"
-                    class="nav-link text-white {{ request()->routeIs('unit_kerja.user_nik.index') ? 'active' : '' }}">
-                    <i class="bi bi-person-lines-fill me-2"></i>User ID NIK - Unit Kerja
+                <a href="{{ route('unit_kerja.user_nik.without') }}"
+                    class="nav-link text-white {{ $userNIKWithoutUnitActive ? 'active' : '' }}">
+                    <i class="bi bi-exclamation-circle me-2"></i>NIK Non Unit Kerja
+                </a>
+            </li>
+
+
+            <li class="nav-item">
+                <a href="{{ route('unit_kerja.user_generic.without') }}"
+                    class="nav-link text-white {{ $userGenericWithoutUnitActive ? 'active' : '' }}">
+                    <i class="bi bi-exclamation-circle me-2"></i>Generic Non Unit Kerja
                 </a>
             </li>
             {{-- <li class="nav-item">
@@ -249,25 +271,25 @@
             <li class="nav-item">
                 <a href="{{ route('nik-job.index') }}"
                     class="nav-link {{ request()->routeIs('nik-job*') && !request()->routeIs('nik-job.null-relationship') ? 'active' : 'text-white' }}">
-                    <i class="bi bi-link-45deg"></i> User ID NIK - Job Role
+                    <i class="bi bi-link-45deg me-2"></i>User ID NIK - Job Role
                 </a>
             </li>
             <li class="nav-item">
                 <a href="{{ route('user-generic-job-role.index') }}"
                     class="nav-link {{ request()->routeIs('user-generic-job-role.*') && !request()->routeIs('user-generic-job-role.null-relationship') ? 'active' : 'text-white' }}">
-                    <i class="bi bi-link-45deg"></i> User ID Generic - Job Role
+                    <i class="bi bi-link-45deg me-2"></i>User ID Generic - Job Role
                 </a>
             </li>
             <li class="nav-item">
                 <a href="{{ route('nik-job.null-relationship') }}"
                     class="nav-link {{ request()->routeIs('nik-job.null-relationship') ? 'active' : 'text-white' }}">
-                    <i class="bi bi-exclamation-circle"></i> User ID NIK Non Job
+                    <i class="bi bi-exclamation-circle me-2"></i>User ID NIK Non Job
                 </a>
             </li>
             <li class="nav-item">
                 <a href="{{ route('user-generic-job-role.null-relationship') }}"
                     class="nav-link {{ request()->routeIs('user-generic-job-role.null-relationship') ? 'active' : 'text-white' }}">
-                    <i class="bi bi-exclamation-circle"></i> User ID Generic Non Job
+                    <i class="bi bi-exclamation-circle me-2"></i>User ID Generic Non Job
                 </a>
             </li>
             {{-- @can('Super Admin')

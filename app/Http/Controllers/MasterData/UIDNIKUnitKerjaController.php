@@ -2,9 +2,10 @@
 
 namespace App\Http\Controllers\MasterData;
 
-use \App\Models\UserGenericUnitKerja;
 use App\Http\Controllers\Controller;
+
 use App\Models\Periode;
+use App\Models\UserNIK;
 use App\Models\UserNIKUnitKerja;
 use Illuminate\Http\Request;
 
@@ -115,5 +116,53 @@ class UIDNIKUnitKerjaController extends Controller
         $userNIKUnitKerja->delete();
 
         return response()->json(['message' => 'Soft deleted'], 200);
+    }
+
+    public function withoutUnitKerja(Request $request)
+    {
+        if ($request->wantsJson()) {
+            $periodeId = (int) $request->get('periode_id');
+            if (!$periodeId) {
+                return response()->json(['data' => []]);
+            }
+
+            $rows = userNIK::query()
+                ->with(['Company']) // company by shortname in 'group'
+                ->select([
+                    'tr_user_ussm_nik.id',
+                    'tr_user_ussm_nik.group',
+                    'tr_user_ussm_nik.user_code',
+                    'tr_user_ussm_nik.last_login',
+                    'tr_user_ussm_nik.valid_from',
+                    'tr_user_ussm_nik.valid_to',
+                ])
+                ->where('tr_user_ussm_nik.periode_id', $periodeId)
+                ->whereNull('tr_user_ussm_nik.deleted_at')
+                ->whereNotExists(function ($q) use ($periodeId) {
+                    $q->selectRaw('1')
+                        ->from('ms_nik_unit_kerja as uk')
+                        ->whereColumn('uk.nik', 'tr_user_ussm_nik.user_code')
+                        ->where('uk.periode_id', $periodeId)
+                        ->whereNull('uk.deleted_at');
+                })
+                ->latest('tr_user_ussm_nik.id')
+                ->get()
+                ->map(function ($item) {
+                    return [
+                        'id'         => $item->id,
+                        'company'    => $item->Company->nama ?? $item->group ?? '-',
+                        'group'      => $item->group,
+                        'user_code'  => $item->user_code,
+                        'last_login' => $item->last_login,
+                        'valid_from' => $item->valid_from,
+                        'valid_to'   => $item->valid_to,
+                    ];
+                });
+
+            return response()->json(['data' => $rows]);
+        }
+
+        $periodes = Periode::orderByDesc('id')->get();
+        return view('unit-kerja.user-nik.without', compact('periodes'));
     }
 }

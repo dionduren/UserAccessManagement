@@ -30,6 +30,9 @@ class UserNIKController extends Controller
                 });
 
             return DataTables::of($userNik)
+                ->addColumn('user_detail_company', function ($row) {
+                    return $row->UserNIKUnitKerja ? $row->UserNIKUnitKerja->company_id : '';
+                })
                 ->addColumn('user_detail_exists', function ($row) {
                     return $row->UserNIKUnitKerja ? true : false;
                 })

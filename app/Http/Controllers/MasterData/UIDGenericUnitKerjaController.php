@@ -3,11 +3,13 @@
 namespace App\Http\Controllers\MasterData;
 
 use App\Http\Controllers\Controller;
-use App\Models\UserGenericUnitKerja;
-use Illuminate\Http\Request;
+
 use App\Models\Periode;
 use App\Models\Company;
 use App\Models\userGeneric;
+use App\Models\UserGenericUnitKerja;
+
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\File;
 use Illuminate\Validation\Rule;
 
@@ -236,5 +238,45 @@ class UIDGenericUnitKerjaController extends Controller
             'results' => $results,
             'pagination' => ['more' => false],
         ]);
+    }
+
+    public function without(Request $request)
+    {
+        if ($request->wantsJson()) {
+            $periodeId = (int) $request->get('periode_id');
+            if (!$periodeId) {
+                return response()->json(['data' => []]);
+            }
+
+            // Users (tr_user_generic) that do NOT have a row in ms_generic_unit_kerja for the same periode
+            $rows = userGeneric::query()
+                ->with('Company') // maps group (shortname) to Company
+                ->where('periode_id', $periodeId)
+                ->whereNull('deleted_at')
+                ->whereNotExists(function ($q) use ($periodeId) {
+                    $q->selectRaw('1')
+                        ->from('ms_generic_unit_kerja as guk')
+                        ->whereColumn('guk.user_cc', 'tr_user_generic.user_code')
+                        ->where('guk.periode_id', $periodeId)
+                        ->whereNull('guk.deleted_at');
+                })
+                ->latest('id')
+                ->get()
+                ->map(function ($u) {
+                    return [
+                        'company'    => optional($u->Company)->company_code ?? $u->group ?? '-',
+                        'user_code'  => $u->user_code,
+                        'nama'       => $u->user_profile,
+                        'last_login' => $u->last_login,
+                        'valid_from' => $u->valid_from,
+                        'valid_to'   => $u->valid_to,
+                    ];
+                });
+
+            return response()->json(['data' => $rows]);
+        }
+
+        $periodes = Periode::orderByDesc('id')->get(['id', 'definisi']);
+        return view('unit-kerja.user-generic.without', compact('periodes'));
     }
 }

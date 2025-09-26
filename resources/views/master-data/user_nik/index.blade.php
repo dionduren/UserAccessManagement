@@ -6,7 +6,7 @@
 
         {{-- <a href="{{ route('user-nik.create') }}" target="_blank" class="btn btn-outline-secondary mb-3"> --}}
         {{-- <a href="{{ route('user-nik.upload.form') }}" class="btn btn-outline-primary mb-3"> --}}
-        <a href="{{ route('dynamic_upload.upload', ['module' => 'user_nik']) }}" class="btn btn-outline-primary mb-3">
+        <a href="{{ route('dynamic_upload.upload', ['module' => 'user_nik']) }}" class="btn btn-primary my-3">
             <i class="bi bi-upload"></i> Upload User NIK
         </a>
 
@@ -35,8 +35,8 @@
         <table id="user_nik_table" class="table table-bordered table-striped table-hover cell-border mt-3">
             <thead style="vertical-align: middle;">
                 <tr>
-                    <th>id</th>
                     <th width="10%">Perusahaan</th>
+                    <th width="10%">User ID Group</th>
                     <th width="10%">User Detail</th>
                     <th>NIK</th>
                     <th>Tipe Lisensi</th>
@@ -44,6 +44,18 @@
                     <th>Valid From</th>
                     <th>Valid To</th>
                     <th>Action</th>
+                </tr>
+                <!-- Filters row under header -->
+                <tr class="filters">
+                    <th><input type="text" class="form-control form-control-sm" placeholder="Cari Perusahaan"></th>
+                    <th><input type="text" class="form-control form-control-sm" placeholder="Cari Group"></th>
+                    <th><input type="text" class="form-control form-control-sm" placeholder="Cari User Detail"></th>
+                    <th><input type="text" class="form-control form-control-sm" placeholder="Cari NIK"></th>
+                    <th><input type="text" class="form-control form-control-sm" placeholder="Cari Lisensi"></th>
+                    <th><input type="text" class="form-control form-control-sm" placeholder="Cari Login"></th>
+                    <th><input type="text" class="form-control form-control-sm" placeholder="Cari Valid From"></th>
+                    <th><input type="text" class="form-control form-control-sm" placeholder="Cari Valid To"></th>
+                    <th></th> <!-- Action (no filter) -->
                 </tr>
             </thead>
         </table>
@@ -55,29 +67,23 @@
 @section('scripts')
     <script>
         $(document).ready(function() {
-            let masterData = {}; // Store parsed JSON for efficient lookups
-
-
-            // Listen to select change event
-            $('#periode').on('change', function(e) {
-                let periodeId = $(this).val();
-
-                if (periodeId) {
-                    $('#user_nik_table').DataTable().ajax.url(
-                        "{{ route('user-nik.index') }}" + "?periode=" + periodeId).load();
-                } else {
-                    $('#user_nik_table').DataTable().ajax.url(
-                        "{{ route('user-nik.index') }}").load();
-                }
+            // Reload by periode
+            $('#periode').on('change', function() {
+                const periodeId = $(this).val();
+                const dt = $('#user_nik_table').DataTable();
+                dt.ajax.url("{{ route('user-nik.index') }}" + (periodeId ? ("?periode=" + periodeId) : ""))
+                    .load();
             });
 
             let userNikTable = $('#user_nik_table').DataTable({
                 processing: true,
                 serverSide: false,
+                orderCellsTop: true, // needed for header filters row
+                fixedHeader: true,
                 ajax: "{{ route('user-nik.index') }}",
                 columns: [{
-                        data: 'id',
-                        name: 'id'
+                        data: 'user_detail_company',
+                        name: 'user_detail_company'
                     },
                     {
                         data: 'group',
@@ -86,22 +92,12 @@
                     {
                         data: 'user_detail_exists',
                         name: 'user_detail_exists',
-                        render: function(data, type, row) {
+                        render: function(data) {
                             return data ?
-                                `<span class="badge bg-success text-white" style="font-size:1em;">
-                                        <i class="bi bi-check-lg"></i> Exist
-                                   </span>` :
-                                `<span class="badge bg-danger text-white" style="font-size:1em;">
-                                        <span style="font-weight:bold;">&#10005;</span> Not-Exist
-                                   </span>`;
+                                `<span class="badge bg-success text-white" style="font-size:1em;"><i class="bi bi-check-lg"></i> Exist</span>` :
+                                `<span class="badge bg-danger text-white" style="font-size:1em;"><span style="font-weight:bold;">&#10005;</span> Not-Exist</span>`;
                         }
                     },
-                    // {
-                    //     data: 'periode',
-                    //     name: 'periode',
-                    //     width: '7.5%'
-                    // },
-
                     {
                         data: 'user_code',
                         name: 'user_code'
@@ -119,15 +115,15 @@
                     {
                         data: 'valid_from',
                         name: 'valid_from',
-                        render: function(data, type, row, meta) {
-                            return `<div style="text-align: center">${data}</div>`;
+                        render: function(data) {
+                            return `<div style="text-align:center">${data ?? ''}</div>`;
                         }
                     },
                     {
                         data: 'valid_to',
                         name: 'valid_to',
-                        render: function(data, type, row, meta) {
-                            return `<div style="text-align: center">${data}</div>`;
+                        render: function(data) {
+                            return `<div style="text-align:center">${data ?? ''}</div>`;
                         }
                     },
                     {
@@ -138,21 +134,26 @@
                         width: '17.5%'
                     }
                 ],
-                responsive: true,
-                searching: true,
-                paging: true,
-                ordering: true,
-                pageLength: 10,
-                lengthMenu: [5, 10, 25, 50, 100],
-                columnDefs: [{
-                    targets: [0],
-                    visible: false
-                }],
+                // removed columnDefs that hid ID (no ID column anymore)
                 order: [
                     [2, 'asc']
-                ]
-            });
+                ],
+                initComplete: function() {
+                    const api = this.api();
+                    // Bind header filter inputs, skip Action (last column)
+                    api.columns().every(function(colIdx) {
+                        if (colIdx === 8) return; // Action
+                        const th = $('#user_nik_table thead tr.filters th').eq(colIdx);
+                        const $input = $('input', th);
+                        if (!$input.length) return;
 
+                        $input.on('keyup change clear', function() {
+                            const val = this.value || '';
+                            api.column(colIdx).search(val).draw();
+                        });
+                    });
+                }
+            });
         });
 
         $('#user_nik_table').on('click', 'button[data-target="#userNIKModal"]', function() {

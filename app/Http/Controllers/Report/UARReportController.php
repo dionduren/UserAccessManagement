@@ -471,8 +471,8 @@ class UARReportController extends Controller
         $table->addCell(3000, ['bgColor' => 'D9E1F2'])->addText('Nama', ['bold' => true, 'color' => '000000', 'size' => 8], ['alignment' => Jc::CENTER, 'space' => ['after' => 0]]);
         $table->addCell(3000, ['bgColor' => 'D9E1F2'])->addText('Job Role', ['bold' => true, 'color' => '000000', 'size' => 8], ['alignment' => Jc::CENTER, 'space' => ['after' => 0]]);
         $table->addCell(1000, ['bgColor' => 'D9E1F2'])->addText('NIK', ['bold' => true, 'color' => '000000', 'size' => 8], ['alignment' => Jc::CENTER, 'space' => ['after' => 0]]);
-        $table->addCell(1750, ['bgColor' => 'D9E1F2'])->addText('Tetap', ['bold' => true, 'color' => '000000', 'size' => 8], ['alignment' => Jc::CENTER, 'space' => ['after' => 0]]);
-        $table->addCell(1750, ['bgColor' => 'D9E1F2'])->addText('Berubah', ['bold' => true, 'color' => '000000', 'size' => 8], ['alignment' => Jc::CENTER, 'space' => ['after' => 0]]);
+        $table->addCell(1750, ['bgColor' => 'D9E1F2'])->addText('Tetap*', ['bold' => true, 'color' => '000000', 'size' => 8], ['alignment' => Jc::CENTER, 'space' => ['after' => 0]]);
+        $table->addCell(1750, ['bgColor' => 'D9E1F2'])->addText('Berubah*', ['bold' => true, 'color' => '000000', 'size' => 8], ['alignment' => Jc::CENTER, 'space' => ['after' => 0]]);
         $table->addCell(2000, ['bgColor' => 'D9E1F2'])->addText('Keterangan', ['bold' => true, 'color' => '000000', 'size' => 8], ['alignment' => Jc::CENTER, 'space' => ['after' => 0]]);
 
         $no = 1;
@@ -590,6 +590,13 @@ class UARReportController extends Controller
             $table->addCell(1750, ['valign' => 'center'])->addText('-', ['size' => 8]);
             $table->addCell(2000, ['valign' => 'center'])->addText('-', ['size' => 8]);
         }
+
+        // Catatan untuk kolom pilihan
+        $section->addText(
+            '*diisi dengan (X) apabila dipilih dan (-) apabila tidak dipilih',
+            ['size' => 8, 'italic' => true, 'color' => '7F7F7F'],
+            ['space' => ['after' => 0]]
+        );
 
         // Approval Table (Persetujuan)
         $section->addTextBreak(1);

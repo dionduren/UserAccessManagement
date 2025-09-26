@@ -29,7 +29,7 @@
                                     <option value="">-- Pilih Periode --</option>
                                     @foreach ($periodes as $p)
                                         <option value="{{ $p->id }}">
-                                            {{ $p->nama ?? ($p->periode ?? ($p->label ?? $p->id)) }}</option>
+                                            {{ $p->definisi }}</option>
                                     @endforeach
                                 </select>
                             </div>
