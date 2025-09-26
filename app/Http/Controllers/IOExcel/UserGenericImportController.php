@@ -9,6 +9,7 @@ use App\Models\Periode;
 use App\Models\TempUploadSession;
 use App\Models\userGeneric;
 
+use App\Exports\UserGenericTemplateExport;
 use App\Imports\UserGenericPreviewImport;
 use App\Services\UserGenericService;
 
@@ -19,6 +20,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Maatwebsite\Excel\Facades\Excel;
 use Symfony\Component\HttpFoundation\StreamedResponse;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Yajra\DataTables\Facades\DataTables;
 
 class UserGenericImportController extends Controller
@@ -358,5 +360,9 @@ class UserGenericImportController extends Controller
         }
 
         return null; // Invalid format
+    }
+    public function downloadTemplate(): BinaryFileResponse
+    {
+        return Excel::download(new UserGenericTemplateExport(), 'template_user_generic.xlsx');
     }
 }

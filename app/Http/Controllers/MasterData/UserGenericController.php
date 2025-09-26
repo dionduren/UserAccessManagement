@@ -181,6 +181,7 @@ class UserGenericController extends Controller
             'periode_id' => 'required|exists:ms_periode,id',
             'group' => 'nullable|string|max:50',
             'user_code' => 'required|string|max:50',
+            'user_profile' => 'nullable|string',
             'user_type' => 'nullable|string|max:50',
             'cost_code' => 'nullable|string|max:50',
             'license_type' => 'nullable|string|max:50',

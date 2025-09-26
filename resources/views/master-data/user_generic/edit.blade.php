@@ -41,10 +41,17 @@
             </div>
 
             <div class="mb-3">
+                <label for="user_profile" class="form-label">Nama User</label>
+                <input type="text" class="form-control" id="user_profile" name="user_profile"
+                    value="{{ old('user_profile', $userGeneric->user_profile) }}" required>
+            </div>
+
+            <div class="mb-3">
                 <label for="user_type" class="form-label">Tipe User</label>
                 <select class="form-control" id="user_type" name="user_type">
                     <option value="">-- Pilih Tipe User --</option>
-                    <option value="internal" {{ old('user_type', $userGeneric->user_type) == 'Generic' ? 'selected' : '' }}>
+                    <option value="internal"
+                        {{ old('user_type', $userGeneric->user_type) == 'Generic' ? 'selected' : '' }}>
                         Generic / Cost Center</option>
                     <option value="external" {{ old('user_type', $userGeneric->user_type) == 'NIK' ? 'selected' : '' }}>NIK
                     </option>

@@ -96,6 +96,7 @@ class USSMJobRoleMasterSheet implements FromCollection, WithHeadings, WithTitle,
                 'departemen_nama'   => optional($r->departemen)->nama,
                 'job_role_id'       => $r->job_role_id,
                 'job_role_nama'     => $r->nama,
+                'user_type'         => 'NIK/Generic', // Default value
             ];
         });
 
@@ -113,6 +114,7 @@ class USSMJobRoleMasterSheet implements FromCollection, WithHeadings, WithTitle,
             'departemen_nama',
             'job_role_id',
             'job_role_nama',
+            'user_type',
         ];
     }
 }

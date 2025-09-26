@@ -5,9 +5,9 @@
         <h1>Dashboard User Generic</h1>
 
         {{-- <a href="{{ route('user-generic.create') }}" target="_blank" class="btn btn-outline-secondary mb-3"> --}}
-        <a class="btn btn-outline-secondary mb-3" disabled>
+        {{-- <a class="btn btn-outline-secondary mb-3" disabled>
             <i class="bi bi-plus"></i> Buat User Generic Baru
-        </a>
+        </a> --}}
 
         @if (session('status'))
             <div class="alert alert-success">{{ session('status') }}</div>

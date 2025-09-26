@@ -384,6 +384,7 @@ Route::middleware(['auth'])->group(function () {
         // Route::post('/submit-single', [UserNIKImportController::class, 'submitSingle'])->name('submitSingle');
         Route::post('/confirm', [UserNIKImportController::class, 'submitAll'])->name('confirm');
     });
+
     // Additional Routes
     Route::get('user-nik/mixed', [UserNIKController::class, 'index_mixed'])->name('user-nik.index_mixed');
     Route::get('user-nik/check-user-detail', [UserNIKController::class, 'checkUserDetail'])->name('user-nik.check-user-detail');
@@ -400,12 +401,13 @@ Route::middleware(['auth'])->group(function () {
         Route::get('preview-page', [UserGenericUnitKerjaController::class, 'previewPage'])->name('previewPage');
         Route::get('get-preview-data', [UserGenericUnitKerjaController::class, 'getPreviewData'])->name('getPreviewData');
         Route::post('confirm-import', [UserGenericUnitKerjaController::class, 'confirmImport'])->name('confirmImport');
+        Route::get('download-template', [UserGenericUnitKerjaController::class, 'downloadTemplate'])->name('downloadTemplate');
     });
 
     Route::prefix('user-generic')->name('user-generic.')->group(function () {
         Route::get('upload', [UserGenericImportController::class, 'uploadForm'])->name('upload');
         Route::post('preview', [UserGenericImportController::class, 'preview'])->name('preview');
-        // Route::get('download-template', [UserGenericImportController::class, 'downloadTemplate'])->name('downloadTemplate');
+        Route::get('download-template', [UserGenericImportController::class, 'downloadTemplate'])->name('downloadTemplate');
         Route::get('preview', [UserGenericImportController::class, 'previewPage'])->name('previewPage');
         Route::get('preview-data', [UserGenericImportController::class, 'getPreviewData'])->name('getPreviewData');
         Route::post('import', [UserGenericImportController::class, 'confirmImport'])->name('confirmImport');
@@ -461,33 +463,18 @@ Route::middleware(['auth'])->group(function () {
         Route::get('user-generic/without', [UIDGenericUnitKerjaController::class, 'without'])->name('user_generic.without');
 
         // --- LIST/JSON INDEX ---
-        Route::get('user-generic', [UIDGenericUnitKerjaController::class, 'index'])
-            ->name('user_generic.index');
-        Route::get('user-generic/data', [UIDGenericUnitKerjaController::class, 'index'])
-            ->name('user_generic.data');
+        Route::get('user-generic', [UIDGenericUnitKerjaController::class, 'index'])->name('user_generic.index');
+        Route::get('user-generic/data', [UIDGenericUnitKerjaController::class, 'index'])->name('user_generic.data');
 
         // --- CREATE/STORE ---
-        Route::get('user-generic/create', [UIDGenericUnitKerjaController::class, 'create'])
-            ->name('user_generic.create');
-        Route::post('user-generic', [UIDGenericUnitKerjaController::class, 'store'])
-            ->name('user_generic.store');
+        Route::get('user-generic/create', [UIDGenericUnitKerjaController::class, 'create'])->name('user_generic.create');
+        Route::post('user-generic', [UIDGenericUnitKerjaController::class, 'store'])->name('user_generic.store');
 
         // --- DYNAMIC ROUTES (CONSTRAINED TO NUMBERS) ---
-        Route::get('user-generic/{userGenericUnitKerja}', [UIDGenericUnitKerjaController::class, 'show'])
-            ->whereNumber('userGenericUnitKerja')
-            ->name('user_generic.show');
-
-        Route::get('user-generic/{userGenericUnitKerja}/edit', [UIDGenericUnitKerjaController::class, 'edit'])
-            ->whereNumber('userGenericUnitKerja')
-            ->name('user_generic.edit');
-
-        Route::put('user-generic/{userGenericUnitKerja}', [UIDGenericUnitKerjaController::class, 'update'])
-            ->whereNumber('userGenericUnitKerja')
-            ->name('user_generic.update');
-
-        Route::delete('user-generic/{userGenericUnitKerja}', [UIDGenericUnitKerjaController::class, 'destroy'])
-            ->whereNumber('userGenericUnitKerja')
-            ->name('user_generic.destroy');
+        Route::get('user-generic/{userGenericUnitKerja}', [UIDGenericUnitKerjaController::class, 'show'])->whereNumber('userGenericUnitKerja')->name('user_generic.show');
+        Route::get('user-generic/{userGenericUnitKerja}/edit', [UIDGenericUnitKerjaController::class, 'edit'])->whereNumber('userGenericUnitKerja')->name('user_generic.edit');
+        Route::put('user-generic/{userGenericUnitKerja}', [UIDGenericUnitKerjaController::class, 'update'])->whereNumber('userGenericUnitKerja')->name('user_generic.update');
+        Route::delete('user-generic/{userGenericUnitKerja}', [UIDGenericUnitKerjaController::class, 'destroy'])->whereNumber('userGenericUnitKerja')->name('user_generic.destroy');
     });
 
     // ------------------ IMPORT DATA MIDDLE DB ------------------

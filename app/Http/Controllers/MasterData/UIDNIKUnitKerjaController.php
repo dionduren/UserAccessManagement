@@ -5,6 +5,7 @@ namespace App\Http\Controllers\MasterData;
 use App\Http\Controllers\Controller;
 
 use App\Models\Periode;
+use App\Models\Company;
 use App\Models\UserNIK;
 use App\Models\UserNIKUnitKerja;
 use Illuminate\Http\Request;
@@ -48,7 +49,15 @@ class UIDNIKUnitKerjaController extends Controller
 
     public function create()
     {
-        return view('unit-kerja.user-nik.create');
+        $periodes = Periode::orderByDesc('id')->get(['id', 'definisi']);
+
+        $userCompany = auth()->user()->loginDetail->company_code ?? null;
+        $companies = Company::select('company_code', 'nama')
+            ->when($userCompany && $userCompany !== 'A000', fn($q) => $q->where('company_code', $userCompany))
+            ->orderBy('company_code')
+            ->get();
+
+        return view('unit-kerja.user-nik.create', compact('periodes', 'companies'));
     }
 
     public function store(Request $request)
@@ -63,12 +72,6 @@ class UIDNIKUnitKerjaController extends Controller
             'departemen_id' => ['nullable', 'string', 'max:255'],
             'atasan' => ['nullable', 'string', 'max:255'],
             'cost_center' => ['nullable', 'string', 'max:255'],
-            'error_kompartemen_id' => ['nullable', 'string', 'max:255'],
-            'error_kompartemen_name' => ['nullable', 'string', 'max:255'],
-            'error_departemen_id' => ['nullable', 'string', 'max:255'],
-            'error_departemen_name' => ['nullable', 'string', 'max:255'],
-            'flagged' => ['nullable', 'boolean'],
-            'keterangan' => ['nullable', 'string'],
         ]);
 
         $data['flagged'] = (bool)($data['flagged'] ?? false);
@@ -86,7 +89,22 @@ class UIDNIKUnitKerjaController extends Controller
 
     public function edit(UserNIKUnitKerja $userNIKUnitKerja)
     {
-        return view('unit-kerja.user-nik.edit', compact('userNIKUnitKerja'));
+        $periodes = Periode::orderByDesc('id')->get(['id', 'definisi']);
+
+        $userCompany = auth()->user()->loginDetail->company_code ?? null;
+        $companies = Company::select('company_code', 'nama')
+            ->when($userCompany && $userCompany !== 'A000', fn($q) => $q->where('company_code', $userCompany))
+            ->orderBy('company_code')
+            ->get();
+
+        $selectedCompany = $userNIKUnitKerja->company_id;
+
+        return view('unit-kerja.user-nik.edit', compact(
+            'userNIKUnitKerja',
+            'periodes',
+            'companies',
+            'selectedCompany'
+        ));
     }
 
     public function update(Request $request, UserNIKUnitKerja $userNIKUnitKerja)

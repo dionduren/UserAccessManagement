@@ -3,17 +3,39 @@
 namespace App\Imports;
 
 use Illuminate\Support\Collection;
+use Maatwebsite\Excel\Concerns\Importable;
 use Maatwebsite\Excel\Concerns\ToCollection;
 use Maatwebsite\Excel\Concerns\WithHeadingRow;
 use Maatwebsite\Excel\Concerns\WithChunkReading;
 
 class UserGenericUnitKerjaPreviewImport implements ToCollection, WithHeadingRow, WithChunkReading
 {
+    use Importable;
+
     public Collection $rows;
 
     public function __construct()
     {
         $this->rows = collect();
+    }
+
+    public function sheets(): array
+    {
+        return [
+            'UPLOAD_TEMPLATE' => new class($this) implements ToCollection, WithHeadingRow {
+                public function __construct(private UserGenericUnitKerjaPreviewImport $parent) {}
+
+                public function collection(Collection $rows): void
+                {
+                    $this->parent->rows = $rows;
+                }
+            },
+        ];
+    }
+
+    public function onUnknownSheet($sheetName): void
+    {
+        // ignore other sheets
     }
 
     public function collection(Collection $rows)

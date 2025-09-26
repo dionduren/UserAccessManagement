@@ -7,8 +7,11 @@ use App\Models\Departemen;
 use App\Models\Kompartemen;
 use App\Models\Periode;
 use App\Models\TempUploadSession;
+
+use App\Exports\UserGenericUnitKerjaTemplateExport;
 use App\Services\UserGenericUnitKerjaService;
 use App\Imports\UserGenericUnitKerjaPreviewImport;
+
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Maatwebsite\Excel\Facades\Excel;
@@ -182,5 +185,15 @@ class UserGenericUnitKerjaController extends Controller
                 ],
             ], 500);
         }
+    }
+
+    public function downloadTemplate()
+    {
+        $companyCode = auth()->user()->loginDetail->company_code ?? null;
+
+        return Excel::download(
+            new UserGenericUnitKerjaTemplateExport($companyCode),
+            'template_user_generic_unit_kerja.xlsx'
+        );
     }
 }

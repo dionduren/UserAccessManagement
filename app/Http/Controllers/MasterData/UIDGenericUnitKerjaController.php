@@ -57,7 +57,13 @@ class UIDGenericUnitKerjaController extends Controller
     {
         // Pass periodes and companies for Select2
         $periodes = Periode::orderByDesc('id')->get(['id', 'definisi']);
-        $companies = Company::orderBy('company_code')->get(['company_code', 'nama']);
+
+        $userCompany = auth()->user()->loginDetail->company_code;
+        if ($userCompany !== 'A000') {
+            $companies = Company::select('company_code', 'nama')->where('company_code', $userCompany)->get();
+        } else {
+            $companies = Company::select('company_code', 'nama')->get();
+        }
 
         return view('unit-kerja.user-generic.create', compact('periodes', 'companies'));
     }
@@ -83,16 +89,22 @@ class UIDGenericUnitKerjaController extends Controller
         return redirect()->route('unit_kerja.user_generic.index')->with('success', 'Created: ID ' . $row->id);
     }
 
-    public function show(UserGenericUnitKerja $userGenericUnitKerja)
-    {
-        return view('unit-kerja.user-generic.show', compact('userGenericUnitKerja'));
-    }
+    // public function show(UserGenericUnitKerja $userGenericUnitKerja)
+    // {
+    //     return view('unit-kerja.user-generic.show', compact('userGenericUnitKerja'));
+    // }
 
     public function edit(UserGenericUnitKerja $userGenericUnitKerja)
     {
         // Provide same dropdown sources as in create
         $periodes = Periode::orderByDesc('id')->get(['id', 'definisi']);
-        $companies = Company::orderBy('company_code')->get(['company_code', 'nama']);
+
+        $userCompany = auth()->user()->loginDetail->company_code;
+        if ($userCompany !== 'A000') {
+            $companies = Company::select('company_code', 'nama')->where('company_code', $userCompany)->get();
+        } else {
+            $companies = Company::select('company_code', 'nama')->get();
+        }
         // Infer the user's company_code for initial cascade selection in the view
         $selectedCompany = data_get($userGenericUnitKerja, 'userGeneric.Company.company_code');
 
