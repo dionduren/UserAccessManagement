@@ -20,7 +20,12 @@ class UARReportController extends Controller
 {
     public function index(Request $request)
     {
-        $companies = Company::select('company_code', 'nama')->get();
+        $userCompany = auth()->user()->loginDetail->company_code;
+        if ($userCompany !== 'A000') {
+            $companies = Company::select('company_code', 'nama')->where('company_code', $userCompany)->get();
+        } else {
+            $companies = Company::select('company_code', 'nama')->get();
+        }
 
         $periodes = Periode::orderByDesc('id')->get(['id', 'definisi', 'created_at']);
         $selectedPeriodeId = $request->get('periode_id');

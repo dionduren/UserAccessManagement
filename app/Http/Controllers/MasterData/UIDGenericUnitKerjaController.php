@@ -17,6 +17,8 @@ class UIDGenericUnitKerjaController extends Controller
 {
     public function index(Request $request)
     {
+        $userCompany = auth()->user()->loginDetail->company_code;
+
         if ($request->wantsJson()) {
             $periodeId = (int) $request->get('periode_id');
             if (!$periodeId) {
@@ -25,6 +27,13 @@ class UIDGenericUnitKerjaController extends Controller
 
             $query = UserGenericUnitKerja::with(['userGeneric', 'kompartemen', 'departemen'])
                 ->where('periode_id', $periodeId);
+
+            // Filter by company unless A000
+            if ($userCompany !== 'A000') {
+                $query->whereHas('userGeneric.Company', function ($q) use ($userCompany) {
+                    $q->where('company_code', $userCompany);
+                });
+            }
 
             $rows = $query->latest('periode_id')->get()->map(function ($item) {
                 return array_merge($item->toArray(), [
@@ -242,15 +251,16 @@ class UIDGenericUnitKerjaController extends Controller
 
     public function without(Request $request)
     {
+        $userCompany = auth()->user()->loginDetail->company_code;
+
         if ($request->wantsJson()) {
             $periodeId = (int) $request->get('periode_id');
             if (!$periodeId) {
                 return response()->json(['data' => []]);
             }
 
-            // Users (tr_user_generic) that do NOT have a row in ms_generic_unit_kerja for the same periode
-            $rows = userGeneric::query()
-                ->with('Company') // maps group (shortname) to Company
+            $query = userGeneric::query()
+                ->with('Company')
                 ->where('periode_id', $periodeId)
                 ->whereNull('deleted_at')
                 ->whereNotExists(function ($q) use ($periodeId) {
@@ -259,19 +269,26 @@ class UIDGenericUnitKerjaController extends Controller
                         ->whereColumn('guk.user_cc', 'tr_user_generic.user_code')
                         ->where('guk.periode_id', $periodeId)
                         ->whereNull('guk.deleted_at');
-                })
-                ->latest('id')
-                ->get()
-                ->map(function ($u) {
-                    return [
-                        'company'    => optional($u->Company)->company_code ?? $u->group ?? '-',
-                        'user_code'  => $u->user_code,
-                        'nama'       => $u->user_profile,
-                        'last_login' => $u->last_login,
-                        'valid_from' => $u->valid_from,
-                        'valid_to'   => $u->valid_to,
-                    ];
                 });
+
+            // Filter by company unless A000
+            if ($userCompany !== 'A000') {
+                $query->whereHas('Company', function ($q) use ($userCompany) {
+                    $q->where('company_code', $userCompany);
+                });
+            }
+
+            $rows = $query->latest('id')->get()->map(function ($u) {
+                return [
+                    'company'    => optional($u->Company)->company_code ?? '-',
+                    // 'company'    => optional($u->Company)->company_code ?? $u->group ?? '-',
+                    'user_code'  => $u->user_code,
+                    'nama'       => $u->user_profile,
+                    'last_login' => $u->last_login,
+                    'valid_from' => $u->valid_from,
+                    'valid_to'   => $u->valid_to,
+                ];
+            });
 
             return response()->json(['data' => $rows]);
         }

@@ -13,17 +13,25 @@ class UIDNIKUnitKerjaController extends Controller
 {
     public function index(Request $request)
     {
+        $userCompany = auth()->user()->loginDetail->company_code ?? null;
+
         if ($request->wantsJson()) {
             $periodeId = (int) $request->get('periode_id');
             if (!$periodeId) {
                 return response()->json(['data' => []]);
             }
 
-            $query = UserNIKUnitKerja::with(['kompartemen', 'departemen'])
+            $query = UserNIKUnitKerja::with(['kompartemen', 'departemen', 'company'])
                 ->where('periode_id', $periodeId);
+
+            // Filter by company unless A000
+            if ($userCompany && $userCompany !== 'A000') {
+                $query->where('company_id', $userCompany);
+            }
 
             $rows = $query->latest('periode_id')->get()->map(function ($item) {
                 return array_merge($item->toArray(), [
+                    'company_nama' => data_get($item, 'company.nama'),
                     'kompartemen_nama' => data_get($item, 'kompartemen.nama'),
                     'departemen_nama' => data_get($item, 'departemen.nama'),
                 ]);
@@ -120,14 +128,16 @@ class UIDNIKUnitKerjaController extends Controller
 
     public function withoutUnitKerja(Request $request)
     {
+        $userCompany = auth()->user()->loginDetail->company_code ?? null;
+
         if ($request->wantsJson()) {
             $periodeId = (int) $request->get('periode_id');
             if (!$periodeId) {
                 return response()->json(['data' => []]);
             }
 
-            $rows = userNIK::query()
-                ->with(['Company']) // company by shortname in 'group'
+            $query = userNIK::query()
+                ->with(['Company'])
                 ->select([
                     'tr_user_ussm_nik.id',
                     'tr_user_ussm_nik.group',
@@ -144,20 +154,26 @@ class UIDNIKUnitKerjaController extends Controller
                         ->whereColumn('uk.nik', 'tr_user_ussm_nik.user_code')
                         ->where('uk.periode_id', $periodeId)
                         ->whereNull('uk.deleted_at');
-                })
-                ->latest('tr_user_ussm_nik.id')
-                ->get()
-                ->map(function ($item) {
-                    return [
-                        'id'         => $item->id,
-                        'company'    => $item->Company->nama ?? $item->group ?? '-',
-                        'group'      => $item->group,
-                        'user_code'  => $item->user_code,
-                        'last_login' => $item->last_login,
-                        'valid_from' => $item->valid_from,
-                        'valid_to'   => $item->valid_to,
-                    ];
                 });
+
+            // Filter by company unless A000
+            if ($userCompany && $userCompany !== 'A000') {
+                $query->whereHas('Company', function ($q) use ($userCompany) {
+                    $q->where('company_code', $userCompany);
+                });
+            }
+
+            $rows = $query->latest('tr_user_ussm_nik.id')->get()->map(function ($item) {
+                return [
+                    'id'         => $item->id,
+                    'company'    => $item->Company->nama ?? $item->group ?? '-',
+                    'group'      => $item->group,
+                    'user_code'  => $item->user_code,
+                    'last_login' => $item->last_login,
+                    'valid_from' => $item->valid_from,
+                    'valid_to'   => $item->valid_to,
+                ];
+            });
 
             return response()->json(['data' => $rows]);
         }

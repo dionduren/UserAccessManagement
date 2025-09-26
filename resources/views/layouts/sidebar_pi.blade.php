@@ -47,26 +47,26 @@
             <li>
                 <a href="{{ route('companies.index') }}"
                     class="nav-link {{ request()->routeIs('companies.*') ? 'active' : 'text-white' }}">
-                    <i class="bi bi-building me-2"></i> Company
+                    <i class="bi bi-building me-2"></i>Company
                 </a>
             </li>
             <li>
                 <a href="{{ route('kompartemens.index') }}"
                     class="nav-link {{ request()->routeIs('kompartemens.*') ? 'active' : 'text-white' }}">
-                    <i class="bi bi-diagram-3 me-2"></i> Kompartemen
+                    <i class="bi bi-diagram-3 me-2"></i>Kompartemen
                 </a>
             </li>
             <li>
                 <a href="{{ route('departemens.index') }}"
                     class="nav-link {{ request()->routeIs('departemens.*') ? 'active' : 'text-white' }}">
-                    <i class="bi bi-layers me-2"></i> Departemen
+                    <i class="bi bi-layers me-2"></i>Departemen
                 </a>
             </li>
 
             <li>
                 <a href="{{ route('cost-center.index') }}"
                     class="nav-link {{ request()->routeIs('cost-center.*') ? 'active' : 'text-white' }}">
-                    <i class="bi bi-cash-stack me-2"></i> Cost Center
+                    <i class="bi bi-cash-stack me-2"></i>Cost Center
                 </a>
             </li>
             <li>
@@ -176,7 +176,7 @@
     <li class="nav-item">
         <a href="{{ route('report.uam.index') }}"
             class="mb-1 nav-link {{ request()->routeIs('report.uam.index') ? 'active' : 'text-white' }}">
-            <i class="bi bi-file-earmark-text me-2"></i> Report UAM
+            <i class="bi bi-file-earmark-text me-2"></i>Report UAM
         </a>
     </li>
 
@@ -246,7 +246,7 @@
             <li class="nav-item">
                 <a href="{{ route('periode.index') }}"
                     class="nav-link {{ request()->routeIs('periode*') ? 'active' : 'text-white' }}">
-                    <i class="bi bi-calendar-event"></i> Periode
+                    <i class="bi bi-calendar-event"></i>Periode
                 </a>
             </li>
         </div>
@@ -262,7 +262,7 @@
             <li class="nav-item">
                 <a href="{{ route('report.ba_penarikan.index') }}"
                     class="mb-1 nav-link {{ request()->routeIs('report.ba_penarikan.index') ? 'active' : 'text-white' }}">
-                    <i class="bi bi-file-earmark-text me-2"></i> Report BA Penarikan Data
+                    <i class="bi bi-file-earmark-text me-2"></i>Report BA Penarikan Data
                 </a>
             </li>
         </div>
@@ -336,7 +336,15 @@
         @php
             $isMappingUserNIKUnitKerjaActive = request()->routeIs('unit_kerja.user_nik.*');
             $isMappingUserGenericUnitKerjaActive = request()->routeIs('unit_kerja.user_generic.*');
-            $isMappingUserIDUnitKerjaActive = $isMappingUserNIKUnitKerjaActive || $isMappingUserGenericUnitKerjaActive;
+
+            $userNIKWithoutUnitActive = request()->routeIs('unit_kerja.user_nik.without');
+            $userGenericWithoutUnitActive = request()->routeIs('unit_kerja.user_generic.without');
+
+            $isMappingUserIDUnitKerjaActive =
+                $isMappingUserNIKUnitKerjaActive ||
+                $isMappingUserGenericUnitKerjaActive ||
+                $userNIKWithoutUnitActive ||
+                $userGenericWithoutUnitActive;
         @endphp
         <a class="mb-1 nav-link dropdown-toggle {{ $isMappingUserIDUnitKerjaActive ? 'active' : 'text-white' }}"
             data-bs-toggle="dropdown" href="#" role="button"
@@ -345,6 +353,13 @@
         </a>
         <div class="dropdown-content">
             <li class="nav-item">
+                <a href="{{ route('unit_kerja.user_nik.index') }}"
+                    class="nav-link text-white {{ $isMappingUserNIKUnitKerjaActive ? 'active' : '' }}">
+                    <i class="bi bi-person-lines-fill me-2"></i>User ID NIK - Unit Kerja
+                </a>
+            </li>
+
+            <li class="nav-item">
                 <a href="{{ route('unit_kerja.user_generic.index') }}"
                     class="nav-link text-white {{ $isMappingUserGenericUnitKerjaActive ? 'active' : '' }}">
                     <i class="bi bi-person-lines-fill me-2"></i>User ID Generic - Unit Kerja
@@ -352,9 +367,17 @@
             </li>
 
             <li class="nav-item">
-                <a href="{{ route('unit_kerja.user_nik.index') }}"
-                    class="nav-link text-white {{ $isMappingUserNIKUnitKerjaActive ? 'active' : '' }}">
-                    <i class="bi bi-person-lines-fill me-2"></i>User ID NIK - Unit Kerja
+                <a href="{{ route('unit_kerja.user_nik.without') }}"
+                    class="nav-link text-white {{ $userNIKWithoutUnitActive ? 'active' : '' }}">
+                    <i class="bi bi-exclamation-circle me-2"></i>NIK Non Unit Kerja
+                </a>
+            </li>
+
+
+            <li class="nav-item">
+                <a href="{{ route('unit_kerja.user_generic.without') }}"
+                    class="nav-link text-white {{ $userGenericWithoutUnitActive ? 'active' : '' }}">
+                    <i class="bi bi-exclamation-circle me-2"></i>Generic Non Unit Kerja
                 </a>
             </li>
         </div>
@@ -382,25 +405,25 @@
 
             <li class="nav-item">
                 <a href="{{ route('nik-job.index') }}" class="nav-link {{ $nikJobActive ? 'active' : 'text-white' }}">
-                    <i class="bi bi-link-45deg"></i> User ID NIK - Job Role
+                    <i class="bi bi-link-45deg me-2"></i>User ID NIK - Job Role
                 </a>
             </li>
             <li class="nav-item">
                 <a href="{{ route('user-generic-job-role.index') }}"
                     class="nav-link {{ $genericJobActive ? 'active' : 'text-white' }}">
-                    <i class="bi bi-link-45deg"></i> User ID Generic - Job Role
+                    <i class="bi bi-link-45deg me-2"></i>User ID Generic - Job Role
                 </a>
             </li>
             <li class="nav-item">
                 <a href="{{ route('nik-job.null-relationship') }}"
                     class="nav-link {{ $nikJobNullActive ? 'active' : 'text-white' }}">
-                    <i class="bi bi-exclamation-circle"></i> User ID NIK Non Job
+                    <i class="bi bi-exclamation-circle me-2"></i>User ID NIK Non Job
                 </a>
             </li>
             <li class="nav-item">
                 <a href="{{ route('user-generic-job-role.null-relationship') }}"
                     class="nav-link {{ $genericJobNullActive ? 'active' : 'text-white' }}">
-                    <i class="bi bi-exclamation-circle"></i> User ID Generic Non Job
+                    <i class="bi bi-exclamation-circle me-2"></i>User ID Generic Non Job
                 </a>
             </li>
         </div>
@@ -409,7 +432,7 @@
     <li class="nav-item">
         <a href="{{ route('report.uar.index') }}"
             class="mb-1 nav-link {{ request()->routeIs('report.uar.index') ? 'active' : 'text-white' }}">
-            <i class="bi bi-file-earmark-text me-2"></i> Report UAR
+            <i class="bi bi-file-earmark-text me-2"></i>Report UAR
         </a>
     </li>
 

@@ -29,7 +29,12 @@ class UAMReportController extends Controller
 {
     public function index(Request $request)
     {
-        $companies = Company::select('company_code', 'nama')->get();
+        $userCompany = auth()->user()->loginDetail->company_code;
+        if ($userCompany !== 'A000') {
+            $companies = Company::select('company_code', 'nama')->where('company_code', $userCompany)->get();
+        } else {
+            $companies = Company::select('company_code', 'nama')->get();
+        }
 
         $companyId = $request->company_id;
         $kompartemenId = $request->kompartemen_id;
