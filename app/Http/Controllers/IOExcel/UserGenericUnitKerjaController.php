@@ -46,8 +46,8 @@ class UserGenericUnitKerjaController extends Controller
                 $row['_row_errors'] = [];
                 $row['_row_warnings'] = [];
 
-                if (empty($row['user_cc'])) {
-                    $row['_row_errors'][] = 'User CC wajib diisi.';
+                if (empty($row['user_code'])) {
+                    $row['_row_errors'][] = 'User Code wajib diisi.';
                 }
                 if (empty($row['kompartemen_id'])) {
                     $row['_row_warnings'][] = 'Kompartemen ID kosong.';
