@@ -7,51 +7,85 @@ use Maatwebsite\Excel\Concerns\Importable;
 use Maatwebsite\Excel\Concerns\ToCollection;
 use Maatwebsite\Excel\Concerns\WithHeadingRow;
 use Maatwebsite\Excel\Concerns\WithChunkReading;
+use Maatwebsite\Excel\Concerns\WithMultipleSheets;
+use Maatwebsite\Excel\Concerns\SkipsUnknownSheets;
 
-class UserGenericUnitKerjaPreviewImport implements ToCollection, WithHeadingRow, WithChunkReading
+class UserGenericUnitKerjaPreviewImport implements WithMultipleSheets, SkipsUnknownSheets
 {
     use Importable;
 
     public Collection $rows;
+
+    // holds allowed sheet keys (e.g. 'UPLOAD_TEMPLATE' or 0)
+    private array $limitSheets = [];
 
     public function __construct()
     {
         $this->rows = collect();
     }
 
-    public function sheets(): array
+    // Custom helper to select which sheets to read
+    public function onlySheets(...$sheets): self
     {
-        return [
-            'UPLOAD_TEMPLATE' => new class($this) implements ToCollection, WithHeadingRow {
-                public function __construct(private UserGenericUnitKerjaPreviewImport $parent) {}
+        // allow passing an array or varargs
+        $list = count($sheets) === 1 && is_array($sheets[0]) ? $sheets[0] : $sheets;
+        // normalize types (keep strict compare later)
+        $this->limitSheets = array_map(function ($k) {
+            return is_numeric($k) ? (int) $k : (string) $k;
+        }, $list);
 
-                public function collection(Collection $rows): void
-                {
-                    $this->parent->rows = $rows;
-                }
-            },
-        ];
+        return $this;
     }
 
-    public function onUnknownSheet($sheetName): void
+    public function sheets(): array
+    {
+        $sheets = [
+            'UPLOAD_TEMPLATE' => new UserGenericUnitKerjaSheetImport($this->rows),
+            0                 => new UserGenericUnitKerjaSheetImport($this->rows), // fallback: first sheet
+        ];
+
+        if ($this->limitSheets) {
+            return collect($sheets)
+                ->only($this->limitSheets)
+                ->all();
+        }
+
+        return $sheets;
+    }
+
+    public function onUnknownSheet($sheetName)
     {
         // ignore other sheets
     }
+}
+
+// Handles a single sheet’s rows
+class UserGenericUnitKerjaSheetImport implements ToCollection, WithHeadingRow, WithChunkReading
+{
+    public function __construct(private Collection $sink) {}
 
     public function collection(Collection $rows)
     {
         foreach ($rows as $row) {
-            $mappedRow = [
-                'user_cc' => $row['user_code'] ?? null,
-                'periode_id' => $row['periode_id'] ?? null,
-                'kompartemen_id' => $row['kompartemen_id'] ?? null,
-                'departemen_id' => $row['departemen_id'] ?? null,
-                'error_kompartemen_id' => $row['error_kompartemen_id'] ?? null,
-                'error_departemen_id' => $row['error_departemen_id'] ?? null,
-                'flagged' => $row['flagged'] ?? null,
-                'keterangan_flagged' => $row['keterangan_flagged'] ?? null,
+            if (!array_filter($row->toArray())) {
+                continue;
+            }
+
+            $mapped = [
+                'user_cc'            => $row['user_code'] ?? null,
+                'nama'               => $row['nama'] ?? null,
+                'company_code'       => $row['company_code'] ?? null,
+                'kompartemen_id'     => $row['kompartemen_id'] ?? null,
+                'kompartemen_nama'   => $row['kompartemen_nama'] ?? null,
+                'departemen_id'      => $row['departemen_id'] ?? null,
+                'departemen_nama'    => $row['departemen_nama'] ?? null,
+                'atasan'             => $row['atasan'] ?? null,
+                'cost_center'        => $row['cost_center'] ?? null,
+                'flagged'            => $row['flagged'] ?? null,
+                'keterangan'         => $row['keterangan'] ?? null,
             ];
-            $this->rows->push(collect($mappedRow));
+
+            $this->sink->push(collect($mapped));
         }
     }
 

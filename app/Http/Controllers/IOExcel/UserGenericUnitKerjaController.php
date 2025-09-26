@@ -8,7 +8,6 @@ use App\Models\Kompartemen;
 use App\Models\Periode;
 use App\Models\TempUploadSession;
 
-use App\Exports\UserGenericUnitKerjaTemplateExport;
 use App\Services\UserGenericUnitKerjaService;
 use App\Imports\UserGenericUnitKerjaPreviewImport;
 
@@ -34,8 +33,9 @@ class UserGenericUnitKerjaController extends Controller
         ]);
 
         try {
-            $import = new UserGenericUnitKerjaPreviewImport();
+            $import = (new UserGenericUnitKerjaPreviewImport())->onlySheets('UPLOAD_TEMPLATE');
             Excel::import($import, $request->file('excel_file'));
+
             $data = $import->rows->map(fn($row) => $row->toArray())->toArray();
 
             $parsedData = [];
@@ -46,8 +46,8 @@ class UserGenericUnitKerjaController extends Controller
                 $row['_row_errors'] = [];
                 $row['_row_warnings'] = [];
 
-                if (empty($row['user_code'])) {
-                    $row['_row_errors'][] = 'User Code wajib diisi.';
+                if (empty($row['user_cc'])) {
+                    $row['_row_errors'][] = 'User CC wajib diisi.';
                 }
                 if (empty($row['kompartemen_id'])) {
                     $row['_row_warnings'][] = 'Kompartemen ID kosong.';
@@ -185,15 +185,5 @@ class UserGenericUnitKerjaController extends Controller
                 ],
             ], 500);
         }
-    }
-
-    public function downloadTemplate()
-    {
-        $companyCode = auth()->user()->loginDetail->company_code ?? null;
-
-        return Excel::download(
-            new UserGenericUnitKerjaTemplateExport($companyCode),
-            'template_user_generic_unit_kerja.xlsx'
-        );
     }
 }
