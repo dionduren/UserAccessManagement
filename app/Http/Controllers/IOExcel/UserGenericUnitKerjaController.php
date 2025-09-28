@@ -10,6 +10,7 @@ use App\Models\TempUploadSession;
 
 use App\Services\UserGenericUnitKerjaService;
 use App\Imports\UserGenericUnitKerjaPreviewImport;
+use App\Exports\UserGenericUnitKerjaTemplateExport;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
@@ -49,12 +50,12 @@ class UserGenericUnitKerjaController extends Controller
                 if (empty($row['user_cc'])) {
                     $row['_row_errors'][] = 'User CC wajib diisi.';
                 }
-                if (empty($row['kompartemen_id'])) {
-                    $row['_row_warnings'][] = 'Kompartemen ID kosong.';
-                }
-                if (empty($row['departemen_id'])) {
-                    $row['_row_warnings'][] = 'Departemen ID kosong.';
-                }
+                // if (empty($row['kompartemen_id'])) {
+                //     $row['_row_warnings'][] = 'Kompartemen ID kosong.';
+                // }
+                // if (empty($row['departemen_id'])) {
+                //     $row['_row_warnings'][] = 'Departemen ID kosong.';
+                // }
 
                 $row['_row_issues_count'] = count($row['_row_errors']) + count($row['_row_warnings']);
                 $parsedData[] = $row;
@@ -185,5 +186,18 @@ class UserGenericUnitKerjaController extends Controller
                 ],
             ], 500);
         }
+    }
+
+    public function downloadTemplate(Request $request)
+    {
+        $request->validate([
+            'company_code' => 'nullable|string|exists:ms_company,company_code',
+        ]);
+
+        $companyCode = $request->input('company_code');
+
+        $fileName = 'User_Generic_Unit_Kerja_Template_' . ($companyCode ?? 'ALL') . '_' . date('Ymd_His') . '.xlsx';
+
+        return Excel::download(new UserGenericUnitKerjaTemplateExport($companyCode), $fileName);
     }
 }

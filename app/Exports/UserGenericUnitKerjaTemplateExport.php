@@ -33,7 +33,7 @@ class UGUKTemplateSheet implements FromCollection, WithHeadings, WithTitle, Shou
     {
         $this->rows = [
             [
-                'user_code'          => '',
+                'user_cc'          => '',
                 'kompartemen_id'     => '',
                 'departemen_id'      => '',
             ],
@@ -53,7 +53,7 @@ class UGUKTemplateSheet implements FromCollection, WithHeadings, WithTitle, Shou
     public function headings(): array
     {
         return [
-            'user_code',
+            'user_cc',
             'kompartemen_id',
             'departemen_id',
         ];

@@ -72,7 +72,7 @@ class UserGenericUnitKerjaSheetImport implements ToCollection, WithHeadingRow, W
             }
 
             $mapped = [
-                'user_cc'            => $row['user_code'] ?? null,
+                'user_cc'            => $row['user_cc'] ?? null,
                 'nama'               => $row['nama'] ?? null,
                 'company_code'       => $row['company_code'] ?? null,
                 'kompartemen_id'     => $row['kompartemen_id'] ?? null,

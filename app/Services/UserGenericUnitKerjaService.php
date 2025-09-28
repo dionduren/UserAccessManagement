@@ -26,7 +26,7 @@ class UserGenericUnitKerjaService
         if (!empty($row['periode_id']) && !Periode::find($row['periode_id'])) {
             $errors[] = 'Periode ID tidak ada dalam database.';
         }
-        if (empty($row['user_code'])) {
+        if (empty($row['user_cc'])) {
             $errors[] = 'User Code wajib diisi.';
         }
 
@@ -41,7 +41,7 @@ class UserGenericUnitKerjaService
 
         UserGenericUnitKerja::updateOrCreate(
             [
-                'user_cc' => $row['user_code'],
+                'user_cc' => $row['user_cc'],
                 'periode_id' => $row['periode_id'],
             ],
             [
