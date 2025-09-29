@@ -9,6 +9,7 @@ use App\Http\Controllers\PeriodeController;
 use App\Http\Controllers\JSONController;
 use App\Http\Controllers\TcodeImportController;
 use App\Http\Controllers\UserController;
+use App\Http\Controllers\CheckpointController;
 
 use App\Http\Controllers\Auth\EmailChangeRequestController;
 use App\Http\Controllers\Auth\ForgotPasswordController;
@@ -177,6 +178,11 @@ Route::middleware(['auth'])->group(function () {
     //     // Simple JSON response:
     //     return response()->json($rows);
     // });
+
+    // ======== PROGRESS CHECKPOINT ===========
+    Route::get('/checkpoints', [CheckpointController::class, 'index'])->name('checkpoints.index');
+    Route::post('/checkpoints/refresh', [CheckpointController::class, 'refresh'])->name('checkpoints.refresh');
+
 
     // ======== USER PROFILE ===========
     Route::get('/profile', [ProfileController::class, 'show'])->name('profile.show');

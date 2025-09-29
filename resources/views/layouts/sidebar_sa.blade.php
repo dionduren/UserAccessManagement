@@ -1,3 +1,11 @@
+<li class="nav-item">
+    <a href="{{ route('checkpoints.index') }}"
+        class="mb-1 nav-link {{ request()->routeIs('checkpoints.index') ? 'active' : 'text-white' }}">
+        <i class="bi bi-flag-fill me-2"></i> Checkpoints
+    </a>
+</li>
+
+
 @can('data.view')
     @include('layouts.sidebar_menu.master_data')
 
