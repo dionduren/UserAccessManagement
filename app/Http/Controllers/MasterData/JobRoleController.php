@@ -219,7 +219,7 @@ class JobRoleController extends Controller
             'kompartemen' => $kompartemenName ?? '-',
             'departemen' => $departemenName ?? '-',
             'job_role' => $jobRole['nama'],
-            'deskripsi' => $jobRole['description'] ?? 'N/A',
+            'deskripsi' => $jobRole['deskripsi'] ?? 'N/A',
             'status' => $jobRole['status'] ?? 'active',
             'flagged' => $jobRole['flagged'] ?? false,
             'actions' => view('master-data.job_roles.partials.actions', ['jobRole' => (object) $jobRole])->render(),

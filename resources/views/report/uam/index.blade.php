@@ -76,6 +76,11 @@
                 <button id="export-single-excel" class="btn btn-success mb-3" style="display: none"><i
                         class="bi bi-file-earmark-x"></i> Export Single-Tcode to Excel</button>
             </div>
+            <div class="col-auto">
+                <button id="export-composite-no-ao" class="btn btn-warning mb-3 text-dark" style="display: none">
+                    <i class="bi bi-exclamation-triangle"></i> Export Excel Composite tanpa Relationship
+                </button>
+            </div>
         </div>
 
         {{-- RESULT 1: DOKUMEN REVIEW USER ID DAN OTORISASI --}}
@@ -306,6 +311,7 @@
                 $('#export-word').show();
                 // $('#export-composite-excel').show();
                 $('#export-single-excel').show();
+                $('#export-composite-no-ao').show();
 
 
                 // Get selected values
@@ -475,6 +481,16 @@
                     departemen_id: $('#departemen').val()
                 });
                 window.open("{{ route('report.uam.export-single-excel') }}?" + params, '_blank');
+            });
+
+            $('#export-composite-no-ao').on('click', function(e) {
+                e.preventDefault();
+                let params = $.param({
+                    company_id: $('#company').val(),
+                    kompartemen_id: $('#kompartemen').val(),
+                    departemen_id: $('#departemen').val()
+                });
+                window.open("{{ route('report.uam.export-composite-no-ao') }}?" + params, '_blank');
             });
         });
     </script>

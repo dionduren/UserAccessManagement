@@ -17,11 +17,13 @@ return new class extends Migration
             $table->string('kompartemen_id')->nullable();
             $table->string('departemen_id')->nullable();
             $table->string('unit_kerja_id');
-            $table->integer('number')->unique();
+            $table->integer('number');
             $table->softDeletes();
             $table->timestamps();
             $table->string('created_by')->nullable();
             $table->string('updated_by')->nullable();
+
+            $table->unique(['company_id', 'number']);
         });
     }
 

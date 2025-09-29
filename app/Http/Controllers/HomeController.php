@@ -8,8 +8,11 @@ use App\Models\JobRole;
 use App\Models\Departemen;
 use App\Models\SingleRole;
 use App\Models\Kompartemen;
-use Illuminate\Http\Request;
 use App\Models\CompositeRole;
+use App\Models\userGeneric;
+use App\Models\userNIK;
+
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
 class HomeController extends Controller
@@ -35,6 +38,7 @@ class HomeController extends Controller
     {
         $user = Auth::user();
         $companyCode = optional($user->loginDetail)->company_code ?? 'A000';
+        $group = Company::where('company_code', $companyCode)->value('shortname');
 
         // DASHBOARD PI - A000 (global)
         if ($companyCode === 'A000') {
@@ -59,7 +63,17 @@ class HomeController extends Controller
                 'singleTcodeEmpty' => SingleRole::doesntHave('tcodes')->count(),
                 'tcodeSing'       => Tcode::has('singleRoles')->count(),
                 'tcodeSingEmpty'  => Tcode::doesntHave('singleRoles')->count(),
+                'nikJob'         => userNIK::has('NIKJobRole')->count(),
+                'nikJobEmpty'    => userNIK::doesntHave('NIKJobRole')->count(),
+                'genericJob'    => userGeneric::has('NIKJobRole')->count(),
+                'genericJobEmpty' => userGeneric::doesntHave('NIKJobRole')->count(),
                 'groupedData'     => $this->getGroupedData(), // company-scoped models only
+                'groupedDataUAR'  => [
+                    'nikJob'          => $this->createGetGroupedDataUAR('nikJob'),
+                    'nikJobEmpty'     => $this->createGetGroupedDataUAR('nikJobEmpty'),
+                    'genericJob'      => $this->createGetGroupedDataUAR('genericJob'),
+                    'genericJobEmpty' => $this->createGetGroupedDataUAR('genericJobEmpty'),
+                ],
             ];
             return view('dashboard.index', compact('data'));
         }
@@ -85,7 +99,17 @@ class HomeController extends Controller
             'singleCompEmpty' => SingleRole::doesntHave('compositeRoles')->count(),
             'singleTcode'     => SingleRole::has('tcodes')->count(),
             'singleTcodeEmpty' => SingleRole::doesntHave('tcodes')->count(),
+            'nikJob'         => userNIK::where('group', $group)->has('NIKJobRole')->count(),
+            'nikJobEmpty'    => userNIK::where('group', $group)->doesntHave('NIKJobRole')->count(),
+            'genericJob'    => userGeneric::where('group', $group)->has('NIKJobRole')->count(),
+            'genericJobEmpty' => userGeneric::where('group', $group)->doesntHave('NIKJobRole')->count(),
             'groupedData'     => $this->getGroupedData($companyCode),
+            'groupedDataUAR'  => [
+                'nikJob'    => $this->createGetGroupedDataUAR('nikJob', $companyCode),
+                'nikJobEmpty'    => $this->createGetGroupedDataUAR('nikJobEmpty', $companyCode),
+                'genericJob' => $this->createGetGroupedDataUAR('genericJob', $companyCode),
+                'genericJobEmpty' => $this->createGetGroupedDataUAR('genericJobEmpty', $companyCode),
+            ],
         ];
 
         return view('dashboard.index_company', [
@@ -127,6 +151,12 @@ class HomeController extends Controller
             'compSingleEmpty'  => CompositeRole::doesntHave('singleRoles')
                 ->when($filter, fn($q) => $q->where('company_id', $companyCode))
                 ->selectRaw('company_id, COUNT(*) as total')->groupBy('company_id')->pluck('total', 'company_id')->toArray(),
+            'nikJobEmpty'     => userNIK::doesntHave('NIKJobRole')
+                ->when($filter, fn($q) => $q->where('group', $companyCode))
+                ->selectRaw('"group" as company_id, COUNT(*) as total')->groupBy('company_id')->pluck('total', 'company_id')->toArray(),
+            'genericJobEmpty' => userGeneric::doesntHave('NIKJobRole')
+                ->when($filter, fn($q) => $q->where('group', $companyCode))
+                ->selectRaw('"group" as company_id, COUNT(*) as total')->groupBy('company_id')->pluck('total', 'company_id')->toArray(),
         ];
 
         // Global (no company_id) SingleRole & Tcode empties kept separately
@@ -141,6 +171,58 @@ class HomeController extends Controller
             'emptyMetrics'  => $emptyMetrics,
             'globalMetrics' => $globalNoCompany,
         ];
+    }
+
+    public function createGetGroupedDataUAR(string $metric, ?string $companyCode = null)
+    {
+        $user = Auth::user();
+        $companyCode = $companyCode ?? optional($user->loginDetail)->company_code ?? 'A000';
+        $filter = $companyCode && $companyCode !== 'A000';
+        $convertedGroup = $filter
+            ? (Company::where('company_code', $companyCode)->value('shortname') ?? $companyCode)
+            : null;
+
+        $definitions = [
+            'nikJob' => [
+                'model'     => userNIK::class,
+                'relation'  => 'NIKJobRole',
+                'aggregate' => 'has',
+            ],
+            'nikJobEmpty' => [
+                'model'     => userNIK::class,
+                'relation'  => 'NIKJobRole',
+                'aggregate' => 'doesntHave',
+            ],
+            'genericJob' => [
+                'model'     => userGeneric::class,
+                'relation'  => 'NIKJobRole',
+                'aggregate' => 'has',
+            ],
+            'genericJobEmpty' => [
+                'model'     => userGeneric::class,
+                'relation'  => 'NIKJobRole',
+                'aggregate' => 'doesntHave',
+            ],
+        ];
+
+        if (! isset($definitions[$metric])) {
+            return [];
+        }
+
+        $definition = $definitions[$metric];
+        $query = $definition['model']::query()
+            ->selectRaw('"group" as shortname, COUNT(*) as total')
+            ->groupBy('shortname');
+
+        $definition['aggregate'] === 'has'
+            ? $query->has($definition['relation'])
+            : $query->doesntHave($definition['relation']);
+
+        if ($filter) {
+            $query->where('group', $convertedGroup);
+        }
+
+        return $query->pluck('total', 'shortname')->toArray();
     }
 
     public function getJobRolesCompositeEmpty(Request $request)
@@ -198,5 +280,67 @@ class HomeController extends Controller
             ->map(fn($t) => ['id' => $t->id, 'nama' => $t->nama])
             ->values();
         return response()->json($tcodes);
+    }
+
+    public function getNikJobEmpty(Request $request)
+    {
+        $authCompany = optional(Auth::user()->loginDetail)->company_code ?? 'A000';
+        $selectedCompany = $authCompany === 'A000'
+            ? ($request->query('company_code') ?? 'A000')
+            : $authCompany;
+
+        $query = userNIK::query()
+            ->with(['Company:company_code,nama,shortname'])
+            ->doesntHave('NIKJobRole');
+
+        if ($selectedCompany !== 'A000') {
+            $groupShortname = Company::where('company_code', $selectedCompany)->value('shortname') ?? $selectedCompany;
+            $query->where('group', $groupShortname);
+        }
+
+        $nikJobsEmpty = $query
+            ->get(['id', 'user_code', 'group'])
+            ->map(fn($item) => [
+                'id'      => $item->id,
+                'nama'    => $item->user_code,
+                'company' => [
+                    'nama'       => $item->Company->nama ?? '-',
+                    'shortname'  => $item->Company->shortname ?? $item->group,
+                ],
+            ])
+            ->values();
+
+        return response()->json($nikJobsEmpty);
+    }
+
+    public function getGenericJobEmpty(Request $request)
+    {
+        $authCompany = optional(Auth::user()->loginDetail)->company_code ?? 'A000';
+        $selectedCompany = $authCompany === 'A000'
+            ? ($request->query('company_code') ?? 'A000')
+            : $authCompany;
+
+        $query = userGeneric::query()
+            ->with(['Company:company_code,nama,shortname'])
+            ->doesntHave('NIKJobRole');
+
+        if ($selectedCompany !== 'A000') {
+            $groupShortname = Company::where('company_code', $selectedCompany)->value('shortname') ?? $selectedCompany;
+            $query->where('group', $groupShortname);
+        }
+
+        $genericJobsEmpty = $query
+            ->get(['id', 'user_code', 'group'])
+            ->map(fn($item) => [
+                'id'      => $item->id,
+                'nama'    => $item->user_code,
+                'company' => [
+                    'nama'      => $item->Company->nama ?? '-',
+                    'shortname' => $item->Company->shortname ?? $item->group,
+                ],
+            ])
+            ->values();
+
+        return response()->json($genericJobsEmpty);
     }
 }

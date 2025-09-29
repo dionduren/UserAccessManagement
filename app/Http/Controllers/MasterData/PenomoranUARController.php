@@ -21,8 +21,16 @@ class PenomoranUARController extends Controller
     // }
     public function index(Request $request)
     {
+        $userCompany = auth()->user()->loginDetail->company_code ?? null;
+
         if ($request->ajax()) {
-            $data = PenomoranUAR::with(['kompartemen', 'departemen'])->select('ms_penomoran_uar.*');
+            $data = PenomoranUAR::with(['kompartemen', 'departemen'])
+                ->select('ms_penomoran_uar.*')
+                ->when(
+                    $userCompany && $userCompany !== 'A000',
+                    fn($q) => $q->where('company_id', $userCompany)
+                );
+
             return DataTables::of($data)
                 ->addColumn('level_unit_kerja', function ($row) {
                     if ($row->departemen) {
@@ -59,7 +67,12 @@ class PenomoranUARController extends Controller
                 ->rawColumns(['actions'])
                 ->make(true);
         }
-        return view('master-data.penomoran_uar.index');
+
+        $companySet = $userCompany && $userCompany === 'A000'
+            ? Company::all()
+            : Company::where('company_code', $userCompany)->get();
+
+        return view('master-data.penomoran_uar.index', compact('companySet'));
     }
 
     /**
@@ -67,9 +80,15 @@ class PenomoranUARController extends Controller
      */
     public function create()
     {
-        $masterData = json_decode(Storage::disk('public')->get('master_data.json'), true);
-        $companies = $masterData;
-        return view('master-data.penomoran_uar.create', compact('masterData', 'companies'));
+        $userCompany = auth()->user()->loginDetail->company_code ?? null;
+
+        $companySet = $userCompany && $userCompany === 'A000'
+            ? Company::orderBy('nama')->get()
+            : Company::where('company_code', $userCompany)->orderBy('nama')->get();
+
+        $organizationData = $this->buildOrganizationData($userCompany);
+
+        return view('master-data.penomoran_uar.create', compact('organizationData', 'companySet'));
     }
 
     /**
@@ -77,21 +96,26 @@ class PenomoranUARController extends Controller
      */
     public function store(Request $request)
     {
-        $kompartemenId = $request->input('kompartemen_id');
-        $departemenId = $request->input('departemen_id');
+        $kompartemenId = $request->input('kompartemen_id') ?: null;
+        $departemenId = $request->input('departemen_id') ?: null;
         $unitKerjaId = $departemenId ?? $kompartemenId;
 
-        $request->merge(['unit_kerja_id' => $unitKerjaId]);
+        $request->merge([
+            'kompartemen_id' => $kompartemenId,
+            'departemen_id' => $departemenId,
+            'unit_kerja_id' => $unitKerjaId,
+        ]);
 
         $request->validate([
             'company_id' => 'required|string',
-            'kompartemen_id' => 'required|string',
+            'kompartemen_id' => 'nullable|string',
             'departemen_id' => 'nullable|string',
             'unit_kerja_id' => 'required|string',
             'number' => 'required|integer',
         ]);
 
         PenomoranUAR::create($request->all());
+
         return redirect()->route('penomoran-uar.index')->with('success', 'Record created successfully.');
     }
 
@@ -110,13 +134,26 @@ class PenomoranUARController extends Controller
     public function edit($id)
     {
         $penomoranUAR = PenomoranUAR::findOrFail($id);
-        // dd($penomoranUAR->toArray());
-        $masterData = json_decode(Storage::disk('public')->get('master_data.json'), true);
-        $companies = $masterData;
+        $userCompany = auth()->user()->loginDetail->company_code ?? null;
+
+        $companySet = $userCompany && $userCompany === 'A000'
+            ? Company::orderBy('nama')->get()
+            : Company::where('company_code', $userCompany)->orderBy('nama')->get();
+
+        $organizationData = $this->buildOrganizationData($userCompany);
+
         $selectedCompany = $penomoranUAR->company_id ?? null;
-        $selectedKompartemen = $penomoranUAR->kompartemen->kompartemen_id ?? null;
-        $selectedDepartemen = $penomoranUAR->departemen->departemen_id ?? null;
-        return view('master-data.penomoran_uar.edit', compact('penomoranUAR', 'masterData', 'companies', 'selectedCompany', 'selectedKompartemen', 'selectedDepartemen'));
+        $selectedKompartemen = $penomoranUAR->kompartemen_id ?? null;
+        $selectedDepartemen = $penomoranUAR->departemen_id ?? null;
+
+        return view('master-data.penomoran_uar.edit', compact(
+            'penomoranUAR',
+            'organizationData',
+            'companySet',
+            'selectedCompany',
+            'selectedKompartemen',
+            'selectedDepartemen'
+        ));
     }
 
     /**
@@ -126,20 +163,26 @@ class PenomoranUARController extends Controller
     {
         $penomoranUAR = PenomoranUAR::findOrFail($id);
 
-        $kompartemenId = $request->input('kompartemen_id');
-        $departemenId = $request->input('departemen_id');
+        $kompartemenId = $request->input('kompartemen_id') ?: null;
+        $departemenId = $request->input('departemen_id') ?: null;
         $unitKerjaId = $departemenId ?? $kompartemenId;
-        $request->merge(['unit_kerja_id' => $unitKerjaId]);
+
+        $request->merge([
+            'kompartemen_id' => $kompartemenId,
+            'departemen_id' => $departemenId,
+            'unit_kerja_id' => $unitKerjaId,
+        ]);
 
         $request->validate([
             'company_id' => 'required|string',
-            'kompartemen_id' => 'required|string',
+            'kompartemen_id' => 'nullable|string',
             'departemen_id' => 'nullable|string',
             'unit_kerja_id' => 'required|string',
             'number' => 'required|integer',
         ]);
 
         $penomoranUAR->update($request->all());
+
         return redirect()->route('penomoran-uar.index')->with('success', 'Record updated successfully.');
     }
 
@@ -164,5 +207,34 @@ class PenomoranUARController extends Controller
     {
         $exists = PenomoranUAR::where('number', $request->number)->exists();
         return response()->json(['exists' => $exists]);
+    }
+
+    private function buildOrganizationData(?string $userCompany): \Illuminate\Support\Collection
+    {
+        return Company::query()
+            ->when($userCompany && $userCompany !== 'A000', fn($q) => $q->where('company_code', $userCompany))
+            ->with([
+                'kompartemen' => fn($q) => $q->select('kompartemen_id', 'company_id', 'nama')->orderBy('nama'),
+                'kompartemen.departemen' => fn($q) => $q->select('departemen_id', 'kompartemen_id', 'company_id', 'nama')->orderBy('nama'),
+                'departemen' => fn($q) => $q->whereNull('kompartemen_id')->select('departemen_id', 'company_id', 'nama')->orderBy('nama'),
+            ])
+            ->orderBy('nama')
+            ->get(['company_code', 'nama'])
+            ->map(fn(Company $company) => [
+                'company_code' => $company->company_code,
+                'nama' => $company->nama,
+                'kompartemen' => $company->kompartemen->map(fn($kom) => [
+                    'kompartemen_id' => $kom->kompartemen_id,
+                    'nama' => $kom->nama,
+                    'departemen' => $kom->departemen->map(fn($dep) => [
+                        'departemen_id' => $dep->departemen_id,
+                        'nama' => $dep->nama,
+                    ])->values(),
+                ])->values(),
+                'departemen_without_kompartemen' => $company->departemen->map(fn($dep) => [
+                    'departemen_id' => $dep->departemen_id,
+                    'nama' => $dep->nama,
+                ])->values(),
+            ])->values();
     }
 }

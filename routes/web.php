@@ -78,6 +78,7 @@ use App\Http\Controllers\Report\UAMReportController;
 use App\Http\Controllers\Report\UARReportController;
 use App\Http\Controllers\Report\WorkUnitReportController;
 use App\Http\Controllers\Report\BAPenarikanDataController;
+use App\Http\Controllers\Report\AnomaliDataReportController;
 
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -116,6 +117,8 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/home/empty/singleRolesComposite', [HomeController::class, 'getSingleRolesCompositeEmpty'])->name('home.empty.singleRolesComposite');
     Route::get('/home/empty/singleRolesTcode', [HomeController::class, 'getSingleRolesTcodeEmpty'])->name('home.empty.singleRolesTcode');
     Route::get('/home/empty/tcodesSingle', [HomeController::class, 'getTcodesSingleEmpty'])->name('home.empty.tcodesSingle');
+    Route::get('/home/empty/nik-job', [HomeController::class, 'getNikJobEmpty'])->name('home.empty.nikJob');
+    Route::get('/home/empty/generic-job', [HomeController::class, 'getGenericJobEmpty'])->name('home.empty.genericJob');
 
 
     // SQL SERVER CONNECTION
@@ -712,6 +715,7 @@ Route::middleware(['auth'])->group(function () {
 
         Route::get('/export-word', [UAMReportController::class, 'exportWord'])->name('export-word');
         Route::get('/export-single-excel', [UAMReportController::class, 'exportSingleExcel'])->name('export-single-excel');
+        Route::get('/export-composite-no-ao', [UAMReportController::class, 'exportCompositeWithoutAO'])->name('export-composite-no-ao');
         // Route::get('/download', [UARReportController::class, 'download'])->name('download');
     });
 
@@ -719,6 +723,12 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/', [BAPenarikanDataController::class, 'index'])->name('index');
         Route::get('/data', [BAPenarikanDataController::class, 'data'])->name('data');
         Route::get('/export-word', [BAPenarikanDataController::class, 'exportWord'])->name('export_word');
+    });
+
+    Route::prefix('report/anomali')->name('report.anomali.')->group(function () {
+        Route::get('/job-role-multi-composite', [AnomaliDataReportController::class, 'jobRoleMultipleComposite'])->name('job-role-multi-composite');
+        Route::get('/composite-multi-job-role', [AnomaliDataReportController::class, 'compositeMultipleJobRole'])->name('composite-multi-jobrole');
+        Route::get('/job-role-same-name', [AnomaliDataReportController::class, 'jobRoleSameName'])->name('job-role-same-name');
     });
 
     // ------------------ PENOMORAN UAR & UAM ------------------

@@ -14,6 +14,7 @@
         <table id="penomoran-uar-table" class="table table-bordered table-striped" style="width:100%">
             <thead>
                 <tr>
+                    <th width="10%">Perusahaan</th>
                     <th width="10%">Unit Kerja ID</th>
                     <th width="10%">Level Unit Kerja</th>
                     <th>Unit Kerja</th>
@@ -33,6 +34,9 @@
                 serverSide: false,
                 ajax: '{{ route('penomoran-uar.index') }}',
                 columns: [{
+                        data: 'company_id',
+                        name: 'company_id'
+                    }, {
                         data: 'unit_kerja_id',
                         name: 'unit_kerja_id'
                     },

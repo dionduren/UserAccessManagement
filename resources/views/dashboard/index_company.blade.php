@@ -70,28 +70,6 @@
             <div class="col-md-3 mb-3">
                 <div class="card bg-success text-white text-center shadow-sm">
                     <div class="card-body">
-                        <h5 class="card-title">CompositeRole dengan Job Role</h5>
-                        <p class="card-text">
-                            {{ $data['compJobPerCompany'][$userCompany] ?? ($data['compJob'] ?? 0) }}
-                        </p>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-3 mb-3">
-                <a href="#" id="btnCompJobEmpty" data-metric="jobRolesComposite" class="text-decoration-none">
-                    <div class="card bg-danger text-white text-center shadow-sm">
-                        <div class="card-body">
-                            <h5 class="card-title">CompositeRole tanpa JobRole</h5>
-                            <p class="card-text">
-                                {{ $data['groupedData']['emptyMetrics']['compJobEmpty'][$userCompany] ?? ($data['compJobEmpty'] ?? 0) }}
-                            </p>
-                        </div>
-                    </div>
-                </a>
-            </div>
-            <div class="col-md-3 mb-3">
-                <div class="card bg-success text-white text-center shadow-sm">
-                    <div class="card-body">
                         <h5 class="card-title">CompositeRole dengan Single Role</h5>
                         <p class="card-text">
                             {{ $data['compSinglePerCompany'][$userCompany] ?? ($data['compSingle'] ?? 0) }}
@@ -188,11 +166,10 @@
         <hr width="90%" class="my-1 mx-auto">
 
         <div class="row pt-3 pb-5">
-            <div class="col-3"></div>
             <div class="col-md-3 mb-3">
                 <div class="card bg-success text-white text-center shadow-sm">
                     <div class="card-body">
-                        <h5 class="card-title">JobRoles dengan Composite Roles</h5>
+                        <h5 class="card-title">Job Roles dengan Composite Role</h5>
                         <p class="card-text">
                             {{ $data['JobCompPerCompany'][$userCompany] ?? ($data['JobComp'] ?? 0) }}
                         </p>
@@ -203,7 +180,7 @@
                 <a href="#" id="btnJobCompEmpty" data-metric="jobRolesComposite" class="text-decoration-none">
                     <div class="card bg-danger text-white text-center shadow-sm" style="cursor:pointer;">
                         <div class="card-body">
-                            <h5 class="card-title">JobRoles tanpa Composite</h5>
+                            <h5 class="card-title">Job Roles tanpa Composite Role</h5>
                             <p class="card-text fw-bold">
                                 {{ $data['groupedData']['emptyMetrics']['JobCompEmpty'][$userCompany] ?? ($data['JobCompEmpty'] ?? 0) }}
                             </p>
@@ -211,7 +188,142 @@
                     </div>
                 </a>
             </div>
+
+            <div class="col-md-3 mb-3">
+                <div class="card bg-success text-white text-center shadow-sm">
+                    <div class="card-body">
+                        <h5 class="card-title">CompositeRole dengan Job Role</h5>
+                        <p class="card-text">
+                            {{ $data['compJobPerCompany'][$userCompany] ?? ($data['compJob'] ?? 0) }}
+                        </p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3 mb-3">
+                <a href="#" id="btnCompJobEmpty" data-metric="jobRolesComposite" class="text-decoration-none">
+                    <div class="card bg-danger text-white text-center shadow-sm">
+                        <div class="card-body">
+                            <h5 class="card-title">CompositeRole tanpa JobRole</h5>
+                            <p class="card-text">
+                                {{ $data['groupedData']['emptyMetrics']['compJobEmpty'][$userCompany] ?? ($data['compJobEmpty'] ?? 0) }}
+                            </p>
+                        </div>
+                    </div>
+                </a>
+            </div>
+
+            <div class="col-md-3 mb-3">
+                <div class="card bg-success text-white text-center shadow-sm">
+                    <div class="card-body">
+                        <h5 class="card-title">User NIK dengan JobRole</h5>
+                        <p class="card-text">{{ $data['nikJob'] }}</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3 mb-3">
+                <a href="#" id="btnNikJobEmpty" data-metric="nikJobEmpty" class="text-decoration-none">
+                    <div class="card bg-danger text-white text-center shadow-sm">
+                        <div class="card-body">
+                            <h5 class="card-title">User NIK tanpa JobRole</h5>
+                            <p class="card-text">{{ $data['nikJobEmpty'] }}</p>
+                        </div>
+                    </div>
+                </a>
+            </div>
+            <div class="col-md-3 mb-3">
+                <div class="card bg-success text-white text-center shadow-sm">
+                    <div class="card-body">
+                        <h5 class="card-title">User Generic dengan JobRole</h5>
+                        <p class="card-text">{{ $data['genericJob'] }}</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3 mb-3">
+                <a href="#" id="btnGenericJobEmpty" data-metric="genericJobEmpty" class="text-decoration-none">
+                    <div class="card bg-danger text-white text-center shadow-sm">
+                        <div class="card-body">
+                            <h5 class="card-title">User Generic tanpa JobRole</h5>
+                            <p class="card-text">{{ $data['genericJobEmpty'] }}</p>
+                        </div>
+                    </div>
+                </a>
+            </div>
         </div>
+
+        {{-- UAR TABLE HERE --}}
+        @php
+            $uarMetrics = $data['groupedDataUAR'] ?? [];
+            $currentCompany = $data['company']->first();
+            $companyShortname = $currentCompany?->shortname ?? ($currentCompany?->company_code ?? $userCompany);
+        @endphp
+        @if ($currentCompany && !empty($uarMetrics))
+            <div class="card text-center shadow-sm mb-5">
+                <div class="card-body">
+                    <h5>Data UAR - {{ $currentCompany->nama }}</h5>
+                    <div class="table-responsive mt-4">
+                        <table class="table table-bordered align-middle">
+                            <thead>
+                                <tr>
+                                    <th>No.</th>
+                                    <th>Company</th>
+                                    @foreach ($uarMetrics as $metric => $counts)
+                                        <th>
+                                            @switch($metric)
+                                                @case('nikJob')
+                                                    User NIK dengan JobRole
+                                                @break
+
+                                                @case('nikJobEmpty')
+                                                    User NIK tanpa JobRole
+                                                @break
+
+                                                @case('genericJob')
+                                                    User Generic dengan JobRole
+                                                @break
+
+                                                @case('genericJobEmpty')
+                                                    User Generic tanpa JobRole
+                                                @break
+
+                                                @default
+                                                    {{ \Illuminate\Support\Str::headline($metric) }}
+                                            @endswitch
+                                        </th>
+                                    @endforeach
+                                    <th class="text-center fw-bold" style="background-color: rgb(176, 176, 176)">Total
+                                    </th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @php
+                                    $rowTotal = 0;
+                                @endphp
+                                <tr>
+                                    <td>1</td>
+                                    <td class="text-start">{{ $currentCompany->nama }}</td>
+                                    @foreach ($uarMetrics as $counts)
+                                        @php
+                                            $value = $counts[$companyShortname] ?? 0;
+                                            $rowTotal += $value;
+                                        @endphp
+                                        <td>{{ $value }}</td>
+                                    @endforeach
+                                    <td class="text-center fw-bold" style="background-color: rgb(176, 176, 176)">
+                                        {{ $rowTotal }}</td>
+                                </tr>
+                                <tr class="text-center fw-bold" style="background-color: rgb(176, 176, 176)">
+                                    <td colspan="2" class="text-end">TOTAL</td>
+                                    @foreach ($uarMetrics as $counts)
+                                        <td>{{ $counts[$companyShortname] ?? 0 }}</td>
+                                    @endforeach
+                                    <td>{{ $rowTotal }}</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        @endif
 
         <!-- Empty Metrics Per Company Table (only user's company) -->
         <div class="card text-center shadow-sm mb-5">
@@ -248,6 +360,14 @@
 
                                             @case('tcodeSingEmpty')
                                                 tCode tanpa Single Role
+                                            @break
+
+                                            @case('nikJobEmpty')
+                                                User NIK tanpa JobRole
+                                            @break
+
+                                            @case('genericJobEmpty')
+                                                User Generic tanpa JobRole
                                             @break
 
                                             @default
@@ -403,6 +523,16 @@
         $('#btnTcodeSingEmpty').on('click', function(e) {
             e.preventDefault();
             showEmptyMetricModal("{{ route('home.empty.tcodesSingle') }}", "tCode tanpa Single Role", true);
+        });
+        $('#btnNikJobEmpty').on('click', e => {
+            e.preventDefault();
+            showEmptyMetricModal("{{ route('home.empty.nikJob') }}", "User NIK tanpa JobRole",
+                false);
+        });
+        $('#btnGenericJobEmpty').on('click', e => {
+            e.preventDefault();
+            showEmptyMetricModal("{{ route('home.empty.genericJob') }}", "User Generic tanpa JobRole",
+                true);
         });
     </script>
 @endsection

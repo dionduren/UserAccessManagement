@@ -21,24 +21,24 @@
                 <label for="company_id">Company</label>
                 <select id="company_id" name="company_id" class="form-control" required>
                     <option value="">-- Select Company --</option>
-                    @foreach ($companies as $company)
-                        <option value="{{ $company['company_id'] }}"
-                            {{ $selectedCompany == $company['company_id'] ? 'selected' : '' }}>
-                            {{ $company['company_name'] }}
+                    @foreach ($companySet as $company)
+                        <option value="{{ $company['company_code'] }}"
+                            {{ $selectedCompany == $company['company_code'] ? 'selected' : '' }}>
+                            {{ $company['nama'] }}
                         </option>
                     @endforeach
                 </select>
             </div>
 
             <div class="form-group mb-3">
-                <label for="kompartemen_id">Kompartemen</label>
-                <select id="kompartemen_id" name="kompartemen_id" class="form-control" required>
+                <label for="kompartemen_id">Kompartemen</label> {{ $selectedKompartemen }}
+                <select id="kompartemen_id" name="kompartemen_id" class="form-control">
                     <option value="">-- Select Kompartemen --</option>
                 </select>
             </div>
 
             <div class="form-group mb-3">
-                <label for="departemen_id">Departemen</label>
+                <label for="departemen_id">Departemen</label> {{ $selectedDepartemen }}
                 <select id="departemen_id" name="departemen_id" class="form-control">
                     <option value="">-- Select Departemen --</option>
                 </select>
@@ -65,70 +65,73 @@
 
 @section('scripts')
     <script>
-        let masterData = @json($masterData);
-        let selectedCompany = "{{ $selectedCompany }}";
-        let selectedKompartemen = "{{ $selectedKompartemen }}";
-        let selectedDepartemen = "{{ $selectedDepartemen }}";
+        const organizationData = @json($organizationData);
+        const selectedCompany = "{{ $selectedCompany }}";
+        const selectedKompartemen = "{{ $selectedKompartemen }}";
+        const selectedDepartemen = "{{ $selectedDepartemen }}";
 
-        $(document).ready(function() {
-            // Populate Kompartemen
-            function populateKompartemen(companyId, selectedKompartemen) {
-                let kompartemenSelect = $('#kompartemen_id');
-                kompartemenSelect.html('<option value="">-- Select Kompartemen --</option>');
-                let company = masterData.find(c => c.company_id === companyId);
-                if (company && company.kompartemen) {
-                    company.kompartemen.forEach(function(k) {
-                        if (k.kompartemen_id && k.nama) {
-                            kompartemenSelect.append(
-                                `<option value="${k.kompartemen_id}" ${selectedKompartemen == k.kompartemen_id ? 'selected' : ''}>${k.nama}</option>`
-                            );
-                        }
-                    });
-                }
+        const findCompany = companyId => organizationData.find(c => String(c.company_code) === String(companyId));
+
+        const populateKompartemen = (companyId, selectedId = '') => {
+            const $select = $('#kompartemen_id');
+            $select.html('<option value="">-- Select Kompartemen --</option>');
+            const company = findCompany(companyId);
+            if (!company) return;
+
+            (company.kompartemen || []).forEach(kom => {
+                $select.append(
+                    `<option value="${kom.kompartemen_id}" ${String(kom.kompartemen_id) === String(selectedId) ? 'selected' : ''}>${kom.nama}</option>`
+                );
+            });
+        };
+
+        const populateDepartemen = (companyId, kompartemenId = '', selectedId = '') => {
+            const $select = $('#departemen_id');
+            $select.html('<option value="">-- Select Departemen --</option>');
+            const company = findCompany(companyId);
+            if (!company) return;
+
+            if (kompartemenId) {
+                const kompartemen = (company.kompartemen || []).find(k => String(k.kompartemen_id) === String(
+                    kompartemenId));
+                (kompartemen?.departemen || []).forEach(dep => {
+                    $select.append(
+                        `<option value="${dep.departemen_id}" ${String(dep.departemen_id) === String(selectedId) ? 'selected' : ''}>${dep.nama}</option>`
+                    );
+                });
             }
 
-            // Populate Departemen
-            function populateDepartemen(companyId, kompartemenId, selectedDepartemen) {
-                let departemenSelect = $('#departemen_id');
-                departemenSelect.html('<option value="">-- Select Departemen --</option>');
-                let company = masterData.find(c => c.company_id === companyId);
-                if (company && company.kompartemen) {
-                    let kompartemen = company.kompartemen.find(k => k.kompartemen_id === kompartemenId);
-                    if (kompartemen && kompartemen.departemen) {
-                        kompartemen.departemen.forEach(function(d) {
-                            if (d.departemen_id && d.nama) {
-                                departemenSelect.append(
-                                    `<option value="${d.departemen_id}" ${selectedDepartemen == d.departemen_id ? 'selected' : ''}>${d.nama}</option>`
-                                );
-                            }
-                        });
-                    }
-                }
+            (company.departemen_without_kompartemen || []).forEach(dep => {
+                const label = `${dep.nama} (Tanpa Kompartemen)`;
+                $select.append(
+                    `<option value="${dep.departemen_id}" ${String(dep.departemen_id) === String(selectedId) ? 'selected' : ''}>${label}</option>`
+                );
+            });
+        };
+
+        $(function() {
+            const companyId = selectedCompany || $('#company_id').val();
+
+            if (companyId) {
+                $('#company_id').val(companyId);
+                populateKompartemen(companyId, selectedKompartemen);
+                populateDepartemen(companyId, selectedKompartemen, selectedDepartemen);
             }
 
-            // Initial population
-            if (selectedCompany) {
-                populateKompartemen(selectedCompany, selectedKompartemen);
-            }
-            if (selectedCompany && selectedKompartemen) {
-                populateDepartemen(selectedCompany, selectedKompartemen, selectedDepartemen);
-            }
-
-            // On change events
             $('#company_id').on('change', function() {
-                populateKompartemen($(this).val(), '');
-                $('#departemen_id').html('<option value="">-- Select Departemen --</option>');
+                const current = $(this).val();
+                populateKompartemen(current);
+                populateDepartemen(current);
             });
 
             $('#kompartemen_id').on('change', function() {
-                populateDepartemen($('#company_id').val(), $(this).val(), '');
+                const currentCompany = $('#company_id').val();
+                populateDepartemen(currentCompany, $(this).val());
             });
 
-            // AJAX check for unique number
             $('#number').on('blur', function() {
-                let number = $(this).val();
                 $.get('{{ route('penomoran-uam.checkNumber') }}', {
-                    number: number,
+                    number: $(this).val(),
                     except: {{ $penomoranUAM->id }}
                 }, function(data) {
                     $('#number-error').text(data.exists ? 'Number already exists!' : '');

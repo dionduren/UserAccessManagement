@@ -436,6 +436,32 @@
         </a>
     </li>
 
+    @can('manage company info')
+        <hr>
+        <div>
+            <h5>Master Data Parameter</h5>
+        </div>
+        <div>
+            <li class="nav-item">
+                <a href="{{ route('penomoran-uar.index') }}"
+                    class="mb-1 nav-link {{ request()->routeIs('penomoran-uar*') ? 'active' : 'text-white' }}">
+                    <i class="bi bi-list-ol me-2"></i> Penomoran UAR
+                </a>
+            </li>
+        </div>
+
+        <div>
+            <li class="nav-item">
+                <a href="{{ route('penomoran-uam.index') }}"
+                    class="mb-1 nav-link {{ request()->routeIs('penomoran-uam*') ? 'active' : 'text-white' }}">
+                    <i class="bi bi-list-ol me-2"></i> Penomoran UAM
+                </a>
+            </li>
+        </div>
+
+        <hr>
+    @endcan
+
     {{-- <hr>
 
     <div>

@@ -497,6 +497,56 @@ class UAMReportController extends Controller
         return Excel::download(new ArrayExport($exportData), 'single_role_tcodes.xlsx');
     }
 
+    public function exportCompositeWithoutAO(Request $request)
+    {
+        $companyId     = $request->query('company_id');
+        $kompartemenId = $request->query('kompartemen_id');
+        $departemenId  = $request->query('departemen_id');
+
+        $jobRoles = JobRole::query()
+            ->with([
+                'company:company_code,nama',
+                'kompartemen:kompartemen_id,nama',
+                'departemen:departemen_id,nama',
+                'compositeRole' => fn($q) => $q->whereNull('deleted_at')->with('ao'),
+            ])
+            ->whereNull('deleted_at')
+            ->when($companyId, fn($q) => $q->where('company_id', $companyId))
+            ->when($kompartemenId, fn($q) => $q->where('kompartemen_id', $kompartemenId))
+            ->when($departemenId, fn($q) => $q->where('departemen_id', $departemenId))
+            ->get()
+            ->filter(function ($jobRole) {
+                $composite = $jobRole->compositeRole;
+                return $composite && !$composite->ao;
+            });
+
+        $rows = $jobRoles->map(function ($jobRole, $index) {
+            $composite = $jobRole->compositeRole;
+
+            return [
+                'No'               => $index + 1,
+                'Company'          => $jobRole->company->nama ?? '-',
+                'Kompartemen'      => $jobRole->kompartemen->nama ?? '-',
+                'Departemen'       => $jobRole->departemen->nama ?? '-',
+                'Job Role ID'      => $jobRole->job_role_id,
+                'Job Role Name'    => $jobRole->nama ?? '-',
+                'Composite Role'   => $composite->nama ?? '-',
+                'Composite Source' => $composite->source ?? '-',
+            ];
+        })->prepend([
+            'No',
+            'Company',
+            'Kompartemen',
+            'Departemen',
+            'Job Role ID',
+            'Job Role Name',
+            'Composite Role',
+            'Composite Source',
+        ])->values()->all();
+
+        return Excel::download(new ArrayExport($rows), 'job_role_composite_without_ao.xlsx');
+    }
+
     public function exportWord(Request $request)
     {
         $companyId = $request->company_id;
