@@ -18,6 +18,7 @@ use App\Models\SingleRole;
 use App\Models\Tcode;
 use App\Models\NIKJobRole;
 use Illuminate\Support\Collection;
+use Log;
 
 class CheckpointService
 {
@@ -167,8 +168,8 @@ class CheckpointService
             'work_units' => function (Company $company): array {
                 $group = $company->shortname ?? $company->company_code;
                 $nikWithUnit = userNIK::where('group', $group)->whereHas('unitKerja')->count();
-                $genericWithUnit = userGeneric::where('group', $group)->whereHas('unitKerja')->count();
-
+                $genericWithUnit = userGeneric::where('group', $group)->whereHas('userGenericUnitKerja')->count();
+                // Log::info("Checking work units for company {$company->company_code}: NIK with unit = {$nikWithUnit}, Generic with unit = {$genericWithUnit}");
                 $completed = $nikWithUnit > 0 && $genericWithUnit > 0;
 
                 return [
@@ -182,6 +183,7 @@ class CheckpointService
                 $group = $company->shortname ?? $company->company_code;
                 $nikWithRole = userNIK::where('group', $group)->whereHas('NIKJobRole')->count();
                 $genericWithRole = userGeneric::where('group', $group)->whereHas('NIKJobRole')->count();
+                // Log::info("Checking job roles for company {$company->company_code}: NIK with role = {$nikWithRole}, Generic with role = {$genericWithRole}");
 
                 $completed = ($nikWithRole > 0 || $nikWithRole === 0) && ($genericWithRole > 0 || $genericWithRole === 0);
 

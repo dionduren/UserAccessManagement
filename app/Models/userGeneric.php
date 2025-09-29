@@ -54,15 +54,15 @@ class userGeneric extends Model
         return $this->hasOne(Company::class, 'shortname', 'group');
     }
 
-    public function unitKerja()
-    {
-        return $this->hasOne(UserNIKUnitKerja::class, 'nik', 'nik');
-    }
+    // public function unitKerja()
+    // {
+    //     return $this->hasOne(UserNIKUnitKerja::class, 'nik', 'nik');
+    // }
 
-    public function UserNIKUnitKerja()
-    {
-        return $this->unitKerja();
-    }
+    // public function UserNIKUnitKerja()
+    // {
+    //     return $this->unitKerja();
+    // }
 
     // public function kompartemen()
     // {
