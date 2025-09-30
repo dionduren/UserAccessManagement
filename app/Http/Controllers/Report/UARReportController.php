@@ -621,7 +621,8 @@ class UARReportController extends Controller
         // // System Administrator
         $approvalTable->addRow();
         $approvalTable->addCell(2500)->addText('System Administrator', ['size' => 8], ['space' => ['after' => 0]]);
-        $approvalTable->addCell(2500)->addText('Deny Pratama', ['size' => 8], ['space' => ['after' => 0]]);
+        $approvalTable->addCell(2500)->addText(' ', ['size' => 8], ['space' => ['after' => 0]]);
+        // $approvalTable->addCell(2500)->addText('Deny Pratama', ['size' => 8], ['space' => ['after' => 0]]);
         $approvalTable->addCell(2500)->addText('', ['size' => 8], ['space' => ['after' => 0]]);
         $approvalTable->addCell(2500)->addText('', ['size' => 8], ['space' => ['after' => 0]]);
 
@@ -639,7 +640,8 @@ class UARReportController extends Controller
         // VP Operasional Sistem TI
         $approvalTable->addRow();
         $approvalTable->addCell(2500)->addText('VP Operasional Sistem TI', ['size' => 8], ['space' => ['after' => 0]]);
-        $approvalTable->addCell(2500)->addText('Abdul Muhyi Marakarma', ['size' => 8], ['space' => ['after' => 0]]);
+        $approvalTable->addCell(2500)->addText('', ['size' => 8], ['space' => ['after' => 0]]);
+        // $approvalTable->addCell(2500)->addText('Abdul Muhyi Marakarma', ['size' => 8], ['space' => ['after' => 0]]);
         $approvalTable->addCell(2500)->addText('', ['size' => 8], ['space' => ['after' => 0]]);
         $approvalTable->addCell(2500)->addText('', ['size' => 8], ['space' => ['after' => 0]]);
 

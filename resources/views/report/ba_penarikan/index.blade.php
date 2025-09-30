@@ -87,14 +87,14 @@
                     <tr>
                         <th style="width:60px;">No</th>
                         <th>Company</th>
-                        <th>User Type</th>
                         <th>User ID</th>
-                        <th>Creator</th>
-                        <th>Created On</th>
+                        <th>User Type</th>
                         <th>Valid From</th>
                         <th>Valid To</th>
                         <th>Last Logon Date</th>
                         <th>Last Logon Time</th>
+                        <th>Creator</th>
+                        <th>Created On</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -226,19 +226,12 @@
                             data: 'company'
                         },
                         {
-                            data: 'user_type',
-                            render: (d, t, r) => [r.user_type, r.user_type_desc].filter(Boolean).join(
-                                ' ') || '-'
-                        },
-                        {
                             data: 'sap_user_id'
                         },
                         {
-                            data: 'creator'
-                        },
-                        {
-                            data: 'creator_created_at',
-                            render: d => formatYmdToIndo(d)
+                            data: 'user_type',
+                            render: (d, t, r) => [r.user_type, r.user_type_desc].filter(Boolean).join(
+                                ' - ') || '-'
                         },
                         {
                             data: 'valid_from',
@@ -255,7 +248,14 @@
                         {
                             data: 'last_logon_time',
                             render: d => formatTime(d)
-                        }
+                        },
+                        {
+                            data: 'creator'
+                        },
+                        {
+                            data: 'creator_created_at',
+                            render: d => formatYmdToIndo(d)
+                        },
                     ],
                     order: [
                         [3, 'asc']

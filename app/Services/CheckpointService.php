@@ -185,7 +185,7 @@ class CheckpointService
                 $genericWithRole = userGeneric::where('group', $group)->whereHas('NIKJobRole')->count();
                 // Log::info("Checking job roles for company {$company->company_code}: NIK with role = {$nikWithRole}, Generic with role = {$genericWithRole}");
 
-                $completed = ($nikWithRole > 0 || $nikWithRole === 0) && ($genericWithRole > 0 || $genericWithRole === 0);
+                $completed = ($nikWithRole > 0) && ($genericWithRole > 0);
 
                 return [
                     'completed' => $completed,

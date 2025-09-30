@@ -222,12 +222,14 @@ class BAPenarikanDataController extends Controller
         $summaryTable->addCell($signWidthC, ['valign' => 'center', 'bgColor' => 'D9D9D9'])->addText('Tanggal', ['bold' => true, 'size' => 11], ['alignment' => Jc::CENTER, 'spaceAfter' => 0]);
         $summaryTable->addRow(750, ['exactHeight' => true]);
         $summaryTable->addCell($titleWidth, ['valign' => 'center'])->addText('Staf System Admin/BASIS', ['bold' => true, 'size' => 11], ['spaceAfter' => 0]);
-        $summaryTable->addCell($signWidthA, ['valign' => 'center'])->addText('Deny Pratama', ['size' => 11], ['spaceAfter' => 0]);
+        $summaryTable->addCell($signWidthA, ['valign' => 'center'])->addText('', ['size' => 11], ['spaceAfter' => 0]);
+        // $summaryTable->addCell($signWidthA, ['valign' => 'center'])->addText('Deny Pratama', ['size' => 11], ['spaceAfter' => 0]);
         $summaryTable->addCell($signWidthB, ['valign' => 'center'])->addText('', ['size' => 11], ['spaceAfter' => 0]);
         $summaryTable->addCell($signWidthC, ['valign' => 'center'])->addText($this->formatSyncDate($syncdate), ['size' => 11], ['alignment' => Jc::CENTER, 'spaceAfter' => 0]);
         $summaryTable->addRow(750, ['exactHeight' => true]);
         $summaryTable->addCell($titleWidth, ['valign' => 'center'])->addText('VP Operasional Sistem TI', ['bold' => true, 'size' => 11], ['spaceAfter' => 0]);
-        $summaryTable->addCell($signWidthA, ['valign' => 'center'])->addText('Abdul Muhyi M', ['size' => 11], ['spaceAfter' => 0]);
+        $summaryTable->addCell($signWidthA, ['valign' => 'center'])->addText('', ['size' => 11], ['spaceAfter' => 0]);
+        // $summaryTable->addCell($signWidthA, ['valign' => 'center'])->addText('Abdul Muhyi M', ['size' => 11], ['spaceAfter' => 0]);
         $summaryTable->addCell($signWidthB, ['valign' => 'center'])->addText('', ['size' => 11], ['spaceAfter' => 0]);
         $summaryTable->addCell($signWidthC, ['valign' => 'center'])->addText($this->formatSyncDate($syncdate), ['size' => 11], ['alignment' => Jc::CENTER, 'spaceAfter' => 0]);
 
