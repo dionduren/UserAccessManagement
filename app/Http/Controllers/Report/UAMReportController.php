@@ -250,12 +250,12 @@ class UAMReportController extends Controller
 
         // Build compositeRolesWithSingles (local singles first, fallback to middle)
         $compositeRolesWithSingles = [];
-        $mappedSingles = '';
         foreach ($compositeRoles as $comp) {
             $comp = $this->unwrapComposite($comp);
             if (!$comp) continue;
             $compNameRaw = $comp->nama;
             $localSingles = $comp->singleRoles ?? collect();
+            $mappedSingles = collect();
 
             if ($localSingles && $localSingles->count() > 0) {
                 // LOCAL singles
