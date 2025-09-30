@@ -30,20 +30,19 @@ class UAMReportController extends Controller
     public function index(Request $request)
     {
         $userCompany = auth()->user()->loginDetail->company_code;
-        if ($userCompany !== 'A000') {
-            $companies = Company::select('company_code', 'nama')->where('company_code', $userCompany)->get();
-        } else {
-            $companies = Company::select('company_code', 'nama')->get();
-        }
+        $companies = $userCompany !== 'A000'
+            ? Company::select('company_code', 'nama')->where('company_code', $userCompany)->get()
+            : Company::select('company_code', 'nama')->get();
 
         $companyId = $request->company_id;
         $kompartemenId = $request->kompartemen_id;
         $departemenId = $request->departemen_id;
 
-        $latestPeriode = Periode::latest()->first();
-        if (!$latestPeriode) {
-            $latestPeriode = null;
-        }
+        $periodes = Periode::orderByDesc('id')->get(['id', 'definisi']);
+        $selectedPeriodeId = $request->input('periode_id') ?? $periodes->first()?->id;
+        $activePeriode = $selectedPeriodeId
+            ? $periodes->firstWhere('id', (int) $selectedPeriodeId)
+            : null;
 
         $unitKerja = '';
         $unitKerjaName = '';
@@ -86,7 +85,9 @@ class UAMReportController extends Controller
             'companies',
             'unitKerja',
             'unitKerjaName',
-            'latestPeriode'
+            'activePeriode',
+            'periodes',
+            'selectedPeriodeId'
         ));
     }
 
@@ -135,8 +136,10 @@ class UAMReportController extends Controller
         $companyId      = $request->company_id;
         $kompartemenId  = $request->kompartemen_id;
         $departemenId   = $request->departemen_id;
-        $latestPeriode  = Periode::latest()->first();
-        $latestYear     = $latestPeriode ? date('Y', strtotime($latestPeriode->created_at)) : null;
+        $periodeId      = $request->periode_id;
+
+        $periode        = $periodeId ? Periode::find($periodeId) : Periode::latest()->first();
+        $periodeYear    = $periode ? $periode->created_at?->format('Y') : now()->format('Y');
         $nomorSurat     = 'XXX - Belum terdaftar';
         $usedMDBSingles = false;
 
@@ -171,7 +174,7 @@ class UAMReportController extends Controller
         $jobRoles = $query->get();
         $data = [];
 
-        $nomorSurat = "PI-TIN-UAM-{$latestYear}-{$nomorSurat}";
+        $nomorSurat = "PI-TIN-UAM-{$periodeYear}-{$nomorSurat}";
 
         // Collect composite names (for possible middle-db fallback)
         $compositeNames = $jobRoles
@@ -549,21 +552,20 @@ class UAMReportController extends Controller
 
     public function exportWord(Request $request)
     {
-        $companyId = $request->company_id;
+        $companyId    = $request->company_id;
         $kompartemenId = $request->kompartemen_id;
-        $departemenId = $request->departemen_id;
+        $departemenId  = $request->departemen_id;
+        $periodeId     = $request->periode_id;
 
         $unitKerja = '-';
         $jabatanUnitKerja = '';
         $unitKerjaName = '';
-        $latestPeriodeObj = Periode::latest()->first();
-        $latestPeriode = $latestPeriodeObj ? $latestPeriodeObj->definisi : '-';
-        $latestPeriodeYear = $latestPeriodeObj ? date('Y', strtotime($latestPeriodeObj->created_at)) : null;
-        $nomorSurat = 'XXX';
+        $periodeObj         = $periodeId ? Periode::find($periodeId) : Periode::latest()->first();
+        $latestPeriode      = $periodeObj ? $periodeObj->definisi : '-';
+        $latestPeriodeYear  = $periodeObj ? $periodeObj->created_at?->format('Y') : now()->format('Y');
+        $nomorSurat         = 'XXX';
         // $maxSingleRoles = 150; // Maximum single roles viewed per document
         $maxTcodes = 600; // Maximum tcodes viewed per document
-
-        // Initialize PhpWord
 
         // Rename unit kerja untuk display info di judul & tabel word
 

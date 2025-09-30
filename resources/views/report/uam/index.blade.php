@@ -36,6 +36,18 @@
         <h3>User Access Management Report</h3>
         <div class="row mb-3">
             <div class="col">
+                <label>Periode</label>
+                <select name="periode" id="periode" class="form-control">
+                    <option value="">-- Select Periode --</option>
+                    @foreach ($periodes as $periode)
+                        <option value="{{ $periode->id }}"
+                            {{ (int) $selectedPeriodeId === $periode->id ? 'selected' : '' }}>
+                            {{ $periode->definisi }}
+                        </option>
+                    @endforeach
+                </select>
+            </div>
+            <div class="col">
                 <label>Company</label>
                 <select name="company" id="company" class="form-control">
                     <option value="">-- Select Company --</option>
@@ -295,8 +307,7 @@
 
             // Load data on button click
             $('#load').on('click', function() {
-                // Check if latestPeriode is null before proceeding
-                @if (is_null($latestPeriode))
+                @if (is_null($activePeriode))
                     Swal.fire({
                         icon: 'error',
                         title: 'Gagal',
@@ -354,6 +365,7 @@
                 $.ajax({
                     url: "{{ route('report.uam.job-roles') }}",
                     data: {
+                        periode_id: $('#periode').val(),
                         company_id: companyId,
                         kompartemen_id: kompartemenId,
                         departemen_id: departemenId
@@ -464,8 +476,8 @@
 
             $('#export-word').on('click', function(e) {
                 e.preventDefault();
-                // Pass current filter as query string
                 let params = $.param({
+                    periode_id: $('#periode').val(),
                     company_id: $('#company').val(),
                     kompartemen_id: $('#kompartemen').val(),
                     departemen_id: $('#departemen').val()
@@ -476,6 +488,7 @@
             $('#export-single-excel').on('click', function(e) {
                 e.preventDefault();
                 let params = $.param({
+                    periode_id: $('#periode').val(),
                     company_id: $('#company').val(),
                     kompartemen_id: $('#kompartemen').val(),
                     departemen_id: $('#departemen').val()
@@ -486,6 +499,7 @@
             $('#export-composite-no-ao').on('click', function(e) {
                 e.preventDefault();
                 let params = $.param({
+                    periode_id: $('#periode').val(),
                     company_id: $('#company').val(),
                     kompartemen_id: $('#kompartemen').val(),
                     departemen_id: $('#departemen').val()
