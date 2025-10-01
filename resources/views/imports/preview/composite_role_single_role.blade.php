@@ -128,6 +128,8 @@
                 xhr.open('POST', confirmForm.attr('action'), true);
                 xhr.setRequestHeader('X-CSRF-TOKEN', $('meta[name="csrf-token"]').attr('content'));
 
+                let completionHandled = false;
+
                 // Event listener for progress updates
                 xhr.onprogress = function(event) {
                     const responseText = event.currentTarget.responseText;
@@ -143,7 +145,8 @@
                                 .text(progress + '%');
                         }
 
-                        if (data.success) {
+                        if (data.success && !completionHandled) {
+                            completionHandled = true;
                             progressBar.css('width', '100%').attr('aria-valuenow', 100).text('100%');
                             $('<div class="alert alert-success mt-4"><h4>' + data.success +
                                 '</h4></div>').insertAfter(confirmForm);
@@ -152,9 +155,28 @@
                                 '<a href="{{ route('composite_single.upload') }}" class="btn btn-primary">Back to Upload Page</a>' +
                                 '<a href="{{ route('home') }}" class="btn btn-secondary">Go to Home Page</a>' +
                                 '</div>').insertAfter(confirmForm);
+
+                            if (Array.isArray(data.warnings) && data.warnings.length > 0) {
+                                const warningHtml = '<ul class="text-start">' +
+                                    data.warnings.map(msg => `<li>${msg}</li>`).join('') +
+                                    '</ul>';
+                                Swal.fire({
+                                    icon: 'warning',
+                                    title: 'Import completed with notes',
+                                    html: warningHtml,
+                                    confirmButtonText: 'OK'
+                                });
+                            } else {
+                                Swal.fire({
+                                    icon: 'success',
+                                    title: 'Import completed',
+                                    text: data.success,
+                                    confirmButtonText: 'OK'
+                                });
+                            }
                         }
-                    } catch (e) {
-                        console.error('Error parsing progress:', e);
+                    } catch (err) {
+                        console.error('Error parsing progress:', err);
                     }
                 };
 

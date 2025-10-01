@@ -28,7 +28,7 @@ class JobCompositeExport implements FromCollection, WithHeadings, WithMapping, S
                 'company:company_code,nama,shortname',
                 'kompartemen:kompartemen_id,nama',
                 'departemen:departemen_id,nama',
-                'compositeRole:id,nama,source,job_role_id,company_id',
+                'compositeRole:id,nama,source,jabatan_id,company_id',
             ])
             ->when(
                 $this->userCompanyCode && $this->userCompanyCode !== 'A000',

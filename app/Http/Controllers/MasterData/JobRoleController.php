@@ -4,15 +4,19 @@ namespace App\Http\Controllers\MasterData;
 
 use App\Http\Controllers\Controller;
 
+use App\Services\JSONService;
+use App\Exports\MasterData\JobUserIdExport;
+
 use App\Models\Company;
 use App\Models\CostCenter;
 use App\Models\Departemen;
 use App\Models\JobRole;
 use App\Models\Kompartemen;
 use App\Models\PenomoranJobRole;
-use App\Services\JSONService; // <-- Add this at the top
-use Maatwebsite\Excel\Facades\Excel; // add
-use App\Exports\JobRoleFlaggedExport; // add
+use App\Exports\JobRoleFlaggedExport;
+use App\Models\Periode;
+
+use Maatwebsite\Excel\Facades\Excel;
 
 use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
@@ -25,9 +29,6 @@ class JobRoleController extends Controller
 {
     public function index()
     {
-        // $job_roles = JobRole::with(['compositeRole', 'company', 'kompartemen', 'departemen'])->get();
-        // return view('job_roles.index', compact('job_roles'));
-
         $user = auth()->user();
         $userCompanyCode = $user->loginDetail->company_code ?? null;
         $companies = 'zzz';
@@ -38,7 +39,10 @@ class JobRoleController extends Controller
             $companies = Company::where('company_code', $userCompanyCode)->get();
         }
 
-        return view('master-data.job_roles.index', compact('companies'));
+        $periodes = Periode::orderByDesc('id')
+            ->get(['id', 'definisi']);
+
+        return view('master-data.job_roles.index', compact('companies', 'periodes'));
     }
 
     public function create()
@@ -480,5 +484,25 @@ class JobRoleController extends Controller
     public function scopeCompany($q, string $companyCode)
     {
         return $q->where('company_id', $companyCode);
+    }
+
+    public function exportUserId(Request $request)
+    {
+        $userCompany = optional(auth()->user()->loginDetail)->company_code;
+
+        $filters = $request->only([
+            'company_id',
+            'kompartemen_id',
+            'departemen_id',
+            'job_role_id',
+            'periode_id',
+        ]);
+
+        $filename = 'job_role_user_ids_' . now()->format('Ymd_His') . '.xlsx';
+
+        return Excel::download(
+            new JobUserIdExport($userCompany, $filters),
+            $filename
+        );
     }
 }

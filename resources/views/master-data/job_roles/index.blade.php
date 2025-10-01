@@ -23,6 +23,22 @@
                     <i class="bi bi-download"></i> Download Flagged Data
                 </a>
 
+                @can('Super Admin')
+                    <a href="#" id="export-job-userid-btn" class="btn btn-success mb-3 ms-2">
+                        <i class="bi bi-file-earmark-excel"></i> Export Job Role User IDs
+                    </a>
+
+                    <select id="periodeDropdown" class="3 mb-3">
+                        <option value="">-- Pilih Periode Export --</option>
+                        @foreach ($periodes as $periode)
+                            <option value="{{ $periode->id }}">
+                                {{ $periode->periode ?? "Periode {$periode->id}" }}
+                                {{ $periode->definisi ? '- ' . $periode->definisi : '' }}
+                            </option>
+                        @endforeach
+                    </select>
+                @endcan
+
                 <!-- Success Message -->
                 @if (session('status'))
                     <div class="alert alert-success">
@@ -33,6 +49,7 @@
                 @if (session('success'))
                     <div class="alert alert-success">{{ session('success') }}</div>
                 @endif
+
 
                 <!-- Dropdown for Company Selection -->
                 <div class="form-group mb-3">
@@ -67,6 +84,7 @@
                     </thead>
                     <tbody></tbody>
                 </table>
+
             </div>
 
             <!-- Modal for Job Role Details -->
@@ -413,6 +431,29 @@
                 const url = new URL("{{ route('job-roles.export-flagged') }}", window.location.origin);
                 if (company) url.searchParams.set('company_code', company);
                 window.location.href = url.toString();
+            });
+
+            $('#export-job-userid-btn').on('click', function(e) {
+                e.preventDefault();
+
+                var params = [];
+                var company = $('[name="company_id"], #company_id, #companyDropdown').val();
+                var kompartemen = $('[name="kompartemen_id"], #kompartemen_id, #kompartemenDropdown').val();
+                var departemen = $('[name="departemen_id"], #departemen_id, #departemenDropdown').val();
+                var jobRole = $('[name="job_role_id"], #job_role_id, #jobRoleDropdown').val();
+                var periode = $('[name="periode_id"], #periode_id, #periodeDropdown').val();
+
+                if (company) params.push('company_id=' + encodeURIComponent(company));
+                if (kompartemen) params.push('kompartemen_id=' + encodeURIComponent(kompartemen));
+                if (departemen) params.push('departemen_id=' + encodeURIComponent(departemen));
+                if (jobRole) params.push('job_role_id=' + encodeURIComponent(jobRole));
+                if (periode) params.push('periode_id=' + encodeURIComponent(periode));
+
+                var url = "{{ route('job-roles.export') }}";
+                if (params.length) {
+                    url += '?' + params.join('&');
+                }
+                window.open(url, '_blank');
             });
         });
     </script>

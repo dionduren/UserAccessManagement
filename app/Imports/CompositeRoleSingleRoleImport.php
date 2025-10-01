@@ -13,31 +13,64 @@ class CompositeRoleSingleRoleImport implements ToModel, WithHeadingRow, WithChun
 {
     public function model(array $row)
     {
-        // Clean targeted fields (remove all whitespace characters)
-        $compositeRoleName = $this->cleanValue($row['composite_role'] ?? '');
-        $singleRoleName = $this->cleanValue($row['single_role'] ?? '');
+        $companyId          = $row['company_id'] ?? null;
+        $compositeRoleName  = $this->cleanValue($row['composite_role'] ?? '');
+        $singleRoleName     = $this->cleanValue($row['single_role'] ?? '');
+        $compositeDescInput = trim($row['composite_description'] ?? '');
+        $singleDescInput    = trim($row['single_description'] ?? '');
 
-        // Step 1: Validate or create Composite Role
         if ($compositeRoleName !== '') {
-            $compositeRole = CompositeRole::firstOrCreate([
-                'nama' => $compositeRoleName,
-            ], [
-                'deskripsi' => $row['composite_description'] ?? null,
-                'company_id' => $row['company_id'] ?? null,
-                'source' => 'upload',
-            ]);
+            $compositeRole = CompositeRole::firstOrNew(['nama' => $compositeRoleName]);
 
-            // Step 2: Validate or create Single Role
+            if (! $compositeRole->exists) {
+                $compositeRole->fill([
+                    'deskripsi' => $compositeDescInput ?: null,
+                    'company_id' => $companyId,
+                    'source' => 'upload',
+                ]);
+                $compositeRole->save();
+            } else {
+                $dirty = false;
+
+                if ($compositeDescInput !== '' && $compositeRole->deskripsi !== $compositeDescInput) {
+                    $compositeRole->deskripsi = $compositeDescInput;
+                    $dirty = true;
+                }
+
+                if ($companyId && $compositeRole->company_id !== $companyId) {
+                    $compositeRole->company_id = $companyId;
+                    $dirty = true;
+                }
+
+                if ($dirty) {
+                    $compositeRole->save();
+                }
+            }
+
             if ($singleRoleName !== '') {
-                $singleRole = SingleRole::firstOrCreate([
-                    'nama' => $singleRoleName,
-                    'company_id' => $row['company_id'] ?? null,
-                ], [
-                    'deskripsi' => $row['single_description'] ?? null,
-                    'source' => 'upload'
+                $singleRole = SingleRole::firstOrNew([
+                    'nama' => $singleRoleName
                 ]);
 
-                // Step 3: Link Single Role to Composite Role
+                if (! $singleRole->exists) {
+                    $singleRole->fill([
+                        'deskripsi' => $singleDescInput ?: null,
+                        'source' => 'upload',
+                    ]);
+                    $singleRole->save();
+                } else {
+                    $dirty = false;
+
+                    if ($singleDescInput !== '' && $singleRole->deskripsi !== $singleDescInput) {
+                        $singleRole->deskripsi = $singleDescInput;
+                        $dirty = true;
+                    }
+
+                    if ($dirty) {
+                        $singleRole->save();
+                    }
+                }
+
                 $compositeRole->singleRoles()->syncWithoutDetaching([$singleRole->id]);
             }
         }

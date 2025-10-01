@@ -250,6 +250,8 @@ Route::middleware(['auth'])->group(function () {
     Route::resource('kompartemens', KompartemenController::class);
     Route::resource('departemens', DepartemenController::class);
 
+
+    Route::get('/job-roles/export', [JobRoleController::class, 'exportUserId'])->name('job-roles.export');
     Route::get('/job-roles/{id}', [JobRoleController::class, 'show'])->where('id', '[0-9]+');
     Route::get('/job-roles/{job_role}/flagged', [JobRoleController::class, 'editFlagged'])->name('job-roles.edit-flagged');
     Route::post('/job-roles/{job_role}/flagged', [JobRoleController::class, 'updateFlagged'])->name('job-roles.update-flagged');

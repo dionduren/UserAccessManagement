@@ -130,8 +130,9 @@ class CompositeRoleSingleRoleController extends Controller
             $dataArray = $data instanceof Collection ? $data->toArray() : $data;
             $totalRows = count($dataArray);
             $processedRows = 0;
+            $warnings = [];
 
-            $response = new StreamedResponse(function () use ($dataArray, $totalRows, &$processedRows) {
+            $response = new StreamedResponse(function () use ($dataArray, $totalRows, &$processedRows, &$warnings) {
                 @ini_set('output_buffering', 'off');
                 @ini_set('zlib.output_compression', '0');
                 @ob_implicit_flush(true);
@@ -150,43 +151,125 @@ class CompositeRoleSingleRoleController extends Controller
                 $lastUpdate = microtime(true);
                 $send(['progress' => 0]);
 
-                foreach ($dataArray as $row) {
-                    if (!isset($row['company_code'], $row['single_role'], $row['composite_role'])) {
-                        Log::warning('Skipping invalid row.', ['row' => $row]);
+                foreach ($dataArray as $index => $row) {
+                    // if (!isset($row['company_code'], $row['single_role'], $row['composite_role'])) {
+                    //     Log::warning('Skipping invalid row.', ['row' => $row]);
+                    //     continue;
+                    // }
+
+                    // $company = Company::where('company_code', $row['company_code'])->first();
+                    // if (!$company) {
+                    //     Log::warning('Company not found for row', ['row' => $row]);
+                    //     continue;
+                    // }
+
+                    $companyCodeRaw = $row['company_code'] ?? null;
+                    $compositeRaw   = $row['composite_role'] ?? null;
+                    $singleRaw      = $row['single_role'] ?? null;
+
+                    $companyCode = $companyCodeRaw === null ? '' : trim((string) $companyCodeRaw);
+                    $compositeName = $compositeRaw === null ? '' : trim((string) $compositeRaw);
+                    $singleName = $singleRaw === null ? '' : trim((string) $singleRaw);
+
+                    $compDescRaw   = $row['composite_role_description'] ?? null;
+                    $singleDescRaw = $row['single_role_description'] ?? null;
+
+                    $compDesc   = $compDescRaw === null ? null : trim((string) $compDescRaw);
+                    $compDesc   = $compDesc === '' ? null : $compDesc;
+                    $singleDesc = $singleDescRaw === null ? null : trim((string) $singleDescRaw);
+                    $singleDesc = $singleDesc === '' ? null : $singleDesc;
+
+                    // CASE 1: no composite + no company => update/create single-role description only
+                    if ($compositeName === '' && $companyCode === '') {
+                        if ($singleName === '') {
+                            Log::warning('Skipping row; only single role description provided without name.', ['row' => $row]);
+                            $warnings[] = "Row " . ($index + 1) . ": Single role name missing while updating description.";
+                            continue;
+                        }
+
+                        $singleRole = SingleRole::firstOrNew(['nama' => $singleName]);
+                        $singleRole->deskripsi = $singleDesc;
+                        if (! $singleRole->exists) {
+                            $singleRole->source = 'upload';
+                        }
+                        $singleRole->save();
+
+                        $processedRows++;
+                        if (microtime(true) - $lastUpdate >= 1 || $processedRows === $totalRows) {
+                            $send(['progress' => (int) round($processedRows / max(1, $totalRows) * 100)]);
+                            $lastUpdate = microtime(true);
+                        }
                         continue;
                     }
 
-                    $company = Company::where('company_code', $row['company_code'])->first();
-                    if (!$company) {
+                    // CASE 2: composite present but company missing => skip (nothing meaningful to update)
+                    if ($compositeName !== '' && $companyCode === '') {
+                        Log::warning('Skipping row; composite role has no company code.', ['row' => $row]);
+                        $warnings[] = "Row " . ($index + 1) . ": Company code is required for composite role '{$compositeName}'.";
+                        continue;
+                    }
+
+                    if ($compositeName === '') {
+                        Log::warning('Skipping row; composite role name missing.', ['row' => $row]);
+                        $warnings[] = "Row " . ($index + 1) . ": Composite role name is blank.";
+                        continue;
+                    }
+
+                    $company = Company::where('company_code', $companyCode)->first();
+                    if (! $company) {
                         Log::warning('Company not found for row', ['row' => $row]);
+                        $warnings[] = "Row " . ($index + 1) . ": Company code '{$companyCode}' not found.";
                         continue;
                     }
 
-                    // Composite Role: create if new; keep existing description
-                    $compositeRole = CompositeRole::firstOrCreate(
-                        [
-                            'nama' => $row['composite_role'],
-                            'company_id' => $company->company_code
-                        ],
-                        [
-                            'deskripsi' => $row['composite_role_description'] ?? null,
-                            'source' => 'upload'
-                        ]
-                    );
+                    $compositeRole = CompositeRole::firstOrNew(['nama' => $compositeName]);
 
-                    // Single Role: create if new; keep existing description
-                    $singleRole = SingleRole::firstOrCreate(
-                        [
-                            'nama' => $row['single_role'],
-                        ],
-                        [
-                            'deskripsi' => $row['single_role_description'] ?? null,
-                            'source' => 'upload'
-                        ]
-                    );
+                    $compDirty = false;
+                    if ($compositeRole->company_id !== $companyCode) {
+                        $compositeRole->company_id = $companyCode;
+                        $compDirty = true;
+                    }
+                    if ($compositeRole->deskripsi !== $compDesc) {
+                        $compositeRole->deskripsi = $compDesc;
+                        $compDirty = true;
+                    }
+                    if (! $compositeRole->exists) {
+                        $compositeRole->source = 'upload';
+                        $compDirty = true;
+                    }
+                    if ($compDirty) {
+                        $compositeRole->save();
+                    }
 
-                    // Link (no duplicate)
-                    $compositeRole->singleRoles()->syncWithoutDetaching([$singleRole->id]);
+                    // CASE 3: single role fields empty => composite-only update done above
+                    if ($singleName === '' && $singleDesc === null) {
+                        $processedRows++;
+                        if (microtime(true) - $lastUpdate >= 1 || $processedRows === $totalRows) {
+                            $send(['progress' => (int) round($processedRows / max(1, $totalRows) * 100)]);
+                            $lastUpdate = microtime(true);
+                        }
+                        continue;
+                    }
+
+                    if ($singleName !== '') {
+                        $singleRole = SingleRole::firstOrNew(['nama' => $singleName]);
+
+                        if ($singleRole->deskripsi !== $singleDesc) {
+                            $singleRole->deskripsi = $singleDesc;
+                            if (! $singleRole->exists) {
+                                $singleRole->source = 'upload';
+                            }
+                            $singleRole->save();
+                        } elseif (! $singleRole->exists) {
+                            $singleRole->source = 'upload';
+                            $singleRole->save();
+                        }
+
+                        $compositeRole->singleRoles()->syncWithoutDetaching([$singleRole->id]);
+                    } else {
+                        Log::info('Composite updated without single role attachment.', ['composite' => $compositeName]);
+                        $warnings[] = "Row " . ($index + 1) . ": Composite '{$compositeName}' updated without single role.";
+                    }
 
                     $processedRows++;
                     if (microtime(true) - $lastUpdate >= 1 || $processedRows === $totalRows) {
@@ -195,7 +278,10 @@ class CompositeRoleSingleRoleController extends Controller
                     }
                 }
 
-                $send(['success' => 'Data imported successfully!']);
+                $send([
+                    'success'  => 'Data imported successfully!',
+                    'warnings' => $warnings,
+                ]);
             });
 
             session()->forget('parsedData');
