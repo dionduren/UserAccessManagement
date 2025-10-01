@@ -98,6 +98,8 @@ class MasterUSMM extends Model
                     CASE us06.lic_type
                         WHEN 'CB' THEN 'SAP Professional User'
                         WHEN 'CA' THEN 'SAP Application Developer'
+                        WHEN 'FN' THEN 'SAP Logistic User'
+                        WHEN 'FX' THEN 'SAP Worker User'
                         ELSE 'Not Assigned'
                     END                                       AS contr_user_type_desc,
                     ll.aname								  AS creator,
@@ -107,7 +109,7 @@ class MasterUSMM extends Model
                     ON ll.bname = ua.bname AND ll.rn = 1
                 LEFT JOIN basis_usr06 us06
                     ON ua.bname = us06.bname
-                WHERE us06.lic_type IN ('CA', 'CB')
+                WHERE us06.lic_type IN ('CA', 'CB','FN','FX')
                 AND ll.ustyp IN ('A','B')
                 -- AND NULLIF(LTRIM(RTRIM(ll.class)), '') IS NOT NULL
                 ORDER BY 
