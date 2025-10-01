@@ -505,4 +505,40 @@ class JobRoleController extends Controller
             $filename
         );
     }
+
+    public function bulkDestroy(Request $request)
+    {
+        $ids = array_filter($request->input('ids', []), fn($id) => !empty($id));
+
+        if (empty($ids)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Tidak ada job role yang dipilih.'
+            ], 422);
+        }
+
+        $jobRoles = JobRole::whereIn('id', $ids)->get();
+
+        if ($jobRoles->isEmpty()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Job role tidak ditemukan atau sudah dihapus.'
+            ], 404);
+        }
+
+        $deleted = 0;
+        foreach ($jobRoles as $jobRole) {
+            if ($jobRole->delete()) {
+                $deleted++;
+            }
+        }
+
+        app(JSONService::class)->generateMasterDataJson();
+
+        return response()->json([
+            'success' => true,
+            'deleted' => $deleted,
+            'message' => "{$deleted} job role berhasil dihapus."
+        ]);
+    }
 }

@@ -257,7 +257,8 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/job-roles/{job_role}/flagged', [JobRoleController::class, 'updateFlagged'])->name('job-roles.update-flagged');
     Route::post('/job-roles/update-flagged-status', [JobRoleController::class, 'updateFlaggedStatus'])->name('job-roles.update-flagged-status');
     Route::get('/job-roles/generate-job-role-id', [JobRoleController::class, 'generateJobRoleId'])->name('job-roles.generate-job-role-id');
-    Route::get('/master-data/job-roles/export-flagged', [JobRoleController::class, 'exportFlagged'])->name('job-roles.export-flagged');
+    Route::get('/job-roles/export-flagged', [JobRoleController::class, 'exportFlagged'])->name('job-roles.export-flagged');
+    Route::delete('/job-roles/bulk-destroy', [JobRoleController::class, 'bulkDestroy'])->name('job-roles.bulk-delete')->middleware('can:Super User');
     Route::resource('job-roles', JobRoleController::class);
 
     Route::get('/get-kompartemen', [KompartemenController::class, 'getKompartemenByCompany']);

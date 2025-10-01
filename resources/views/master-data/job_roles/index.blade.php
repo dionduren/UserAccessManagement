@@ -39,6 +39,10 @@
                     </select>
                 @endcan
 
+                @can('Super User')
+                    <button id="bulkDeleteButton" class="btn btn-danger mb-3 d-none">Hapus Terpilih</button>
+                @endcan
+
                 <!-- Success Message -->
                 @if (session('status'))
                     <div class="alert alert-success">
@@ -153,115 +157,113 @@
             // Initialize select2
             $('.select2').select2();
 
-            let masterData = {}; // To store JSON data for efficient lookups
+            const isSuperUser = @json(auth()->user()->can('Super User'));
+            let masterData = {};
+
+            let columns = [];
+
+            if (isSuperUser) {
+                columns.push({
+                    data: null,
+                    title: '',
+                    orderable: false,
+                    searchable: false,
+                    className: 'text-center align-middle',
+                    width: '2%',
+                    render: (_, __, row) =>
+                        `<input type="checkbox" class="row-select" value="${row.id ?? ''}">`
+                });
+            }
+
+            columns = columns.concat([{
+                    data: 'company',
+                    title: 'Perusahaan'
+                },
+                {
+                    data: 'kompartemen',
+                    title: 'Kompartemen'
+                },
+                {
+                    data: 'departemen',
+                    title: 'Departemen'
+                },
+                {
+                    data: 'job_role_id',
+                    title: 'Kode Job Role'
+                },
+                {
+                    data: 'job_role',
+                    title: 'Nama Jabatan'
+                },
+                {
+                    data: 'deskripsi',
+                    title: 'Deskripsi'
+                },
+                {
+                    data: 'status',
+                    title: 'Status',
+                    render: function(data) {
+                        if (data === 'Active') {
+                            return '<span style="color: #fff; background: #28a745; padding: 2px 8px; border-radius: 4px;">Active</span>';
+                        } else if (data === 'Not Active') {
+                            return '<span style="color: #fff; background: #dc3545; padding: 2px 8px; border-radius: 4px;">Not Active</span>';
+                        }
+                        return data;
+                    },
+                    createdCell: function(td, cellData) {
+                        if (cellData === 'Not Active') {
+                            $(td).css({
+                                'background': '#dc3545',
+                                'color': '#fff'
+                            });
+                        } else if (cellData === 'Active') {
+                            $(td).css({
+                                'background': '#28a745',
+                                'color': '#fff'
+                            });
+                        }
+                    }
+                },
+                {
+                    data: 'flagged',
+                    title: 'Flagged',
+                    render: function(data) {
+                        return data ? 'Yes' : 'No';
+                    },
+                    createdCell: function(td, cellData, rowData) {
+                        if (rowData.flagged) {
+                            if (!rowData.job_role_id || rowData.job_role_id === 'Not Assigned') {
+                                $(td).css('background-color', '#f02e3f').css('color', '#fff');
+                            } else {
+                                $(td).css('background-color', '#fff3cd').css('color', '#000');
+                            }
+                        }
+                    }
+                },
+                {
+                    data: 'actions',
+                    title: 'Actions',
+                    width: '12.5%',
+                    orderable: false,
+                    searchable: false
+                }
+            ]);
 
             let jobRolesTable = $('#jobRolesTable').DataTable({
                 responsive: true,
                 paging: true,
                 searching: true,
                 ordering: true,
-                data: [], // Start with empty data
-                columns: [{
-                        data: 'company',
-                        title: 'Perusahaan'
-                    },
-                    {
-                        data: 'kompartemen',
-                        title: 'Kompartemen'
-                    },
-                    {
-                        data: 'departemen',
-                        title: 'Departemen'
-                    },
-                    {
-                        data: 'job_role_id',
-                        title: 'Kode Job Role'
-                    },
-                    {
-                        data: 'job_role',
-                        title: 'Nama Jabatan'
-                    },
-                    {
-                        data: 'deskripsi',
-                        title: 'Deskripsi'
-                    },
-                    {
-                        data: 'status',
-                        title: 'Status',
-                        render: function(data) {
-                            if (data === 'Active') {
-                                return '<span style="color: #fff; background: #28a745; padding: 2px 8px; border-radius: 4px;">Active</span>';
-                            } else if (data === 'Not Active') {
-                                return '<span style="color: #fff; background: #dc3545; padding: 2px 8px; border-radius: 4px;">Not Active</span>';
-                            }
-                            return data;
-                        },
-                        createdCell: function(td, cellData) {
-                            if (cellData === 'Not Active') {
-                                $(td).css({
-                                    'background': '#dc3545',
-                                    'color': '#fff'
-                                });
-                            } else if (cellData === 'Active') {
-                                $(td).css({
-                                    'background': '#28a745',
-                                    'color': '#fff'
-                                });
-                            }
-                        }
-                    },
-                    {
-                        data: 'flagged',
-                        title: 'Flagged',
-                        render: function(data) {
-                            return data ? 'Yes' : 'No';
-                        },
-                        createdCell: function(td, cellData, rowData) {
-                            if (rowData.flagged) {
-                                if (!rowData.job_role_id || rowData.job_role_id ===
-                                    'Not Assigned') {
-                                    // Red if job_role_id does not exist or is "Not Assigned"
-                                    $(td).css('background-color', '#f02e3f');
-                                    $(td).css('color', '#fff');
-                                } else {
-                                    // Yellow if job_role_id exists and is not "Not Assigned"
-                                    $(td).css('background-color', '#fff3cd');
-                                    $(td).css('color', '#000');
-                                }
-                            }
-                        }
-                    },
-                    {
-                        data: 'actions',
-                        title: 'Actions',
-                        width: '12.5%',
-                        orderable: false,
-                        searchable: false
-                    }
-                ],
-                // rowCallback: function(row, data) {
-                //     // Flagged coloring
-                //     if (data.flagged) {
-                //         if (!data.job_role_id || data.job_role_id === 'Not Assigned') {
-                //             // Red if job_role_id does not exist or is "Not Assigned"
-                //             $(row).css('background-color', '#f02e3f');
-                //         } else {
-                //             // Yellow if job_role_id exists and is not "Not Assigned"
-                //             $(row).css('background-color', '#fff3cd');
-                //         }
-                //     }
-                // }
+                data: [],
+                columns: columns
             });
 
-            // Fetch master data and initialize the page
+            // Fetch master data
             $.ajax({
                 url: '/storage/master_data.json',
                 dataType: 'json',
                 success: function(data) {
                     masterData = data;
-
-                    // Populate company dropdown
-                    // populateDropdown('#companyDropdown', data, 'company_id', 'company_name');
                 },
                 error: function() {
                     alert('Failed to load master data.');
@@ -455,6 +457,47 @@
                 }
                 window.open(url, '_blank');
             });
+
+            // Bulk delete functionality
+            if (isSuperUser) {
+                $('#bulkDeleteButton').on('click', function() {
+                    const selectedIds = $('.row-select:checked').map(function() {
+                        return $(this).val();
+                    }).get();
+
+                    if (!selectedIds.length) {
+                        return alert('Tidak ada job role yang dipilih.');
+                    }
+
+                    if (!confirm('Anda yakin ingin menghapus job role terpilih?')) {
+                        return;
+                    }
+
+                    $.ajax({
+                        url: "{{ route('job-roles.bulk-delete') }}",
+                        method: 'POST',
+                        data: {
+                            ids: selectedIds,
+                            _token: '{{ csrf_token() }}',
+                            _method: 'DELETE'
+                        },
+                        success: function(response) {
+                            alert(response.message);
+                            $('#bulkDeleteButton').addClass('d-none');
+                            loadJobRoles();
+                        },
+                        error: function(xhr) {
+                            alert(xhr.responseJSON?.message ||
+                                'Gagal menghapus job role terpilih.');
+                        }
+                    });
+                });
+
+                $(document).on('change', '.row-select', function() {
+                    const anyChecked = $('.row-select:checked').length > 0;
+                    $('#bulkDeleteButton').toggleClass('d-none', !anyChecked);
+                });
+            }
         });
     </script>
 @endsection
