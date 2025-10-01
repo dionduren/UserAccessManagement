@@ -39,8 +39,13 @@
                     <!-- Job Role Dropdown -->
                     <div class="mb-3">
                         <label for="jabatan_id" class="form-label">Job Role</label>
-                        <select name="jabatan_id" id="jabatan_id" class="form-control select2" required>
-                        </select>
+                        <select name="jabatan_id" id="jabatan_id" class="form-control select2" required></select>
+                        <div class="form-check form-switch mt-2">
+                            <input class="form-check-input" type="checkbox" id="toggleAllJobRoles">
+                            <label class="form-check-label" for="toggleAllJobRoles">
+                                Tampilkan semua Job Role di perusahaan ini
+                            </label>
+                        </div>
                     </div>
 
                     <!-- Composite Role Dropdown -->
@@ -60,87 +65,92 @@
 @section('scripts')
     <script>
         $(document).ready(function() {
-            // Initialize select2 for the Job Role dropdown
-            $('.select2').select2({
+            $('#jabatan_id, #composite_role_id').select2({
                 width: '100%',
                 allowClear: true,
             });
 
-            //Data Cache
-            let jobRolesData = @json($job_roles_data);
+            let jobRolesDataUnassigned = @json($job_roles_data);
+            let jobRolesDataAll = @json($all_job_roles_data);
             let compositeRolesData = @json($compositeRoles);
+            let useAllJobRoles = false;
 
-            // Populate Job Roles and Composite Roles with existing data
             populateJobRoles('{{ $relationship->company_id }}', '{{ $relationship->jabatan_id }}');
             populateCompositeRoles(compositeRolesData, '{{ $relationship->id }}');
 
-            // Function to populate Job Roles
             function populateJobRoles(companyId, selectedJobRole = null) {
-                $('#jabatan_id').empty().append(
-                    '<option value="">Pilih Job Role</option>');
+                const dataset = useAllJobRoles ? jobRolesDataAll : jobRolesDataUnassigned;
+                let companyData = dataset[companyId] || null;
 
-                if (jobRolesData[companyId]) {
-                    $.each(jobRolesData[companyId], function(kompartemen, departemens) {
+                if (!companyData && !useAllJobRoles) {
+                    companyData = jobRolesDataAll[companyId] || null;
+                }
+
+                let $select = $('#jabatan_id');
+                $select.empty().append('<option value="">Pilih Job Role</option>');
+
+                if (companyData) {
+                    $.each(companyData, function(kompartemen, departemens) {
                         $.each(departemens, function(departemen, roles) {
                             let optgroupLabel = `${kompartemen} - ${departemen}`;
                             let optgroup = $('<optgroup>').attr('label', optgroupLabel);
 
-
-                            $.each(roles, function(index, role) {
-                                let option = $('<option>').val(role.id).text(role
-                                    .nama);
-                                if (role.id == selectedJobRole) {
+                            roles.forEach(role => {
+                                let option = $('<option>').val(role.id).text(role.nama);
+                                if (String(role.id) === String(selectedJobRole)) {
                                     option.attr('selected', 'selected');
                                 }
                                 optgroup.append(option);
                             });
 
-                            $('#jabatan_id').append(optgroup);
+                            $select.append(optgroup);
                         });
                     });
                 }
 
-                $('#jabatan_id').select2({
-                    allowClear: true,
-                    width: '100%'
-                });
+                $select.trigger('change.select2');
+
+                if (!$select.val() && selectedJobRole) {
+                    $select.val(String(selectedJobRole)).trigger('change.select2');
+                }
             }
 
-            // Function to populate the Composite Roles dropdown
             function populateCompositeRoles(roles, selectedCompositeRole = null) {
-                $('#composite_role_id').empty().append(
-                    '<option value="">Pilih Composite Role</option>');
+                const $select = $('#composite_role_id');
+                $select.empty().append('<option value="">Pilih Composite Role</option>');
 
                 roles.forEach(role => {
                     let option = $('<option>').val(role.id).text(role.nama);
-
-                    if (role.id == selectedCompositeRole) {
-                        option.attr('selected',
-                            'selected');
+                    if (String(role.id) === String(selectedCompositeRole)) {
+                        option.attr('selected', 'selected');
                     }
-                    $('#composite_role_id').append(option);
+                    $select.append(option);
                 });
 
-                $('#composite_role_id').select2({
-                    width: '100%',
-                    allowClear: true,
-                });
+                $select.trigger('change.select2');
             }
 
-            // Handle company selection change
+            $('#toggleAllJobRoles').on('change', function() {
+                useAllJobRoles = this.checked;
+                populateJobRoles($('#company_id').val(), '{{ $relationship->jabatan_id }}');
+            });
+
             $('#company_id').change(function() {
                 let companyId = $(this).val();
-                populateJobRoles(companyId, {{ $relationship->jabatan_id }});
+                populateJobRoles(companyId, '{{ $relationship->jabatan_id }}');
+
                 $.get('{{ route('job-composite.company-composite') }}', {
                     company_id: companyId
                 }, function(data) {
-                    populateCompositeRoles(data,
-                        {{ $relationship->id }}); // Populate filtered composite roles
+                    populateCompositeRoles(data, '{{ $relationship->id }}');
                 });
             });
 
-            // Trigger the change event on page load to set initial Job Roles
-            // $('#company_id').trigger('change');
+            if (!$('#jabatan_id').val()) {
+                $('#toggleAllJobRoles').prop('checked', true);
+                useAllJobRoles = true;
+                populateJobRoles('{{ $relationship->company_id }}', '{{ $relationship->jabatan_id }}');
+            }
         });
     </script>
 @endsection

@@ -159,12 +159,13 @@ class JobCompositeController extends Controller
         if ($userCompanyCode === 'A000') {
             $companies = Company::all();
 
-            $jobRoles = JobRole::whereNotExists(function ($q) use ($relationship) {
-                $q->select('*')
-                    ->from('tr_composite_roles')
-                    ->whereColumn('tr_job_roles.id', 'tr_composite_roles.jabatan_id')
-                    ->where('tr_composite_roles.id', '!=', $relationship->id);
-            })->get();
+            $jobRoles = JobRole::with(['company', 'kompartemen', 'departemen'])
+                ->whereNotExists(function ($q) use ($relationship) {
+                    $q->select('*')
+                        ->from('tr_composite_roles')
+                        ->whereColumn('tr_job_roles.id', 'tr_composite_roles.jabatan_id')
+                        ->where('tr_composite_roles.id', '!=', $relationship->id);
+                })->get();
 
             $compositeRoles = CompositeRole::where(function ($q) use ($relationship) {
                 $q->whereNull('jabatan_id')
@@ -173,14 +174,15 @@ class JobCompositeController extends Controller
         } else {
             $companies = Company::where('company_code', $userCompanyCode)->get();
 
-            $jobRoles = JobRole::whereHas('company', function ($q) use ($userCompanyCode) {
-                $q->where('company_code', $userCompanyCode);
-            })->whereNotExists(function ($q) use ($relationship) {
-                $q->select('*')
-                    ->from('tr_composite_roles')
-                    ->whereColumn('tr_job_roles.id', 'tr_composite_roles.jabatan_id')
-                    ->where('tr_composite_roles.id', '!=', $relationship->id);
-            })->get();
+            $jobRoles = JobRole::with(['company', 'kompartemen', 'departemen'])
+                ->whereHas('company', function ($q) use ($userCompanyCode) {
+                    $q->where('company_code', $userCompanyCode);
+                })->whereNotExists(function ($q) use ($relationship) {
+                    $q->select('*')
+                        ->from('tr_composite_roles')
+                        ->whereColumn('tr_job_roles.id', 'tr_composite_roles.jabatan_id')
+                        ->where('tr_composite_roles.id', '!=', $relationship->id);
+                })->get();
 
             $compositeRoles = CompositeRole::whereHas('company', function ($q) use ($userCompanyCode) {
                 $q->where('company_code', $userCompanyCode);
@@ -190,21 +192,39 @@ class JobCompositeController extends Controller
             })->get();
         }
 
-        $job_roles_data = [];
-        foreach ($jobRoles as $jobRole) {
-            $companyId = $jobRole->company_id;
-            $companyShortName = $jobRole->company->shortname;
-            $kompartemenName = $jobRole->kompartemen->nama ?? 'No Kompartemen';
-            $departemenName = $jobRole->departemen->nama ?? 'No Departemen';
+        $companyCodes = $companies->pluck('company_code');
 
-            $job_roles_data[$companyId][$kompartemenName][$departemenName][] = [
-                'id' => $jobRole->id,
-                'nama' => $jobRole->nama,
-                'company_shortname' => $companyShortName,
-            ];
-        }
+        $allJobRoles = JobRole::with(['company', 'kompartemen', 'departemen'])
+            ->whereIn('company_id', $companyCodes)
+            ->get();
 
-        return view('relationship.job-composite.edit', compact('relationship', 'companies', 'job_roles_data', 'compositeRoles', 'id'));
+        $groupJobRoles = function ($collection) {
+            $result = [];
+            foreach ($collection as $jobRole) {
+                $companyId = $jobRole->company_id;
+                $kompartemenName = $jobRole->kompartemen->nama ?? 'No Kompartemen';
+                $departemenName = $jobRole->departemen->nama ?? 'No Departemen';
+
+                $result[$companyId][$kompartemenName][$departemenName][] = [
+                    'id' => $jobRole->id,
+                    'nama' => $jobRole->nama,
+                    'company_shortname' => $jobRole->company->shortname ?? $jobRole->company_id,
+                ];
+            }
+            return $result;
+        };
+
+        $job_roles_data = $groupJobRoles($jobRoles);
+        $all_job_roles_data = $groupJobRoles($allJobRoles);
+
+        return view('relationship.job-composite.edit', compact(
+            'relationship',
+            'companies',
+            'job_roles_data',
+            'all_job_roles_data',
+            'compositeRoles',
+            'id'
+        ));
     }
 
     public function getCompositeFilterCompany(Request $request)
