@@ -35,9 +35,12 @@
                 <a href="{{ route('job-composite.create') }}" class="btn btn-primary mb-3">
                     <i class="bi bi-plus"></i> Buat Relationship Baru
                 </a>
-                {{-- <a href="#" id="downloadFlaggedBtn" class="btn btn-outline-danger mb-3 ms-2">
-                    <i class="bi bi-download"></i> Download Flagged
-                </a> --}}
+
+                @can('Super Admin')
+                    <a href="#" id="exportJobCompositeBtn" class="btn btn-success mb-3 ms-2">
+                        <i class="bi bi-file-earmark-excel"></i> Export Master Data
+                    </a>
+                @endcan
 
                 <!-- Dropdowns for Filtering -->
                 <div class="form-group">
@@ -351,6 +354,18 @@
             // On Job Role change -> redraw
             $('#jobRoleDropdown').on('change', function() {
                 compositeRolesTable.draw();
+            });
+
+            $('#exportJobCompositeBtn').on('click', function(e) {
+                e.preventDefault();
+                const params = $.param({
+                    company: $('#companyDropdown').val(),
+                    kompartemen: $('#kompartemenDropdown').val(),
+                    departemen: $('#departemenDropdown').val(),
+                    job_role: $('#jobRoleDropdown').val()
+                });
+                const url = "{{ route('job-composite.export') }}" + (params ? `?${params}` : '');
+                window.location.href = url;
             });
 
             function populateDropdown(selector, items, valueField, textField) {

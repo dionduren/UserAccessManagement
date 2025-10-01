@@ -300,6 +300,7 @@ Route::middleware(['auth'])->group(function () {
     // ======= MASTER DATA RELATIONSHIP ======= 
 
     Route::get('/relationship/job-composite/data', [JobCompositeController::class, 'getCompositeRoles'])->name('job-composite.data');
+    Route::get('/relationship/job-composite/export', [JobCompositeController::class, 'export'])->name('job-composite.export');
     Route::get('/relationship/job-composite/empty-composite', [JobCompositeController::class, 'getEmptyCompositeRole'])->name('job-composite.empty-composite');
     Route::get('/relationship/job-composite/company-composite', [JobCompositeController::class, 'getCompositeFilterCompany'])->name('job-composite.company-composite');
     Route::get('/relationship/job-composite/flagged/export', [JobCompositeController::class, 'exportFlagged'])->name('job-composite.export-flagged');

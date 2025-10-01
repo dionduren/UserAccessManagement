@@ -8,6 +8,7 @@ use App\Models\Company;
 use App\Models\JobRole;
 use App\Models\CompositeRole;
 use App\Exports\JobCompositeFlaggedExport; // added
+use App\Exports\MasterData\JobCompositeExport;
 
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\DB;
@@ -367,5 +368,21 @@ class JobCompositeController extends Controller
             . '_' . now()->format('Ymd_His') . '.xlsx';
 
         return Excel::download(new JobCompositeFlaggedExport($companyCode), $filename);
+    }
+
+    public function export(Request $request)
+    {
+        $userCompanyCode = optional(auth()->user()->loginDetail)->company_code ?? 'A000';
+
+        $filters = [
+            'company'     => $request->query('company'),
+            'kompartemen' => $request->query('kompartemen'),
+            'departemen'  => $request->query('departemen'),
+            'job_role'    => $request->query('job_role'),
+        ];
+
+        $filename = 'job_composite_roles_' . now()->format('Ymd_His') . '.xlsx';
+
+        return Excel::download(new JobCompositeExport($userCompanyCode, $filters), $filename);
     }
 }
