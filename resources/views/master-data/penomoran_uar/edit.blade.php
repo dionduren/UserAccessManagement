@@ -134,8 +134,11 @@
             $('#number').on('blur', function() {
                 $.get('{{ route('penomoran-uar.checkNumber') }}', {
                     number: $(this).val(),
-                    except: {{ $penomoranUAR->id }}
-                }, data => $('#number-error').text(data.exists ? 'Number already exists!' : ''));
+                    except: {{ $penomoranUAR->id }},
+                    company_id: $('#company_id').val()
+                }, data => $('#number-error').text(data.exists ? 'Nomor sudah digunakan oleh ' +
+                    data
+                    .unit_kerja_id + '!' : ''))
             });
         });
     </script>

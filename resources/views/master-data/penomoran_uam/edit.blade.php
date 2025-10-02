@@ -133,9 +133,10 @@
                 $.get('{{ route('penomoran-uam.checkNumber') }}', {
                     number: $(this).val(),
                     except: {{ $penomoranUAM->id }}
-                }, function(data) {
-                    $('#number-error').text(data.exists ? 'Number already exists!' : '');
-                });
+                    company_id: $('#company_id').val()
+                }, data => $('#number-error').text(data.exists ? 'Nomor sudah digunakan oleh ' +
+                    data
+                    .unit_kerja_id + '!' : ''))
             });
         });
     </script>

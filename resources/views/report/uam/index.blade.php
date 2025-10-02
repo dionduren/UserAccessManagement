@@ -33,7 +33,7 @@
     @endif
 
     <div class="container-fluid mb-5">
-        <h3>User Access Management Report</h3>
+        <h3>User Access Matrix Report</h3>
         <div class="row mb-3">
             <div class="col">
                 <label>Periode</label>

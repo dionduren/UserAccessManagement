@@ -147,9 +147,11 @@
 
                 $('#number').on('blur', function() {
                     $.get('{{ route('penomoran-uar.checkNumber') }}', {
-                        number: $(this).val()
+                        number: $(this).val(),
+                        company_id: $('#company_id').val()
                     }, function(data) {
-                        $('#number-error').text(data.exists ? 'Number already exists!' : '');
+                        $('#number-error').text(data.exists ? 'Nomor sudah digunakan oleh ' + data
+                            .unit_kerja_id + '!' : '');
                     });
                 });
             });

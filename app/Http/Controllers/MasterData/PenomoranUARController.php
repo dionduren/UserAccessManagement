@@ -3,9 +3,13 @@
 namespace App\Http\Controllers\MasterData;
 
 use App\Http\Controllers\Controller;
+
 use App\Models\Company;
+use App\Models\Departemen;
+use App\Models\Kompartemen;
 use App\Models\PenomoranUAR;
 use Illuminate\Http\Request;
+
 use Illuminate\Support\Facades\Storage;
 use Yajra\DataTables\DataTables;
 
@@ -205,8 +209,22 @@ class PenomoranUARController extends Controller
     // AJAX uniqueness check
     public function checkNumber(Request $request)
     {
-        $exists = PenomoranUAR::where('number', $request->number)->exists();
-        return response()->json(['exists' => $exists]);
+        $companyId = $request->input('company_id');
+        $unitKerjaInfo = '';
+
+        $exists = PenomoranUAR::where('number', $request->number)
+            ->where('company_id', $companyId)
+            ->exists();
+
+        if ($exists) {
+            $unitKerjaId = PenomoranUAR::where('number', $request->number)
+                ->where('company_id', $companyId)
+                ->first()
+                ->unit_kerja_id;
+            $unitKerjaInfo = Kompartemen::where('kompartemen_id', $unitKerjaId)->first()?->nama ?? Departemen::where('departemen_id', $unitKerjaId)->first()?->nama ?? 'N/A';
+        }
+
+        return response()->json(['exists' => $exists, 'unit_kerja_id' => $unitKerjaInfo]);
     }
 
     private function buildOrganizationData(?string $userCompany): \Illuminate\Support\Collection
