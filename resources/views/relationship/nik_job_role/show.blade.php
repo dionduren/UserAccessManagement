@@ -15,7 +15,7 @@
                     <dt>User</dt>
                     <dd>
                         {{ $nikJobRole->nik ?? '-' }} -
-                        {{ $nikJobRole->userDetail->nama ?? 'Belum ada Data Karyawan' }}
+                        {{ $nikJobRole->unitKerja->nama ?? 'Belum ada Data Karyawan' }}
                     </dd>
 
                     <dt>Job Role</dt>

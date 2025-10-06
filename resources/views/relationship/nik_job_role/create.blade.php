@@ -73,13 +73,11 @@
                     @foreach ($userNIKs as $user)
                         <option value="{{ $user->user_code }}">
                             {{ $user->user_code }} -
-                            {{ $user->userDetail
-                                ? $user->userDetail->nama .
+                            {{ $user->unitKerja
+                                ? $user->unitKerja->nama .
                                     ' | ' .
-                                    ($user->userDetail->kompartemen ? 'Kompartemen: ' . $user->userDetail->kompartemen->nama . ' - ' : '') .
-                                    ($user->userDetail->departemen
-                                        ? 'Departemen: ' . $user->userDetail->departemen->nama
-                                        : 'Belum ada Data Karyawan')
+                                    ($user->unitKerja->kompartemen ? 'Kompartemen: ' . $user->unitKerja->kompartemen->nama . ' - ' : '') .
+                                    ($user->unitKerja->departemen ? 'Departemen: ' . $user->unitKerja->departemen->nama : 'Belum ada Data Karyawan')
                                 : 'Belum ada Data Karyawan' }}
                         </option>
                     @endforeach

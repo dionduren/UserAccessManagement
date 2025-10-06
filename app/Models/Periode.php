@@ -2,6 +2,10 @@
 
 namespace App\Models;
 
+use App\Models\UserNIK;
+use App\Models\UserGeneric;
+use App\Models\UserGenericUnitKerja;
+use App\Models\UserNIKUnitKerja;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -23,9 +27,14 @@ class Periode extends Model
 
 
     // Eloquent Relationships
-    public function userDetail()
+    public function unitKerjaNIK()
     {
-        return $this->hasMany(UserDetail::class, 'periode_id', 'id');
+        return $this->hasMany(UserNIKUnitKerja::class, 'periode_id', 'id');
+    }
+
+    public function unitKerjaGeneric()
+    {
+        return $this->hasMany(UserGenericUnitKerja::class, 'periode_id', 'id');
     }
 
     public function userNIK()

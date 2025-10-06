@@ -10,6 +10,7 @@ use App\Models\NIKJobRole;
 use App\Models\Periode;
 use App\Models\UserGenericUnitKerja;
 use App\Models\UserNIKUnitKerja;
+use App\Models\middle_db\view\GenericKaryawanMappingFiltered;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -102,5 +103,10 @@ class userGeneric extends Model
     public function NIKJobRole()
     {
         return $this->hasMany(NIKJobRole::class, 'nik', 'user_code');
+    }
+
+    public function mappingNIK()
+    {
+        return $this->hasOne(GenericKaryawanMappingFiltered::class, 'sap_user_id', 'user_code');
     }
 }

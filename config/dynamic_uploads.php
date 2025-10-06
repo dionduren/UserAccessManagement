@@ -1,6 +1,7 @@
 <?php
 
 use App\Models\UserDetail;
+use App\Models\MasterDataKaryawanLocal;
 use App\Models\userNIK;
 use App\Models\userGeneric;
 use App\Models\NIKJobRole;
@@ -74,7 +75,7 @@ return [
             'where_fields' => ['nik'],
             'columns' => [
                 // 'nik' => ['type' => 'string', 'is_nik' => true],
-                'nik' => ['type' => 'lookup', 'alias' => 'nik', 'model' => UserDetail::class, 'id_field' => 'nik'],
+                'nik' => ['type' => 'lookup', 'alias' => 'nik', 'model' => MasterDataKaryawanLocal::class, 'id_field' => 'nik'],
                 // 'job_role_id' => ['type' => 'lookup', 'model' => JobRole::class, 'id_field' => 'job_role_id'],
                 // 'job_role' => ['type' => 'string'],
                 'job_role' => ['type' => 'lookup', 'header_name' => 'Job Role ID', 'model' => JobRole::class, 'id_field' => 'nama',  'db_field' => 'job_role_id'],

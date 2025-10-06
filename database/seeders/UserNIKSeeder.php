@@ -3,7 +3,7 @@
 namespace Database\Seeders;
 
 use App\Models\userNIK;
-use App\Models\UserDetail;
+// use App\Models\UserDetail;
 use Illuminate\Support\Carbon;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\File;
@@ -66,23 +66,23 @@ class UserNIKSeeder extends Seeder
             );
 
             // Insert into UserDetail
-            UserDetail::updateOrCreate(
-                ['nik' => $user['user_code']],
-                [
-                    'nama' => $user['nama'],
-                    'email' => $user['Email'],
-                    'company_id' => $user['company_id'],
-                    'direktorat' => $user['direktorat'],
-                    'kompartemen_id' => $user['kompartemen_id'],
-                    'departemen_id' => $user['departemen_id'],
-                    'grade' => $user['grade'],
-                    'jabatan' => $user['jabatan'],
-                    'atasan' => $user['atasan'],
-                    'cost_center' => $user['cost_center'],
-                    'created_by' => "Seeder",
-                    'updated_by' => "Seeder"
-                ]
-            );
+            // UserDetail::updateOrCreate(
+            //     ['nik' => $user['user_code']],
+            //     [
+            //         'nama' => $user['nama'],
+            //         'email' => $user['Email'],
+            //         'company_id' => $user['company_id'],
+            //         'direktorat' => $user['direktorat'],
+            //         'kompartemen_id' => $user['kompartemen_id'],
+            //         'departemen_id' => $user['departemen_id'],
+            //         'grade' => $user['grade'],
+            //         'jabatan' => $user['jabatan'],
+            //         'atasan' => $user['atasan'],
+            //         'cost_center' => $user['cost_center'],
+            //         'created_by' => "Seeder",
+            //         'updated_by' => "Seeder"
+            //     ]
+            // );
         }
 
         $this->command->info('User NIK & User Detail data seeded successfully!');

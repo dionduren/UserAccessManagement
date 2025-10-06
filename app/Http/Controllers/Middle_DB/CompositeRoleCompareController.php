@@ -41,7 +41,7 @@ class CompositeRoleCompareController extends Controller
             'company',
             'kompartemen',
             'departemen',
-            'jobRole.NIKJobRole.userDetail:nik,nama',
+            'jobRole.NIKJobRole.unitKerja:nik,nama',
             'jobRole.NIKJobRole.userGeneric:user_code,user_profile',
             'singleRoles'
         ])->where('nama', $name)->first();
@@ -70,7 +70,7 @@ class CompositeRoleCompareController extends Controller
         if ($composite && $composite->jobRole) {
             $assignedUsersLocal = $composite->jobRole->NIKJobRole
                 ->map(function ($row) {
-                    $detail = $row->userDetail;
+                    $detail = $row->unitKerja;
                     $generic = $row->userGeneric;
                     return [
                         'nik'         => $detail ? $detail->nik : ($generic->user_code ?? null),

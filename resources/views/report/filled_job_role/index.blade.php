@@ -19,8 +19,8 @@
             // Get all users assigned to this role
             $users = $jobRole->NIKJobRole->map(function ($nikJobRole) {
                 return [
-                    'nik' => $nikJobRole->userDetail->nik ?? '-',
-                    'nama' => $nikJobRole->userDetail->nama ?? '-',
+                    'nik' => $nikJobRole->unitKerja->nik ?? '-',
+                    'nama' => $nikJobRole->unitKerja->nama ?? '-',
                 ];
             });
 

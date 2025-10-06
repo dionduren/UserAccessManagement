@@ -6,7 +6,7 @@ use Illuminate\Support\Facades\File;
 
 use App\Models\Company;
 use App\Models\Departemen;
-use App\Models\UserDetail;
+// use App\Models\UserDetail;
 use App\Models\Kompartemen;
 use App\Models\CostPrevUser;
 use App\Models\CostCurrentUser;
@@ -80,22 +80,22 @@ class GenericUserListSeeder extends Seeder
             $departemenId = Departemen::where('name', $user['Departemen'])->value('id');
 
             // Create UserDetail if not existing using current_nik as the unique key
-            UserDetail::firstOrCreate(
-                ['nik' => $user['current_nik']],
-                [
-                    'nama'           => $user['current_user'],
-                    'nik'            => $user['current_nik'],
-                    'company_id'     => $companyId,
-                    'kompartemen_id' => $kompartemenId,
-                    'departemen_id'  => $departemenId,
-                    'jabatan'        => $user['Jabatan'],
-                    'cost_center'      => $user['cost_code'],
-                    'created_at'     => now(),
-                    'updated_at'     => now(),
-                    'created_by'     => 'Seeder',
-                    'updated_by'     => 'Seeder',
-                ]
-            );
+            // UserDetail::firstOrCreate(
+            //     ['nik' => $user['current_nik']],
+            //     [
+            //         'nama'           => $user['current_user'],
+            //         'nik'            => $user['current_nik'],
+            //         'company_id'     => $companyId,
+            //         'kompartemen_id' => $kompartemenId,
+            //         'departemen_id'  => $departemenId,
+            //         'jabatan'        => $user['Jabatan'],
+            //         'cost_center'      => $user['cost_code'],
+            //         'created_at'     => now(),
+            //         'updated_at'     => now(),
+            //         'created_by'     => 'Seeder',
+            //         'updated_by'     => 'Seeder',
+            //     ]
+            // );
         }
 
         $this->command->info('Cost Prev, Current, and User Detail data seeded successfully!');

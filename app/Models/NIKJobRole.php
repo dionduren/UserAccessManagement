@@ -4,7 +4,8 @@ namespace App\Models;
 
 use App\Models\JobRole;
 use App\Models\Periode;
-use App\Models\UserDetail;
+use App\Models\UserNIKUnitKerja;
+use App\Models\UserGenericUnitKerja;
 use App\Models\middle_db\MasterUSMM;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -44,6 +45,16 @@ class NIKJobRole extends Model
     public function UserNIKUnitKerja()
     {
         return $this->unitKerja();
+    }
+
+    public function unitKerjaGeneric()
+    {
+        return $this->hasOne(UserGenericUnitKerja::class, 'nik', 'nik');
+    }
+
+    public function UserGenericUnitKerja()
+    {
+        return $this->unitKerjaGeneric();
     }
 
     public function jobRole()

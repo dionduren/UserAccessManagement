@@ -122,11 +122,12 @@ class UARReportController extends Controller
             ->where('is_active', true)
             ->where('periode_id', $periode->id);
 
+        // Filter data tanpa company, kompartemen, departemen
         if (!$companyId && !$kompartemenId && !$departemenId) {
             $query->whereHas('jobRole');
         }
 
-
+        // Filter berdasarkan company, kompartemen, departemen
         if ($companyId) {
             $query->whereHas('jobRole', fn($q) => $q->where('company_id', $companyId));
         }
@@ -137,6 +138,7 @@ class UARReportController extends Controller
             $query->whereHas('jobRole', fn($q) => $q->where('departemen_id', $departemenId));
         }
 
+        // Ambil nomor surat & cost center berdasarkan departemen/kompartemen jika ada
         if ($departemenId) {
             $penomoranUAR = PenomoranUAR::where('unit_kerja_id', $departemenId)
                 ->whereNull('deleted_at')->latest()->first();
@@ -164,17 +166,21 @@ class UARReportController extends Controller
 
         $nomorSurat = "PI-TIN-UAR-{$periodeYear}-{$nomorSurat}";
 
+        // Set data User ID - Job Role berdasarkan departemen/kompartemen terpilih
         foreach ($nikJobRoles as $nikJobRole) {
             if ($nikJobRole->userGeneric || $nikJobRole->userNIK) {
+                // Ambil data job role
                 $jobRole = $nikJobRole->jobRole;
-                $mdb     = $nikJobRole->mdb_usmm;
 
+                // Ambil data user berdasarkan user ID di Middle DB
+                $mdb     = $nikJobRole->mdb_usmm;
                 $mdbData = $mdb ? [
                     'sap_user_id' => $mdb->sap_user_id ?? null,
                     'nama'        => $mdb->full_name ?? null,
                     'nik'         => $mdb->masterDataKaryawan_nama->nik ?? null,
                 ] : null;
 
+                // Susun row data untuk response per User ID terpilih
                 $data[] = [
                     'company'       => $jobRole?->company?->nama ?? '-',
                     'kompartemen'   => $nikJobRole->userGeneric?->UserGenericUnitKerja?->kompartemen->nama
@@ -182,12 +188,9 @@ class UARReportController extends Controller
                     'departemen'    => $nikJobRole->userGeneric?->UserGenericUnitKerja?->departemen->nama
                         ?? $jobRole?->departemen?->nama ?? '-',
                     'user_nik'      => $nikJobRole->nik ?? '-',
-                    'karyawan_nik'  => $nikJobRole->userNIK?->user_code
-                        ?? $nikJobRole->userGeneric?->nik
-                        ?? '-',
-                    'user_definisi' => $nikJobRole->userGeneric?->user_profile
-                        ?? ($nikJobRole->userNIK?->unitKerja?->nama ?? '-'),
                     'job_role'      => $jobRole?->nama ?? '-',
+                    'user_definisi' => $nikJobRole->userGeneric?->user_profile ?? ($nikJobRole->userNIK?->unitKerja?->nama ?? '-'),
+                    'karyawan_nik'  => $nikJobRole->userNIK ? $nikJobRole->userNIK->user_code : ($nikJobRole->userGeneric->mappingNIK ? $nikJobRole->userGeneric->mappingNIK->personnel_number : '-'),
                     'mdb_usmm'      => $mdbData,
                 ];
             }
@@ -220,6 +223,7 @@ class UARReportController extends Controller
         $latestPeriodeYear = $periode->created_at?->format('Y') ?? date('Y');
         $nomorSurat = 'XXX'; // Example, replace with your logic
 
+        // Persiapkan Identifier Unit Kerja & Nomor Dokumen UAR berdasarkan filter Unit kerja yang dipilih
         if ($departemenId) {
             $departemen = Departemen::find($departemenId);
             $displayName = $departemen ? $departemen->nama : '';
@@ -284,17 +288,8 @@ class UARReportController extends Controller
             $cost_center = 'Tidak ada Cost Center untuk Level Perusahaan';
         }
 
-        // dd($unitKerja, $unitKerjaName, $jabatanUnitKerja, $latestPeriode, $nomorSurat);
 
-        // $query = JobRole::query()
-        //     ->with(['NIKJobRole' => function ($q) {
-        //         $q->whereNull('deleted_at')->where('is_active', true);
-        //     }]);
-        // if ($companyId) $query->where('company_id', $companyId);
-        // if ($kompartemenId) $query->where('kompartemen_id', $kompartemenId);
-        // if ($departemenId) $query->where('departemen_id', $departemenId);
-
-        // $jobRoles = $query->get();
+        // Ambil data User ID - Job Role sesuai filter Unit Kerja yang dipilih
         $query = NIKJobRole::query()
             ->with([
                 'jobRole.company',
@@ -328,20 +323,6 @@ class UARReportController extends Controller
                 $q->where('departemen_id', $departemenId);
             });
         }
-
-        // if ($departemenId) {
-        //     $nomorSurat = PenomoranUAR::where('unit_kerja_id', $departemenId)
-        //         ->whereNull('deleted_at')
-        //         ->latest()
-        //         ->first()
-        //         ->number ?? 'XXX (Belum terdaftar)';
-        // } elseif ($kompartemenId) {
-        //     $nomorSurat = PenomoranUAR::where('unit_kerja_id', $kompartemenId)
-        //         ->whereNull('deleted_at')
-        //         ->latest()
-        //         ->first()
-        //         ->number ?? 'XXX (Belum terdaftar)';
-        // }
 
         $nikJobRoles = $query->get();
 
@@ -517,7 +498,7 @@ class UARReportController extends Controller
             if ($nikJobRole->userGeneric || $nikJobRole->userNIK) {
                 $jobRole = $nikJobRole->jobRole;
 
-                // New logic: prefer mdb_usmm values if present
+                $mdkl = $nikJobRole->userGeneric ? $nikJobRole->userGeneric->unitKerja : $nikJobRole->unitKerja;
                 $mdb = $nikJobRole->mdb_usmm;
 
                 // ORIGINAL (reference):
@@ -525,7 +506,13 @@ class UARReportController extends Controller
                 // Nama (was: userGeneric->user_profile OR userNIK->unitKerja->nama)
                 // NIK  (was: userGeneric->nik OR userNIK->user_code)
 
-                if ($mdb) {
+                if ($mdkl) {
+                    $userId    = $nikJobRole->nik ?? '-';
+                    $userName  = $this->sanitizeForDocx(
+                        $nikJobRole->userGeneric?->user_profile ?? ($nikJobRole->userNIK?->unitKerja?->nama ?? '-')
+                    );
+                    $nikValue  = $nikJobRole->userNIK ? $nikJobRole->userNIK->user_code : ($nikJobRole->userGeneric->mappingNIK ? $nikJobRole->userGeneric->mappingNIK->personnel_number : '-');
+                } else {
                     $userId    = $mdb->sap_user_id ?? ($nikJobRole->nik ?? '-');
                     $userName  = $this->sanitizeForDocx($mdb->full_name ?? (
                         $nikJobRole->userGeneric?->user_profile
@@ -533,14 +520,6 @@ class UARReportController extends Controller
                     ));
                     // If relation to MasterDataKaryawan (alias masterDataKaryawan_nama) exists, take its nik
                     $nikValue  = $mdb->masterDataKaryawan_nama->nik ?? '-';
-                } else {
-                    $userId    = $nikJobRole->nik ?? '-';
-                    $userName  = $this->sanitizeForDocx(
-                        $nikJobRole->userGeneric?->user_profile
-                            ?? ($nikJobRole->userNIK?->unitKerja?->nama ?? '-')
-                    );
-                    $nikValue  = $nikJobRole->userGeneric?->nik
-                        ?? ($nikJobRole->userNIK?->user_code ?? '-');
                 }
 
                 $table->addRow();

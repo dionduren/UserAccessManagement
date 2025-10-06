@@ -4,10 +4,9 @@ namespace App\Http\Controllers\IOExcel;
 
 use App\Http\Controllers\Controller;
 
-use \Maatwebsite\Excel\Exceptions\NoTypeDetectedException;
 use App\Imports\UserNIKImport;
 
-use \App\Models\UserDetail;
+use App\Models\MasterDataKaryawanLocal;
 use App\Models\Company;
 use App\Models\UserNIK;
 
@@ -16,6 +15,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
 use Maatwebsite\Excel\Facades\Excel;
+use Maatwebsite\Excel\Exceptions\NoTypeDetectedException;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 use Yajra\DataTables\Facades\DataTables;
 
@@ -107,7 +107,7 @@ class UserNIKImportController extends Controller
               $errors[$index + 1] = ["Company not found for group: {$row['group']}"];
             }
           } else {
-            $userNIKExists = UserDetail::where('nik', $row['user_code'])->exists();
+            $userNIKExists = MasterDataKaryawanLocal::where('nik', $row['user_code'])->exists();
             if (!$userNIKExists) {
               $previewData[] = [
                 'periode_id' => $periodeId,
