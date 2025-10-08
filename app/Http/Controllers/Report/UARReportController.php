@@ -368,7 +368,39 @@ class UARReportController extends Controller
             'borderSize' => 0,
             'borderColor' => 'FFFFFF',
         ]);
-        // Row 1: Nomor
+        // Row 1: RAHASIA
+        $nestedTable->addRow();
+        // Nested bordered box with red background "RAHASIA" (mirrors cover style)
+        $rahCell = $nestedTable->addCell(3250, [
+            'valign'   => 'center',
+            'gridSpan' => 2,
+        ]);
+        $rahBox = $rahCell->addTable([
+            'borderSize'       => 6,
+            'borderColor'      => '000000',
+            'cellMarginTop'    => 80,
+            'cellMarginBottom' => 80,
+            'cellMarginLeft'   => 80,
+            'cellMarginRight'  => 80,
+        ]);
+        $rahBox->getStyle()->setUnit(\PhpOffice\PhpWord\SimpleType\TblWidth::PERCENT);
+        $rahBox->getStyle()->setWidth(100 * 50);
+        $rahBox->getStyle()->setCellMarginLeft(0);
+        $rahBox->getStyle()->setCellMarginRight(0);
+
+        $rahBox->addRow();
+        $rahBox->addCell(null, [
+            'valign'  => 'center',
+            'bgColor' => 'FF0000',
+            'width'   => 100 * 50,
+            'unit'    => \PhpOffice\PhpWord\SimpleType\TblWidth::PERCENT,
+        ])->addText(
+            'RAHASIA',
+            ['bold' => true, 'size' => 9],
+            ['alignment' => Jc::CENTER, 'spaceBefore' => 0, 'spaceAfter' => 0]
+        );
+
+        // Row 2: Nomor
         $nestedTable->addRow();
         $nestedTable->addCell(1000, [
             'valign' => 'center',
@@ -638,7 +670,7 @@ class UARReportController extends Controller
                     ['space' => ['after' => 0]]
                 );
                 // Last Login
-                $table->addCell(4500, ['valign' => 'center'])->addText(
+                $table->addCell(4000, ['valign' => 'center'])->addText(
                     $this->sanitizeForDocx(
                         $userSystem->last_login
                             ? \Carbon\Carbon::parse($userSystem->last_login)->format('d F Y')
@@ -651,7 +683,7 @@ class UARReportController extends Controller
                 // Tetap / Berubah / Keterangan (unchanged placeholders)
                 $table->addCell(1500, ['valign' => 'center'])->addText('', ['size' => 8], ['space' => ['after' => 0]]);
                 $table->addCell(1500, ['valign' => 'center'])->addText('', ['size' => 8], ['space' => ['after' => 0]]);
-                $table->addCell(2000, ['valign' => 'center'])->addText(
+                $table->addCell(2500, ['valign' => 'center'])->addText(
                     '',
                     ['size' => 8, 'color' => 'A6A6A6'],
                     [

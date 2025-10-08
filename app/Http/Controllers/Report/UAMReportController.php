@@ -734,7 +734,7 @@ class UAMReportController extends Controller
         // Add empty rows for spacing
         // for ($i = 0; $i < 6; $i++) $coverTable->addRow(300);
 
-        $coverTable->addRow(8000, [
+        $coverTable->addRow(7500, [
             'valign' => 'center',
         ]);
         $coverTable->addCell(9000, ['gridSpan' => 3, 'valign' => 'center'])->addText(
@@ -791,8 +791,10 @@ class UAMReportController extends Controller
         $docInfoTable = $coverSection->addTable(['borderSize' => 6, 'borderColor' => '000000', 'cellMargin' => 20]);
         $docInfoTable = $coverSection->addTable(['borderSize' => 6, 'borderColor' => '000000', 'cellMargin' => 80]);
         $docInfoTable = $coverSection->addTable(['borderSize' => 6, 'borderColor' => '000000', 'cellMargin' => 80]);
+
+        // Row 1: Logo + No Dok + Nomor Surat
         $docInfoTable->addRow(500, ['exactHeight' => true]);
-        $docInfoTable->addCell(3400, ['valign' => 'center', 'vMerge' => 'restart',])->addImage(
+        $docInfoTable->addCell(3400, ['valign' => 'center', 'vMerge' => 'restart'])->addImage(
             public_path('logo_pupuk_indonesia.png'),
             ['width' => 120, 'height' => 60, 'alignment' => Jc::CENTER]
         );
@@ -813,16 +815,59 @@ class UAMReportController extends Controller
             ['bold' => true, 'size' => 14],
             ['alignment' => Jc::CENTER, 'spaceAfter' => 0]
         );
+
+        // Row 2: Empty + Tahun Terbit + Disclaimer
         $docInfoTable->addRow(1200, ['exactHeight' => true]);
         $docInfoTable->addCell(null, ['vMerge' => 'continue']);
         $docInfoTable->addCell(6000, [
             'valign' => 'center',
             'gridSpan' => 2,
+            'vMerge' => 'restart',
         ])->addText(
             "PupukIndonesia@" . Carbon::today()->year . " Dokumen ini milik PT Pupuk Indonesia (Persero). Segala informasi yang tercantum dalam dokumen ini bersifat rahasia dan terbatas, serta tidak diperkenankan untuk didistribusikan kembali, baik dalam bentuk cetakan maupun elektronik, tanpa persetujuan dari PT Pupuk Indonesia (Persero).",
             ['size' => 8],
             ['alignment' => Jc::CENTER, 'spaceAfter' => 0]
         );
+
+        // Row 3: Watermark + Empty
+        $docInfoTable->addRow(500, ['exactHeight' => true]);
+        // White background with a bordered rectangle (nested table) containing the text RAHASIA
+        $rahCell = $docInfoTable->addCell(3400, [
+            'valign' => 'center',
+            'vMerge' => 'restart',
+        ]);
+        $rahBox = $rahCell->addTable([
+            'borderSize'      => 6,
+            'borderColor'     => '000000',
+            'cellMarginTop'   => 80,
+            'cellMarginBottom' => 80,
+            'cellMarginLeft'  => 80,
+            'cellMarginRight' => 80,
+        ]);
+        // Make nested table occupy full parent cell width
+        $rahBox->getStyle()->setUnit(\PhpOffice\PhpWord\SimpleType\TblWidth::PERCENT);
+        $rahBox->getStyle()->setWidth(100 * 50); // 100%
+        // Optional: remove internal left/right margins to truly maximize space
+        $rahBox->getStyle()->setCellMarginLeft(0);
+        $rahBox->getStyle()->setCellMarginRight(0);
+
+        $rahBox->addRow();
+        $rahBox->addCell(null, [
+            'valign' => 'center',
+            'bgColor' => 'FF0000',
+            'width'  => 100 * 50,
+            'unit'   => \PhpOffice\PhpWord\SimpleType\TblWidth::PERCENT,
+        ])->addText(
+            'RAHASIA',
+            ['bold' => true, 'size' => 9],
+            ['alignment' => Jc::CENTER, 'spaceBefore' => 0, 'spaceAfter' => 0]
+        );
+
+        $docInfoTable->addCell(null, [
+            'vMerge'   => 'continue',
+            'gridSpan' => 2,
+        ]);
+
 
         // Main section with header/footer
         $section = $phpWord->addSection();
@@ -832,20 +877,54 @@ class UAMReportController extends Controller
         $headerTable = $header->addTable(['borderSize' => 6, 'borderColor' => '000000', 'cellMarginLeft' => 50, 'cellMarginTop' => 25, 'cellMarginRight' => 50, 'cellMarginBottom' => 25]);
 
         // Row 1: Logo + Title + No Dok + Nomor Surat
-        $headerTable->addRow(250, ['exactHeight' => true]);
+        $headerTable->addRow(500, ['exactHeight' => true]);
         $headerTable->addCell(3000, ['valign' => 'center', 'vMerge' => 'restart',])->addImage(
             public_path('logo_pupuk_indonesia.png'),
             ['width' => 80, 'height' => 50, 'alignment' => Jc::CENTER]
         );
-        $headerTable->addCell(6000, ['valign' => 'center'])->addText(
+        $headerTable->addCell(6000, ['valign' => 'center', 'vMerge' => 'restart'])->addText(
             'TEKNOLOGI INFORMASI',
             ['bold' => true, 'size' => 9],
             ['alignment' => Jc::CENTER, 'spaceBefore' => 0, 'spaceAfter' => 0]
         );
+        // Nested bordered box with red background "RAHASIA" (mirrors cover style)
+        $rahCell = $headerTable->addCell(4200, [
+            'valign'   => 'center',
+            'gridSpan' => 2,
+        ]);
+        $rahBox = $rahCell->addTable([
+            'borderSize'       => 6,
+            'borderColor'      => '000000',
+            'cellMarginTop'    => 80,
+            'cellMarginBottom' => 80,
+            'cellMarginLeft'   => 80,
+            'cellMarginRight'  => 80,
+        ]);
+        $rahBox->getStyle()->setUnit(\PhpOffice\PhpWord\SimpleType\TblWidth::PERCENT);
+        $rahBox->getStyle()->setWidth(100 * 50);
+        $rahBox->getStyle()->setCellMarginLeft(0);
+        $rahBox->getStyle()->setCellMarginRight(0);
+
+        $rahBox->addRow();
+        $rahBox->addCell(null, [
+            'valign'  => 'center',
+            'bgColor' => 'FF0000',
+            'width'   => 100 * 50,
+            'unit'    => \PhpOffice\PhpWord\SimpleType\TblWidth::PERCENT,
+        ])->addText(
+            'RAHASIA',
+            ['bold' => true, 'size' => 9],
+            ['alignment' => Jc::CENTER, 'spaceBefore' => 0, 'spaceAfter' => 0]
+        );
+
+        // Row 2: Colspan Logo + Colspan TEKNOLOGI INFORMASI + No Dok + Nomor Surat
+        $headerTable->addRow(250, ['exactHeight' => true]);
+        $headerTable->addCell(null, ['vMerge' => 'continue']);
+        $headerTable->addCell(null, ['vMerge' => 'continue']);
         $headerTable->addCell(1200, ['valign' => 'center'])->addText('No Dok', ['size' => 9], ['spaceBefore' => 0, 'spaceAfter' => 0]);
         $headerTable->addCell(3000, ['valign' => 'center'])->addText('PI-TIN-UAM-' . $latestPeriodeYear . '-' . $nomorSurat, ['size' => 9], ['spaceBefore' => 0, 'spaceAfter' => 0]);
 
-        // Row 2: Rowspan + Judul  + Rev. Ke + 0
+        // Row 3: Rowspan + Judul  + Rev. Ke + 0
         $headerTable->addRow(250, ['exactHeight' => true]);
         $headerTable->addCell(null, ['vMerge' => 'continue']);
         $headerTable->addCell(6000, ['valign' => 'center', 'vMerge' => 'restart'])->addText(
@@ -856,14 +935,14 @@ class UAMReportController extends Controller
         $headerTable->addCell(1200, ['valign' => 'center'])->addText('Rev. Ke', ['size' => 9], ['spaceBefore' => 0, 'spaceAfter' => 0]);
         $headerTable->addCell(3000, ['valign' => 'center'])->addText('0', ['size' => 9], ['spaceBefore' => 0, 'spaceAfter' => 0]);
 
-        // Row 3: Rowspan + Rowspan Tanggal + Tanggal Sekarang
+        // Row 4: Rowspan + Rowspan Tanggal + Tanggal Sekarang
         $headerTable->addRow(250, ['exactHeight' => true]);
         $headerTable->addCell(null, ['vMerge' => 'continue']);
         $headerTable->addCell(null, ['vMerge' => 'continue']);
         $headerTable->addCell(1200, ['valign' => 'center'])->addText('Tanggal', ['size' => 9], ['spaceBefore' => 0, 'spaceAfter' => 0]);
         $headerTable->addCell(3000, ['valign' => 'center'])->addText(\Carbon\Carbon::today()->locale('id')->isoFormat('DD MMMM YYYY'), ['size' => 9], ['spaceBefore' => 0, 'spaceAfter' => 0]);
 
-        // Row 4: Rowspan + Rowspan + Halaman Ke + Halaman
+        // Row 5: Rowspan + Rowspan + Halaman Ke + Halaman
         $headerTable->addRow(250, ['exactHeight' => true]);
         $headerTable->addCell(null, ['vMerge' => 'continue']);
         $headerTable->addCell(null, ['vMerge' => 'continue']);

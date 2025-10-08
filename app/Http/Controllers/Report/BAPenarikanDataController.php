@@ -185,10 +185,58 @@ class BAPenarikanDataController extends Controller
             public_path('logo_pupuk_indonesia.png'),
             ['width' => 100, 'height' => 50, 'alignment' => Jc::CENTER]
         );
-        $headerTable->addCell(9500, ['valign' => 'center', 'gridSpan' => 2])->addText(
+        $headerTable->addCell(6500, ['valign' => 'center', 'gridSpan' => 2])->addText(
             'Berita Acara Penarikan Data <w:br/> REVIU HAK AKSES',
             ['bold' => true, 'size' => 16],
             ['alignment' => Jc::CENTER, 'spaceAfter' => 0]
+        );
+        // Right-side cell with nested "RAHASIA" box
+        $outerCell = $headerTable->addCell(3000, ['valign' => 'center']);
+
+        // Create a nested table to host the red RAHASIA box (no outer borders)
+        $nestedTable = $outerCell->addTable([
+            'borderSize'       => 0,
+            'borderColor'      => 'FFFFFF',
+            'cellMarginTop'    => 0,
+            'cellMarginBottom' => 0,
+            'cellMarginLeft'   => 0,
+            'cellMarginRight'  => 0,
+        ]);
+        $nestedTable->getStyle()->setUnit(\PhpOffice\PhpWord\SimpleType\TblWidth::PERCENT);
+        $nestedTable->getStyle()->setWidth(100 * 50);
+
+        // Single row for the RAHASIA box (let it auto-grow vertically = "max height")
+        $nestedTable->addRow();
+
+        $rahCell = $nestedTable->addCell(3000, [
+            'valign'   => 'center',
+            'gridSpan' => 2,
+        ]);
+
+        // Inner boxed table (red background) - full width
+        $rahBox = $rahCell->addTable([
+            'borderSize'       => 6,
+            'borderColor'      => '000000',
+            'cellMarginTop'    => 80,
+            'cellMarginBottom' => 80,
+            'cellMarginLeft'   => 80,
+            'cellMarginRight'  => 80,
+        ]);
+        $rahBox->getStyle()->setUnit(\PhpOffice\PhpWord\SimpleType\TblWidth::PERCENT);
+        $rahBox->getStyle()->setWidth(100 * 50);
+        $rahBox->getStyle()->setCellMarginLeft(0);
+        $rahBox->getStyle()->setCellMarginRight(0);
+
+        $rahBox->addRow(); // auto height (max as needed)
+        $rahBox->addCell(null, [
+            'valign'  => 'center',
+            'bgColor' => 'FF0000',
+            'width'   => 100 * 50,
+            'unit'    => \PhpOffice\PhpWord\SimpleType\TblWidth::PERCENT,
+        ])->addText(
+            'RAHASIA',
+            ['bold' => true, 'size' => 9],
+            ['alignment' => Jc::CENTER, 'spaceBefore' => 0, 'spaceAfter' => 0]
         );
         // $section->addText('BERITA ACARA PENARIKAN DATA - UID GENERIK SAP', ['bold' => true, 'size' => 14], ['alignment' => Jc::CENTER]);
         // $section->addTextBreak(1);
