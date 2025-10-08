@@ -23,11 +23,11 @@ use Log;
 class CheckpointService
 {
     public const STEPS = [
-        'organization' => '1. Organization Data (Company, Kompartemen, Departemen, Cost Center, MDK)',
-        'roles'        => '2. Role Data (Job Role, Composite, Single, Tcode)',
-        'users'        => '3. User ID Data (User NIK, User Generic)',
-        'work_units'   => '4. User ID - Work Unit',
-        'job_roles'    => '5. User ID - Job Role',
+        'organization' => "1. Organization Data<br>(Company, Kompartemen, Departemen, Cost Center, MasterDataKaryawan)<br><br>[Middle DB Data]",
+        'roles'        => "2. Role Data<br>(Job Role, Composite, Single, Tcode)<br><br>[Middle DB Data]",
+        'users'        => "3. User ID<br>(User NIK & User Generic)<br><br>[Middle DB Data]",
+        'work_units'   => "4. User ID - Unit Kerja<br><br>[Upload]",
+        'job_roles'    => "5. User ID - Job Role<br><br>[Upload]",
     ];
 
     public function steps(): array
@@ -167,31 +167,73 @@ class CheckpointService
             },
             'work_units' => function (Company $company): array {
                 $group = $company->shortname ?? $company->company_code;
-                $nikWithUnit = userNIK::where('group', $group)->whereHas('unitKerja')->count();
+
+                $totalNik     = userNIK::where('group', $group)->count();
+                $totalGeneric = userGeneric::where('group', $group)->count();
+
+                $nikWithUnit     = userNIK::where('group', $group)->whereHas('unitKerja')->count();
                 $genericWithUnit = userGeneric::where('group', $group)->whereHas('userGenericUnitKerja')->count();
-                // Log::info("Checking work units for company {$company->company_code}: NIK with unit = {$nikWithUnit}, Generic with unit = {$genericWithUnit}");
-                $completed = $nikWithUnit > 0 && $genericWithUnit > 0;
+
+                // Raw differences (can be negative => data error / duplication)
+                $diffNik     = $totalNik - $nikWithUnit;
+                $diffGeneric = $totalGeneric - $genericWithUnit;
+
+                if (($totalNik + $totalGeneric) === 0 || ($nikWithUnit + $genericWithUnit) === 0) {
+                    $status = 'pending';
+                } elseif ($diffNik < 0 || $diffGeneric < 0) {
+                    $status = 'failed'; // error status
+                } elseif ($diffNik === 0 && $diffGeneric === 0) {
+                    $status = 'completed';
+                } else {
+                    $status = 'in_progress';
+                }
+
+                $nikPct = $totalNik ? round(min(100, $nikWithUnit / $totalNik * 100)) : 0;
+                $genPct = $totalGeneric ? round(min(100, $genericWithUnit / $totalGeneric * 100)) : 0;
+
+                $summary = "NIK - Unit Kerja: {$nikWithUnit}/{$totalNik} ({$nikPct}%), Generic - Unit Kerja: {$genericWithUnit}/{$totalGeneric} ({$genPct}%)";
+                if ($status === 'failed') {
+                    $summary .= " [ERROR: mapping melebihi total user]";
+                }
 
                 return [
-                    'completed' => $completed,
-                    'payload'   => [
-                        'summary' => "NIK+Unit: {$nikWithUnit}, Generic+Unit: {$genericWithUnit}",
-                    ],
+                    'status'  => $status,
+                    'payload' => ['summary' => $summary],
                 ];
             },
             'job_roles' => function (Company $company): array {
                 $group = $company->shortname ?? $company->company_code;
-                $nikWithRole = userNIK::where('group', $group)->whereHas('NIKJobRole')->count();
-                $genericWithRole = userGeneric::where('group', $group)->whereHas('NIKJobRole')->count();
-                // Log::info("Checking job roles for company {$company->company_code}: NIK with role = {$nikWithRole}, Generic with role = {$genericWithRole}");
 
-                $completed = ($nikWithRole > 0) && ($genericWithRole > 0);
+                $totalNik     = userNIK::where('group', $group)->count();
+                $totalGeneric = userGeneric::where('group', $group)->count();
+
+                $nikWithRole     = userNIK::where('group', $group)->whereHas('NIKJobRole')->count();
+                $genericWithRole = userGeneric::where('group', $group)->whereHas('NIKJobRole')->count();
+
+                $diffNikRole     = $totalNik - $nikWithRole;
+                $diffGenericRole = $totalGeneric - $genericWithRole;
+
+                if (($totalNik + $totalGeneric) === 0 || ($nikWithRole + $genericWithRole) === 0) {
+                    $status = 'pending';
+                } elseif ($diffNikRole < 0 || $diffGenericRole < 0) {
+                    $status = 'failed';
+                } elseif ($diffNikRole === 0 && $diffGenericRole === 0) {
+                    $status = 'completed';
+                } else {
+                    $status = 'in_progress';
+                }
+
+                $nikPct = $totalNik ? round(min(100, $nikWithRole / $totalNik * 100)) : 0;
+                $genPct = $totalGeneric ? round(min(100, $genericWithRole / $totalGeneric * 100)) : 0;
+
+                $summary = "NIK Role: {$nikWithRole}/{$totalNik} ({$nikPct}%), Generic Role: {$genericWithRole}/{$totalGeneric} ({$genPct}%)";
+                if ($status === 'failed') {
+                    $summary .= " [ERROR: mapping melebihi total user]";
+                }
 
                 return [
-                    'completed' => $completed,
-                    'payload'   => [
-                        'summary' => "NIK+JobRole: {$nikWithRole}, Generic+JobRole: {$genericWithRole}",
-                    ],
+                    'status'  => $status,
+                    'payload' => ['summary' => $summary],
                 ];
             },
         ];

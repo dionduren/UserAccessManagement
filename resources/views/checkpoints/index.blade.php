@@ -32,7 +32,7 @@
             <div class="card-body">
                 <div class="table-responsive">
                     <table class="table table-bordered align-middle">
-                        <thead class="table-light">
+                        <thead class="table-light align-top">
                             <tr>
                                 <th class="w-25">Step</th>
                                 @foreach ($companies as $company)
@@ -43,18 +43,19 @@
                         <tbody>
                             @foreach ($steps as $stepKey => $label)
                                 <tr>
-                                    <td class="fw-semibold">{{ $label }}</td>
+                                    <td class="fw-semibold align-top">{!! $label !!}</td>
                                     @foreach ($companies as $company)
                                         @php
                                             $cell = $matrix[$stepKey][$company->company_code] ?? null;
                                             $status = $cell['status'] ?? 'pending';
                                             $badgeClass = match ($status) {
                                                 'completed' => 'bg-success',
+                                                'in_progress' => 'bg-warning text-dark',
                                                 'failed' => 'bg-danger',
                                                 default => 'bg-secondary',
                                             };
                                         @endphp
-                                        <td class="text-center">
+                                        <td class="text-center align-top">
                                             <span class="badge {{ $badgeClass }}">{{ ucfirst($status) }}</span>
                                             @if (!empty($cell['completed_at']))
                                                 <div class="small text-muted mt-1">
