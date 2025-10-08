@@ -93,6 +93,11 @@
                     <i class="bi bi-exclamation-triangle"></i> Export Excel Composite tanpa Relationship
                 </button>
             </div>
+            <div class="col-auto align-self-center">
+                <div id="load-spinner" class="spinner-border text-success" role="status" style="display:none;">
+                    <span class="sr-only"></span>
+                </div>
+            </div>
         </div>
 
         {{-- RESULT 1: DOKUMEN REVIEW USER ID DAN OTORISASI --}}
@@ -370,32 +375,40 @@
                         kompartemen_id: kompartemenId,
                         departemen_id: departemenId
                     },
+                    beforeSend: function() {
+                        $('#load-spinner').show();
+                    },
                     success: function(response) {
                         jobRoleTable.clear();
+
+                        const jobRolesEmpty = !Array.isArray(response.data) || response.data
+                            .length === 0;
                         let totalUser = 0;
-                        if (response.data) {
+                        let cost_center = response.cost_center || '-';
+
+                        if (jobRolesEmpty) {
+                            jobRoleTable.draw();
+                            $('#job-role-table-container').hide();
+                            $('#nomor-surat-cell').text('XXX - Belum terdaftar');
+                        } else {
                             jobRoleTable.rows.add(response.data).draw();
                             totalUser = response.data.length;
                             cost_center = response.cost_center;
-                            if (response.nomorSurat) {
-                                $('#nomor-surat-cell').text(response.nomorSurat);
-                            } else {
-                                $('#nomor-surat-cell').text('XXX - Belum terdaftar');
-                            }
-                        } else {
-                            jobRoleTable.draw();
+                            $('#nomor-surat-cell').text(response.nomorSurat ||
+                                'XXX - Belum terdaftar');
+                            $('#job-role-table-container').show();
                         }
-                        $('#jumlah-awal-user-cell').html('<strong>' + totalUser + '</strong>');
-                        $('#cost-center-cell').text(cost_center);
 
-                        // Fill composite role - single role table
-                        if (response.composite_roles && response.composite_roles.length > 0) {
+                        $('#jumlah-awal-user-cell').html('<strong>' + totalUser + '</strong>');
+                        $('#cost-center-cell').text(cost_center ?? '-');
+
+                        if (!jobRolesEmpty && response.composite_roles && response
+                            .composite_roles.length > 0) {
                             let tbody = '';
                             response.composite_roles.forEach(function(cr, idx) {
-                                let singleRoles = cr.single_roles;
+                                const singleRoles = cr.single_roles;
                                 singleRoles.forEach(function(sr, srIdx) {
                                     tbody += '<tr>';
-                                    // Only show composite role cell for the first single role, with rowspan
                                     if (srIdx === 0) {
                                         tbody +=
                                             `<td rowspan="${singleRoles.length}">${idx + 1}</td>`;
@@ -404,21 +417,12 @@
                                     }
                                     tbody += `<td>${sr.nama_display}</td>`;
                                     tbody += `<td>${sr.deskripsi}</td>`;
-                                    let srcDisplay;
-                                    switch (sr.source) {
-                                        case 'import':
-                                            srcDisplay = 'MDB';
-                                            break;
-                                        case 'manual':
-                                        case 'edit':
-                                            srcDisplay = 'SYS';
-                                            break;
-                                        case 'upload':
-                                            srcDisplay = 'UPL';
-                                            break;
-                                        default:
-                                            srcDisplay = sr.source || 'CLOUD';
-                                    }
+                                    let srcDisplay = sr.source === 'import' ?
+                                        'MDB' :
+                                        (sr.source === 'manual' || sr.source ===
+                                            'edit') ? 'SYS' :
+                                        sr.source === 'upload' ? 'UPL' :
+                                        (sr.source || 'CLOUD');
                                     tbody += `<td>${srcDisplay}</td>`;
                                     tbody += '</tr>';
                                 });
@@ -430,11 +434,12 @@
                             $('#composite-role-table-container').hide();
                         }
 
-                        // Fill single role - tcode table
-                        if (response.single_roles && response.single_roles.length > 0) {
+                        if (!jobRolesEmpty && response.single_roles && response.single_roles
+                            .length > 0) {
                             let tbody = '';
                             let idx = 1;
-                            let tcodeSet = new Set();
+                            const tcodeSet = new Set();
+
                             response.single_roles.forEach(function(sr) {
                                 if (sr.tcodes.length > 0) {
                                     sr.tcodes.forEach(function(tc, tcIdx) {
@@ -449,27 +454,57 @@
                                         tbody +=
                                             `<td>${tc.deskripsi || '-'}</td>`;
                                         tbody += '</tr>';
+
                                         if (tc.tcode) tcodeSet.add(tc.tcode);
                                     });
                                 } else {
                                     tbody += `<tr>
-                <td>${idx}</td>
-                <td>${sr.nama}</td>
-                <td>-</td>
-                <td>-</td>
-            </tr>`;
+                                        <td>${idx}</td>
+                                        <td>${sr.nama}</td>
+                                        <td>-</td>
+                                        <td>-</td>
+                                    </tr>`;
                                 }
                                 idx++;
                             });
+
                             $('#single-role-table tbody').html(tbody);
                             $('#single-role-table-container').show();
-                            // Show counts
                             $('#unique-single-role-cell').text(response.single_roles.length);
                             $('#unique-tcode-cell').text(tcodeSet.size);
                         } else {
                             $('#single-role-table tbody').html('');
                             $('#single-role-table-container').hide();
+                            $('#unique-single-role-cell').text('0');
+                            $('#unique-tcode-cell').text('0');
                         }
+
+                        if (jobRolesEmpty) {
+                            $('#unique-single-role-cell').html(
+                                '<em style="color:#a00;">Belum ada user terdaftar. Silahkan cek konfigurasi Job Role - Composite Role, serta Relationship Composite Role - Single Role</em>'
+                            );
+                            $('#unique-tcode-cell').text('0');
+                        }
+                    },
+                    error: function() {
+                        jobRoleTable.draw();
+                        $('#job-role-table-container').hide();
+                        $('#composite-role-table tbody').html('');
+                        $('#composite-role-table-container').hide();
+                        $('#single-role-table tbody').html('');
+                        $('#single-role-table-container').hide();
+                        $('#jumlah-awal-user-cell').html(
+                            '<em style="color:#a00;">Belum ada user terdaftar. Silahkan cek konfigurasi Job Role - Composite Role, serta Relationship Composite Role - Single Role</em>'
+                        );
+                        $('#unique-single-role-cell').html(
+                            '<em style="color:#a00;">Belum ada user terdaftar. Silahkan cek konfigurasi Job Role - Composite Role, serta Relationship Composite Role - Single Role</em>'
+                        );
+                        $('#unique-tcode-cell').text('0');
+                        $('#cost-center-cell').text('-');
+                        $('#nomor-surat-cell').text('XXX - Belum terdaftar');
+                    },
+                    complete: function() {
+                        $('#load-spinner').hide();
                     }
                 });
             });

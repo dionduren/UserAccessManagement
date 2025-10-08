@@ -9,6 +9,7 @@ use App\Models\UserGenericUnitKerja;
 
 use App\Models\userNIK;
 use App\Models\UserNIKUnitKerja;
+use App\Models\userGenericSystem;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
@@ -96,9 +97,26 @@ class PeriodeController extends Controller
             }
 
             if ($USSMJobRoles->isEmpty()) {
-                $message .= '<li>Tidak ada data Mapping User Generic - Job Role sebelumnya untuk diduplikat.</li></ul>';
-            } else if ($USSMJobRoles->count() > 0) {
-                $message .= '<li>Mapping User Generic - Job Role berhasil diduplikat dari ' . $previousPeriode->definisi . '</li></ul>';
+                $message .= '<li>Tidak ada data Mapping User Generic - Job Role sebelumnya untuk diduplikat.</li>';
+            } else {
+                $message .= '<li>Mapping User Generic - Job Role berhasil diduplikat dari ' . $previousPeriode->definisi . '</li>';
+            }
+
+            // === Tambahan: Duplikat Data User System (userGenericSystem) dari periode sebelumnya ===
+            $userSystemPrev = userGenericSystem::where('periode_id', $previousPeriode->id)->get();
+
+            foreach ($userSystemPrev as $sys) {
+                $newSys = $sys->replicate();
+                $newSys->periode_id = $latestPeriode->id;
+                $newSys->created_at = now();
+                $newSys->updated_at = now();
+                $newSys->save();
+            }
+
+            if ($userSystemPrev->isEmpty()) {
+                $message .= '<li>Tidak ada data User System sebelumnya untuk diduplikat.</li></ul>';
+            } else {
+                $message .= '<li>Data User System berhasil diduplikat dari ' . $previousPeriode->definisi . '</li></ul>';
             }
         } else {
             $message .= '<br><ul><li>Tidak ada data UAR sebelumnya untuk diduplikat.</li></ul>';
@@ -173,6 +191,7 @@ class PeriodeController extends Controller
                 'user_generic_unit_kerja' => 0,
                 'user_nik_unit_kerja' => 0,
                 'nik_job_role' => 0,
+                'user_generic_system' => 0,
                 'periode' => 0,
             ]
         ];
@@ -184,6 +203,7 @@ class PeriodeController extends Controller
             $summary['deleted']['user_nik_unit_kerja'] = UserNIKUnitKerja::where('periode_id', $pid)->delete();
             $summary['deleted']['user_generic'] = userGeneric::where('periode_id', $pid)->delete();
             $summary['deleted']['user_nik'] = userNIK::where('periode_id', $pid)->delete();
+            $summary['deleted']['user_generic_system'] = userGenericSystem::where('periode_id', $pid)->delete();
 
             $periode->delete();
             $summary['deleted']['periode'] = 1;

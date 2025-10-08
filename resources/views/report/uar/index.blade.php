@@ -61,6 +61,11 @@
             <div class="col-auto">
                 <button id="export-word" class="btn btn-success mb-3" style="display: none">Export to Word</button>
             </div>
+            <div class="col-auto align-self-center">
+                <div id="load-spinner" class="spinner-border text-success" role="status" style="display:none;">
+                    <span class="sr-only"></span>
+                </div>
+            </div>
         </div>
 
         <div class="row mb-3" id="review-table-container" style="display:none;">
@@ -110,6 +115,8 @@
         </div>
 
         <div id="job-role-table-container" class="mt-4" style="display:none;">
+            <h5 class="mb-2">Summary User Access Review</h5>
+            <br>
             <table id="job-role-table" class="table table-bordered table-striped" style="width:100%">
                 <thead>
                     <tr>
@@ -126,6 +133,25 @@
                     </tr>
                 </thead>
             </table>
+        </div>
+
+        <div id="user-system-summary-container" class="mt-4" style="display:none;">
+            <h5 class="mb-2">Summary User System</h5>
+            <br>
+            <div class="table-responsive">
+                <table id="user-system-summary-table" class="table table-striped table-bordered" style="width:100%">
+                    <thead class="table-light">
+                        <tr>
+                            <th style="width:30%;">User ID</th>
+                            <th style="width:40%;">Deskripsi</th>
+                            <th style="width:30%;">Last Login</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- dynamic rows -->
+                    </tbody>
+                </table>
+            </div>
         </div>
     </div>
 @endsection
@@ -230,6 +256,7 @@
                 }
 
                 $('#review-table-container').show();
+                $('#user-system-summary-container').show();
                 $('#job-role-table-container').show();
                 $('#export-word').show();
 
@@ -256,18 +283,54 @@
                         kompartemen_id: kompartemenId,
                         departemen_id: departemenId
                     },
+                    beforeSend: function() {
+                        $('#load-spinner').show();
+                    },
                     success: function(resp) {
                         jobRoleTable.clear();
-                        if (resp.data) {
+                        if (resp.data && resp.data.length > 0) {
                             jobRoleTable.rows.add(resp.data).draw();
                             $('#jumlah-awal-user-cell').html('<strong>' + resp.data.length +
                                 '</strong>');
                         } else {
                             jobRoleTable.draw();
-                            $('#jumlah-awal-user-cell').html('<strong>0</strong>');
+                            $('#jumlah-awal-user-cell').html(
+                                '<em style="color:#a00;">Belum ada user terdaftar. Silahkan cek konfigurasi Job Role - User ID</em>'
+                            );
                         }
                         $('#nomor-surat-cell').text(resp.nomorSurat || 'XXX - Belum terdaftar');
                         $('#cost-center-cell').text(resp.cost_center || '-');
+
+                        // === User System Summary handling ===
+                        const $ussContainer = $('#user-system-summary-container');
+                        const $ussTbody = $('#user-system-summary-table tbody');
+
+                        if (resp.user_system && Array.isArray(resp.user_system) && resp
+                            .user_system.length > 0) {
+                            let rowsHtml = '';
+                            resp.user_system.forEach(u => {
+                                rowsHtml += `<tr>
+                                    <td>${u.user_code ?? '-'}</td>
+                                    <td>${u.user_profile ?? '-'}</td>
+                                    <td>${u.last_login ? u.last_login.substring(0,10) : '-'}</td>
+                                </tr>`;
+                            });
+                            $ussTbody.html(rowsHtml);
+                            $ussContainer.show();
+                        } else {
+                            $ussTbody.empty();
+                            $ussContainer.hide();
+                        }
+
+                    },
+                    error: function() {
+                        jobRoleTable.draw();
+                        $('#jumlah-awal-user-cell').html(
+                            '<em style="color:#a00;">Belum ada user terdaftar. Silahkan cek konfigurasi Job Role - User ID</em>'
+                        );
+                    },
+                    complete: function() {
+                        $('#load-spinner').hide();
                     }
                 });
             });

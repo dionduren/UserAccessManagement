@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Report;
 
 use App\Http\Controllers\Controller;
+
 use App\Models\Company;
 use App\Models\Departemen;
 use App\Models\JobRole;
@@ -10,6 +11,7 @@ use App\Models\Kompartemen;
 use App\Models\NIKJobRole;
 use App\Models\PenomoranUAR;
 use App\Models\Periode;
+use App\Models\userGenericSystem;
 
 use Illuminate\Http\Request;
 
@@ -102,6 +104,7 @@ class UARReportController extends Controller
         $periodeYear  = $periode->created_at ? $periode->created_at->format('Y') : date('Y');
         $nomorSurat   = 'XXX - Belum terdaftar';
         $cost_center  = '-';
+        $dataUserSystem = [];
 
         $query = NIKJobRole::query()
             ->with([
@@ -155,6 +158,10 @@ class UARReportController extends Controller
             if ($penomoranUAR) {
                 $nomorSurat  = $penomoranUAR->number;
                 $cost_center = $penomoranUAR->kompartemen?->cost_center ?? 'Belum terdaftar';
+
+                if ($cost_center == 'A008200000') {
+                    $dataUserSystem = userGenericSystem::where('cost_code', $cost_center)->where('periode_id', $periode->id)->get();
+                }
             } else {
                 $nomorSurat  = 'XXX (Belum terdaftar)';
                 $cost_center = Kompartemen::find($kompartemenId)?->cost_center ?? 'Belum terdaftar';
@@ -199,7 +206,8 @@ class UARReportController extends Controller
         return response()->json([
             'data'        => $data,
             'nomorSurat'  => $nomorSurat,
-            'cost_center' => $cost_center
+            'cost_center' => $cost_center,
+            'user_system'   => $dataUserSystem,
         ]);
     }
 
@@ -218,6 +226,8 @@ class UARReportController extends Controller
         $jabatanUnitKerja = '';
         $unitKerjaName = '';
         $cost_center = '';
+        $dataUserSystem = [];
+
         $latestPeriodeObj = $periode;
         $latestPeriode    = $periode->definisi;
         $latestPeriodeYear = $periode->created_at?->format('Y') ?? date('Y');
@@ -274,6 +284,8 @@ class UARReportController extends Controller
             if ($penomoranUAR) {
                 $nomorSurat = $penomoranUAR->number;
                 $cost_center = $penomoranUAR->kompartemen->cost_center;
+
+                $dataUserSystem = userGenericSystem::where('cost_code', $cost_center)->where('periode_id', $periode->id)->get();
             } else {
                 $nomorSurat = 'XXX (Belum terdaftar)';
                 $cost_center = Kompartemen::where('kompartemen_id', $kompartemenId)->first()?->cost_center ?? 'Belum terdaftar';
@@ -581,6 +593,74 @@ class UARReportController extends Controller
             ['size' => 8, 'italic' => true, 'color' => '7F7F7F'],
             ['space' => ['after' => 0]]
         );
+
+        // Summary User System
+        if ($dataUserSystem) {
+
+            $section->addTextBreak(1);
+
+            $table = $section->addTable(['borderSize' => 6, 'borderColor' => '000000', 'cellMargin' => 80]);
+            $table->addRow();
+            $table->addCell(12000, [
+                'gridSpan' => 7,
+                'bgColor' => 'D9E1F2',
+                'valign' => 'center'
+            ])->addText(
+                'SUMMARY USER SYSTEM',
+                ['bold' => true, 'color' => '000000', 'size' => 8],
+                ['alignment' => Jc::CENTER, 'space' => ['after' => 0]]
+            );
+            $table->addRow();
+            $table->addCell(750, ['bgColor' => 'D9E1F2'])->addText('No', ['bold' => true, 'color' => '000000', 'size' => 8], ['alignment' => Jc::CENTER, 'space' => ['after' => 0]]);
+            $table->addCell(3000, ['bgColor' => 'D9E1F2'])->addText('User ID', ['bold' => true, 'color' => '000000', 'size' => 8], ['alignment' => Jc::CENTER, 'space' => ['after' => 0]]);
+            $table->addCell(4500, ['bgColor' => 'D9E1F2'])->addText('Deskripsi', ['bold' => true, 'color' => '000000', 'size' => 8], ['alignment' => Jc::CENTER, 'space' => ['after' => 0]]);
+            $table->addCell(4500, ['bgColor' => 'D9E1F2'])->addText('Last Login', ['bold' => true, 'color' => '000000', 'size' => 8], ['alignment' => Jc::CENTER, 'space' => ['after' => 0]]);
+            $table->addCell(1750, ['bgColor' => 'D9E1F2'])->addText('Tetap*', ['bold' => true, 'color' => '000000', 'size' => 8], ['alignment' => Jc::CENTER, 'space' => ['after' => 0]]);
+            $table->addCell(1750, ['bgColor' => 'D9E1F2'])->addText('Berubah*', ['bold' => true, 'color' => '000000', 'size' => 8], ['alignment' => Jc::CENTER, 'space' => ['after' => 0]]);
+            $table->addCell(2000, ['bgColor' => 'D9E1F2'])->addText('Keterangan', ['bold' => true, 'color' => '000000', 'size' => 8], ['alignment' => Jc::CENTER, 'space' => ['after' => 0]]);
+
+            $no = 1;
+
+            // Loop through NIKJobRoles and add rows to the table
+            foreach ($dataUserSystem as $userSystem) {
+                $table->addRow();
+                $table->addCell(750, ['valign' => 'center'])->addText(
+                    $no++,
+                    ['size' => 8],
+                    ['space' => ['after' => 0], 'alignment' => Jc::CENTER]
+                );
+                // User ID
+                $table->addCell(3000, ['valign' => 'center'])->addText($userSystem->user_code, ['size' => 8], ['space' => ['after' => 0]]);
+                // Deskripsi
+                $table->addCell(4500, ['valign' => 'center'])->addText(
+                    $userSystem->user_profile,
+                    ['size' => 8],
+                    ['space' => ['after' => 0]]
+                );
+                // Last Login
+                $table->addCell(4500, ['valign' => 'center'])->addText(
+                    $this->sanitizeForDocx(
+                        $userSystem->last_login
+                            ? \Carbon\Carbon::parse($userSystem->last_login)->format('d F Y')
+                            : '-'
+                    ),
+                    ['size' => 8],
+                    ['alignment' => Jc::CENTER, 'space' => ['after' => 0]]
+                );
+
+                // Tetap / Berubah / Keterangan (unchanged placeholders)
+                $table->addCell(1500, ['valign' => 'center'])->addText('', ['size' => 8], ['space' => ['after' => 0]]);
+                $table->addCell(1500, ['valign' => 'center'])->addText('', ['size' => 8], ['space' => ['after' => 0]]);
+                $table->addCell(2000, ['valign' => 'center'])->addText(
+                    'Apabila ada (perubahan job function/nama/nik/Penonaktifan)',
+                    ['size' => 8, 'color' => 'A6A6A6'],
+                    [
+                        'space' => ['after' => 0],
+                        'wrap' => true,
+                    ]
+                );
+            }
+        }
 
         // Approval Table (Persetujuan)
         $section->addTextBreak(1);

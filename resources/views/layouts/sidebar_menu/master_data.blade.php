@@ -260,17 +260,12 @@
 
 <div class="dropdown">
     @php
+        // Added company_kompartemen* so the dropdown stays open on the upload page
         $isUserIdJobRoleActive = request()->routeIs(
             'job-composite*',
             'job-roles.*',
-            'user-nik.*',
-            'user-nik.middle_db',
-            'user-generic.*',
-            'user-generic.upload',
-            'user-generic.previewPage',
+            'company_kompartemen*',
             'dynamic_upload.*',
-            'company_kompartemen.*',
-            'middle_db.view.uam.user_composite.*',
             'compare.uam.relationship.user_composite*',
         );
     @endphp
@@ -281,27 +276,6 @@
     </a>
 
     <div class="dropdown-content {{ $isUserIdJobRoleActive ? 'show' : '' }}">
-        @can('Super Admin')
-            <div class="mx-3 text-white text-end"><strong>Middle DB</strong></div>
-            <li class="nav-item">
-                <a href="{{ route('user-nik.middle_db') }}"
-                    class="mb-1 nav-link {{ request()->routeIs('user-nik.middle_db') ? 'active' : 'text-white' }}">
-                    <i class="bi bi-database-fill-gear me-2"></i>User ID NIK
-                </a>
-            </li>
-            <li class="nav-item">
-                <a href="{{ route('user-generic.middle_db') }}"
-                    class="mb-1 nav-link {{ request()->routeIs('user-generic.middle_db') ? 'active' : 'text-white' }}">
-                    <i class="bi bi-database-fill-gear me-2"></i>User ID Generic
-                </a>
-            </li>
-            <li class="nav-item">
-                <a href="{{ route('middle_db.view.uam.user_composite.index') }}"
-                    class="mb-1 nav-link {{ request()->routeIs('middle_db.view.uam.user_composite.*', 'compare.uam.relationship.user_composite*') ? 'active' : 'text-white' }}">
-                    <i class="bi bi-database-fill-gear me-2"></i>User ID - Composite Role
-                </a>
-            </li>
-        @endcan
         <hr width="80%" class="my-1" style="margin-left: auto">
         <div class="mx-3 text-white text-end"><strong>Manage Local Data</strong></div>
         @can('data.create')
@@ -309,24 +283,6 @@
                 <a href="{{ route('company_kompartemen.upload') }}"
                     class="nav-link {{ request()->routeIs('company_kompartemen*') ? 'active' : 'text-white' }}">
                     <i class="bi bi-file-earmark-spreadsheet me-2"></i>Upload Job Role - Composite
-                </a>
-            </li>
-            <li>
-                <a href="{{ route('import.user_id.index') }}"
-                    class="nav-link {{ request()->routeIs('import.user_id.*') ? 'active' : 'text-white' }}">
-                    <i class="bi bi-cloud-download me-2"></i>Import User ID
-                </a>
-            </li>
-            <li class="nav-item">
-                <a href="{{ route('dynamic_upload.upload', ['module' => 'user_nik']) }}"
-                    class="nav-link {{ request()->routeIs('dynamic_upload.*') && request()->route('module') === 'user_nik' ? 'active' : 'text-white' }}">
-                    <i class="bi bi-file-earmark-spreadsheet me-2"></i>Upload {{ $modules['user_nik']['name'] }}
-                </a>
-            </li>
-            <li class="nav-item">
-                <a href="{{ route('user-generic.upload') }}"
-                    class="nav-link {{ request()->routeIs('user-generic.upload') || request()->routeIs('user-generic.previewPage') ? 'active' : 'text-white' }}">
-                    <i class="bi bi-file-earmark-spreadsheet me-2"></i>Upload User ID Generic
                 </a>
             </li>
             <hr width="80%" class="my-1" style="margin-left: auto">
@@ -342,28 +298,6 @@
             <a href="{{ route('job-composite.index') }}"
                 class="nav-link {{ request()->routeIs('job-composite*') ? 'active' : 'text-white' }}">
                 <i class="bi bi-link-45deg me-2"></i>Job Role - Composite Role
-            </a>
-        </li>
-
-        <li class="nav-item">
-            <a href="{{ route('user-nik.index') }}"
-                class="nav-link {{ request()->routeIs('user-nik.*') ? 'active' : 'text-white' }}">
-                <i class="bi bi-person-badge me-2"></i>User ID NIK
-            </a>
-        </li>
-
-        @php
-            $isUserGenericIndexActive =
-                request()->routeIs('user-generic.*') &&
-                !request()->routeIs('user-generic.upload') &&
-                !request()->routeIs('user-generic.previewPage') &&
-                !request()->routeIs('user-generic-job-role.*') &&
-                !request()->routeIs('user-generic.middle_db');
-        @endphp
-        <li class="nav-item">
-            <a href="{{ route('user-generic.index') }}"
-                class="nav-link {{ $isUserGenericIndexActive ? 'active' : 'text-white' }}">
-                <i class="bi bi-person-lines-fill me-2"></i>User ID Generic
             </a>
         </li>
     </div>

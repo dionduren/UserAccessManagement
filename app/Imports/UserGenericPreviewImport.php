@@ -14,10 +14,17 @@ class UserGenericPreviewImport implements WithMultipleSheets, SkipsUnknownSheets
     use Importable;
 
     public Collection $rows;
+    protected int $periodeId;
 
-    public function __construct()
+    public function __construct(int $periodeId)
     {
         $this->rows = collect();
+        $this->periodeId = $periodeId;
+    }
+
+    public function getPeriodeId(): int
+    {
+        return $this->periodeId;
     }
 
     public function sheets(): array
@@ -30,6 +37,7 @@ class UserGenericPreviewImport implements WithMultipleSheets, SkipsUnknownSheets
                 {
                     foreach ($rows as $row) {
                         $mappedRow = [
+                            'periode_id'    => $this->parent->getPeriodeId(),
                             'group'         => $row['group'] ?? null,
                             'user_code'     => $row['user_code'] ?? null,
                             'user_type'     => $row['user_type'] ?? null,
@@ -42,7 +50,7 @@ class UserGenericPreviewImport implements WithMultipleSheets, SkipsUnknownSheets
                             'valid_to'      => $row['valid_to'] ?? null,
                             'keterangan'    => $row['keterangan'] ?? null,
                             'uar_listed'    => $row['uar_listed'] ?? null,
-                            'created_by'    => auth()->id(),
+                            'created_by'    => auth()->user()->name,
                         ];
 
                         $this->parent->rows->push(collect($mappedRow));
@@ -52,8 +60,5 @@ class UserGenericPreviewImport implements WithMultipleSheets, SkipsUnknownSheets
         ];
     }
 
-    public function onUnknownSheet($sheetName)
-    {
-        // ignore other sheets
-    }
+    public function onUnknownSheet($sheetName) {}
 }

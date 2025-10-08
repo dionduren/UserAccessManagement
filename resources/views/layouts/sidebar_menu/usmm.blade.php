@@ -73,6 +73,124 @@
                 </div> --}}
 
     @php
+        // State checks for each submenu item
+        $isUserNikUploadActive = request()->routeIs('dynamic_upload.*') && request()->route('module') === 'user_nik';
+        $isUserGenericUploadActive =
+            request()->routeIs('user-generic.upload') || request()->routeIs('user-generic.previewPage');
+        $isImportUserIdActive = request()->routeIs('import.user_id.*');
+        $isUserSystemImportActive =
+            request()->routeIs('user_system.import.index') || request()->routeIs('user_system.import.preview.get');
+        $isUserSystemIndexActive = request()->routeIs('user-system.*') && !$isUserSystemImportActive;
+
+        $isUserNikMiddleDbActive = request()->routeIs('user-nik.middle_db');
+        $isUserGenericMiddleDbActive =
+            request()->routeIs('user-generic.middle_db') || request()->routeIs('compare.usmm.generic');
+        $isUserCompositeMiddleDbActive =
+            request()->routeIs('middle_db.view.uam.user_composite.*') ||
+            request()->routeIs('compare.uam.relationship.user_composite*');
+
+        $isUserGenericIndexActive =
+            request()->routeIs('user-generic.*') &&
+            !$isUserGenericUploadActive &&
+            !request()->routeIs('user-generic-job-role.*') &&
+            !$isUserGenericMiddleDbActive;
+
+        $isUserNikIndexActive = request()->routeIs('user-nik.*') && !$isUserNikMiddleDbActive;
+
+        // Overall dropdown active state
+        $isUserSystemMenuActive =
+            $isUserNikUploadActive ||
+            $isUserGenericUploadActive ||
+            $isImportUserIdActive ||
+            $isUserSystemImportActive ||
+            $isUserSystemIndexActive ||
+            $isUserGenericIndexActive ||
+            $isUserNikIndexActive ||
+            $isUserNikMiddleDbActive ||
+            $isUserGenericMiddleDbActive ||
+            $isUserCompositeMiddleDbActive;
+    @endphp
+
+    <div class="dropdown">
+        <a class="mb-1 nav-link dropdown-toggle {{ $isUserSystemMenuActive ? 'active' : 'text-white' }}"
+            data-bs-toggle="dropdown" href="#" role="button"
+            aria-expanded="{{ $isUserSystemMenuActive ? 'true' : 'false' }}">
+            <span class="me-auto">2. User ID</span>
+        </a>
+
+        <div class="dropdown-content {{ $isUserSystemMenuActive ? 'show' : '' }}">
+            @can('Super Admin')
+                <div class="mx-3 text-white text-end"><strong>Middle DB</strong></div>
+                <li class="nav-item">
+                    <a href="{{ route('user-nik.middle_db') }}"
+                        class="mb-1 nav-link {{ $isUserNikMiddleDbActive ? 'active' : 'text-white' }}">
+                        <i class="bi bi-database-fill-gear me-2"></i>User ID NIK
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="{{ route('user-generic.middle_db') }}"
+                        class="mb-1 nav-link {{ $isUserGenericMiddleDbActive ? 'active' : 'text-white' }}">
+                        <i class="bi bi-database-fill-gear me-2"></i>User ID Generic
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="{{ route('middle_db.view.uam.user_composite.index') }}"
+                        class="mb-1 nav-link {{ $isUserCompositeMiddleDbActive ? 'active' : 'text-white' }}">
+                        <i class="bi bi-database-fill-gear me-2"></i>User ID - Composite Role
+                    </a>
+                </li>
+            @endcan
+            <div class="mx-3 text-white text-end"><strong>Local Data</strong></div>
+
+            <li>
+                <a href="{{ route('import.user_id.index') }}"
+                    class="nav-link {{ $isImportUserIdActive ? 'active' : 'text-white' }}">
+                    <i class="bi bi-cloud-download me-2"></i>Import User ID
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="{{ route('dynamic_upload.upload', ['module' => 'user_nik']) }}"
+                    class="nav-link {{ $isUserNikUploadActive ? 'active' : 'text-white' }}">
+                    <i class="bi bi-file-earmark-spreadsheet me-2"></i>Upload {{ $modules['user_nik']['name'] }}
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="{{ route('user-generic.upload') }}"
+                    class="nav-link {{ $isUserGenericUploadActive ? 'active' : 'text-white' }}">
+                    <i class="bi bi-file-earmark-spreadsheet me-2"></i>Upload User ID Generic
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="{{ route('user_system.import.index') }}"
+                    class="nav-link {{ $isUserSystemImportActive ? 'active' : 'text-white' }}">
+                    <i class="bi bi-file-earmark-spreadsheet me-2"></i>Upload User System
+                </a>
+            </li>
+
+            <li class="nav-item">
+                <a href="{{ route('user-generic.index') }}"
+                    class="nav-link {{ $isUserGenericIndexActive ? 'active' : 'text-white' }}">
+                    <i class="bi bi-person-lines-fill me-2"></i>User ID Generic
+                </a>
+            </li>
+
+            <li class="nav-item">
+                <a href="{{ route('user-nik.index') }}"
+                    class="nav-link {{ $isUserNikIndexActive ? 'active' : 'text-white' }}">
+                    <i class="bi bi-person-badge me-2"></i>User ID NIK
+                </a>
+            </li>
+
+            <li class="nav-item">
+                <a href="{{ route('user-system.index') }}"
+                    class="nav-link {{ $isUserSystemIndexActive ? 'active' : 'text-white' }}">
+                    <i class="bi bi-people me-2"></i>User System List
+                </a>
+            </li>
+        </div>
+    </div>
+
+    @php
         $modules = config('dynamic_uploads.modules');
         $nikJobRoleModule = $modules['nik_job_role'] ?? null;
 
@@ -104,7 +222,7 @@
         <a class="mb-1 nav-link dropdown-toggle {{ $isUserIdUnitActive ? 'active' : 'text-white' }}"
             data-bs-toggle="dropdown" href="#" role="button"
             aria-expanded="{{ $isUserIdUnitActive ? 'true' : 'false' }}">
-            <span class="me-auto">2. Validasi User ID - Unit Kerja</span>
+            <span class="me-auto">3. Validasi User ID - Unit Kerja</span>
         </a>
         <div class="dropdown-content {{ $isUserIdUnitActive ? 'show' : '' }}">
             @can('Super Admin')
@@ -251,7 +369,7 @@
         <a class="mb-1 nav-link dropdown-toggle {{ $isMappingActive ? 'active' : 'text-white' }}"
             data-bs-toggle="dropdown" href="#" role="button"
             aria-expanded="{{ $isMappingActive ? 'true' : 'false' }}">
-            3. Validasi User ID - Job Role
+            4. Validasi User ID - Job Role
         </a>
         <div class="dropdown-content {{ $isMappingActive ? 'show' : '' }}">
             <div class="mx-3 text-white text-end"><strong>Local Data</strong></div>

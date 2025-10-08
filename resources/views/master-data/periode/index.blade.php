@@ -126,6 +126,7 @@
                         <hr class="my-1">
                         <ul class="mb-0">
                             <li>User Generic: <code>${s.deleted?.user_generic ?? 0}</code></li>
+                            <li>User System: <code>${s.deleted?.user_generic_system ?? 0}</code></li>
                             <li>User NIK: <code>${s.deleted?.user_nik ?? 0}</code></li>
                             <li>Mapping Generic Unit Kerja: <code>${s.deleted?.user_generic_unit_kerja ?? 0}</code></li>
                             <li>Mapping NIK Unit Kerja: <code>${s.deleted?.user_nik_unit_kerja ?? 0}</code></li>

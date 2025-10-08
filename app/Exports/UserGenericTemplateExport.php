@@ -88,14 +88,13 @@ class UserGenericInstructionSheet implements FromCollection, WithHeadings, WithT
     public function collection(): Collection
     {
         return new Collection([
-            ['Column', 'Description', 'Example'],
             ['group', 'Kode perusahaan atau grup user', 'A000'],
             ['user_code', 'User code unik (wajib)', 'USR000123'],
             ['user_type', 'Jenis user (NIK / Generic)', 'Generic'],
             ['user_profile', 'Nama lengkap user', 'Budi Santoso'],
             ['nik', 'Nomor induk karyawan (opsional)', '73004567'],
             ['cost_code', 'Kode cost center user', 'A0011000000'],
-            ['license_type', 'Jenis lisensi SAP/APP (wajib)', 'CA/CB'],
+            ['license_type', 'Jenis lisensi SAP/APP (wajib)', 'CA/CB/FN/FX'],
             ['last_login', 'Tanggal login terakhir (format YYYY-MM-DD)', '2025-01-30'],
             ['valid_from', 'Tanggal mulai berlaku (format YYYY-MM-DD)', '2025-02-01'],
             ['valid_to', 'Tanggal akhir berlaku (format YYYY-MM-DD)', '2025-12-31'],

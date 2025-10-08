@@ -22,6 +22,18 @@ class MsSapLicenseTypeSeeder extends Seeder
                 'created_at' => now(),
                 'updated_at' => now(),
             ],
+            [
+                'license_type' => 'FN',
+                'contract_license_type' => 'SAP Logistic User',
+                'created_at' => now(),
+                'updated_at' => now(),
+            ],
+            [
+                'license_type' => 'FX',
+                'contract_license_type' => ' ',
+                'created_at' => now(),
+                'updated_at' => now(),
+            ],
         ]);
     }
 }

@@ -26,11 +26,13 @@ use App\Http\Controllers\IOExcel\UserGenericImportController;
 use App\Http\Controllers\IOExcel\UserGenericUnitKerjaController;
 use App\Http\Controllers\IOExcel\UserNIKImportController;
 use App\Http\Controllers\IOExcel\USSMJobRoleController;
+use App\Http\Controllers\IOExcel\UserSystemImportController;
+
+use App\Http\Controllers\IOExcel\WorkUnitImportController;
 use App\Http\Controllers\MasterData\CompanyController;
 use App\Http\Controllers\MasterData\CompositeRoleController;
 use App\Http\Controllers\MasterData\CostCenterController;
 // use App\Http\Controllers\IOExcel\ExcelImportController;
-
 use App\Http\Controllers\MasterData\CostPrevUserController;
 use App\Http\Controllers\MasterData\DepartemenController;
 use App\Http\Controllers\MasterData\JobRoleController;
@@ -42,6 +44,7 @@ use App\Http\Controllers\MasterData\TcodeController;
 use App\Http\Controllers\MasterData\TerminatedEmployeeController;
 use App\Http\Controllers\MasterData\UserDetailController;
 use App\Http\Controllers\MasterData\UserGenericController;
+use App\Http\Controllers\MasterData\UserSystemController;
 use App\Http\Controllers\MasterData\UserNIKController;
 use App\Http\Controllers\MasterData\UIDNIKUnitKerjaController;
 use App\Http\Controllers\MasterData\UIDGenericUnitKerjaController;
@@ -436,6 +439,16 @@ Route::middleware(['auth'])->group(function () {
     Route::get('user-generic/flagged-edit/{id}', [UserGenericController::class, 'editFlagged'])->name('user-generic.flagged-edit');
     Route::post('user-generic/flagged-edit/{id}', [UserGenericController::class, 'updateFlagged'])->name('user-generic.flagged-update');
     Route::resource('user-generic', UserGenericController::class)->name('index', 'user-generic.index');
+
+    Route::get('user-system/flagged/{id}/edit', [UserSystemController::class, 'editFlagged'])->name('user-system.flagged-edit');
+    Route::post('user-system/flagged/{id}',     [UserSystemController::class, 'updateFlag'])->name('user-system.flagged-update');
+    Route::resource('user-system',               UserSystemController::class)->except(['show', 'create', 'store']);
+
+    Route::get('user-system/import',            [UserSystemImportController::class, 'index'])->name('user_system.import.index');
+    Route::get('user-system/import/template',   [UserSystemImportController::class, 'template'])->name('user_system.import.template');
+    Route::get('user-system/import/preview',    [UserSystemImportController::class, 'previewGet'])->name('user_system.import.preview.get');
+    Route::post('user-system/import/preview',   [UserSystemImportController::class, 'preview'])->name('user_system.import.preview');
+    Route::post('user-system/import/confirm',   [UserSystemImportController::class, 'confirm'])->name('user_system.import.confirm');
 
     Route::get('cost-center/prev-user', [CostCenterController::class, 'index_prev_user'])->name('prev-user.index');
     Route::put('cost-center/prev-user/update', [CostCenterController::class, 'update_prev_user'])->name('prev-user.update');
