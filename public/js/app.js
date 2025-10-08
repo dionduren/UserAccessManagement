@@ -8,6 +8,27 @@ $(document).ready(function () {
 
     setViewportHeight();
     window.addEventListener('resize', setViewportHeight);
+
+    const sidebar = document.getElementById('sidebar');
+    const btn = document.getElementById('sidebar-collapse-btn');
+    const icon = document.getElementById('sidebar-collapse-icon');
+    if (!sidebar || !btn) return;
+    const KEY = 'uas.sidebar.collapsed';
+    function apply(c) {
+        sidebar.classList.toggle('sidebar-collapsed', c);
+        if (icon) {
+            icon.classList.toggle('bi-chevron-double-right', c);
+            icon.classList.toggle('bi-chevron-double-left', !c);
+        }
+        btn.setAttribute('aria-expanded', (!c).toString());
+    }
+    let collapsed = localStorage.getItem(KEY) === '1';
+    apply(collapsed);
+    btn.addEventListener('click', () => {
+        collapsed = !collapsed;
+        localStorage.setItem(KEY, collapsed ? '1' : '0');
+        apply(collapsed);
+    });
 })
 
 document.getElementById('sidebarToggle').addEventListener('click', function () {

@@ -652,7 +652,7 @@ class UARReportController extends Controller
                 $table->addCell(1500, ['valign' => 'center'])->addText('', ['size' => 8], ['space' => ['after' => 0]]);
                 $table->addCell(1500, ['valign' => 'center'])->addText('', ['size' => 8], ['space' => ['after' => 0]]);
                 $table->addCell(2000, ['valign' => 'center'])->addText(
-                    'Apabila ada (perubahan job function/nama/nik/Penonaktifan)',
+                    '',
                     ['size' => 8, 'color' => 'A6A6A6'],
                     [
                         'space' => ['after' => 0],

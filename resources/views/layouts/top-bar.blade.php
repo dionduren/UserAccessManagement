@@ -1,10 +1,17 @@
 <div class="top-bar d-flex align-items-center">
+
+    <!-- Sidebar Toggle Button -->
+    <button id="sidebar-collapse-btn" class="btn btn-outline-secondary me-3" type="button" title="Toggle Sidebar"
+        style="min-width:42px;">
+        <i class="bi bi-chevron-double-left" id="sidebar-collapse-icon"></i>
+    </button>
+
     <!-- Breadcrumb -->
-    <nav aria-label="breadcrumb">
+    {{-- <nav aria-label="breadcrumb">
         <ol class="breadcrumb">
             {!! getBreadcrumbs() !!}
         </ol>
-    </nav>
+    </nav> --}}
 
     <div class="d-flex align-items-center">
         @auth()

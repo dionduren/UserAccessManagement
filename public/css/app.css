@@ -61,7 +61,47 @@ body {
     background-color: #135029;
     /* background-color: #343a40; */
     color: #fff;
-    transition: transform .3s ease;
+    transition: transform .5s ease;
+}
+
+
+#sidebar.sidebar-collapsed {
+    width: 0px;
+}
+
+#sidebar.sidebar-collapsed .nav-label {
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity .15s ease;
+}
+
+#sidebar .nav-label {
+    transition: opacity .15s ease .05s;
+    white-space: nowrap;
+}
+
+#sidebar a.nav-link {
+    position: relative;
+}
+
+#sidebar a.nav-link.active {
+    background: #1d4ed8;
+}
+
+#sidebar.sidebar-collapsed a.nav-link {
+    justify-content: center;
+}
+
+#sidebar.sidebar-collapsed a.nav-link i {
+    margin-right: 0 !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+
+    #sidebar,
+    #sidebar .nav-label {
+        transition: none;
+    }
 }
 
 /* Scrollable area inside the sidebar */
