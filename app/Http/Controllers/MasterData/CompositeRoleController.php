@@ -94,7 +94,7 @@ class CompositeRoleController extends Controller
             'nama' => $request->nama,
             'deskripsi' => $request->deskripsi,
             'Status' => "Active",
-            'source' => 'manual',
+            'source' => 'upload',
         ]);
 
         return redirect()->route('composite-roles.index')->with('success', 'Composite Role created successfully.');
@@ -147,8 +147,6 @@ class CompositeRoleController extends Controller
             ],
             'deskripsi' => 'nullable|string',
         ]);
-
-        $request->merge(['source' => 'edit']);
 
         // Update Composite Role details
         $compositeRole->update([

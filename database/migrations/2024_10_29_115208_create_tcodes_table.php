@@ -13,6 +13,7 @@ class CreateTcodesTable extends Migration
             $table->string('code');
             $table->string('sap_module')->nullable(); // SAP Module Name
             $table->text('deskripsi')->nullable(); // Description
+            $table->string('source')->nullable(); // e.g., 'SAP', 'Manual'
             $table->timestamps();
             $table->softDeletes();
             $table->text('created_by')->nullable();

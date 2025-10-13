@@ -168,7 +168,7 @@ class SingleRoleTcodeController extends Controller
                         ['nama' => $row['single_role']],
                         [
                             'deskripsi' => $row['single_role_description'],
-                            'source' => 'manual'
+                            'source' => 'upload'
                         ]
                     );
 
@@ -176,6 +176,7 @@ class SingleRoleTcodeController extends Controller
                         ['code' => $row['tcode']],
                         [
                             'deskripsi' => $row['tcode_description'],
+                            'source' => 'upload'
                         ]
                     );
 

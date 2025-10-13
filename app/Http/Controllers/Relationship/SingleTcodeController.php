@@ -47,6 +47,8 @@ class SingleTcodeController extends Controller
             'tcode_id' => 'required|array|exists:tr_tcodes,code',
         ]);
 
+        $validatedData->merge(['source' => 'upload']);
+
         $singleRole = SingleRole::findOrFail($validatedData['single_role_id']);
         $singleRole->tcodes()->syncWithoutDetaching($validatedData['tcode_id']);
 

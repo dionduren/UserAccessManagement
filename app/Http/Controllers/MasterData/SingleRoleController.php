@@ -54,7 +54,7 @@ class SingleRoleController extends Controller
             'deskripsi' => 'nullable|string',
         ]);
 
-        $request->merge(['source' => 'manual']);
+        $request->merge(['source' => 'upload']);
 
         $singleRole = SingleRole::create($request->all());
 
@@ -96,8 +96,6 @@ class SingleRoleController extends Controller
             ],
             'deskripsi' => 'nullable|string',
         ]);
-
-        $request->merge(['source' => 'edit']);
 
         $singleRole->update($request->all());
 

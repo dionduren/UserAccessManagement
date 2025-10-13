@@ -35,6 +35,8 @@ class TcodeController extends Controller
             'deskripsi' => 'nullable|string',
         ]);
 
+        $request->merge(['source' => 'upload']);
+
         Tcode::create($request->all());
 
         return response()->json(['status' => 'success', 'message' => 'Tcode created successfully.']);

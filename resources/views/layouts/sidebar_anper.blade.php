@@ -69,6 +69,12 @@
                     <i class="bi bi-file-earmark-spreadsheet me-2"></i>Upload Composite - Single Role
                 </a>
             </li>
+            <li class="nav-item">
+                <a href="{{ route('tcode_single_role.upload') }}"
+                    class="nav-link {{ request()->routeIs('tcode_single_role*') ? 'active' : 'text-white' }}">
+                    <i class="bi bi-file-earmark-spreadsheet me-2"></i>Upload Single Role - Tcode
+                </a>
+            </li>
             <li>
                 <a href="{{ route('tcodes.index') }}"
                     class="nav-link {{ request()->routeIs('tcodes.*') ? 'active' : 'text-white' }}">
