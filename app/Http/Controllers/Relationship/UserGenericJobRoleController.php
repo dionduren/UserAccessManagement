@@ -20,6 +20,8 @@ class UserGenericJobRoleController extends Controller
     public function index(Request $request)
     {
         $periodes = Periode::select('id', 'definisi')->get();
+        $userCompany = auth()->user()->loginDetail->company_code ?? null;
+        $companyShortname = Company::where('company_code', $userCompany)->value('shortname');
 
         if ($request->ajax()) {
             if (!$request->filled('periode')) {
@@ -37,6 +39,7 @@ class UserGenericJobRoleController extends Controller
                     'keterangan_flagged',
                     'user_profile as definisi'
                 ])
+                ->where('group', $companyShortname) // Filter by user's company
                 ->with(['periode', 'NIKJobRole' => function ($q) use ($periodeId) {
                     $q->where('periode_id', $periodeId)->with('jobRole');
                 }])

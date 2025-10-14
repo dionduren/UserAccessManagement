@@ -52,8 +52,6 @@
                 </select>
             </div>
 
-            checking $nikJobRole->jobRole->company_id first, if not exist then use $userCompany value
-
             <!-- Kompartemen Dropdown -->
             <div class="form-group mb-3">
                 <label for="kompartemenDropdown">Pilih Kompartemen</label>
@@ -137,7 +135,8 @@
                 });
 
                 // Get default values from server
-                const defaultCompany = "{{ $nikJobRole->jobRole->company_id ?? '' }}";
+                // const defaultCompany = "{{ $nikJobRole->jobRole->company_id ?? '' }}";
+                const defaultCompany = "{{ $selectedCompanyId }}";
                 const defaultKompartemen = "{{ $nikJobRole->jobRole->kompartemen_id ?? '' }}";
                 const defaultDepartemen = "{{ $nikJobRole->jobRole->departemen_id ?? '' }}";
                 const defaultJobRole = "{{ $nikJobRole->job_role_id }}";
