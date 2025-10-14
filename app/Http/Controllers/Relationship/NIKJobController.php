@@ -56,7 +56,7 @@ class NIKJobController extends Controller
         // return redirect()->route('nik-job.index')->with('success', 'NIK Job Role created successfully.');
         $request->validate([
             'periode_id' => 'required|exists:ms_periode,id',
-            'job_role_id' => 'required|exists:tr_job_roles,id',
+            'job_role_id' => 'required|exists:tr_job_roles,job_role_id',
             'user_code' => 'required|exists:ms_user_detail,nik',
         ]);
 
@@ -138,8 +138,8 @@ class NIKJobController extends Controller
     {
         $request->validate([
             'periode_id'   => 'required|exists:ms_periode,id',
-            'job_role_id'  => 'required|exists:tr_job_roles,id',
-            'user_code'         => 'required|exists:tr_user_ussm_nik,user_code', // adjust if needed
+            'job_role_id'  => 'required|exists:tr_job_roles,job_role_id',
+            'user_code'    => 'required|exists:tr_user_ussm_nik,user_code', // adjust if needed
         ]);
 
         $nikJobRole = NIKJobRole::findOrFail($id);
