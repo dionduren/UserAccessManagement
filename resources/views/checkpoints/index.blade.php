@@ -63,7 +63,7 @@
                                                 </div>
                                             @endif
                                             @if (!empty($cell['payload']['summary']))
-                                                <div class="small mt-1">{{ $cell['payload']['summary'] }}</div>
+                                                <div class="small mt-1">{!! $cell['payload']['summary'] !!}</div>
                                             @endif
                                         </td>
                                     @endforeach
