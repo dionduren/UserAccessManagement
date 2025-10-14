@@ -61,7 +61,7 @@ class NIKJobController extends Controller
         $request->validate([
             'periode_id' => 'required|exists:ms_periode,id',
             'job_role_id' => 'required|exists:tr_job_roles,job_role_id',
-            'user_code' => 'required|exists:ms_user_detail,nik',
+            'nik' => 'required|exists:ms_user_detail,nik',
         ]);
 
         // Check for existing assignment in this period
