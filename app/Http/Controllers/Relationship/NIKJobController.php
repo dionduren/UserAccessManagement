@@ -119,16 +119,29 @@ class NIKJobController extends Controller
      */
     public function edit($id)
     {
-        // Find the record or fail with a 404.
-        $nikJobRole = NIKJobRole::findOrFail($id);
+        $companies = [];
+        $userCompany = auth()->user()->loginDetail->company_code ?? null;
 
-        // Get all required data for the dropdowns.
-        $periodes  = Periode::select('id', 'definisi')->get();
-        $userNIKs  = userNIK::select('id', 'user_code')->get();
-        $companies = Company::all(); // or select only id and name
+        if ($userCompany) {
 
-        // Pass the NIKJobRole record along with dropdown data.
-        return view('relationship.nik_job_role.edit', compact('nikJobRole', 'periodes', 'companies', 'userNIKs'));
+            if ($userCompany && $userCompany !== 'A000') {
+                $companies = Company::where('company_code', $userCompany)->get();
+            } else {
+                $companies = Company::all();
+            }
+
+            // Find the record or fail with a 404.
+            $nikJobRole = NIKJobRole::findOrFail($id);
+
+            // Get all required data for the dropdowns.
+            $periodes  = Periode::select('id', 'definisi')->get();
+            $userNIKs  = userNIK::select('id', 'user_code')->get();
+            // $companies = Company::all(); // or select only id and name
+
+            // Pass the NIKJobRole record along with dropdown data.
+            return view('relationship.nik_job_role.edit', compact('nikJobRole', 'periodes', 'companies', 'userNIKs', 'userCompany'));
+        }
+        return redirect()->route('login')->with('error', 'Unauthorized access.');
     }
 
     /**

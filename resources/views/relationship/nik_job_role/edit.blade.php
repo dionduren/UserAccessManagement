@@ -38,11 +38,19 @@
             <!-- Company Dropdown -->
             <div class="form-group mb-3">
                 <label for="companyDropdown">Pilih Perusahaan</label>
+                @php
+                    $userCompanyCode = isset($userCompany)
+                        ? (is_object($userCompany)
+                            ? $userCompany->company_code ?? ''
+                            : $userCompany)
+                        : '';
+                    $selectedCompany = old('company_id', $nikJobRole->jobRole->company_id ?? $userCompanyCode);
+                @endphp
                 <select id="companyDropdown" class="form-control" name="company_id" required>
                     <option value="">-- Pilih Perusahaan --</option>
                     @foreach ($companies as $company)
                         <option value="{{ $company->company_code }}"
-                            {{ old('company_id', $nikJobRole->jobRole->company_id) == $company->company_code ? 'selected' : '' }}>
+                            {{ $selectedCompany == $company->company_code ? 'selected' : '' }}>
                             {{ $company->nama }}
                         </option>
                     @endforeach

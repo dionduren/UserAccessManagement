@@ -57,7 +57,9 @@
                                             <th>NIK</th>
                                             <th>Nama</th>
                                             <th>Direktorat</th>
+                                            <th>Kompartemen ID</th>
                                             <th>Kompartemen</th>
+                                            <th>Departemen ID</th>
                                             <th>Departemen</th>
                                             <th>Cost Center</th>
                                             <th>Atasan</th>
@@ -98,8 +100,16 @@
                         name: 'direktorat'
                     },
                     {
+                        data: 'kompartemen_id',
+                        name: 'kompartemen_id'
+                    },
+                    {
                         data: 'kompartemen',
                         name: 'kompartemen'
+                    },
+                    {
+                        data: 'departemen_id',
+                        name: 'departemen_id'
                     },
                     {
                         data: 'departemen',
