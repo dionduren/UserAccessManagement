@@ -155,13 +155,14 @@ class CheckpointService
                 $group = $company->shortname ?? $company->company_code;
                 $nik = userNIK::where('group', $group)->count();
                 $generic = userGeneric::where('group', $group)->count();
+                $sumUser = $nik + $generic;
 
                 $completed = $nik > 0 || $generic > 0;
 
                 return [
                     'completed' => $completed,
                     'payload'   => [
-                        'summary' => "UserNIK: {$nik}, UserGeneric: {$generic}",
+                        'summary' => "UserNIK: {$nik}, UserGeneric: {$generic}, Total: {$sumUser}",
                     ],
                 ];
             },

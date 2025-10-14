@@ -131,11 +131,15 @@ class JobRoleController extends Controller
                 ],
                 'nama' => [
                     'required',
-                    'string',
-                    Rule::unique('tr_job_roles', 'nama')
-                        ->where('company_id', $request->company_id)
-                        ->ignore($jobRole->id, 'id')
+                    'string'
                 ],
+                // 'nama' => [
+                //     'required',
+                //     'string',
+                //     Rule::unique('tr_job_roles', 'nama')
+                //         ->where('company_id', $request->company_id)
+                //         ->ignore($jobRole->id, 'id')
+                // ],
                 'deskripsi' => 'nullable|string',
                 'kompartemen_id' => 'nullable|exists:ms_kompartemen,kompartemen_id',
                 'departemen_id' => 'nullable|exists:ms_departemen,departemen_id',
