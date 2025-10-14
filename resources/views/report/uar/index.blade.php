@@ -124,9 +124,9 @@
                         <th>User ID</th>
                         <th width="20%">Nama</th>
                         <th width="20%">Job Role</th>
-                        {{-- <th width="20%" style="background-color: #d4edda;">Kompartemen</th> --}}
-                        {{-- <th width="20%" style="background-color: #d4edda;">Departemen</th> --}}
-                        <th width="7,5%">NIK</th>
+                        <th width="7.5%">NIK</th>
+                        <th style="background-color: #007bff; color: white;">Assigned UID-JobRole</th>
+                        <th style="background-color: #007bff; color: white;">Unit Kerja of UID-JobRole</th>
                         <th style="background-color: yellowgreen">User ID (Middle DB)</th>
                         <th style="background-color: yellowgreen">Nama (Middle DB)</th>
                         <th style="background-color: orange">NIK (Master Karyawan)</th>
@@ -231,6 +231,12 @@
                     },
                     {
                         data: 'karyawan_nik'
+                    },
+                    {
+                        data: 'assigned_job_role'
+                    },
+                    {
+                        data: 'assigned_unit_kerja'
                     },
                     {
                         data: 'mdb_usmm.sap_user_id'

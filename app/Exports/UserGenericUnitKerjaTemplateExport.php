@@ -89,7 +89,9 @@ class UGUKMasterSheet implements FromCollection, WithHeadings, WithTitle, Should
             ->with([
                 'kompartemen' => fn($q) => $q->select('kompartemen_id', 'company_id', 'nama'),
                 'kompartemen.departemen' => fn($q) => $q->select('departemen_id', 'kompartemen_id', 'nama'),
-                'departemen' => fn($q) => $q->select('departemen_id', 'company_id', 'kompartemen_id', 'nama'),
+                // ADD: Load departments that belong directly to company (no kompartemen)
+                'departemenWithoutKompartemen' => fn($q) => $q->select('departemen_id', 'company_id', 'kompartemen_id', 'nama')
+                    ->whereNull('kompartemen_id')
             ])
             ->orderBy('company_code')
             ->get();
@@ -97,6 +99,7 @@ class UGUKMasterSheet implements FromCollection, WithHeadings, WithTitle, Should
         $rows = [];
 
         foreach ($companies as $company) {
+            // First: Process kompartemen and their departemen
             if ($company->kompartemen->isNotEmpty()) {
                 foreach ($company->kompartemen as $komp) {
                     if ($komp->departemen->isNotEmpty()) {
@@ -111,6 +114,7 @@ class UGUKMasterSheet implements FromCollection, WithHeadings, WithTitle, Should
                             ];
                         }
                     } else {
+                        // Kompartemen without departemen
                         $rows[] = [
                             'company_code'     => $company->company_code,
                             'company_name'     => $company->nama,
@@ -121,8 +125,11 @@ class UGUKMasterSheet implements FromCollection, WithHeadings, WithTitle, Should
                         ];
                     }
                 }
-            } elseif ($company->departemen->isNotEmpty()) {
-                foreach ($company->departemen as $dept) {
+            }
+
+            // Second: Process departemen that belong directly to company (no kompartemen)
+            if ($company->departemenWithoutKompartemen->isNotEmpty()) {
+                foreach ($company->departemenWithoutKompartemen as $dept) {
                     $rows[] = [
                         'company_code'     => $company->company_code,
                         'company_name'     => $company->nama,
@@ -132,7 +139,10 @@ class UGUKMasterSheet implements FromCollection, WithHeadings, WithTitle, Should
                         'departemen_name'  => $dept->nama,
                     ];
                 }
-            } else {
+            }
+
+            // Third: Company without any kompartemen or departemen
+            if ($company->kompartemen->isEmpty() && $company->departemenWithoutKompartemen->isEmpty()) {
                 $rows[] = [
                     'company_code'     => $company->company_code,
                     'company_name'     => $company->nama,

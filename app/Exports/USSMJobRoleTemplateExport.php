@@ -3,6 +3,7 @@
 namespace App\Exports;
 
 use App\Models\JobRole;
+use App\Models\Company;
 use Illuminate\Support\Collection;
 use Maatwebsite\Excel\Concerns\WithMultipleSheets;
 use Maatwebsite\Excel\Concerns\FromCollection;
@@ -70,35 +71,132 @@ class USSMJobRoleMasterSheet implements FromCollection, WithHeadings, WithTitle,
 
     public function collection()
     {
-        $query = JobRole::with(['company', 'kompartemen', 'departemen'])
-            ->select('company_id', 'kompartemen_id', 'departemen_id', 'job_role_id', 'nama')
-            ->whereNotNull('job_role_id')
-            ->orderBy('company_id')
-            ->orderBy('kompartemen_id')
-            ->orderBy('departemen_id')
-            ->orderBy('job_role_id');
+        // Get companies with their organizational structure
+        $companies = Company::select('company_code', 'nama')
+            ->when(
+                $this->companyCode && $this->companyCode !== 'A000',
+                fn($q) => $q->where('company_code', $this->companyCode)
+            )
+            ->with([
+                'kompartemen' => fn($q) => $q->select('kompartemen_id', 'company_id', 'nama'),
+                'kompartemen.departemen' => fn($q) => $q->select('departemen_id', 'kompartemen_id', 'nama'),
+                'kompartemen.departemen.jobRoles' => fn($q) => $q->select('job_role_id', 'departemen_id', 'nama')
+                    ->whereNotNull('job_role_id'),
+                // Load departments directly under company (no kompartemen)
+                'departemenWithoutKompartemen' => fn($q) => $q->select('departemen_id', 'company_id', 'kompartemen_id', 'nama')
+                    ->whereNull('kompartemen_id'),
+                'departemenWithoutKompartemen.jobRoles' => fn($q) => $q->select('job_role_id', 'departemen_id', 'nama')
+                    ->whereNotNull('job_role_id'),
+            ])
+            ->orderBy('company_code')
+            ->get();
 
-        // If user is not A000, restrict by their company_code
-        if (!empty($this->companyCode) && $this->companyCode !== 'A000') {
-            $query->where('company_id', $this->companyCode);
+        $rows = [];
+
+        foreach ($companies as $company) {
+            // First: Process kompartemen -> departemen -> job roles
+            if ($company->kompartemen->isNotEmpty()) {
+                foreach ($company->kompartemen as $komp) {
+                    if ($komp->departemen->isNotEmpty()) {
+                        foreach ($komp->departemen as $dept) {
+                            if ($dept->jobRoles->isNotEmpty()) {
+                                foreach ($dept->jobRoles as $role) {
+                                    $rows[] = [
+                                        'company_code'      => $company->company_code,
+                                        'company_nama'      => $company->nama,
+                                        'kompartemen_id'    => $komp->kompartemen_id,
+                                        'kompartemen_nama'  => $komp->nama,
+                                        'departemen_id'     => $dept->departemen_id,
+                                        'departemen_nama'   => $dept->nama,
+                                        'job_role_id'       => $role->job_role_id,
+                                        'job_role_nama'     => $role->nama,
+                                        'user_type'         => 'NIK/Generic',
+                                    ];
+                                }
+                            } else {
+                                // Department without job roles
+                                $rows[] = [
+                                    'company_code'      => $company->company_code,
+                                    'company_nama'      => $company->nama,
+                                    'kompartemen_id'    => $komp->kompartemen_id,
+                                    'kompartemen_nama'  => $komp->nama,
+                                    'departemen_id'     => $dept->departemen_id,
+                                    'departemen_nama'   => $dept->nama,
+                                    'job_role_id'       => null,
+                                    'job_role_nama'     => null,
+                                    'user_type'         => 'NIK/Generic',
+                                ];
+                            }
+                        }
+                    } else {
+                        // Kompartemen without departemen
+                        $rows[] = [
+                            'company_code'      => $company->company_code,
+                            'company_nama'      => $company->nama,
+                            'kompartemen_id'    => $komp->kompartemen_id,
+                            'kompartemen_nama'  => $komp->nama,
+                            'departemen_id'     => null,
+                            'departemen_nama'   => null,
+                            'job_role_id'       => null,
+                            'job_role_nama'     => null,
+                            'user_type'         => 'NIK/Generic',
+                        ];
+                    }
+                }
+            }
+
+            // Second: Process departemen directly under company (no kompartemen)
+            if ($company->departemenWithoutKompartemen->isNotEmpty()) {
+                foreach ($company->departemenWithoutKompartemen as $dept) {
+                    if ($dept->jobRoles->isNotEmpty()) {
+                        foreach ($dept->jobRoles as $role) {
+                            $rows[] = [
+                                'company_code'      => $company->company_code,
+                                'company_nama'      => $company->nama,
+                                'kompartemen_id'    => null,
+                                'kompartemen_nama'  => null,
+                                'departemen_id'     => $dept->departemen_id,
+                                'departemen_nama'   => $dept->nama,
+                                'job_role_id'       => $role->job_role_id,
+                                'job_role_nama'     => $role->nama,
+                                'user_type'         => 'NIK/Generic',
+                            ];
+                        }
+                    } else {
+                        // Department without job roles
+                        $rows[] = [
+                            'company_code'      => $company->company_code,
+                            'company_nama'      => $company->nama,
+                            'kompartemen_id'    => null,
+                            'kompartemen_nama'  => null,
+                            'departemen_id'     => $dept->departemen_id,
+                            'departemen_nama'   => $dept->nama,
+                            'job_role_id'       => null,
+                            'job_role_nama'     => null,
+                            'user_type'         => 'NIK/Generic',
+                        ];
+                    }
+                }
+            }
+
+            // Third: Company without any organizational structure or job roles
+            if (
+                $company->kompartemen->isEmpty() &&
+                $company->departemenWithoutKompartemen->isEmpty()
+            ) {
+                $rows[] = [
+                    'company_code'      => $company->company_code,
+                    'company_nama'      => $company->nama,
+                    'kompartemen_id'    => null,
+                    'kompartemen_nama'  => null,
+                    'departemen_id'     => null,
+                    'departemen_nama'   => null,
+                    'job_role_id'       => null,
+                    'job_role_nama'     => null,
+                    'user_type'         => 'NIK/Generic',
+                ];
+            }
         }
-
-        $roles = $query->get();
-
-        $rows = $roles->map(function ($r) {
-            return [
-                // company_id equals ms_company.company_code
-                'company_code'      => $r->company_id,
-                'company_nama'      => optional($r->company)->nama,
-                'kompartemen_id'    => $r->kompartemen_id,
-                'kompartemen_nama'  => optional($r->kompartemen)->nama,
-                'departemen_id'     => $r->departemen_id,
-                'departemen_nama'   => optional($r->departemen)->nama,
-                'job_role_id'       => $r->job_role_id,
-                'job_role_nama'     => $r->nama,
-                'user_type'         => 'NIK/Generic', // Default value
-            ];
-        });
 
         return new Collection($rows);
     }
