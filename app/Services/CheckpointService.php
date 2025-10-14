@@ -156,7 +156,7 @@ class CheckpointService
                 $nik = userNIK::where('group', $group)->count();
                 $generic = userGeneric::where('group', $group)->count();
 
-                $completed = $nik > 0 && $generic > 0;
+                $completed = $nik > 0 || $generic > 0;
 
                 return [
                     'completed' => $completed,
