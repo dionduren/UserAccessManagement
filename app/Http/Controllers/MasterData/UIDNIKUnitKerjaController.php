@@ -6,7 +6,7 @@ use App\Http\Controllers\Controller;
 
 use App\Models\Periode;
 use App\Models\Company;
-use App\Models\UserNIK;
+use App\Models\userNIK;
 use App\Models\UserNIKUnitKerja;
 use Illuminate\Http\Request;
 
