@@ -9,9 +9,12 @@ use App\Models\Company;
 use App\Models\userGeneric;
 use App\Models\UserGenericUnitKerja;
 
+use App\Exports\UserGenericWithoutUnitKerjaExport;
+
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\File;
 use Illuminate\Validation\Rule;
+use Maatwebsite\Excel\Facades\Excel;
 
 class UIDGenericUnitKerjaController extends Controller
 {
@@ -307,5 +310,27 @@ class UIDGenericUnitKerjaController extends Controller
 
         $periodes = Periode::orderByDesc('id')->get(['id', 'definisi']);
         return view('unit-kerja.user-generic.without', compact('periodes'));
+    }
+
+    public function exportWithout(Request $request)
+    {
+        $periodeId = (int) $request->get('periode_id');
+
+        if (!$periodeId) {
+            return redirect()->back()->with('error', 'Periode harus dipilih untuk export');
+        }
+
+        $userCompany = auth()->user()->loginDetail->company_code;
+
+        // Get periode name for filename
+        $periode = \App\Models\Periode::find($periodeId);
+        $periodeName = $periode ? $periode->definisi : 'Unknown';
+
+        $filename = 'User_Generic_Without_Unit_Kerja_' . $periodeName . '_' . now()->format('Y-m-d_H-i-s') . '.xlsx';
+
+        return Excel::download(
+            new UserGenericWithoutUnitKerjaExport($periodeId, $userCompany),
+            $filename
+        );
     }
 }

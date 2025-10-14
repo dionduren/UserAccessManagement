@@ -169,6 +169,13 @@ class UARReportController extends Controller
             ->where('periode_id', $periode->id);
 
         // Apply filters for UserGeneric
+        if ($companyId) {
+            $userGenericQuery->whereHas('departemen', function ($q) use ($companyId) {
+                $q->where('company_id', $companyId);
+            })->orWhereHas('kompartemen', function ($q) use ($companyId) {
+                $q->where('company_id', $companyId);
+            });
+        }
         if ($kompartemenId) {
             $userGenericQuery->where('kompartemen_id', $kompartemenId);
         }

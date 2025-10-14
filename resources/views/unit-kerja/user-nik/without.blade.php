@@ -6,6 +6,9 @@
             <div class="card-header d-flex align-items-center justify-content-between">
                 <h5 class="mb-0">User NIK Without Unit Kerja</h5>
                 <div class="d-flex gap-2">
+                    <button id="export-excel" class="btn btn-success btn-sm" disabled>
+                        <i class="fas fa-file-excel"></i> Export Excel
+                    </button>
                     <a href="{{ route('unit_kerja.user_nik.index') }}" class="btn btn-outline-secondary btn-sm">
                         Back to Unit Kerja
                     </a>
@@ -119,7 +122,34 @@
             });
 
             $('#periode_id').on('change', function() {
+                const periodeId = $(this).val();
                 table.ajax.reload();
+
+                // Enable/disable export button based on periode selection
+                if (periodeId) {
+                    $('#export-excel').prop('disabled', false);
+                } else {
+                    $('#export-excel').prop('disabled', true);
+                }
+            });
+
+            // Export button click handler
+            $('#export-excel').on('click', function(e) {
+                e.preventDefault();
+                const periodeId = $('#periode_id').val();
+
+                if (!periodeId) {
+                    alert('Silakan pilih periode terlebih dahulu');
+                    return;
+                }
+
+                // Create download URL with parameters
+                const url = new URL("{{ route('unit_kerja.user_nik.without.export') }}", window.location
+                    .origin);
+                url.searchParams.set('periode_id', periodeId);
+
+                // Trigger download
+                window.location.href = url.toString();
             });
         });
     </script>
