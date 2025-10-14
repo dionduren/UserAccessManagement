@@ -10,7 +10,7 @@ use App\Models\Periode;
 use App\Models\userGeneric;
 
 use App\Exports\UserGenericWithoutJobRoleExport;
-
+use App\Models\Company;
 use Illuminate\Http\Request;
 use Yajra\DataTables\Facades\DataTables;
 use Maatwebsite\Excel\Facades\Excel;
@@ -190,6 +190,8 @@ class UserGenericJobRoleController extends Controller
     public function indexWithoutJobRole(Request $request)
     {
         $periodes = Periode::select('id', 'definisi')->get();
+        $userCompany = auth()->user()->loginDetail->company_code ?? null;
+        $companyShortname = Company::where('company_code', $userCompany)->value('shortname');
 
         if ($request->ajax()) {
             // Only load data if periode is selected
@@ -206,6 +208,7 @@ class UserGenericJobRoleController extends Controller
                     'user_code',
                     'last_login',
                 ])
+                ->where('group', $companyShortname) // Filter by user's company
                 // Collect wrong job_role_id(s) (not found in tr_job_roles or soft-deleted)
                 ->selectSub(function ($sub) use ($periodeId) {
                     $sub->from('tr_ussm_job_role as jr')
@@ -266,6 +269,8 @@ class UserGenericJobRoleController extends Controller
     public function exportWithoutJobRole(Request $request)
     {
         $periodeId = (int) $request->get('periode');
+        $userCompany = auth()->user()->loginDetail->company_code ?? null;
+        $companyShortname = Company::where('company_code', $userCompany)->value('shortname');
 
         if (!$periodeId) {
             return redirect()->back()->with('error', 'Periode harus dipilih untuk export');
@@ -278,7 +283,7 @@ class UserGenericJobRoleController extends Controller
         $filename = 'User_Generic_Without_Job_Role_' . $periodeName . '_' . now()->format('Y-m-d_H-i-s') . '.xlsx';
 
         return Excel::download(
-            new UserGenericWithoutJobRoleExport($periodeId),
+            new UserGenericWithoutJobRoleExport($periodeId, $companyShortname),
             $filename
         );
     }

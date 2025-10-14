@@ -14,10 +14,12 @@ use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 class UserNIKWithoutJobRoleExport implements FromCollection, WithHeadings, WithStyles, ShouldAutoSize, WithTitle
 {
     protected int $periodeId;
+    protected ?string $companyShortname;
 
-    public function __construct(int $periodeId)
+    public function __construct(int $periodeId, ?string $companyShortname = null)
     {
         $this->periodeId = $periodeId;
+        $this->companyShortname = $companyShortname;
     }
 
     public function collection()
@@ -31,6 +33,7 @@ class UserNIKWithoutJobRoleExport implements FromCollection, WithHeadings, WithS
                 'kompartemen.nama as kompartemen',
                 'departemen.nama as departemen',
             ])
+            ->where('group', $this->companyShortname) // Filter by user's company
             // Aggregate any wrong job_role_id(s) for this user+periode (comma-separated)
             ->selectSub(function ($sub) {
                 $sub->from('tr_ussm_job_role as jr')

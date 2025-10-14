@@ -14,10 +14,12 @@ use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 class UserGenericWithoutJobRoleExport implements FromCollection, WithHeadings, WithStyles, ShouldAutoSize, WithTitle
 {
     protected int $periodeId;
+    protected ?string $companyShortname;
 
-    public function __construct(int $periodeId)
+    public function __construct(int $periodeId, ?string $companyShortname = null)
     {
         $this->periodeId = $periodeId;
+        $this->companyShortname = $companyShortname;
     }
 
     public function collection()
@@ -29,6 +31,7 @@ class UserGenericWithoutJobRoleExport implements FromCollection, WithHeadings, W
                 'user_code',
                 'last_login',
             ])
+            ->where('group', $this->companyShortname) // Filter by user's company
             // Collect wrong job_role_id(s) (not found in tr_job_roles or soft-deleted)
             ->selectSub(function ($sub) {
                 $sub->from('tr_ussm_job_role as jr')

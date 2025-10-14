@@ -243,6 +243,8 @@ class NIKJobController extends Controller
     public function indexWithoutJobRole(Request $request)
     {
         $periodes = Periode::select('id', 'definisi')->get();
+        $userCompany = auth()->user()->loginDetail->company_code ?? null;
+        $companyShortname = Company::where('company_code', $userCompany)->value('shortname');
 
         if ($request->ajax()) {
             if (!$request->filled('periode')) {
@@ -260,6 +262,7 @@ class NIKJobController extends Controller
                     'kompartemen.nama as kompartemen',
                     'departemen.nama as departemen',
                 ])
+                ->where('group', $companyShortname) // Filter by user's company
                 // Aggregate any wrong job_role_id(s) for this user+periode (comma-separated)
                 ->selectSub(function ($sub) use ($periode) {
                     $sub->from('tr_ussm_job_role as jr')
@@ -310,6 +313,8 @@ class NIKJobController extends Controller
     public function exportWithoutJobRole(Request $request)
     {
         $periodeId = (int) $request->get('periode');
+        $userCompany = auth()->user()->loginDetail->company_code ?? null;
+        $companyShortname = Company::where('company_code', $userCompany)->value('shortname');
 
         if (!$periodeId) {
             return redirect()->back()->with('error', 'Periode harus dipilih untuk export');
@@ -322,7 +327,7 @@ class NIKJobController extends Controller
         $filename = 'NIK_Without_Job_Role_' . $periodeName . '_' . now()->format('Y-m-d_H-i-s') . '.xlsx';
 
         return Excel::download(
-            new UserNIKWithoutJobRoleExport($periodeId),
+            new UserNIKWithoutJobRoleExport($periodeId, $companyShortname),
             $filename
         );
     }
