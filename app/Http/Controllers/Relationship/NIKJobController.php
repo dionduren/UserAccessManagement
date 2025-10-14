@@ -77,7 +77,7 @@ class NIKJobController extends Controller
 
         NIKJobRole::create([
             'periode_id' => $request->periode_id,
-            'nik' => $request->user_code,
+            'nik' => $request->nik,
             'job_role_id' => $request->job_role_id,
             'is_active' => true,
             // 'last_update' => now(),
