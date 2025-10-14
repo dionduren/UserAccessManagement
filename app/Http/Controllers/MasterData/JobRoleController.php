@@ -60,8 +60,8 @@ class JobRoleController extends Controller
                 'nama' => [
                     'required',
                     'string',
-                    Rule::unique('tr_job_roles', 'nama')
-                        ->where('company_id', $request->company_id)
+                    // Rule::unique('tr_job_roles', 'nama')
+                    //     ->where('company_id', $request->company_id)
                 ],
                 'deskripsi' => 'nullable|string',
                 'kompartemen_id' => 'nullable|exists:ms_kompartemen,kompartemen_id',
@@ -152,6 +152,9 @@ class JobRoleController extends Controller
 
             // Only increment if job_role_id is changed
             if ($request->job_role_id && $request->job_role_id !== $oldJobRoleId) {
+
+                DB::table('tr_nik_job_roles')->where('job_role_id', $oldJobRoleId)->delete();
+
                 PenomoranJobRole::updateOrCreate(
                     ['company_id' => $request->company_id],
                     ['last_number' => \DB::raw('last_number + 1')]

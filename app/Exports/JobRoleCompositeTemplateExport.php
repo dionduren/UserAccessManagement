@@ -148,8 +148,8 @@ class HierarchyMasterSheet implements FromCollection, WithHeadings, WithTitle, S
             'kompartemen' => function ($q) {
                 $q->select('kompartemen_id', 'company_id', 'nama');
             },
+            // Load all departemen for the company
             'departemen' => function ($q) {
-                // departemen without kompartemen (if any)
                 $q->select('departemen_id', 'company_id', 'kompartemen_id', 'nama');
             },
         ])->select('company_code', 'nama')->get();
@@ -157,6 +157,8 @@ class HierarchyMasterSheet implements FromCollection, WithHeadings, WithTitle, S
         $rows = [];
 
         foreach ($companies as $company) {
+            $processedDepartemen = collect(); // Keep track of processed departemen
+
             // If company has kompartemen
             if ($company->kompartemen->count()) {
                 foreach ($company->kompartemen as $komp) {
@@ -171,6 +173,7 @@ class HierarchyMasterSheet implements FromCollection, WithHeadings, WithTitle, S
                                 'departemen_id'    => $dept->departemen_id,
                                 'departemen_name'  => $dept->nama,
                             ];
+                            $processedDepartemen->push($dept->departemen_id);
                         }
                     } else {
                         // Kompartemen without departemen
@@ -184,31 +187,38 @@ class HierarchyMasterSheet implements FromCollection, WithHeadings, WithTitle, S
                         ];
                     }
                 }
-            } else {
-                // Company without kompartemen (and maybe standalone departemen)
-                if ($company->departemen->count()) {
-                    foreach ($company->departemen as $dept) {
-                        // departemen lacking kompartemen_id
-                        $rows[] = [
-                            'company_code'     => $company->company_code,
-                            'company_name'     => $company->nama,
-                            'kompartemen_id'   => null,
-                            'kompartemen_name' => null,
-                            'departemen_id'    => $dept->departemen_id,
-                            'departemen_name'  => $dept->nama,
-                        ];
-                    }
-                } else {
-                    // Bare company row
+            }
+
+            // Add departemen that don't belong to any kompartemen (kompartemen_id is null)
+            // or departemen that weren't processed above
+            foreach ($company->departemen as $dept) {
+                // Only add if not already processed and has no kompartemen
+                if (
+                    !$processedDepartemen->contains($dept->departemen_id) &&
+                    (is_null($dept->kompartemen_id) || $dept->kompartemen_id === '')
+                ) {
                     $rows[] = [
                         'company_code'     => $company->company_code,
                         'company_name'     => $company->nama,
                         'kompartemen_id'   => null,
                         'kompartemen_name' => null,
-                        'departemen_id'    => null,
-                        'departemen_name'  => null,
+                        'departemen_id'    => $dept->departemen_id,
+                        'departemen_name'  => $dept->nama,
                     ];
                 }
+            }
+
+            // If company has no kompartemen and no departemen at all
+            if ($company->kompartemen->count() === 0 && $company->departemen->count() === 0) {
+                // Bare company row
+                $rows[] = [
+                    'company_code'     => $company->company_code,
+                    'company_name'     => $company->nama,
+                    'kompartemen_id'   => null,
+                    'kompartemen_name' => null,
+                    'departemen_id'    => null,
+                    'departemen_name'  => null,
+                ];
             }
         }
 
