@@ -67,7 +67,7 @@ class NIKJobController extends Controller
         // Check for existing assignment in this period
         $exists = NIKJobRole::where([
             'periode_id' => $request->periode_id,
-            'nik' => $request->user_code,
+            'nik' => $request->nik,
             'job_role_id' => $request->job_role_id,
         ])->exists();
 
