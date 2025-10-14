@@ -139,14 +139,14 @@ class NIKJobController extends Controller
         $request->validate([
             'periode_id'   => 'required|exists:ms_periode,id',
             'job_role_id'  => 'required|exists:tr_job_roles,job_role_id',
-            'user_code'    => 'required|exists:tr_user_ussm_nik,user_code', // adjust if needed
+            'nik'    => 'required|exists:tr_user_ussm_nik,user_code', // adjust if needed
         ]);
 
         $nikJobRole = NIKJobRole::findOrFail($id);
         $nikJobRole->update([
             'periode_id'  => $request->input('periode_id'),
             'job_role_id' => $request->input('job_role_id'),
-            'nik'         => $request->input('user_code'),
+            'nik'         => $request->input('nik'),
         ]);
 
         return redirect()->route('nik-job.index')
