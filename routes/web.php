@@ -336,6 +336,7 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/create', [UserGenericJobRoleController::class, 'create'])->name('create');
         Route::post('/', [UserGenericJobRoleController::class, 'store'])->name('store');
         Route::get('/without-job-role', [UserGenericJobRoleController::class, 'indexWithoutJobRole'])->name('null-relationship');
+        Route::get('/without-job-role/export', [UserGenericJobRoleController::class, 'exportWithoutJobRole'])->name('without.export');
         Route::get('/{id}', [UserGenericJobRoleController::class, 'show'])->name('show');
         Route::get('/{id}/edit', [UserGenericJobRoleController::class, 'edit'])->name('edit');
         Route::post('/{id}/flagged', [UserGenericJobRoleController::class, 'updateFlagged']);
@@ -458,6 +459,7 @@ Route::middleware(['auth'])->group(function () {
 
     Route::get('relationship/nik-job/get-by-periode-id', [NIKJobController::class, 'getNIKJobRolesByPeriodeId'])->name('nik-job.get-by-periode');
     Route::get('relationship/nik-job/without-job-role', [NIKJobController::class, 'indexWithoutJobRole'])->name('nik-job.null-relationship');
+    Route::get('relationship/nik-job/without-job-role/export', [NIKJobController::class, 'exportWithoutJobRole'])->name('nik-job.without.export');
     Route::resource('relationship/nik-job', NIKJobController::class);
 
     Route::prefix('karyawan-unit-kerja')->name('karyawan_unit_kerja.')->group(function () {

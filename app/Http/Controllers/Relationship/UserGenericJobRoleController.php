@@ -9,8 +9,11 @@ use \App\Models\NIKJobRole;
 use App\Models\Periode;
 use App\Models\userGeneric;
 
+use App\Exports\UserGenericWithoutJobRoleExport;
+
 use Illuminate\Http\Request;
 use Yajra\DataTables\Facades\DataTables;
+use Maatwebsite\Excel\Facades\Excel;
 
 class UserGenericJobRoleController extends Controller
 {
@@ -258,5 +261,25 @@ class UserGenericJobRoleController extends Controller
         }
 
         return view('relationship.generic-job_role.no-relationship', compact('periodes'));
+    }
+
+    public function exportWithoutJobRole(Request $request)
+    {
+        $periodeId = (int) $request->get('periode');
+
+        if (!$periodeId) {
+            return redirect()->back()->with('error', 'Periode harus dipilih untuk export');
+        }
+
+        // Get periode name for filename
+        $periode = Periode::find($periodeId);
+        $periodeName = $periode ? $periode->definisi : 'Unknown';
+
+        $filename = 'User_Generic_Without_Job_Role_' . $periodeName . '_' . now()->format('Y-m-d_H-i-s') . '.xlsx';
+
+        return Excel::download(
+            new UserGenericWithoutJobRoleExport($periodeId),
+            $filename
+        );
     }
 }

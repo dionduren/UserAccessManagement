@@ -9,9 +9,13 @@ use App\Models\JobRole;
 use App\Models\Periode;
 use App\Models\userNIK;
 use App\Models\NIKJobRole;
+use App\Exports\UserNIKWithoutJobRoleExport;
+
 use Illuminate\Http\Request;
-use Yajra\DataTables\DataTables;
 use Illuminate\Support\Facades\DB;
+
+use Yajra\DataTables\DataTables;
+use Maatwebsite\Excel\Facades\Excel;
 
 class NIKJobController extends Controller
 {
@@ -301,5 +305,25 @@ class NIKJobController extends Controller
         }
 
         return view('relationship.nik_job_role.no-relationship', compact('periodes'));
+    }
+
+    public function exportWithoutJobRole(Request $request)
+    {
+        $periodeId = (int) $request->get('periode');
+
+        if (!$periodeId) {
+            return redirect()->back()->with('error', 'Periode harus dipilih untuk export');
+        }
+
+        // Get periode name for filename
+        $periode = Periode::find($periodeId);
+        $periodeName = $periode ? $periode->definisi : 'Unknown';
+
+        $filename = 'NIK_Without_Job_Role_' . $periodeName . '_' . now()->format('Y-m-d_H-i-s') . '.xlsx';
+
+        return Excel::download(
+            new UserNIKWithoutJobRoleExport($periodeId),
+            $filename
+        );
     }
 }
