@@ -137,7 +137,7 @@ class UARReportController extends Controller
 
         $nomorSurat = "PI-TIN-UAR-{$periodeYear}-{$nomorSurat}";
 
-        // Query UserNIKUnitKerja
+        // Query UserNIKUnitKerja with NIKJobRole filter
         $userNIKQuery = UserNIKUnitKerja::query()
             ->with([
                 'company',
@@ -145,7 +145,16 @@ class UARReportController extends Controller
                 'departemen'
             ])
             ->whereNull('deleted_at')
-            ->where('periode_id', $periode->id);
+            ->where('periode_id', $periode->id)
+            // Only include UserNIKUnitKerja that have corresponding NIKJobRole
+            ->whereExists(function ($query) use ($periode) {
+                $query->select(\DB::raw(1))
+                    ->from('tr_ussm_job_role')
+                    ->whereColumn('tr_ussm_job_role.nik', 'ms_nik_unit_kerja.nik')
+                    ->where('tr_ussm_job_role.periode_id', $periode->id)
+                    ->where('tr_ussm_job_role.is_active', true)
+                    ->whereNull('tr_ussm_job_role.deleted_at');
+            });
 
         // Apply filters for UserNIK
         if ($companyId) {
@@ -158,7 +167,7 @@ class UARReportController extends Controller
             $userNIKQuery->where('departemen_id', $departemenId);
         }
 
-        // Query UserGenericUnitKerja
+        // Query UserGenericUnitKerja with NIKJobRole filter
         $userGenericQuery = UserGenericUnitKerja::query()
             ->with([
                 'userGeneric',
@@ -166,14 +175,27 @@ class UARReportController extends Controller
                 'departemen'
             ])
             ->whereNull('deleted_at')
-            ->where('periode_id', $periode->id);
+            ->where('periode_id', $periode->id)
+            // Only include UserGenericUnitKerja that have corresponding NIKJobRole
+            ->whereExists(function ($query) use ($periode) {
+                $query->select(\DB::raw(1))
+                    ->from('tr_ussm_job_role')
+                    ->whereColumn('tr_ussm_job_role.nik', 'ms_generic_unit_kerja.user_cc')
+                    ->where('tr_ussm_job_role.periode_id', $periode->id)
+                    ->where('tr_ussm_job_role.is_active', true)
+                    ->whereNull('tr_ussm_job_role.deleted_at');
+            });
 
-        // Apply filters for UserGeneric
+        // Apply filters for UserGeneric - FIXED COMPANY FILTERING
         if ($companyId) {
-            $userGenericQuery->whereHas('departemen', function ($q) use ($companyId) {
-                $q->where('company_id', $companyId);
-            })->orWhereHas('kompartemen', function ($q) use ($companyId) {
-                $q->where('company_id', $companyId);
+            $userGenericQuery->where(function ($q) use ($companyId) {
+                $q->whereHas('departemen', function ($subQ) use ($companyId) {
+                    $subQ->where('company_id', $companyId);
+                })->orWhere(function ($subQ) use ($companyId) {
+                    $subQ->whereHas('kompartemen', function ($subSubQ) use ($companyId) {
+                        $subSubQ->where('company_id', $companyId);
+                    })->whereNull('departemen_id');
+                });
             });
         }
         if ($kompartemenId) {
@@ -191,7 +213,7 @@ class UARReportController extends Controller
         // Process UserNIK data
         foreach ($userNIKs as $userNIK) {
             // Find corresponding NIKJobRole with job role relationships
-            $nikJobRole = NIKJobRole::with([
+            $nikJobRoleQuery = NIKJobRole::with([
                 'jobRole.kompartemen',
                 'jobRole.departemen',
                 'mdb_usmm'
@@ -199,38 +221,59 @@ class UARReportController extends Controller
                 ->whereNull('deleted_at')
                 ->where('is_active', true)
                 ->where('periode_id', $periode->id)
-                ->where('nik', $userNIK->nik)
-                ->first();
+                ->where('nik', $userNIK->nik);
+
+            // Filter NIKJobRole by company if specified
+            if ($companyId) {
+                $nikJobRoleQuery->whereHas('jobRole', function ($q) use ($companyId) {
+                    $q->where('company_id', $companyId);
+                });
+            }
+            if ($kompartemenId) {
+                $nikJobRoleQuery->whereHas('jobRole', function ($q) use ($kompartemenId) {
+                    $q->where('kompartemen_id', $kompartemenId);
+                });
+            }
+            if ($departemenId) {
+                $nikJobRoleQuery->whereHas('jobRole', function ($q) use ($departemenId) {
+                    $q->where('departemen_id', $departemenId);
+                });
+            }
+
+            $nikJobRole = $nikJobRoleQuery->first();
+
+            // Skip if no NIKJobRole found (this shouldn't happen due to whereExists, but safety check)
+            if (!$nikJobRole) {
+                continue;
+            }
 
             $jobRoleName = '-';
             $assignedJobRole = '-';
             $assignedUnitKerja = '-';
 
-            if ($nikJobRole) {
-                $jobRole = $nikJobRole->jobRole;
-                if ($jobRole) {
-                    $isDifferentUnitKerja = false;
+            $jobRole = $nikJobRole->jobRole;
+            if ($jobRole) {
+                $isDifferentUnitKerja = false;
 
-                    // Check if job role's unit kerja matches selected filters
-                    if ($departemenId && $jobRole->departemen_id != $departemenId) {
-                        $isDifferentUnitKerja = true;
-                    } elseif ($kompartemenId && !$departemenId && $jobRole->kompartemen_id != $kompartemenId) {
-                        $isDifferentUnitKerja = true;
-                    } elseif ($companyId && !$kompartemenId && !$departemenId && $jobRole->company_id != $companyId) {
-                        $isDifferentUnitKerja = true;
-                    }
+                // Check if job role's unit kerja matches selected filters
+                if ($departemenId && $jobRole->departemen_id != $departemenId) {
+                    $isDifferentUnitKerja = true;
+                } elseif ($kompartemenId && !$departemenId && $jobRole->kompartemen_id != $kompartemenId) {
+                    $isDifferentUnitKerja = true;
+                } elseif ($companyId && !$kompartemenId && !$departemenId && $jobRole->company_id != $companyId) {
+                    $isDifferentUnitKerja = true;
+                }
 
-                    // Set assigned job role details
-                    $assignedJobRole = $jobRole->nama ?? '-';
-                    $kompartemenName = $jobRole->kompartemen?->nama ?? '-';
-                    $departemenName = $jobRole->departemen?->nama ?? '-';
-                    $assignedUnitKerja = $kompartemenName . ' - ' . $departemenName;
+                // Set assigned job role details
+                $assignedJobRole = $jobRole->nama ?? '-';
+                $kompartemenName = $jobRole->kompartemen?->nama ?? '-';
+                $departemenName = $jobRole->departemen?->nama ?? '-';
+                $assignedUnitKerja = $kompartemenName . ' - ' . $departemenName;
 
-                    if ($isDifferentUnitKerja) {
-                        $jobRoleName = '<span style="color: red;">[Job Role with Different Unit Kerja]</span>';
-                    } else {
-                        $jobRoleName = $assignedJobRole;
-                    }
+                if ($isDifferentUnitKerja) {
+                    $jobRoleName = '<span style="color: red;">[Job Role with Different Unit Kerja]</span>';
+                } else {
+                    $jobRoleName = $assignedJobRole;
                 }
             }
 
@@ -246,7 +289,7 @@ class UARReportController extends Controller
                 'company'       => $userNIK->company?->nama ?? '-',
                 'kompartemen'   => $userNIK->kompartemen?->nama ?? '-',
                 'departemen'    => $userNIK->departemen?->nama ?? '-',
-                'user_nik'      => $nikJobRole?->nik ?? $userNIK->nik ?? '-',
+                'user_nik'      => $nikJobRole->nik ?? $userNIK->nik ?? '-',
                 'job_role'      => $jobRoleName,
                 'assigned_job_role' => $assignedJobRole,
                 'assigned_unit_kerja' => $assignedUnitKerja,
@@ -257,10 +300,10 @@ class UARReportController extends Controller
             ];
         }
 
-        // Process UserGeneric data
+        // Process UserGeneric data with same filtering logic
         foreach ($userGenerics as $userGeneric) {
             // Find corresponding NIKJobRole with job role relationships
-            $nikJobRole = NIKJobRole::with([
+            $nikJobRoleQuery = NIKJobRole::with([
                 'jobRole.kompartemen',
                 'jobRole.departemen',
                 'mdb_usmm'
@@ -268,38 +311,59 @@ class UARReportController extends Controller
                 ->whereNull('deleted_at')
                 ->where('is_active', true)
                 ->where('periode_id', $periode->id)
-                ->where('nik', $userGeneric->user_cc)
-                ->first();
+                ->where('nik', $userGeneric->user_cc);
+
+            // Filter NIKJobRole by company if specified
+            if ($companyId) {
+                $nikJobRoleQuery->whereHas('jobRole', function ($q) use ($companyId) {
+                    $q->where('company_id', $companyId);
+                });
+            }
+            if ($kompartemenId) {
+                $nikJobRoleQuery->whereHas('jobRole', function ($q) use ($kompartemenId) {
+                    $q->where('kompartemen_id', $kompartemenId);
+                });
+            }
+            if ($departemenId) {
+                $nikJobRoleQuery->whereHas('jobRole', function ($q) use ($departemenId) {
+                    $q->where('departemen_id', $departemenId);
+                });
+            }
+
+            $nikJobRole = $nikJobRoleQuery->first();
+
+            // Skip if no NIKJobRole found (this shouldn't happen due to whereExists, but safety check)
+            if (!$nikJobRole) {
+                continue;
+            }
 
             $jobRoleName = '-';
             $assignedJobRole = '-';
             $assignedUnitKerja = '-';
 
-            if ($nikJobRole) {
-                $jobRole = $nikJobRole->jobRole;
-                if ($jobRole) {
-                    $isDifferentUnitKerja = false;
+            $jobRole = $nikJobRole->jobRole;
+            if ($jobRole) {
+                $isDifferentUnitKerja = false;
 
-                    // Check if job role's unit kerja matches selected filters
-                    if ($departemenId && $jobRole->departemen_id != $departemenId) {
-                        $isDifferentUnitKerja = true;
-                    } elseif ($kompartemenId && !$departemenId && $jobRole->kompartemen_id != $kompartemenId) {
-                        $isDifferentUnitKerja = true;
-                    } elseif ($companyId && !$kompartemenId && !$departemenId && $jobRole->company_id != $companyId) {
-                        $isDifferentUnitKerja = true;
-                    }
+                // Check if job role's unit kerja matches selected filters
+                if ($departemenId && $jobRole->departemen_id != $departemenId) {
+                    $isDifferentUnitKerja = true;
+                } elseif ($kompartemenId && !$departemenId && $jobRole->kompartemen_id != $kompartemenId) {
+                    $isDifferentUnitKerja = true;
+                } elseif ($companyId && !$kompartemenId && !$departemenId && $jobRole->company_id != $companyId) {
+                    $isDifferentUnitKerja = true;
+                }
 
-                    // Set assigned job role details
-                    $assignedJobRole = $jobRole->nama ?? '-';
-                    $kompartemenName = $jobRole->kompartemen?->nama ?? '-';
-                    $departemenName = $jobRole->departemen?->nama ?? '-';
-                    $assignedUnitKerja = $kompartemenName . ' - ' . $departemenName;
+                // Set assigned job role details
+                $assignedJobRole = $jobRole->nama ?? '-';
+                $kompartemenName = $jobRole->kompartemen?->nama ?? '-';
+                $departemenName = $jobRole->departemen?->nama ?? '-';
+                $assignedUnitKerja = $kompartemenName . ' - ' . $departemenName;
 
-                    if ($isDifferentUnitKerja) {
-                        $jobRoleName = '<span style="color: red;">[Job Role with Different Unit Kerja]</span>';
-                    } else {
-                        $jobRoleName = $assignedJobRole;
-                    }
+                if ($isDifferentUnitKerja) {
+                    $jobRoleName = '<span style="color: red;">[Job Role with Different Unit Kerja]</span>';
+                } else {
+                    $jobRoleName = $assignedJobRole;
                 }
             }
 
@@ -323,7 +387,7 @@ class UARReportController extends Controller
                 'company'       => $companyName,
                 'kompartemen'   => $userGeneric->kompartemen?->nama ?? '-',
                 'departemen'    => $userGeneric->departemen?->nama ?? '-',
-                'user_nik'      => $nikJobRole?->nik ?? $userGeneric->user_cc ?? '-',
+                'user_nik'      => $nikJobRole->nik ?? $userGeneric->user_cc ?? '-',
                 'job_role'      => $jobRoleName,
                 'assigned_job_role' => $assignedJobRole,
                 'assigned_unit_kerja' => $assignedUnitKerja,
