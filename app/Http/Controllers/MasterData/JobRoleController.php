@@ -56,47 +56,38 @@ class JobRoleController extends Controller
     {
         try {
             $request->validate([
-                'company_id' => 'required|exists:ms_company,company_code',
-                'nama' => [
-                    'required',
-                    'string',
-                    // Rule::unique('tr_job_roles', 'nama')
-                    //     ->where('company_id', $request->company_id)
-                ],
-                'deskripsi' => 'nullable|string',
+                'company_id'     => 'required|exists:ms_company,company_code',
+                'nama'           => ['required', 'string'],
+                'deskripsi'      => 'nullable|string',
                 'kompartemen_id' => 'nullable|exists:ms_kompartemen,kompartemen_id',
-                'departemen_id' => 'nullable|exists:ms_departemen,departemen_id',
+                'departemen_id'  => 'nullable|exists:ms_departemen,departemen_id',
+                // optionally validate job_role_id uniqueness if you allow setting it on create:
+                // 'job_role_id' => ['nullable','string', Rule::unique('tr_job_roles','job_role_id')->where('company_id', $request->company_id)],
             ]);
 
-            $jobRole = JobRole::create($request->all() + [
-                'created_by' => auth()->user()->name
-            ]);
+            DB::transaction(function () use ($request) {
+                $jobRole = JobRole::create($request->all() + [
+                    'created_by' => auth()->user()->name
+                ]);
 
-            // Increment PenomoranJobRole if job_role_id is set
-            if ($request->job_role_id) {
-                PenomoranJobRole::updateOrCreate(
-                    ['company_id' => $request->company_id],
-                    ['last_number' => \DB::raw('last_number + 1')]
-                );
-            }
+                // Increment numbering only if a job_role_id was assigned
+                if (filled($request->job_role_id)) {
+                    $counter = PenomoranJobRole::firstOrCreate(
+                        ['company_id' => $request->company_id],
+                        ['last_number' => 0]
+                    );
+                    $counter->increment('last_number');
+                }
+            });
 
             return redirect()
                 ->route('job-roles.index')
                 ->with('status', 'Job role created successfully.');
         } catch (ValidationException $e) {
-            // Redirect back with validation errors
-            return redirect()
-                ->back()
-                ->withErrors($e->errors())
-                ->withInput();
+            return back()->withErrors($e->errors())->withInput();
         } catch (QueryException $e) {
-            // Log the query error and return a user-friendly message
             Log::error('Error creating Job Role: ' . $e->getMessage());
-
-            return redirect()
-                ->back()
-                ->withErrors(['error' => 'An unexpected error occurred while saving the job role.'])
-                ->withInput();
+            return back()->withErrors(['error' => 'An unexpected error occurred while saving the job role.'])->withInput();
         }
     }
 
@@ -128,23 +119,33 @@ class JobRoleController extends Controller
                         ->where('company_id', $request->company_id)
                         ->ignore($job_role->id, 'id'),
                 ],
-                'nama' => ['required', 'string'],
-                'deskripsi' => 'nullable|string',
+                'nama'           => ['required', 'string'],
+                'deskripsi'      => 'nullable|string',
                 'kompartemen_id' => 'nullable|exists:ms_kompartemen,kompartemen_id',
                 'departemen_id'  => 'nullable|exists:ms_departemen,departemen_id',
             ]);
 
-            $oldJobRoleId = $job_role->job_role_id;
-            $job_role->update($request->all() + ['updated_by' => auth()->user()->name]);
+            DB::transaction(function () use ($request, $job_role) {
+                $oldJobRoleId = $job_role->job_role_id;
 
-            if ($request->job_role_id && $request->job_role_id !== $oldJobRoleId) {
-                DB::table('tr_nik_job_roles')->where('job_role_id', $oldJobRoleId)->delete();
+                $job_role->update($request->all() + ['updated_by' => auth()->user()->name]);
 
-                PenomoranJobRole::updateOrCreate(
-                    ['company_id' => $request->company_id],
-                    ['last_number' => \DB::raw('last_number + 1')]
-                );
-            }
+                // If job_role_id changed (including from null -> value), update related and increment numbering
+                if (filled($request->job_role_id) && $request->job_role_id !== $oldJobRoleId) {
+
+                    if ($oldJobRoleId && DB::table('tr_nik_job_roles')->where('job_role_id', $oldJobRoleId)->exists()) {
+                        DB::table('tr_nik_job_roles')
+                            ->where('job_role_id', $oldJobRoleId)
+                            ->update(['job_role_id' => $request->job_role_id]);
+                    }
+
+                    $counter = PenomoranJobRole::firstOrCreate(
+                        ['company_id' => $request->company_id],
+                        ['last_number' => 0]
+                    );
+                    $counter->increment('last_number');
+                }
+            });
 
             return redirect()->route('job-roles.index')->with('status', 'Job role updated successfully.');
         } catch (ValidationException $e) {

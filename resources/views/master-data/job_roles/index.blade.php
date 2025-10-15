@@ -368,7 +368,8 @@
 
                 if (kompartemenData?.departemen.length) {
                     // Populate departemen dropdown based on selected kompartemen
-                    populateDropdown('#departemenDropdown', kompartemenData.departemen, 'kompartemen_id',
+                    // FIX: use 'departemen_id' as the value field (was 'kompartemen_id')
+                    populateDropdown('#departemenDropdown', kompartemenData.departemen, 'departemen_id',
                         'nama');
                 }
 
@@ -377,6 +378,7 @@
 
             // Handle departemen dropdown change
             $('#departemenDropdown').on('change', function() {
+                console.log('Departemen changed', $(this).val());
                 loadJobRoles();
             });
 
@@ -384,7 +386,6 @@
             function loadJobRoles() {
                 const companyId = $('#companyDropdown').val();
                 const kompartemenId = $('#kompartemenDropdown').val();
-                console.log(kompartemenId);
                 const departemenId = $('#departemenDropdown').val();
 
                 $.ajax({
@@ -410,9 +411,14 @@
                 dropdown.empty().append('<option value="">-- Select --</option>');
                 if (items?.length) {
                     dropdown.prop('disabled', false);
-                    items.sort((a, b) => a[textField].localeCompare(b[textField])).forEach(item => {
-                        dropdown.append(`<option value="${item[valueField]}">${item[textField]}</option>`);
-                    });
+                    items
+                        .filter(item => item && item[valueField] != null) // avoid undefined values
+                        .sort((a, b) => String(a[textField] ?? '').localeCompare(String(b[textField] ?? '')))
+                        .forEach(item => {
+                            const val = item[valueField];
+                            const text = item[textField] ?? val;
+                            dropdown.append(`<option value="${val}">${text}</option>`);
+                        });
                 } else {
                     dropdown.prop('disabled', true);
                 }
