@@ -221,7 +221,7 @@
                                 <button class="btn btn-info btn-sm show-detail" data-id="${row.id}">
                                     <i class="bi bi-eye"></i> Detail
                                 </button>
-                                <a href="/relationship/generic-job_role/${row.id}/edit" target="_blank" class="btn btn-sm btn-warning">
+                                <a href="/relationship/generic-job-role/${row.id}/edit" target="_blank" class="btn btn-sm btn-warning">
                                     <i class="bi bi-pencil-square"></i> Edit
                                 </a>
                                 <button onclick="deleteRelationship(${row.id})" class="btn btn-sm btn-danger">
@@ -323,7 +323,7 @@
             }).then((result) => {
                 if (result.isConfirmed) {
                     $.ajax({
-                        url: '/relationship/generic-job_role/' + id,
+                        url: '/relationship/generic-job-role/' + id,
                         type: 'DELETE',
                         data: {
                             _token: '{{ csrf_token() }}'
@@ -353,7 +353,7 @@
         $(document).on('click', '.show-detail', function() {
             var id = $(this).data('id');
             $.ajax({
-                url: '/relationship/generic-job_role/' + id,
+                url: '/relationship/generic-job-role/' + id,
                 method: 'GET',
                 success: function(response) {
                     $('#modal-id').val(id);
@@ -400,7 +400,7 @@
             e.preventDefault();
             var id = $('#modal-id').val();
             $.ajax({
-                url: '/relationship/generic-job_role/' + id + '/flagged',
+                url: '/relationship/generic-job-role/' + id + '/flagged',
                 method: 'POST',
                 data: {
                     _token: '{{ csrf_token() }}',
