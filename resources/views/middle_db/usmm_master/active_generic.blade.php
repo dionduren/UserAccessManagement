@@ -8,8 +8,10 @@
             <div class="card-header d-flex flex-column flex-md-row align-items-md-center gap-2">
                 <h2 class="mb-0 flex-grow-1">USMM - Active Generic Users</h2>
                 <div class="d-flex gap-2">
-                    <a href="{{ route('compare.usmm.generic') }}" target="_blank" class="btn btn-warning btn-sm">Compare USMM
-                        Generic</a>
+                    <div id="dtButtons" class="btn-group"></div>
+                    <a href="{{ route('compare.usmm.generic') }}" target="_blank"
+                        class="btn btn-warning btn-sm border border-dark">Compare
+                        USMM Generic</a>
                     <button id="btnReloadInactive" class="btn btn-outline-secondary btn-sm">Reload / Clear Filters</button>
                 </div>
             </div>
@@ -33,44 +35,31 @@
                         </tr>
                         <tr class="filters">
                             <th><input data-col="0" type="text" class="form-control form-control-sm"
-                                    placeholder="Company">
-                            </th>
+                                    placeholder="Company"></th>
                             <th><input data-col="1" type="text" class="form-control form-control-sm"
-                                    placeholder="User ID">
-                            </th>
+                                    placeholder="User ID"></th>
                             <th><input data-col="2" type="text" class="form-control form-control-sm"
-                                    placeholder="Full Name">
-                            </th>
+                                    placeholder="Full Name"></th>
                             <th><input data-col="3" type="text" class="form-control form-control-sm"
-                                    placeholder="Department">
-                            </th>
+                                    placeholder="Department"></th>
                             <th><input data-col="4" type="text" class="form-control form-control-sm"
-                                    placeholder="Logon Date">
-                            </th>
+                                    placeholder="Logon Date"></th>
                             <th><input data-col="5" type="text" class="form-control form-control-sm"
-                                    placeholder="Logon Time">
-                            </th>
+                                    placeholder="Logon Time"></th>
                             <th><input data-col="6" type="text" class="form-control form-control-sm"
-                                    placeholder="User Type">
-                            </th>
+                                    placeholder="User Type"></th>
                             <th><input data-col="7" type="text" class="form-control form-control-sm"
-                                    placeholder="Valid From">
-                            </th>
+                                    placeholder="Valid From"></th>
                             <th><input data-col="8" type="text" class="form-control form-control-sm"
-                                    placeholder="Valid To">
-                            </th>
+                                    placeholder="Valid To"></th>
                             <th><input data-col="9" type="text" class="form-control form-control-sm"
-                                    placeholder="Contractual">
-                            </th>
+                                    placeholder="Contractual"></th>
                             <th><input data-col="10" type="text" class="form-control form-control-sm"
-                                    placeholder="Creator">
-                            </th>
-                            <th><input data-col="10" type="text" class="form-control form-control-sm"
-                                    placeholder="Created On">
-                            </th>
-                            <th><input data-col="10" type="text" class="form-control form-control-sm"
-                                    placeholder="Synced At">
-                            </th>
+                                    placeholder="Creator"></th>
+                            <th><input data-col="11" type="text" class="form-control form-control-sm"
+                                    placeholder="Created On"></th>
+                            <th><input data-col="12" type="text" class="form-control form-control-sm"
+                                    placeholder="Synced At"></th>
                         </tr>
                     </thead>
                     <tbody></tbody>
@@ -80,7 +69,18 @@
     </div>
 @endsection
 
+@section('styles')
+    <link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.4.1/css/buttons.bootstrap5.min.css">
+@endsection
+
 @section('scripts')
+    <!-- Export to Excel deps -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js" crossorigin="anonymous"
+        referrerpolicy="no-referrer"></script>
+    <script src="https://cdn.datatables.net/buttons/2.4.1/js/dataTables.buttons.min.js"></script>
+    <script src="https://cdn.datatables.net/buttons/2.4.1/js/buttons.bootstrap5.min.js"></script>
+    <script src="https://cdn.datatables.net/buttons/2.4.1/js/buttons.html5.min.js"></script>
+
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             const btnReload = document.getElementById('btnReloadInactive');
@@ -113,10 +113,41 @@
                 processing: true,
                 deferRender: true,
                 pageLength: 25,
+                lengthMenu: [
+                    [10, 25, 50, 100, -1],
+                    [10, 25, 50, 100, 'All']
+                ],
                 orderCellsTop: true,
                 order: [
                     [1, 'asc']
                 ],
+                layout: {
+                    top1Start: {
+                        div: {
+                            className: 'pageLength'
+                        }
+                    },
+                    bottom1Start: {
+                        div: {
+                            className: 'info'
+                        }
+                    },
+                    bottom1End: {
+                        div: {
+                            className: 'paging'
+                        }
+                    }
+                },
+                buttons: [{
+                    extend: 'excelHtml5',
+                    text: 'Export Excel',
+                    className: 'btn btn-sm btn-success',
+                    title: 'USMM_Active_Generic_Users',
+                    filename: 'USMM_Active_Generic_Users_' + new Date().toISOString().slice(0, 10),
+                    exportOptions: {
+                        columns: ':visible'
+                    }
+                }],
                 ajax: {
                     url: '{{ route('middle_db.usmm.activeGenericData') }}'
                 },
@@ -163,12 +194,13 @@
                     },
                     {
                         data: 'created_at',
-                        render: function(val) {
-                            return val ? new Date(val).toLocaleString('en-GB') : '';
-                        }
+                        render: (val) => val ? new Date(val).toLocaleString('en-GB') : ''
                     }
                 ],
                 initComplete: function() {
+                    // Put Excel button in header group
+                    table.buttons().container().appendTo('#dtButtons');
+
                     $('#usmmInactiveTable thead tr.filters input').on('keyup change', function() {
                         const colIdx = $(this).data('col');
                         const val = this.value;

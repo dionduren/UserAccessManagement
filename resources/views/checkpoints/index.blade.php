@@ -34,16 +34,16 @@
                     <table class="table table-bordered align-middle">
                         <thead class="table-light align-top">
                             <tr>
-                                <th class="w-25">Step</th>
+                                <th class="w-25 sticky-col">Step</th>
                                 @foreach ($companies as $company)
-                                    <th>{{ $company->nama }}</th>
+                                    <th class="company-col company-header-col">{{ $company->nama }}</th>
                                 @endforeach
                             </tr>
                         </thead>
                         <tbody>
                             @foreach ($steps as $stepKey => $label)
                                 <tr>
-                                    <td class="fw-semibold align-top">{!! $label !!}</td>
+                                    <td class="fw-semibold align-top sticky-col">{!! $label !!}</td>
                                     @foreach ($companies as $company)
                                         @php
                                             $cell = $matrix[$stepKey][$company->company_code] ?? null;
@@ -55,7 +55,7 @@
                                                 default => 'bg-secondary',
                                             };
                                         @endphp
-                                        <td class="text-center align-top">
+                                        <td class="text-center align-top company-col">
                                             <span class="badge {{ $badgeClass }}">{{ ucfirst($status) }}</span>
                                             @if (!empty($cell['completed_at']))
                                                 <div class="small text-muted mt-1">
@@ -82,28 +82,48 @@
 
 @section('header-scripts')
     <style>
-        /* Make the table body scroll while keeping header visible */
+        /* Scroll container; keep header/first column sticky */
         .table-sticky-header {
-            /* Height will be adjusted by JS to fit viewport; this is a safe fallback */
-            max-height: 70vh;
             overflow-y: auto;
+            overflow-x: auto;
+            max-height: 70vh;
         }
 
-        /* Sticky header cells */
+        /* Sticky header */
         .table-sticky-header thead th {
             position: sticky;
             top: 0;
             z-index: 2;
-            /* above body cells */
             background-color: #f8f9fa;
-            /* matches .table-light */
         }
 
-        /* Ensure shadow/border is visible on sticky header */
-        .table-sticky-header thead {
+        /* Sticky first column (header + body) */
+        .table-sticky-header .sticky-col {
             position: sticky;
-            top: 0;
-            z-index: 2;
+            left: 0;
+            z-index: 3;
+            background-color: #fff;
+            box-shadow: 2px 0 0 rgba(0, 0, 0, .05);
+        }
+
+        /* Top-left cell */
+        .table-sticky-header thead .sticky-col {
+            z-index: 4;
+            background-color: #f8f9fa;
+            box-shadow: 2px 0 0 rgba(0, 0, 0, .05), 0 2px 0 rgba(0, 0, 0, .05);
+        }
+
+        /* Widen company columns */
+        .table-sticky-header th.company-col,
+        .table-sticky-header td.company-col {
+            min-width: 150px;
+            vertical-align: top;
+        }
+
+        /* Center + middle only for company header cells */
+        .table-sticky-header thead th.company-header-col {
+            text-align: center;
+            vertical-align: middle !important;
         }
     </style>
 @endsection

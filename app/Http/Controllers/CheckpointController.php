@@ -16,7 +16,18 @@ class CheckpointController extends Controller
         $periodes = Periode::orderByDesc('id')->get(['id', 'definisi']);
         $selectedPeriode = $request->query('periode_id', $periodes->first()?->id);
 
-        $companies = Company::orderBy('company_code')->get(['company_code', 'nama', 'shortname']);
+        $userCompanyCode = optional(auth()->user()->loginDetail)->company_code;
+
+        $companiesQuery = Company::query()
+            ->where('company_code', '!=', 'Z000');
+
+        if ($userCompanyCode && $userCompanyCode !== 'A000') {
+            $companiesQuery->where('company_code', $userCompanyCode);
+        }
+
+        $companies = $companiesQuery
+            ->orderBy('company_code')
+            ->get(['company_code', 'nama', 'shortname']);
 
         $matrix = $this->service->getProgress($selectedPeriode, $companies);
 
@@ -35,7 +46,19 @@ class CheckpointController extends Controller
             'periode_id' => 'required|integer|exists:ms_periode,id',
         ]);
 
-        $companies = Company::orderBy('company_code')->get(['company_code', 'nama', 'shortname']);
+        $userCompanyCode = optional(auth()->user()->loginDetail)->company_code;
+
+        $companiesQuery = Company::query()
+            ->where('company_code', '!=', 'Z000');
+
+        if ($userCompanyCode && $userCompanyCode !== 'A000') {
+            $companiesQuery->where('company_code', $userCompanyCode);
+        }
+
+        $companies = $companiesQuery
+            ->orderBy('company_code')
+            ->get(['company_code', 'nama', 'shortname']);
+
         $this->service->refresh($validated['periode_id'], $companies);
 
         return redirect()

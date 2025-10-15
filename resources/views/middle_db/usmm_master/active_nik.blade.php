@@ -8,6 +8,7 @@
             <div class="card-header d-flex flex-column flex-md-row align-items-md-center gap-2">
                 <h2 class="mb-0 flex-grow-1">USMM - Active NIK Users</h2>
                 <div class="d-flex gap-2">
+                    <div id="dtButtons" class="btn-group"></div>
                     <button id="btnReloadInactive" class="btn btn-outline-secondary btn-sm">Reload / Clear Filters</button>
                 </div>
             </div>
@@ -63,10 +64,10 @@
                             <th><input data-col="10" type="text" class="form-control form-control-sm"
                                     placeholder="Creator">
                             </th>
-                            <th><input data-col="10" type="text" class="form-control form-control-sm"
+                            <th><input data-col="11" type="text" class="form-control form-control-sm"
                                     placeholder="Created On">
                             </th>
-                            <th><input data-col="10" type="text" class="form-control form-control-sm"
+                            <th><input data-col="12" type="text" class="form-control form-control-sm"
                                     placeholder="Synced At">
                             </th>
                         </tr>
@@ -78,7 +79,19 @@
     </div>
 @endsection
 
+@section('styles')
+    <link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.4.1/css/buttons.bootstrap5.min.css">
+@endsection
+
 @section('scripts')
+    <!-- Add required scripts for export to Excel -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"
+        integrity="sha512-QmU1z2e6w9WqZ5b1Qk3q6Vv0Vf8v3k3p1f6x2zPp8VhQpH3m3p5j0lCz6FJv3oJQe7cH5nq1Jxg9z5jQK0yqYw=="
+        crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script src="https://cdn.datatables.net/buttons/2.4.1/js/dataTables.buttons.min.js"></script>
+    <script src="https://cdn.datatables.net/buttons/2.4.1/js/buttons.bootstrap5.min.js"></script>
+    <script src="https://cdn.datatables.net/buttons/2.4.1/js/buttons.html5.min.js"></script>
+
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             const btnReload = document.getElementById('btnReloadInactive');
@@ -111,10 +124,43 @@
                 processing: true,
                 deferRender: true,
                 pageLength: 25,
+                lengthMenu: [
+                    [10, 25, 50, 100, -1],
+                    [10, 25, 50, 100, 'All']
+                ],
                 orderCellsTop: true,
                 order: [
                     [1, 'asc']
                 ],
+                // Show length (l), table (t), info (i), paging (p); buttons rendered externally
+                layout: {
+                    top1Start: {
+                        div: {
+                            className: 'pageLength',
+                        }
+                    },
+                    bottom1Start: {
+                        div: {
+                            className: 'info',
+                        }
+                    },
+                    bottom1End: {
+                        div: {
+                            className: 'paging',
+                        }
+                    }
+                },
+                buttons: [{
+                    extend: 'excelHtml5',
+                    text: 'Export Excel',
+                    className: 'btn btn-sm btn-success',
+                    title: 'USMM_Active_NIK_Users',
+                    filename: 'USMM_Active_NIK_Users_' + new Date().toISOString().slice(0, 10),
+                    exportOptions: {
+                        // export visible columns only
+                        columns: ':visible'
+                    }
+                }],
                 ajax: {
                     url: '{{ route('middle_db.usmm.activeNIKData') }}'
                 },
@@ -162,11 +208,14 @@
                     {
                         data: 'created_at',
                         render: function(val) {
-                            return val ? new Date(val).toLocaleString('en-GB') : '';
+                            return val ? new Date(val).toLocaleString('en-GB') : ''
                         }
                     }
                 ],
                 initComplete: function() {
+                    // Keep Excel button in header group
+                    table.buttons().container().appendTo('#dtButtons');
+
                     $('#usmmInactiveTable thead tr.filters input').on('keyup change', function() {
                         const colIdx = $(this).data('col');
                         const val = this.value;

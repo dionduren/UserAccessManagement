@@ -23,11 +23,12 @@ use Log;
 class CheckpointService
 {
     public const STEPS = [
-        'organization' => "1. Organization Data<br>(Company, Kompartemen, Departemen, Cost Center, MasterDataKaryawan)<br><br>[Middle DB Data]",
-        'roles'        => "2. Role Data<br>(Job Role, Composite, Single, Tcode)<br><br>[Middle DB Data]",
-        'users'        => "3. User ID<br>(User NIK & User Generic)<br><br>[Middle DB Data]",
-        'work_units'   => "4. User ID - Unit Kerja<br><br>[Upload]",
-        'job_roles'    => "5. User ID - Job Role<br><br>[Upload]",
+        'organization'    => "1. Organization Data<br>(Kompartemen, Departemen, Cost Center, MasterDataKaryawan)<br><br>[Middle DB Data]",
+        'roles'           => "2. Role Data<br>(Composite, Single, Tcode)<br><br>[Middle DB Data]",
+        'job_role_master' => "3. Job Role Data<br><br>[Upload]",
+        'users'           => "4. User ID<br>(User NIK & User Generic)<br><br>[Middle DB Data]",
+        'work_units'      => "5. User ID - Unit Kerja<br><br>[Upload]",
+        'job_roles'       => "6. User ID - Job Role<br><br>[Upload]",
     ];
 
     public function steps(): array
@@ -119,38 +120,56 @@ class CheckpointService
     protected function checkers(): array
     {
         return [
-            'organization' => function (Company $company): array {
+            // Accept $periodeId for signature consistency
+            'organization' => function (Company $company, int $periodeId): array {
                 $code = $company->company_code;
-                $komCount = Kompartemen::where('company_id', $code)->count();
-                $depCount = Departemen::where('company_id', $code)->count();
+                $komCount  = Kompartemen::where('company_id', $code)->count();
+                $depCount  = Departemen::where('company_id', $code)->count();
                 $costCount = CostCenter::where('company_id', $code)->count();
-                $mdkCount = MasterDataKaryawanLocal::where(fn($q) => $q->where('company', $code))->count();
+                $mdkCount  = MasterDataKaryawanLocal::where(fn($q) => $q->where('company', $code))->count();
 
                 $completed = $komCount > 0 && $depCount > 0 && $costCount > 0 && $mdkCount > 0;
 
                 return [
                     'completed' => $completed,
                     'payload'   => [
-                        'summary' => "Kompartemen: {$komCount}, Departemen: {$depCount}, Cost Center: {$costCount}, MDK: {$mdkCount}"
+                        'summary' => "Kompartemen: {$komCount} <br> Departemen: {$depCount} <br> Cost Center: {$costCount} <br> MDK: {$mdkCount}"
                     ],
                 ];
             },
-            'roles' => function (Company $company): array {
-                $code = $company->company_code;
-                $jobRoles = JobRole::where('company_id', $code)->count();
-                $composites = CompositeRole::where('company_id', $code)->count();
-                $singleRoles = SingleRole::count();
-                $tcodes = Tcode::count();
 
-                $completed = $jobRoles > 0 && $composites > 0 && $singleRoles > 0 && $tcodes > 0;
+            // Roles excluding JobRole (now on its own step)
+            'roles' => function (Company $company, int $periodeId): array {
+                $code       = $company->company_code;
+                $composites = CompositeRole::where('company_id', $code)->count();
+                $single     = SingleRole::count();
+                $tcodes     = Tcode::count();
+
+                $completed = $composites > 0 && $single > 0 && $tcodes > 0;
 
                 return [
                     'completed' => $completed,
                     'payload'   => [
-                        'summary' => "JobRole: {$jobRoles}, Composite: {$composites}, Single: {$singleRoles}, Tcode: {$tcodes}"
+                        'summary' => "Composite: {$composites} <br> Single: {$single} <br> Tcode: {$tcodes}"
                     ],
                 ];
             },
+
+            // New step: Job Role master (Upload)
+            'job_role_master' => function (Company $company, int $periodeId): array {
+                $code     = $company->company_code;
+                $jobRoles = JobRole::where('company_id', $code)->count();
+
+                $completed = $jobRoles > 0;
+
+                return [
+                    'completed' => $completed,
+                    'payload'   => [
+                        'summary' => "JobRole: {$jobRoles}"
+                    ],
+                ];
+            },
+
             'users' => function (Company $company, int $periodeId): array {
                 $group = $company->shortname ?? $company->company_code;
                 $today = now()->toDateString();
@@ -158,21 +177,18 @@ class CheckpointService
                 $nik = userNIK::where('group', $group)
                     ->where('periode_id', $periodeId)
                     ->where(function ($w) use ($today) {
-                        $w->whereNull('valid_to')
-                            ->orWhereDate('valid_to', '>=', $today);
+                        $w->whereNull('valid_to')->orWhereDate('valid_to', '>=', $today);
                     })
                     ->count();
 
                 $generic = userGeneric::where('group', $group)
                     ->where('periode_id', $periodeId)
                     ->where(function ($w) use ($today) {
-                        $w->whereNull('valid_to')
-                            ->orWhereDate('valid_to', '>=', $today);
+                        $w->whereNull('valid_to')->orWhereDate('valid_to', '>=', $today);
                     })
                     ->count();
 
-                $sumUser = $nik + $generic;
-
+                $sumUser   = $nik + $generic;
                 $completed = $nik > 0 || $generic > 0;
 
                 return [
@@ -182,6 +198,7 @@ class CheckpointService
                     ],
                 ];
             },
+
             'work_units' => function (Company $company, int $periodeId): array {
                 $group = $company->shortname ?? $company->company_code;
 
@@ -190,16 +207,12 @@ class CheckpointService
 
                 $nikWithUnit = userNIK::where('group', $group)
                     ->where('periode_id', $periodeId)
-                    ->whereHas('unitKerja', function ($q) use ($periodeId) {
-                        $q->where('periode_id', $periodeId);
-                    })
+                    ->whereHas('unitKerja', fn($q) => $q->where('periode_id', $periodeId))
                     ->count();
 
                 $genericWithUnit = userGeneric::where('group', $group)
                     ->where('periode_id', $periodeId)
-                    ->whereHas('userGenericUnitKerja', function ($q) use ($periodeId) {
-                        $q->where('periode_id', $periodeId);
-                    })
+                    ->whereHas('userGenericUnitKerja', fn($q) => $q->where('periode_id', $periodeId))
                     ->count();
 
                 $diffNik     = $totalNik - $nikWithUnit;
@@ -217,8 +230,8 @@ class CheckpointService
 
                 $nikPct = $totalNik ? round(min(100, $nikWithUnit / $totalNik * 100)) : 0;
                 $genPct = $totalGeneric ? round(min(100, $genericWithUnit / $totalGeneric * 100)) : 0;
-                $sumWithUnit = $nikWithUnit + $genericWithUnit;
-                $sumWithUnitTotal = $totalNik + $totalGeneric;
+                $sumWithUnit       = $nikWithUnit + $genericWithUnit;
+                $sumWithUnitTotal  = $totalNik + $totalGeneric;
 
                 $summary = "NIK - Unit Kerja: {$nikWithUnit}/{$totalNik} ({$nikPct}%) <br> Generic - Unit Kerja: {$genericWithUnit}/{$totalGeneric} ({$genPct}%) <br>  <br> Total - Unit Kerja: {$sumWithUnit}/{$sumWithUnitTotal}";
                 if ($status === 'failed') {
@@ -230,6 +243,7 @@ class CheckpointService
                     'payload' => ['summary' => $summary],
                 ];
             },
+
             'job_roles' => function (Company $company, int $periodeId): array {
                 $group = $company->shortname ?? $company->company_code;
 
@@ -238,16 +252,12 @@ class CheckpointService
 
                 $nikWithRole = userNIK::where('group', $group)
                     ->where('periode_id', $periodeId)
-                    ->whereHas('NIKJobRole', function ($q) use ($periodeId) {
-                        $q->where('periode_id', $periodeId);
-                    })
+                    ->whereHas('NIKJobRole', fn($q) => $q->where('periode_id', $periodeId))
                     ->count();
 
                 $genericWithRole = userGeneric::where('group', $group)
                     ->where('periode_id', $periodeId)
-                    ->whereHas('NIKJobRole', function ($q) use ($periodeId) {
-                        $q->where('periode_id', $periodeId);
-                    })
+                    ->whereHas('NIKJobRole', fn($q) => $q->where('periode_id', $periodeId))
                     ->count();
 
                 $diffNikRole     = $totalNik - $nikWithRole;
@@ -265,7 +275,7 @@ class CheckpointService
 
                 $nikPct = $totalNik ? round(min(100, $nikWithRole / $totalNik * 100)) : 0;
                 $genPct = $totalGeneric ? round(min(100, $genericWithRole / $totalGeneric * 100)) : 0;
-                $sumWithRole = $nikWithRole + $genericWithRole;
+                $sumWithRole      = $nikWithRole + $genericWithRole;
                 $sumWithRoleTotal = $totalNik + $totalGeneric;
 
                 $summary = "NIK Role: {$nikWithRole}/{$totalNik} ({$nikPct}%) <br> Generic Role: {$genericWithRole}/{$totalGeneric} ({$genPct}%) <br> <br> Total Role: {$sumWithRole}/{$sumWithRoleTotal}";
