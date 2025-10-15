@@ -56,7 +56,7 @@
 
                                 <div class="col-12">
                                     <label for="kompartemen_id" class="form-label">Kompartemen</label>
-                                    <select id="kompartemen_id" name="kompartemen_id" class="form-select" disabled>
+                                    <select id="kompartemen_id" name="kompartemen_id" class="form-select">
                                         @php
                                             $oldKomp = old('kompartemen_id', $userGenericUnitKerja->kompartemen_id);
                                         @endphp
@@ -68,7 +68,7 @@
 
                                 <div class="col-12">
                                     <label for="departemen_id" class="form-label">Departemen</label>
-                                    <select id="departemen_id" name="departemen_id" class="form-select" disabled>
+                                    <select id="departemen_id" name="departemen_id" class="form-select">
                                         @php
                                             $oldDept = old('departemen_id', $userGenericUnitKerja->departemen_id);
                                         @endphp
@@ -85,7 +85,7 @@
 
                                 <div class="col-12">
                                     <label for="user_cc" class="form-label">User CC (User Code)</label>
-                                    <select id="user_cc" name="user_cc" class="form-select" required disabled>
+                                    <select id="user_cc" name="user_cc" class="form-select" required>
                                         @php
                                             $currentUserCode = old('user_cc', $userGenericUnitKerja->user_cc);
                                             $currentUserText = trim(
@@ -122,152 +122,137 @@
 
 @section('scripts')
     <script>
-        let DEPT_BY_KOMP = {};
-        let DEP_WO = [];
+        $(document).ready(function() {
+            const $periode = $('#periode_id');
+            const $company = $('#company_code');
+            const $userCc = $('#user_cc');
+            const $kompartemen = $('#kompartemen_id');
+            const $departemen = $('#departemen_id');
 
-        function initSelect2() {
-            $('#periode_id').select2({
-                width: '100%'
-            });
-            $('#company_code').select2({
-                width: '100%'
-            });
-            $('#kompartemen_id').select2({
-                width: '100%',
-                placeholder: '-- Pilih Kompartemen --',
-                allowClear: true
-            });
-            $('#departemen_id').select2({
-                width: '100%',
-                placeholder: '-- Pilih Departemen --',
-                allowClear: true
-            });
-            $('#user_cc').select2({
-                width: '100%',
-                placeholder: 'Cari User Code / Nama...',
-                allowClear: true,
+            // Initialize Select2 for user search
+            $userCc.select2({
                 ajax: {
-                    delay: 250,
                     url: "{{ route('unit_kerja.user_generic.search_users') }}",
                     dataType: 'json',
+                    delay: 250,
                     data: function(params) {
                         return {
-                            q: params.term || '',
-                            company: $('#company_code').val() || ''
+                            q: params.term,
+                            company: $company.val(),
+                            periode_id: $periode.val(),
+                            mode: 'edit',
+                            editing_user_id: @json($userGenericUnitKerja->user_cc)
                         };
                     },
                     processResults: function(data) {
-                        return data;
-                    }
-                }
-            });
-        }
-
-        function resetKompartemenAndDepartemen(disableKompartemen = true) {
-            $('#kompartemen_id').empty().val(null).trigger('change').prop('disabled', disableKompartemen);
-            $('#departemen_id').empty().val(null).trigger('change').prop('disabled', true);
-        }
-
-        function toggleUserCC() {
-            const hasCompany = !!$('#company_code').val();
-            $('#user_cc').prop('disabled', !hasCompany);
-            if (!hasCompany) $('#user_cc').val(null).trigger('change');
-        }
-
-        function fillDepartemenOptions(options) {
-            const $d = $('#departemen_id');
-            $d.empty().append(new Option('', '', false, false));
-            (options || []).forEach(d => $d.append(new Option(d.text, d.id, false, false)));
-            $d.prop('disabled', !(options && options.length));
-            $d.val(null).trigger('change');
-        }
-
-        // Returns a Promise to allow chaining (needed for preselecting existing values)
-        function loadCompanyStructure(companyCode) {
-            if (!companyCode) {
-                resetKompartemenAndDepartemen(true);
-                return Promise.resolve();
-            }
-
-            return fetch("{{ route('unit_kerja.user_generic.company_structure') }}?company=" + encodeURIComponent(
-                    companyCode), {
-                    headers: {
-                        'Accept': 'application/json'
-                    }
-                })
-                .then(r => r.json())
-                .then(json => {
-                    DEPT_BY_KOMP = json.departemen_by_kompartemen || {};
-                    DEP_WO = json.departemen_wo || [];
-
-                    // Fill Kompartemen
-                    const komps = json.kompartemen || [];
-                    const $k = $('#kompartemen_id');
-                    $k.empty().append(new Option('', '', false, false));
-                    komps.forEach(k => $k.append(new Option(k.text, k.id, false, false)));
-                    $k.prop('disabled', komps.length === 0);
-
-                    // Default fill with departemen tanpa kompartemen; will be replaced if a kompartemen is selected
-                    fillDepartemenOptions(DEP_WO);
-                    return json;
-                })
-                .catch(() => {
-                    resetKompartemenAndDepartemen(true);
-                });
-        }
-
-        $(function() {
-            initSelect2();
-
-            const initialCompany = @json(old('company_code', $selectedCompany));
-            const initialKomp = @json(old('kompartemen_id', $userGenericUnitKerja->kompartemen_id));
-            const initialDept = @json(old('departemen_id', $userGenericUnitKerja->departemen_id));
-
-            // Initial enable/disable
-            resetKompartemenAndDepartemen(true);
-            if (initialCompany) $('#company_code').val(initialCompany).trigger('change');
-            toggleUserCC();
-
-            // Load structure for initial company and preselect existing values
-            if (initialCompany) {
-                loadCompanyStructure(initialCompany).then(() => {
-                    if (initialKomp) {
-                        // Set Kompartemen and then fill Departemen under that Kompartemen
-                        $('#kompartemen_id').val(initialKomp).trigger('change');
-
-                        const arr = DEPT_BY_KOMP[initialKomp] || [];
-                        fillDepartemenOptions(arr);
-                        if (initialDept) {
-                            $('#departemen_id').val(initialDept).trigger('change');
-                        }
-                    } else {
-                        // No Kompartemen saved: use Departemen WO
-                        fillDepartemenOptions(DEP_WO);
-                        if (initialDept) {
-                            $('#departemen_id').val(initialDept).trigger('change');
-                        }
-                    }
-                    toggleUserCC();
-                });
-            }
-
-            // Company change
-            $('#company_code').on('change', function() {
-                const code = $(this).val();
-                toggleUserCC();
-                loadCompanyStructure(code);
+                        return {
+                            results: data.results || []
+                        };
+                    },
+                    cache: true
+                },
+                placeholder: 'Search User...',
             });
 
-            // Kompartemen change -> switch departemen list
-            $('#kompartemen_id').on('change', function() {
-                const kid = $(this).val();
-                if (!kid) {
-                    fillDepartemenOptions(DEP_WO);
+            // Add current user to Select2 if not found in search
+            const currentUser = @json($userGenericUnitKerja->user_cc);
+            if (currentUser) {
+                const currentText = currentUser + ' - ' + @json(data_get($userGenericUnitKerja, 'userGeneric.user_profile', 'Unknown'));
+                const option = new Option(currentText, currentUser, true, true);
+                $userCc.append(option).trigger('change');
+            }
+
+            function loadCompanyStructure(callback = null) {
+                const companyCode = $company.val();
+                if (!companyCode) {
+                    resetDropdowns();
+                    if (callback) callback();
                     return;
                 }
-                const arr = DEPT_BY_KOMP[kid] || [];
-                fillDepartemenOptions(arr);
+
+                $.get("{{ route('unit_kerja.user_generic.company_structure') }}", {
+                        company: companyCode
+                    })
+                    .done(function(data) {
+                        populateKompartemen(data.kompartemen, data.departemen_by_kompartemen);
+                        populateDepartemenWo(data.departemen_wo);
+                        if (callback) callback();
+                    })
+                    .fail(function() {
+                        resetDropdowns();
+                        if (callback) callback();
+                    });
+            }
+
+            function populateKompartemen(kompartemen, departemenByKomp) {
+                $kompartemen.empty().append('<option value="">-- Select Kompartemen --</option>');
+                if (kompartemen.length > 0) {
+                    kompartemen.forEach(k => {
+                        $kompartemen.append(`<option value="${k.id}">${k.text}</option>`);
+                    });
+                }
+
+                window.departemenByKompartemen = departemenByKomp;
+            }
+
+            function populateDepartemenWo(departemenWo) {
+                window.departemenWithoutKompartemen = departemenWo;
+                updateDepartemenOptions();
+            }
+
+            function updateDepartemenOptions() {
+                $departemen.empty().append('<option value="">-- Select Departemen --</option>');
+
+                const selectedKomp = $kompartemen.val();
+                let options = [];
+
+                if (selectedKomp && window.departemenByKompartemen && window.departemenByKompartemen[
+                        selectedKomp]) {
+                    options = options.concat(window.departemenByKompartemen[selectedKomp]);
+                }
+
+                if (window.departemenWithoutKompartemen) {
+                    options = options.concat(window.departemenWithoutKompartemen);
+                }
+
+                if (options.length > 0) {
+                    options.forEach(d => {
+                        $departemen.append(`<option value="${d.id}">${d.text}</option>`);
+                    });
+                }
+            }
+
+            function resetDropdowns() {
+                [$kompartemen, $departemen].forEach($el => {
+                    $el.empty().append('<option value="">-- Select --</option>');
+                });
+                window.departemenByKompartemen = {};
+                window.departemenWithoutKompartemen = [];
+            }
+
+            // Event handlers
+            $company.on('change', function() {
+                loadCompanyStructure();
             });
+
+            $kompartemen.on('change', updateDepartemenOptions);
+
+            // Set initial company and load structure
+            const initialCompany = @json($selectedCompany);
+            if (initialCompany) {
+                $company.val(initialCompany);
+                loadCompanyStructure(() => {
+                    const initialKomp = @json($userGenericUnitKerja->kompartemen_id);
+                    const initialDept = @json($userGenericUnitKerja->departemen_id);
+
+                    if (initialKomp) {
+                        $kompartemen.val(initialKomp).trigger('change');
+                    }
+                    if (initialDept) {
+                        setTimeout(() => $departemen.val(initialDept), 100);
+                    }
+                });
+            }
         });
     </script>
 @endsection

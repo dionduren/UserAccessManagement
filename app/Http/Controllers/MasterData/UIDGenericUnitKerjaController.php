@@ -6,13 +6,14 @@ use App\Http\Controllers\Controller;
 
 use App\Models\Periode;
 use App\Models\Company;
+use App\Models\Kompartemen;
+use App\Models\Departemen;
 use App\Models\userGeneric;
 use App\Models\UserGenericUnitKerja;
 
 use App\Exports\UserGenericWithoutUnitKerjaExport;
 
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\File;
 use Illuminate\Validation\Rule;
 use Maatwebsite\Excel\Facades\Excel;
 
@@ -146,7 +147,7 @@ class UIDGenericUnitKerjaController extends Controller
         return response()->json(['message' => 'Soft deleted'], 200);
     }
 
-    // New: return kompartemen and departemen lists from master_data.json by company_code
+    // Updated: return kompartemen and departemen from database models
     public function companyStructure(Request $request)
     {
         $companyCode = $request->query('company');
@@ -154,116 +155,53 @@ class UIDGenericUnitKerjaController extends Controller
             return response()->json(['message' => 'company is required'], 422);
         }
 
-        $path = public_path('storage/master_data.json');
-        if (!File::exists($path)) {
-            return response()->json([
-                'kompartemen' => [],
-                'departemen_by_kompartemen' => [],
-                'departemen_wo' => [],
-            ]);
-        }
+        // Get kompartemen for this company
+        $kompartemenList = Kompartemen::where('company_id', $companyCode)
+            ->orderBy('nama')
+            ->get(['kompartemen_id', 'nama']);
 
-        $json = json_decode(File::get($path), true) ?: [];
-        $company = collect($json)->firstWhere('company_id', $companyCode);
-
-        if (!$company) {
-            return response()->json([
-                'kompartemen' => [],
-                'departemen_by_kompartemen' => [],
-                'departemen_wo' => [],
-            ]);
-        }
-
-        // Build kompartemen and its departemen (sorted)
-        $komps = collect($company['kompartemen'] ?? [])
-            ->map(function ($k) {
-                return [
-                    'id' => $k['kompartemen_id'] ?? null,
-                    'text' => $k['nama'] ?? ($k['kompartemen_id'] ?? ''),
-                    'departemen' => collect($k['departemen'] ?? [])
-                        ->filter(fn($d) => isset($d['departemen_id']) || isset($d['nama']))
-                        ->map(function ($d) {
-                            return [
-                                'id' => $d['departemen_id'] ?? ($d['nama'] ?? ''),
-                                'text' => $d['nama'] ?? ($d['departemen_id'] ?? ''),
-                            ];
-                        })
-                        ->sortBy('text', SORT_NATURAL | SORT_FLAG_CASE)
-                        ->values()
-                        ->all(),
-                ];
-            })
-            ->filter(fn($k) => !empty($k['id']) || !empty($k['text']))
-            ->sortBy('text', SORT_NATURAL | SORT_FLAG_CASE)
-            ->values();
-
-        $departemenByKomps = [];
-        foreach ($komps as $k) {
-            $departemenByKomps[$k['id']] = $k['departemen'];
-        }
-
-        // Build departemen_without_kompartemen (sorted)
-        $depWo = collect($company['departemen_without_kompartemen'] ?? [])
-            ->filter(fn($d) => isset($d['departemen_id']) || isset($d['nama']))
-            ->map(function ($d) {
-                return [
-                    'id' => $d['departemen_id'] ?? ($d['nama'] ?? ''),
-                    'text' => $d['nama'] ?? ($d['departemen_id'] ?? ''),
-                ];
-            })
-            ->sortBy('text', SORT_NATURAL | SORT_FLAG_CASE)
-            ->values()
-            ->all();
-
-        return response()->json([
-            'kompartemen' => $komps->map(fn($k) => ['id' => $k['id'], 'text' => $k['text']])->all(),
-            'departemen_by_kompartemen' => $departemenByKomps,
-            'departemen_wo' => $depWo,
-        ]);
-    }
-
-    // New: Select2 search for userGeneric not yet in ms_generic_unit_kerja, filtered by company
-    public function searchUsers(Request $request)
-    {
-        $q = trim((string) $request->query('q', ''));
-        $company = $request->query('company');
-
-        $query = userGeneric::query()->with('Company');
-
-        if ($company) {
-            $query->whereHas('Company', function ($qq) use ($company) {
-                $qq->where('company_code', $company);
-            });
-        }
-
-        if ($q !== '') {
-            $query->where(function ($qq) use ($q) {
-                $qq->where('user_code', 'like', '%' . $q . '%')
-                    ->orWhere('user_profile', 'like', '%' . $q . '%');
-            });
-        }
-
-        $query->whereNotIn('user_code', function ($sub) {
-            $sub->select('user_cc')
-                ->from('ms_generic_unit_kerja')
-                ->whereNull('deleted_at');
-        });
-
-        $results = $query->limit(20)->get()->map(function ($u) {
-            $code = $u->user_code ?? '';
-            $name = $u->user_profile ?? '[tanpa nama]';
+        $kompartemen = $kompartemenList->map(function ($k) {
             return [
-                'id' => $code,
-                'text' => trim($code . ' - ' . $name),
+                'id' => $k->kompartemen_id,
+                'text' => $k->nama,
             ];
         });
 
+        // Get departemen grouped by kompartemen
+        $departemenByKompartemen = [];
+        foreach ($kompartemenList as $komp) {
+            $depts = Departemen::where('kompartemen_id', $komp->kompartemen_id)
+                ->orderBy('nama')
+                ->get(['departemen_id', 'nama']);
+
+            $departemenByKompartemen[$komp->kompartemen_id] = $depts->map(function ($d) {
+                return [
+                    'id' => $d->departemen_id,
+                    'text' => $d->nama,
+                ];
+            })->toArray();
+        }
+
+        // Get departemen without kompartemen (kompartemen_id is null)
+        $departemenWo = Departemen::where('company_id', $companyCode)
+            ->whereNull('kompartemen_id')
+            ->orderBy('nama')
+            ->get(['departemen_id', 'nama'])
+            ->map(function ($d) {
+                return [
+                    'id' => $d->departemen_id,
+                    'text' => $d->nama,
+                ];
+            });
+
         return response()->json([
-            'results' => $results,
-            'pagination' => ['more' => false],
+            'kompartemen' => $kompartemen,
+            'departemen_by_kompartemen' => $departemenByKompartemen,
+            'departemen_wo' => $departemenWo,
         ]);
     }
 
+    // Updated: Select2 search filtered by company and periode
     public function without(Request $request)
     {
         $userCompany = auth()->user()->loginDetail->company_code;
@@ -332,5 +270,78 @@ class UIDGenericUnitKerjaController extends Controller
             new UserGenericWithoutUnitKerjaExport($periodeId, $userCompany),
             $filename
         );
+    }
+
+    // Add this method for Select2 user search
+    public function searchUsers(Request $request)
+    {
+        $q = trim((string) $request->query('q', ''));
+        $company = $request->query('company');
+        $periode = $request->query('periode_id');
+        $mode = $request->query('mode', 'create'); // 'create' or 'edit'
+        $editingUserId = $request->query('editing_user_id'); // for edit mode
+
+        $query = userGeneric::query()->with('Company');
+
+        // Filter by periode first (required)
+        if ($periode) {
+            $query->where('periode_id', $periode);
+        } else {
+            // No periode selected, return empty
+            return response()->json([
+                'results' => [],
+                'pagination' => ['more' => false],
+            ]);
+        }
+
+        // Filter by company if provided
+        if ($company) {
+            $query->whereHas('Company', function ($qq) use ($company) {
+                $qq->where('company_code', $company);
+            });
+        }
+
+        // Search by user_code or user_profile
+        if ($q !== '') {
+            $query->where(function ($qq) use ($q) {
+                $qq->where('user_code', 'like', '%' . $q . '%')
+                    ->orWhere('user_profile', 'like', '%' . $q . '%');
+            });
+        }
+
+        // Different exclusion logic based on mode
+        if ($mode === 'create') {
+            // CREATE: Exclude users already assigned to unit kerja
+            $query->whereNotIn('user_code', function ($sub) use ($periode) {
+                $sub->select('user_cc')
+                    ->from('ms_generic_unit_kerja')
+                    ->where('periode_id', $periode)
+                    ->whereNull('deleted_at');
+            });
+        } elseif ($mode === 'edit' && $editingUserId) {
+            // EDIT: Exclude users already assigned to unit kerja EXCEPT the one being edited
+            $query->whereNotIn('user_code', function ($sub) use ($periode, $editingUserId) {
+                $sub->select('user_cc')
+                    ->from('ms_generic_unit_kerja')
+                    ->where('periode_id', $periode)
+                    ->where('user_cc', '!=', $editingUserId)
+                    ->whereNull('deleted_at');
+            });
+        }
+        // If mode is 'edit' but no editingUserId, show all users (fallback)
+
+        $results = $query->limit(20)->get()->map(function ($u) {
+            $code = $u->user_code ?? '';
+            $name = $u->user_profile ?? '[tanpa nama]';
+            return [
+                'id' => $code,
+                'text' => trim($code . ' - ' . $name),
+            ];
+        });
+
+        return response()->json([
+            'results' => $results,
+            'pagination' => ['more' => false],
+        ]);
     }
 }

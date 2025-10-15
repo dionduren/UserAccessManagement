@@ -102,147 +102,135 @@
 
 @section('scripts')
     <script>
-        let DEPT_BY_KOMP = {}; // { kompartemen_id: [{id,text}] }
-        let DEP_WO = []; // [{id,text}]
+        $(document).ready(function() {
+            const $periode = $('#periode_id');
+            const $company = $('#company_code');
+            const $userCc = $('#user_cc');
+            const $kompartemen = $('#kompartemen_id');
+            const $departemen = $('#departemen_id');
 
-        function initSelect2() {
-            $('#periode_id').select2({
-                width: '100%'
-            });
-            $('#company_code').select2({
-                width: '100%'
-            });
-            $('#kompartemen_id').select2({
-                width: '100%',
-                placeholder: '-- Pilih Kompartemen --',
-                allowClear: true
-            });
-            $('#departemen_id').select2({
-                width: '100%',
-                placeholder: '-- Pilih Departemen --',
-                allowClear: true
-            });
-            $('#user_cc').select2({
-                width: '100%',
-                placeholder: 'Cari User Code / Nama...',
-                allowClear: true,
+            // Initialize Select2 for user search (disabled until periode selected)
+            $userCc.select2({
                 ajax: {
-                    delay: 250,
                     url: "{{ route('unit_kerja.user_generic.search_users') }}",
                     dataType: 'json',
+                    delay: 250,
                     data: function(params) {
                         return {
-                            q: params.term || '',
-                            company: $('#company_code').val() || ''
+                            q: params.term,
+                            company: $company.val(),
+                            periode_id: $periode.val(), // Include periode filter
                         };
                     },
                     processResults: function(data) {
-                        return data; // {results: [...]}
-                    }
+                        return {
+                            results: data.results || []
+                        };
+                    },
+                    cache: true
+                },
+                placeholder: 'Search User...',
+                minimumInputLength: 1,
+                disabled: true // Start disabled
+            });
+
+            // Enable/disable user search based on periode selection
+            $periode.on('change', function() {
+                const hasperiode = $(this).val();
+                $userCc.prop('disabled', !hasperiode);
+                if (!hasperiode) {
+                    $userCc.val(null).trigger('change');
                 }
             });
-        }
 
-        function resetKompartemenAndDepartemen(disableKompartemen = true) {
-            $('#kompartemen_id').empty().val(null).trigger('change').prop('disabled', disableKompartemen);
-            $('#departemen_id').empty().val(null).trigger('change').prop('disabled', true);
-        }
-
-        function toggleUserCC() {
-            const hasCompany = !!$('#company_code').val();
-            $('#user_cc').prop('disabled', !hasCompany);
-            if (!hasCompany) $('#user_cc').val(null).trigger('change');
-        }
-
-        function fillDepartemenOptions(options) {
-            const $d = $('#departemen_id');
-            $d.empty().append(new Option('', '', false, false));
-            (options || []).forEach(d => $d.append(new Option(d.text, d.id, false, false)));
-            $d.prop('disabled', !(options && options.length));
-            $d.val(null).trigger('change');
-        }
-
-        function loadCompanyStructure(companyCode) {
-            if (!companyCode) {
-                resetKompartemenAndDepartemen(true);
-                return;
-            }
-
-            fetch("{{ route('unit_kerja.user_generic.company_structure') }}?company=" + encodeURIComponent(companyCode), {
-                    headers: {
-                        'Accept': 'application/json'
-                    }
-                })
-                .then(r => r.json())
-                .then(json => {
-                    // Save maps
-                    DEPT_BY_KOMP = json.departemen_by_kompartemen || {};
-                    DEP_WO = json.departemen_wo || [];
-
-                    // Fill Kompartemen
-                    const komps = json.kompartemen || [];
-                    const $k = $('#kompartemen_id');
-                    $k.empty().append(new Option('', '', false, false));
-                    komps.forEach(k => $k.append(new Option(k.text, k.id, false, false)));
-                    // Enable Kompartemen only if there are items for this company
-                    $k.prop('disabled', komps.length === 0);
-
-                    // Initial fill for Departemen:
-                    // - If user chooses a kompartemen later, departemen will be replaced
-                    // - If user doesn’t choose kompartemen, show "departemen tanpa kompartemen"
-                    fillDepartemenOptions(DEP_WO);
-                })
-                .catch(() => {
-                    resetKompartemenAndDepartemen(true);
-                });
-        }
-
-        $(function() {
-            initSelect2();
-
-            // Initial states
-            toggleUserCC();
-            resetKompartemenAndDepartemen(true);
-
-            // Company change
-            $('#company_code').on('change', function() {
-                const code = $(this).val();
-                toggleUserCC();
-                loadCompanyStructure(code);
+            // Refresh user search when company changes
+            $company.on('change', function() {
+                if ($periode.val()) {
+                    $userCc.val(null).trigger('change'); // Clear selection
+                }
+                loadCompanyStructure();
             });
 
-            // Kompartemen change -> switch departemen list
-            $('#kompartemen_id').on('change', function() {
-                const kid = $(this).val();
-                if (!kid) {
-                    // No kompartemen chosen: show departemen_without_kompartemen
-                    fillDepartemenOptions(DEP_WO);
+            function loadCompanyStructure() {
+                const companyCode = $company.val();
+                if (!companyCode) {
+                    resetDropdowns();
                     return;
                 }
 
-                const arr = DEPT_BY_KOMP[kid] || [];
-                fillDepartemenOptions(arr);
-            });
+                $.get("{{ route('unit_kerja.user_generic.company_structure') }}", {
+                        company: companyCode
+                    })
+                    .done(function(data) {
+                        populateKompartemen(data.kompartemen, data.departemen_by_kompartemen);
+                        populateDepartemenWo(data.departemen_wo);
+                    })
+                    .fail(function() {
+                        resetDropdowns();
+                    });
+            }
 
-            // Restore old selections (if validation failed)
-            const oldCompany = @json(old('company_code'));
-            const oldKomp = @json(old('kompartemen_id'));
-            const oldDept = @json(old('departemen_id'));
-            if (oldCompany) {
-                $('#company_code').val(oldCompany).trigger('change');
-                setTimeout(() => {
-                    if (oldKomp) {
-                        $('#kompartemen_id').val(oldKomp).trigger('change');
-                        setTimeout(() => {
-                            if (oldDept) $('#departemen_id').val(oldDept).trigger('change');
-                        }, 150);
-                    } else if (oldDept) {
-                        // No kompartemen previously: departemen came from DEP_WO
-                        setTimeout(() => {
-                            $('#departemen_id').val(oldDept).trigger('change');
-                        }, 150);
-                    }
-                }, 400);
+            function populateKompartemen(kompartemen, departemenByKomp) {
+                $kompartemen.empty().append('<option value="">-- Select Kompartemen --</option>');
+                if (kompartemen.length > 0) {
+                    kompartemen.forEach(k => {
+                        $kompartemen.append(`<option value="${k.id}">${k.text}</option>`);
+                    });
+                    $kompartemen.prop('disabled', false);
+                } else {
+                    $kompartemen.prop('disabled', true);
+                }
+
+                // Store departemen mapping for kompartemen change handler
+                window.departemenByKompartemen = departemenByKomp;
+            }
+
+            function populateDepartemenWo(departemenWo) {
+                window.departemenWithoutKompartemen = departemenWo;
+                updateDepartemenOptions();
+            }
+
+            function updateDepartemenOptions() {
+                $departemen.empty().append('<option value="">-- Select Departemen --</option>');
+
+                const selectedKomp = $kompartemen.val();
+                let options = [];
+
+                // Add departemen from selected kompartemen
+                if (selectedKomp && window.departemenByKompartemen && window.departemenByKompartemen[
+                        selectedKomp]) {
+                    options = options.concat(window.departemenByKompartemen[selectedKomp]);
+                }
+
+                // Add departemen without kompartemen
+                if (window.departemenWithoutKompartemen) {
+                    options = options.concat(window.departemenWithoutKompartemen);
+                }
+
+                if (options.length > 0) {
+                    options.forEach(d => {
+                        $departemen.append(`<option value="${d.id}">${d.text}</option>`);
+                    });
+                    $departemen.prop('disabled', false);
+                } else {
+                    $departemen.prop('disabled', true);
+                }
+            }
+
+            function resetDropdowns() {
+                [$kompartemen, $departemen].forEach($el => {
+                    $el.empty().append('<option value="">-- Select --</option>').prop('disabled', true);
+                });
+                window.departemenByKompartemen = {};
+                window.departemenWithoutKompartemen = [];
+            }
+
+            // Handle kompartemen change
+            $kompartemen.on('change', updateDepartemenOptions);
+
+            // Initial state
+            if ($periode.val()) {
+                $userCc.prop('disabled', false);
             }
         });
     </script>
