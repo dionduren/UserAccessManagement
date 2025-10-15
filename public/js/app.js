@@ -17,8 +17,8 @@ $(document).ready(function () {
     function apply(c) {
         sidebar.classList.toggle('sidebar-collapsed', c);
         if (icon) {
-            icon.classList.toggle('bi-chevron-double-right', c);
-            icon.classList.toggle('bi-chevron-double-left', !c);
+            icon.classList.toggle('bi-arrow-bar-right', c);
+            icon.classList.toggle('bi-arrow-bar-left', !c);
         }
         btn.setAttribute('aria-expanded', (!c).toString());
     }

@@ -136,6 +136,7 @@ class NIKJobController extends Controller
 
             // Find the record or fail with a 404.
             $nikJobRole = NIKJobRole::findOrFail($id);
+            // dd($nikJobRole);
 
             // Get all required data for the dropdowns.
             $periodes  = Periode::select('id', 'definisi')->get();

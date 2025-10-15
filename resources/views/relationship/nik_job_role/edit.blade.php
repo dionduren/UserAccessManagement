@@ -98,7 +98,6 @@
                                 <select name="job_role_id" id="job_role_id" class="form-control select2" required>
                                     <option value="">Select Job Role</option>
                                 </select>
-                                <small class="text-muted">Current Job Role ID: {{ $nikJobRole->job_role_id }}</small>
                             </div>
 
                             <!-- User Dropdown -->
@@ -164,10 +163,15 @@
         window.masterData = null;
 
         // Fetch master data before initializing dropdowns
-        fetch('/storage/master_data.json')
+        const defaultCompany = "{{ $selectedCompanyId }}";
+        const query = defaultCompany ? `?company=${encodeURIComponent(defaultCompany)}&active_only=true` :
+            '?active_only=true';
+
+        fetch(`/api/master-data${query}`)
             .then(response => response.json())
             .then(data => {
-                window.masterData = data;
+                // Always store as array to match previous JSON shape
+                window.masterData = Array.isArray(data) ? data : [data];
                 initializeDropdowns();
             })
             .catch(error => {
@@ -342,6 +346,7 @@
                 function populateJobRolesDropdown(jobRoles) {
                     const dropdown = $('#job_role_id');
                     dropdown.empty().append('<option value="">-- Select Job Role --</option>');
+                    console.log('Populating Job Roles:', jobRoles);
 
                     if (!jobRoles?.length) {
                         dropdown.prop('disabled', true);
@@ -402,7 +407,9 @@
                             group.roles.forEach(role => {
                                 optgroup.append($('<option>', {
                                     value: role.job_role_id,
-                                    text: role.nama
+                                    text: (role.job_role_id ? '' + role
+                                            .job_role_id + ' - ' : 'NULL - ') + role
+                                        .nama
                                 }));
                             });
 

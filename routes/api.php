@@ -2,6 +2,7 @@
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\API\MasterDataController;
 
 /*
 |--------------------------------------------------------------------------
@@ -29,3 +30,6 @@ Route::prefix('cascade')->group(function () {
             ->get(['departemen_id as id', 'nama']);
     });
 });
+
+// New dynamic master data endpoint
+Route::get('/master-data', [MasterDataController::class, 'hierarchy']);
