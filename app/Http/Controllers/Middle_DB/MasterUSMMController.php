@@ -84,6 +84,12 @@ class MasterUSMMController extends Controller
         $q = trim((string) $request->get('q', ''));
 
         $rows = DB::table('mdb_usmm_master')
+            // Exclude records where valid_to date is in the past (allow null or 00000000 = open-ended)
+            ->where(function ($w) {
+                $w->whereNull('valid_to')
+                    ->orWhere('valid_to', '00000000')
+                    ->orWhereRaw("to_date(valid_to, 'YYYYMMDD') >= current_date");
+            })
             ->when($q !== '', function ($qq) use ($q) {
                 $like = '%' . $q . '%';
                 $qq->where(function ($w) use ($like) {
