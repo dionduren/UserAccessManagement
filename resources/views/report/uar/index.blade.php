@@ -131,6 +131,27 @@
                         <th style="background-color: yellowgreen">Nama (Middle DB)</th>
                         <th style="background-color: orange">NIK (Master Karyawan)</th>
                     </tr>
+                    <tr class="filters">
+                        <th></th>
+                        <th><input data-col="1" type="text" class="form-control form-control-sm"
+                                placeholder="Cari User ID"></th>
+                        <th><input data-col="2" type="text" class="form-control form-control-sm"
+                                placeholder="Cari Nama"></th>
+                        <th><input data-col="3" type="text" class="form-control form-control-sm"
+                                placeholder="Cari Job Role"></th>
+                        <th><input data-col="4" type="text" class="form-control form-control-sm"
+                                placeholder="Cari NIK"></th>
+                        <th><input data-col="5" type="text" class="form-control form-control-sm"
+                                placeholder="Cari Assigned JobRole"></th>
+                        <th><input data-col="6" type="text" class="form-control form-control-sm"
+                                placeholder="Cari Unit Kerja"></th>
+                        <th><input data-col="7" type="text" class="form-control form-control-sm"
+                                placeholder="Cari UID (MDB)"></th>
+                        <th><input data-col="8" type="text" class="form-control form-control-sm"
+                                placeholder="Cari Nama (MDB)"></th>
+                        <th><input data-col="9" type="text" class="form-control form-control-sm"
+                                placeholder="Cari NIK (MK)"></th>
+                    </tr>
                 </thead>
             </table>
         </div>
@@ -156,7 +177,17 @@
     </div>
 @endsection
 
+@section('header-scripts')
+    <link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.4.1/css/buttons.bootstrap5.min.css">
+@endsection
+
 @section('scripts')
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js" crossorigin="anonymous"
+        referrerpolicy="no-referrer"></script>
+    <script src="https://cdn.datatables.net/buttons/2.4.1/js/dataTables.buttons.min.js"></script>
+    <script src="https://cdn.datatables.net/buttons/2.4.1/js/buttons.bootstrap5.min.js"></script>
+    <script src="https://cdn.datatables.net/buttons/2.4.1/js/buttons.html5.min.js"></script>
+
     <script>
         $(document).ready(function() {
 
@@ -251,7 +282,63 @@
                 pageLength: 15,
                 order: [
                     [1, 'asc']
-                ]
+                ],
+                // Keep your paging/search layout
+                layout: {
+                    top1Start: {
+                        div: {
+                            className: 'pageLength'
+                        }
+                    },
+                    top1End: {
+                        div: {
+                            className: 'search'
+                        }
+                    },
+                    bottom1Start: {
+                        div: {
+                            className: 'info'
+                        }
+                    },
+                    bottom1End: {
+                        div: {
+                            className: 'paging'
+                        }
+                    }
+                },
+                buttons: [{
+                    extend: 'excelHtml5',
+                    text: 'Export Excel',
+                    className: 'btn btn-success btn-sm',
+                    title: 'User_Access_Review',
+                    filename: 'UAR_' + new Date().toISOString().slice(0, 10),
+                    exportOptions: {
+                        // exclude "No" column
+                        columns: ':visible:not(:first-child)'
+                    }
+                }],
+                initComplete: function() {
+                    const api = this.api();
+                    const wrapper = $(api.table().container());
+
+                    // Move built-in controls into custom layout areas
+                    wrapper.find('.dt-length').appendTo(wrapper.find('.pageLength').first());
+                    wrapper.find('.dt-search').appendTo(wrapper.find('.search').first());
+                    wrapper.find('.dt-info').appendTo(wrapper.find('.info').first());
+                    wrapper.find('.dt-paging').appendTo(wrapper.find('.paging').first());
+
+                    // Place the Excel button next to the search box
+                    api.buttons().container().appendTo(wrapper.find('.search').first());
+
+                    // Wire column filters
+                    $('#job-role-table thead tr.filters input').on('keyup change', function() {
+                        const colIdx = $(this).data('col');
+                        const val = this.value;
+                        if (api.column(colIdx).search() !== val) {
+                            api.column(colIdx).search(val).draw();
+                        }
+                    });
+                }
             });
 
             $('#load').on('click', function() {
@@ -260,25 +347,17 @@
                     Swal.fire('Periode belum dipilih', 'Silakan pilih periode terlebih dahulu', 'warning');
                     return;
                 }
-
-                $('#review-table-container').show();
-                $('#user-system-summary-container').show();
-                $('#job-role-table-container').show();
-                $('#export-word').show();
+                $('#review-table-container, #user-system-summary-container, #job-role-table-container, #export-word')
+                    .show();
 
                 let companyId = $('#company').val();
                 let kompartemenId = $('#kompartemen').val();
                 let departemenId = $('#departemen').val();
 
-                // Tentukan Unit Kerja
                 let unitKerja = '-';
-                if (departemenId) {
-                    unitKerja = $('#departemen option:selected').text();
-                } else if (kompartemenId) {
-                    unitKerja = $('#kompartemen option:selected').text();
-                } else if (companyId) {
-                    unitKerja = $('#company option:selected').text();
-                }
+                if (departemenId) unitKerja = $('#departemen option:selected').text();
+                else if (kompartemenId) unitKerja = $('#kompartemen option:selected').text();
+                else if (companyId) unitKerja = $('#company option:selected').text();
                 $('#unit-kerja-cell').text(unitKerja);
 
                 $.ajax({
@@ -289,9 +368,7 @@
                         kompartemen_id: kompartemenId,
                         departemen_id: departemenId
                     },
-                    beforeSend: function() {
-                        $('#load-spinner').show();
-                    },
+                    beforeSend: () => $('#load-spinner').show(),
                     success: function(resp) {
                         jobRoleTable.clear();
                         if (resp.data && resp.data.length > 0) {
@@ -307,12 +384,10 @@
                         $('#nomor-surat-cell').text(resp.nomorSurat || 'XXX - Belum terdaftar');
                         $('#cost-center-cell').text(resp.cost_center || '-');
 
-                        // === User System Summary handling ===
+                        // User System Summary (unchanged)
                         const $ussContainer = $('#user-system-summary-container');
                         const $ussTbody = $('#user-system-summary-table tbody');
-
-                        if (resp.user_system && Array.isArray(resp.user_system) && resp
-                            .user_system.length > 0) {
+                        if (Array.isArray(resp.user_system) && resp.user_system.length > 0) {
                             let rowsHtml = '';
                             resp.user_system.forEach(u => {
                                 rowsHtml += `<tr>
@@ -327,7 +402,6 @@
                             $ussTbody.empty();
                             $ussContainer.hide();
                         }
-
                     },
                     error: function() {
                         jobRoleTable.draw();
@@ -335,9 +409,7 @@
                             '<em style="color:#a00;">Belum ada user terdaftar. Silahkan cek konfigurasi Job Role - User ID</em>'
                         );
                     },
-                    complete: function() {
-                        $('#load-spinner').hide();
-                    }
+                    complete: () => $('#load-spinner').hide()
                 });
             });
 
