@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use App\Models\JobRole;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Foundation\Support\Providers\RouteServiceProvider as ServiceProvider;
 use Illuminate\Http\Request;
@@ -28,13 +29,18 @@ class RouteServiceProvider extends ServiceProvider
             return Limit::perMinute(60)->by($request->user()?->id ?: $request->ip());
         });
 
-        $this->routes(function () {
-            Route::middleware('api')
-                ->prefix('api')
-                ->group(base_path('routes/api.php'));
+        // Bind {job_role} by job_role_id (string) OR id (numeric) safely
+        Route::bind('job_role', function ($value) {
+            // Do NOT include trashed; return 404 for soft-deleted records
+            if (is_numeric($value)) {
+                return \App\Models\JobRole::where('id', (int)$value)->firstOrFail();
+            }
+            return \App\Models\JobRole::where('job_role_id', $value)->firstOrFail();
+        });
 
-            Route::middleware('web')
-                ->group(base_path('routes/web.php'));
+        $this->routes(function () {
+            Route::middleware('api')->prefix('api')->group(base_path('routes/api.php'));
+            Route::middleware('web')->group(base_path('routes/web.php'));
         });
     }
 }

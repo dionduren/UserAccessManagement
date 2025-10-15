@@ -21,6 +21,12 @@ class JobRole extends Model
     protected $table = 'tr_job_roles';
     protected $primaryKey = 'id';
 
+    // Use job_role_id in routes (show/edit/destroy)
+    public function getRouteKeyName()
+    {
+        return 'job_role_id';
+    }
+
     protected $fillable = [
         'company_id',
         'kompartemen_id',

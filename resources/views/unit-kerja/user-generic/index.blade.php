@@ -11,7 +11,7 @@
                             <a href="{{ route('unit_kerja.user_generic.create') }}" class="btn btn-primary">
                                 <i class="bi bi-plus"></i> Buat Relationship User ID Generic - Unit Kerja Baru
                             </a>
-                            <button id="btnBulkDelete" class="btn btn-danger btn-sm" disabled>Delete Selected</button>
+                            <button id="btnBulkDelete" class="btn btn-danger" disabled>Delete Selected</button>
                             <div id="dtButtons" class="btn-group"></div>
                             <div class="d-flex align-items-center gap-2">
                                 <label for="periode_id" class="mb-0 small text-nowrap">Periode</label>

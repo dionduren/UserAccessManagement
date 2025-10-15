@@ -85,6 +85,8 @@
                 <!-- Table to display Job Roles -->
                 <table id="jobRolesTable" class="table table-bordered table-striped table-hover mt-3">
                     <thead>
+                        {{-- DataTables will render the header titles from JS.
+                             We append a filters row programmatically in initComplete. --}}
                     </thead>
                     <tbody></tbody>
                 </table>
@@ -98,9 +100,8 @@
                     <div class="modal-content">
                         <div class="modal-header">
                             <h5 class="modal-title" id="showJobRoleModalLabel">Job Role Details</h5>
-                            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                                <span aria-hidden="true">&times;</span>
-                            </button>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                            {{-- Bootstrap 5 --}}
                         </div>
                         <div class="modal-body" id="modal-job-role-details">
                             <!-- Job Role details will be dynamically loaded here -->
@@ -202,13 +203,15 @@
                 {
                     data: 'status',
                     title: 'Status',
-                    render: function(data) {
+                    render: function(data, type) {
+                        // Use raw value for search/sort; decorate only for display
+                        if (type !== 'display') return data;
                         if (data === 'Active') {
-                            return '<span style="color: #fff; background: #28a745; padding: 2px 8px; border-radius: 4px;">Active</span>';
+                            return '<span style="color:#fff;background:#28a745;padding:2px 8px;border-radius:4px;">Active</span>';
                         } else if (data === 'Not Active') {
-                            return '<span style="color: #fff; background: #dc3545; padding: 2px 8px; border-radius: 4px;">Not Active</span>';
+                            return '<span style="color:#fff;background:#dc3545;padding:2px 8px;border-radius:4px;">Not Active</span>';
                         }
-                        return data;
+                        return data ?? '';
                     },
                     createdCell: function(td, cellData) {
                         if (cellData === 'Not Active') {
@@ -227,7 +230,9 @@
                 {
                     data: 'flagged',
                     title: 'Flagged',
-                    render: function(data) {
+                    render: function(data, type) {
+                        // keep plain text so filtering works easily
+                        if (type !== 'display') return data ? 'Yes' : 'No';
                         return data ? 'Yes' : 'No';
                     },
                     createdCell: function(td, cellData, rowData) {
@@ -255,7 +260,69 @@
                 searching: true,
                 ordering: true,
                 data: [],
-                columns: columns
+                columns: columns,
+                initComplete: function() {
+                    const api = this.api();
+                    const $thead = $('#jobRolesTable thead');
+
+                    // Build a filters row under the header
+                    if ($thead.find('tr.filters').length === 0) {
+                        const $filterRow = $('<tr class="filters"></tr>').appendTo($thead);
+
+                        api.columns().every(function(colIdx) {
+                            const column = this;
+                            const title = $(column.header()).text().trim();
+                            const $cell = $('<th></th>').appendTo($filterRow);
+
+                            // Skip checkbox column (empty title) and Actions column
+                            if (title === '' || title === 'Actions') return;
+
+                            if (title === 'Status') {
+                                const $select = $(`
+                            <select class="form-select form-select-sm">
+                                <option value="">All</option>
+                                <option value="Active">Active</option>
+                                <option value="Not Active">Not Active</option>
+                            </select>
+                        `).appendTo($cell);
+
+                                $select.on('change', function() {
+                                    const v = $(this).val();
+                                    if (v) {
+                                        // exact match with regex
+                                        column.search('^' + $.fn.dataTable.util
+                                                .escapeRegex(v) + '$', true, false)
+                                            .draw();
+                                    } else {
+                                        column.search('').draw();
+                                    }
+                                });
+                            } else if (title === 'Flagged') {
+                                const $select = $(`
+                            <select class="form-select form-select-sm">
+                                <option value="">All</option>
+                                <option value="Yes">Yes</option>
+                                <option value="No">No</option>
+                            </select>
+                        `).appendTo($cell);
+
+                                $select.on('change', function() {
+                                    const v = $(this).val();
+                                    column.search(v, false, false).draw();
+                                });
+                            } else {
+                                $('<input type="text" class="form-control form-control-sm" placeholder="Search ' +
+                                        title + '">')
+                                    .appendTo($cell)
+                                    .on('keyup change clear', function() {
+                                        if (column.search() !== this.value) {
+                                            column.search(this.value).draw();
+                                        }
+                                    });
+                            }
+                        });
+                    }
+                }
             });
 
             // Fetch master data
@@ -362,30 +429,24 @@
             /// Show Job Role Details in Modal
             $(document).on('click', '.show-job-role', function(e) {
                 e.preventDefault();
-                const jobRoleId = $(this).data('id');
-
-                if (!jobRoleId) {
-                    alert('Job Role ID is missing.');
-                    return;
-                }
+                const url = $(this).attr('href');
+                if (!url) return;
 
                 $.ajax({
-                    url: `/job-roles/${jobRoleId}`,
+                    url: url,
                     method: 'GET',
                     success: function(response) {
                         $('#modal-job-role-details').html(response);
-                        $('#showJobRoleModal').modal('show');
+                        const modalEl = document.getElementById('showJobRoleModal');
+                        bootstrap.Modal.getOrCreateInstance(modalEl).show();
                     },
-                    error: function() {
+                    error: function(xhr) {
                         $('#modal-job-role-details').html(
                             '<p class="text-danger">Unable to load job role details.</p>');
-                    },
+                        const modalEl = document.getElementById('showJobRoleModal');
+                        bootstrap.Modal.getOrCreateInstance(modalEl).show();
+                    }
                 });
-            });
-
-            // Close modal event
-            $(document).on('click', '.close', function() {
-                $('#showJobRoleModal').modal('hide');
             });
 
             $(document).on('click', '.flagged-job-role', function(e) {
