@@ -1,7 +1,7 @@
 <div class="top-bar d-flex align-items-center">
 
     <!-- Sidebar Toggle Button -->
-    <button id="sidebar-collapse-btn" class="btn btn-outline-secondary me-3" type="button" title="Toggle Sidebar"
+    <button id="sidebar-collapse-btn" class="btn btn-success me-3" type="button" title="Toggle Sidebar"
         style="min-width:42px;">
         <i class="bi bi-chevron-double-left" id="sidebar-collapse-icon"></i>
     </button>

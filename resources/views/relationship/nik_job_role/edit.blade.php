@@ -2,105 +2,159 @@
 
 @section('content')
     <div class="container-fluid">
-        <h1>Edit User Job Role</h1>
-
-        <!-- Error Messages -->
-        @if ($errors->any())
-            <div class="alert alert-danger">
-                <h4>Error(s) occurred:</h4>
-                <ul>
-                    @foreach ($errors->all() as $error)
-                        <li>{{ $error }}</li>
-                    @endforeach
-                </ul>
+        <div class="card shadow-sm">
+            <div class="card-header d-flex align-items-center justify-content-between">
+                <h5 class="mb-0">Edit User Job Role</h5>
+                <div class="d-flex gap-2">
+                    <a href="{{ route('nik-job.index') }}" class="btn btn-outline-secondary btn-sm">
+                        <i class="fas fa-arrow-left"></i> Back to List
+                    </a>
+                </div>
             </div>
-        @endif
+            <div class="card-body">
+                <!-- Error Messages -->
+                @if ($errors->any())
+                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                        <h6 class="alert-heading">Error(s) occurred:</h6>
+                        <ul class="mb-0">
+                            @foreach ($errors->all() as $error)
+                                <li>{{ $error }}</li>
+                            @endforeach
+                        </ul>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                @endif
 
-        <form action="{{ route('nik-job.update', $nikJobRole->id) }}" method="POST">
-            @csrf
-            @method('PUT')
+                <!-- Success Messages -->
+                @if (session('success'))
+                    <div class="alert alert-success alert-dismissible fade show" role="alert">
+                        {{ session('success') }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                @endif
 
-            <!-- Periode Dropdown -->
-            <div class="mb-3">
-                <label for="periode_id" class="form-label">Periode</label>
-                <select name="periode_id" id="periode_id" class="form-control form-select" required>
-                    <option value="">Select Periode</option>
-                    @foreach ($periodes as $periode)
-                        <option value="{{ $periode->id }}"
-                            {{ old('periode_id', $nikJobRole->periode_id) == $periode->id ? 'selected' : '' }}>
-                            {{ $periode->definisi }}
-                        </option>
-                    @endforeach
-                </select>
+                <form action="{{ route('nik-job.update', $nikJobRole->id) }}" method="POST">
+                    @csrf
+                    @method('PUT')
+
+                    <!-- Periode Dropdown -->
+                    <div class="mb-3">
+                        <label for="periode_id" class="form-label">Periode <span class="text-danger">*</span></label>
+                        <select name="periode_id" id="periode_id" class="form-control form-select" required>
+                            <option value="">Select Periode</option>
+                            @foreach ($periodes as $periode)
+                                <option value="{{ $periode->id }}"
+                                    {{ old('periode_id', $nikJobRole->periode_id) == $periode->id ? 'selected' : '' }}>
+                                    {{ $periode->definisi }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <!-- Company Dropdown -->
+                            <div class="form-group mb-3">
+                                <label for="companyDropdown">Pilih Perusahaan <span class="text-danger">*</span></label>
+                                @php
+                                    $selectedCompanyId = old(
+                                        'company_id',
+                                        data_get($nikJobRole, 'jobRole.company_id') ?: $userCompany,
+                                    );
+                                @endphp
+                                <select id="companyDropdown" class="form-control" name="company_id" required>
+                                    <option value="">-- Pilih Perusahaan --</option>
+                                    @foreach ($companies as $company)
+                                        <option value="{{ $company->company_code }}"
+                                            {{ $selectedCompanyId == $company->company_code ? 'selected' : '' }}>
+                                            {{ $company->nama }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                            </div>
+
+                            <!-- Kompartemen Dropdown -->
+                            <div class="form-group mb-3">
+                                <label for="kompartemenDropdown">Pilih Kompartemen</label>
+                                <select id="kompartemenDropdown" class="form-control" name="kompartemen_id">
+                                    <option value="">-- Pilih Kompartemen --</option>
+                                </select>
+                            </div>
+
+                            <!-- Departemen Dropdown -->
+                            <div class="form-group mb-3">
+                                <label for="departemenDropdown">Pilih Departemen</label>
+                                <select id="departemenDropdown" class="form-control" name="departemen_id">
+                                    <option value="">-- Pilih Departemen --</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <!-- Job Role Dropdown -->
+                            <div class="mb-3">
+                                <label for="job_role_id" class="form-label">Job Role <span
+                                        class="text-danger">*</span></label>
+                                <select name="job_role_id" id="job_role_id" class="form-control select2" required>
+                                    <option value="">Select Job Role</option>
+                                </select>
+                                <small class="text-muted">Current Job Role ID: {{ $nikJobRole->job_role_id }}</small>
+                            </div>
+
+                            <!-- User Dropdown -->
+                            <div class="mb-3">
+                                <label for="nik" class="form-label">User <span class="text-danger">*</span></label>
+                                <select name="nik" id="nik" class="form-control select2" required>
+                                    <option value="">Select User</option>
+                                    @foreach ($userNIKs as $user)
+                                        <option value="{{ $user->user_code }}"
+                                            {{ $nikJobRole->nik == $user->user_code ? 'selected' : '' }}>
+                                            {{ $user->user_code }} -
+                                            {{ $user->unitKerja
+                                                ? $user->unitKerja->nama .
+                                                    ' | ' .
+                                                    ($user->unitKerja->kompartemen ? 'Kompartemen: ' . $user->unitKerja->kompartemen->nama . ' - ' : '') .
+                                                    ($user->unitKerja->departemen ? 'Departemen: ' . $user->unitKerja->departemen->nama : 'Belum ada Data Karyawan')
+                                                : 'Belum ada Data Karyawan' }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                            </div>
+
+                            <!-- Current Values Display -->
+                            <div class="alert alert-info">
+                                <h6 class="alert-heading">Current Assignment:</h6>
+                                <p class="mb-1"><strong>NIK:</strong> {{ $nikJobRole->nik }}</p>
+                                <p class="mb-1"><strong>Job Role:</strong> {{ $nikJobRole->jobRole->nama ?? 'N/A' }}</p>
+                                <p class="mb-0"><strong>Job Role ID:</strong> {{ $nikJobRole->job_role_id }}</p>
+                                @if ($nikJobRole->jobRole)
+                                    <p class="mb-0"><strong>Company:</strong>
+                                        {{ $nikJobRole->jobRole->company->nama ?? 'N/A' }}</p>
+                                    <p class="mb-0"><strong>Kompartemen:</strong>
+                                        {{ $nikJobRole->jobRole->kompartemen->nama ?? 'N/A' }}</p>
+                                    <p class="mb-0"><strong>Departemen:</strong>
+                                        {{ $nikJobRole->jobRole->departemen->nama ?? 'N/A' }}</p>
+                                @endif
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="alert alert-warning">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <strong>Note:</strong> Ubah list user menjadi terfilter sesuai kompartemen yang terpilih
+                    </div>
+
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save"></i> Update User Job Role
+                        </button>
+                        <a href="{{ route('nik-job.index') }}" class="btn btn-secondary">
+                            <i class="fas fa-times"></i> Cancel
+                        </a>
+                    </div>
+                </form>
             </div>
-
-            <!-- Cascading Dropdowns for Job Role selection -->
-            <!-- Company Dropdown -->
-            <div class="form-group mb-3">
-                <label for="companyDropdown">Pilih Perusahaan</label>
-                @php
-                    $selectedCompanyId = old('company_id', data_get($nikJobRole, 'jobRole.company_id') ?: $userCompany);
-                @endphp
-                <select id="companyDropdown" class="form-control" name="company_id" required>
-                    <option value="">-- Pilih Perusahaan --</option>
-                    @foreach ($companies as $company)
-                        <option value="{{ $company->company_code }}"
-                            {{ $selectedCompanyId == $company->company_code ? 'selected' : '' }}>
-                            {{ $company->nama }}
-                        </option>
-                    @endforeach
-                </select>
-            </div>
-
-            <!-- Kompartemen Dropdown -->
-            <div class="form-group mb-3">
-                <label for="kompartemenDropdown">Pilih Kompartemen</label>
-                <select id="kompartemenDropdown" class="form-control" name="kompartemen_id">
-                    <option value="">-- Pilih Kompartemen --</option>
-                </select>
-            </div>
-
-            <!-- Departemen Dropdown -->
-            <div class="form-group mb-3">
-                <label for="departemenDropdown">Pilih Departemen</label>
-                <select id="departemenDropdown" class="form-control" name="departemen_id">
-                    <option value="">-- Pilih Departemen --</option>
-                </select>
-            </div>
-
-            <!-- Job Role Dropdown -->
-            <div class="mb-3">
-                <label for="job_role_id" class="form-label">Job Role</label>
-                <select name="job_role_id" id="job_role_id" class="form-control select2" required>
-                    <option value="">Select Job Role</option>
-                </select>
-            </div>
-
-            <!-- User Dropdown -->
-            <div class="mb-3">
-                <label for="nik" class="form-label">User</label>
-                <select name="nik" id="nik" class="form-control select2" required>
-                    <option value="">Select User</option>
-                    @foreach ($userNIKs as $user)
-                        <option value="{{ $user->user_code }}" {{ $nikJobRole->nik == $user->user_code ? 'selected' : '' }}>
-                            {{ $user->user_code }} -
-                            {{ $user->unitKerja
-                                ? $user->unitKerja->nama .
-                                    ' | ' .
-                                    ($user->unitKerja->kompartemen ? 'Kompartemen: ' . $user->unitKerja->kompartemen->nama . ' - ' : '') .
-                                    ($user->unitKerja->departemen ? 'Departemen: ' . $user->unitKerja->departemen->nama : 'Belum ada Data Karyawan')
-                                : 'Belum ada Data Karyawan' }}
-                        </option>
-                    @endforeach
-                </select>
-            </div>
-
-            <div>
-                <span class="text-danger">Note: Ubah list user menjadi terfilter sesuai kompartemen yang terpilih</span>
-            </div>
-
-            <button type="submit" class="btn btn-primary">Update User Job Role</button>
-        </form>
+        </div>
     </div>
 @endsection
 
@@ -123,251 +177,251 @@
 
         function initializeDropdowns() {
             $(document).ready(function() {
-                // Initialize Select2
-                $('#nik').select2({
-                    placeholder: 'Select User',
-                    allowClear: true
-                });
-
-                $('#job_role_id').select2({
-                    placeholder: 'Select Job Role',
-                    allowClear: true
-                });
-
-                // Get default values from server
-                // const defaultCompany = "{{ $nikJobRole->jobRole->company_id ?? '' }}";
-                const defaultCompany = "{{ $selectedCompanyId }}";
-                const defaultKompartemen = "{{ $nikJobRole->jobRole->kompartemen_id ?? '' }}";
-                const defaultDepartemen = "{{ $nikJobRole->jobRole->departemen_id ?? '' }}";
-                const defaultJobRole = "{{ $nikJobRole->job_role_id }}";
-
-                // Company dropdown handler
-                $('#companyDropdown').on('change', function() {
-                    const companyId = $(this).val();
-                    if (!companyId) {
-                        resetDropdowns(['#kompartemenDropdown', '#departemenDropdown', '#job_role_id']);
-                        return;
-                    }
-
-                    const company = window.masterData.find(c => c.company_id === companyId);
-                    if (!company) return;
-
-                    // Populate Kompartemen dropdown
-                    populateKompartemenDropdown(company.kompartemen);
-
-                    // Only show company level roles
-                    populateJobRolesDropdown(company.job_roles_without_relations);
-                });
-
-                // Kompartemen dropdown handler
-                $('#kompartemenDropdown').on('change', function() {
-                    const companyId = $('#companyDropdown').val();
-                    const kompartemenId = $(this).val();
-
-                    if (!kompartemenId) {
-                        resetDropdowns(['#departemenDropdown', '#job_role_id']);
-                        return;
-                    }
-
-                    const company = window.masterData.find(c => c.company_id === companyId);
-                    const kompartemen = company?.kompartemen.find(k => k.kompartemen_id === kompartemenId);
-                    if (!kompartemen) return;
-
-                    // Populate Departemen under selected Kompartemen
-                    populateDepartemenDropdown(kompartemen.departemen);
-
-                    // Show company + kompartemen level roles
-                    const combinedRoles = [
-                        ...company.job_roles_without_relations,
-                        ...kompartemen.job_roles
-                    ];
-                    populateJobRolesDropdown(combinedRoles);
-                });
-
-                // Departemen dropdown handler
-                $('#departemenDropdown').on('change', function() {
-                    const companyId = $('#companyDropdown').val();
-                    const kompartemenId = $('#kompartemenDropdown').val();
-                    const departemenId = $(this).val();
-
-                    const company = window.masterData.find(c => c.company_id === companyId);
-                    let departemen;
-
-                    if (kompartemenId) {
-                        const kompartemen = company?.kompartemen.find(k => k.kompartemen_id ===
-                            kompartemenId);
-                        departemen = kompartemen?.departemen.find(d => d.departemen_id === departemenId);
-                    } else {
-                        departemen = company?.departemen_without_kompartemen.find(d => d.departemen_id ===
-                            departemenId);
-                    }
-
-                    if (!departemen) return;
-
-                    // All levels combined with proper grouping
-                    const combinedRoles = [
-                        ...company.job_roles_without_relations,
-                        ...(kompartemenId ? company.kompartemen.find(k => k.kompartemen_id ===
-                            kompartemenId)?.job_roles || [] : []),
-                        ...departemen.job_roles
-                    ];
-
-                    populateJobRolesDropdown(combinedRoles);
-                });
-
-                // Helper functions same as create.blade.php
-                function populateKompartemenDropdown(kompartemenList) {
-                    const dropdown = $('#kompartemenDropdown');
-                    dropdown.empty().append('<option value="">-- Select Kompartemen --</option>');
-
-                    if (kompartemenList?.length) {
-                        dropdown.prop('disabled', false);
-                        const sortedList = [...kompartemenList].sort((a, b) => a.nama.localeCompare(b.nama));
-                        sortedList.forEach(item => {
-                            dropdown.append(`<option value="${item.kompartemen_id}">${item.nama}</option>`);
+                        // Initialize Select2
+                        $('#nik').select2({
+                            placeholder: 'Select User',
+                            allowClear: true
                         });
-                    } else {
-                        dropdown.prop('disabled', true);
-                    }
-                }
 
-                function populateDepartemenDropdown(departemenList) {
-                    const dropdown = $('#departemenDropdown');
-                    dropdown.empty().append('<option value="">-- Select Departemen --</option>');
-
-                    if (departemenList?.length) {
-                        dropdown.prop('disabled', false);
-                        const sortedList = [...departemenList].sort((a, b) => a.nama.localeCompare(b.nama));
-                        sortedList.forEach(item => {
-                            dropdown.append(`<option value="${item.departemen_id}">${item.nama}</option>`);
+                        $('#job_role_id').select2({
+                            placeholder: 'Select Job Role',
+                            allowClear: true
                         });
-                    } else {
-                        dropdown.prop('disabled', true);
-                    }
-                }
 
-                function populateJobRolesDropdown(jobRoles) {
-                    const dropdown = $('#job_role_id');
-                    dropdown.empty().append('<option value="">-- Select Job Role --</option>');
+                        // Get default values from server
+                        const defaultCompany = "{{ $selectedCompanyId }}";
+                        const defaultKompartemen = "{{ $nikJobRole->jobRole->kompartemen_id ?? '' }}";
+                        const defaultDepartemen = "{{ $nikJobRole->jobRole->departemen_id ?? '' }}";
+                        const defaultJobRole = "{{ $nikJobRole->job_role_id }}";
 
-                    if (!jobRoles?.length) {
-                        dropdown.prop('disabled', true);
-                        return;
-                    }
+                        console.log('Default values:', {
+                            company: defaultCompany,
+                            kompartemen: defaultKompartemen,
+                            departemen: defaultDepartemen,
+                            jobRole: defaultJobRole
+                        });
 
-                    // Create optgroup structure
-                    const groups = {
-                        company: {
-                            label: 'Company Level Job Roles',
-                            roles: []
-                        },
-                        kompartemen: {
-                            label: 'Kompartemen Level Job Roles',
-                            roles: []
-                        },
-                        departemen: {
-                            label: 'Departemen Level Job Roles',
-                            roles: []
-                        }
-                    };
+                        // Company dropdown handler
+                        $('#companyDropdown').on('change', function() {
+                            const companyId = $(this).val();
+                            console.log('Company changed to:', companyId);
 
-                    const currentKompartemenId = $('#kompartemenDropdown').val();
-                    const currentDepartemenId = $('#departemenDropdown').val();
-                    const companyId = $('#companyDropdown').val();
-
-                    // Find current company
-                    const company = window.masterData.find(c => c.company_id === companyId);
-                    if (!company) return;
-
-                    // Group based on source location in JSON structure
-                    jobRoles.forEach(role => {
-                        if (role.status !== 'Active') return;
-
-                        if (company.job_roles_without_relations.some(r => r.id === role.id)) {
-                            groups.company.roles.push(role);
-                            return;
-                        }
-
-                        if (currentKompartemenId) {
-                            const kompartemen = company.kompartemen.find(k => k.kompartemen_id ===
-                                currentKompartemenId);
-                            if (kompartemen?.job_roles.some(r => r.id === role.id)) {
-                                groups.kompartemen.roles.push(role);
+                            if (!companyId) {
+                                resetDropdowns(['#kompartemenDropdown', '#departemenDropdown', '#job_role_id']);
                                 return;
                             }
 
-                            if (currentDepartemenId) {
-                                const departemen = kompartemen.departemen.find(d => d.departemen_id ===
-                                    currentDepartemenId);
-                                if (departemen?.job_roles.some(r => r.id === role.id)) {
-                                    groups.departemen.roles.push(role);
-                                    return;
-                                }
+                            const company = window.masterData.find(c => c.company_id === companyId);
+                            if (!company) return;
+
+                            // Populate Kompartemen dropdown
+                            populateKompartemenDropdown(company.kompartemen);
+
+                            // Only show company level roles
+                            populateJobRolesDropdown(company.job_roles_without_relations);
+                        });
+
+                        // Kompartemen dropdown handler
+                        $('#kompartemenDropdown').on('change', function() {
+                            const companyId = $('#companyDropdown').val();
+                            const kompartemenId = $(this).val();
+                            console.log('Kompartemen changed to:', kompartemenId);
+
+                            if (!kompartemenId) {
+                                resetDropdowns(['#departemenDropdown', '#job_role_id']);
+                                return;
+                            }
+
+                            const company = window.masterData.find(c => c.company_id === companyId);
+                            const kompartemen = company?.kompartemen.find(k => k.kompartemen_id === kompartemenId);
+                            if (!kompartemen) return;
+
+                            // Populate Departemen under selected Kompartemen
+                            populateDepartemenDropdown(kompartemen.departemen);
+
+                            // Show company + kompartemen level roles
+                            const combinedRoles = [
+                                ...company.job_roles_without_relations,
+                                ...kompartemen.job_roles
+                            ];
+                            populateJobRolesDropdown(combinedRoles);
+                        });
+
+                        // Departemen dropdown handler
+                        $('#departemenDropdown').on('change', function() {
+                            const companyId = $('#companyDropdown').val();
+                            const kompartemenId = $('#kompartemenDropdown').val();
+                            const departemenId = $(this).val();
+                            console.log('Departemen changed to:', departemenId);
+
+                            const company = window.masterData.find(c => c.company_id === companyId);
+                            let departemen;
+
+                            if (kompartemenId) {
+                                const kompartemen = company?.kompartemen.find(k => k.kompartemen_id ===
+                                    kompartemenId);
+                                departemen = kompartemen?.departemen.find(d => d.departemen_id === departemenId);
+                            } else {
+                                departemen = company?.departemen_without_kompartemen.find(d => d.departemen_id ===
+                                    departemenId);
+                            }
+
+                            if (!departemen) return;
+
+                            // All levels combined with proper grouping
+                            const combinedRoles = [
+                                ...company.job_roles_without_relations,
+                                ...(kompartemenId ? company.kompartemen.find(k => k.kompartemen_id ===
+                                    kompartemenId)?.job_roles || [] : []),
+                                ...departemen.job_roles
+                            ];
+
+                            populateJobRolesDropdown(combinedRoles);
+                        });
+
+                        // Helper functions
+                        function populateKompartemenDropdown(kompartemenList) {
+                            const dropdown = $('#kompartemenDropdown');
+                            dropdown.empty().append('<option value="">-- Select Kompartemen --</option>');
+
+                            if (kompartemenList?.length) {
+                                dropdown.prop('disabled', false);
+                                const sortedList = [...kompartemenList].sort((a, b) => a.nama.localeCompare(b.nama));
+                                sortedList.forEach(item => {
+                                    const isSelected = item.kompartemen_id === defaultKompartemen;
+                                    dropdown.append(
+                                        `<option value="${item.kompartemen_id}" ${isSelected ? 'selected' : ''}>${item.nama}</option>`
+                                        );
+                                });
+                            } else {
+                                dropdown.prop('disabled', true);
                             }
                         }
-                    });
 
-                    // Add optgroups and options
-                    Object.values(groups).forEach(group => {
-                        if (group.roles.length > 0) {
-                            const optgroup = $('<optgroup>', {
-                                label: group.label
-                            });
+                        function populateDepartemenDropdown(departemenList) {
+                            const dropdown = $('#departemenDropdown');
+                            dropdown.empty().append('<option value="">-- Select Departemen --</option>');
 
-                            group.roles.forEach(role => {
-                                optgroup.append($('<option>', {
-                                    value: role.job_role_id,
-                                    text: role.nama,
-                                    selected: role.job_role_id ==
-                                        defaultJobRole // Compare with defaultJobRole
-                                }));
-                            });
-
-                            dropdown.append(optgroup);
+                            if (departemenList?.length) {
+                                dropdown.prop('disabled', false);
+                                const sortedList = [...departemenList].sort((a, b) => a.nama.localeCompare(b.nama));
+                                sortedList.forEach(item => {
+                                    const isSelected = item.departemen_id === defaultDepartemen;
+                                    dropdown.append(
+                                        `<option value="${item.departemen_id}" ${isSelected ? 'selected' : ''}>${item.nama}</option>`
+                                        );
+                                });
+                            } else {
+                                dropdown.prop('disabled', true);
+                            }
                         }
-                    });
 
-                    dropdown.prop('disabled', false);
+                        function populateJobRolesDropdown(jobRoles) {
+                            const dropdown = $('#job_role_id');
+                            dropdown.empty().append('<option value="">-- Select Job Role --</option>');
 
-                    // Trigger change event to notify Select2
-                    dropdown.trigger('change');
-                }
+                            if (!jobRoles?.length) {
+                                dropdown.prop('disabled', true);
+                                return;
+                            }
 
-                function resetDropdowns(selectors) {
-                    selectors.forEach(selector => {
-                        $(selector)
-                            .empty()
-                            .append('<option value="">-- Select --</option>')
-                            .prop('disabled', true);
-                    });
-                }
-
-                // Set initial values and trigger cascade
-                if (defaultCompany) {
-                    $('#companyDropdown').val(defaultCompany).trigger('change');
-
-                    // Wait for company change to complete
-                    setTimeout(() => {
-                        if (defaultKompartemen) {
-                            $('#kompartemenDropdown').val(defaultKompartemen).trigger('change');
-
-                            // Wait for kompartemen change to complete
-                            setTimeout(() => {
-                                if (defaultDepartemen) {
-                                    $('#departemenDropdown').val(defaultDepartemen).trigger(
-                                        'change');
-
-                                    // Wait for departemen change and set job role
-                                    setTimeout(() => {
-                                        $('#job_role_id').val(defaultJobRole).trigger(
-                                            'change');
-                                    }, 100);
+                            // Create optgroup structure
+                            const groups = {
+                                company: {
+                                    label: 'Company Level Job Roles',
+                                    roles: []
+                                },
+                                kompartemen: {
+                                    label: 'Kompartemen Level Job Roles',
+                                    roles: []
+                                },
+                                departemen: {
+                                    label: 'Departemen Level Job Roles',
+                                    roles: []
                                 }
-                            }, 100);
+                            };
+
+                            const currentKompartemenId = $('#kompartemenDropdown').val();
+                            const currentDepartemenId = $('#departemenDropdown').val();
+                            const companyId = $('#companyDropdown').val();
+
+                            const company = window.masterData.find(c => c.company_id === companyId);
+                            if (!company) return;
+
+                            // Group based on source location in JSON structure
+                            jobRoles.forEach(role => {
+                                if (role.status !== 'Active') return;
+
+                                if (company.job_roles_without_relations.some(r => r.id === role.id)) {
+                                    groups.company.roles.push(role);
+                                } else if (currentKompartemenId) {
+                                    const kompartemen = company.kompartemen.find(k => k.kompartemen_id ===
+                                        currentKompartemenId);
+                                    if (kompartemen?.job_roles.some(r => r.id === role.id)) {
+                                        groups.kompartemen.roles.push(role);
+                                    } else if (currentDepartemenId) {
+                                        const departemen = kompartemen?.departemen.find(d => d.departemen_id ===
+                                            currentDepartemenId);
+                                        if (departemen?.job_roles.some(r => r.id === role.id)) {
+                                            groups.departemen.roles.push(role);
+                                        }
+                                    }
+                                }
+                            });
+
+                            // Add optgroups and options
+                            Object.values(groups).forEach(group => {
+                                if (group.roles.length > 0) {
+                                    const optgroup = $('<optgroup>', {
+                                        label: group.label
+                                    });
+
+                                    group.roles.forEach(role => {
+                                        const isSelected = role.job_role_id === defaultJobRole;
+                                        console.log(
+                                            `Comparing role.job_role_id (${role.job_role_id}) with defaultJobRole (${defaultJobRole}): ${isSelected}`
+                                            );
+
+                                        optgroup.append($('<option>', {
+                                            value: role.job_role_id,
+                                            text: role.nama,
+                                            selected: isSelected
+                                        }));
+                                    });
+
+                                    dropdown.append(optgroup);
+                                }
+                            });
+
+                            dropdown.prop('disabled', false);
+                            dropdown.trigger('change');
                         }
-                    }, 100);
-                }
-            });
-        }
-    </script>
-@endsection
+
+                        function resetDropdowns(selectors) {
+                            selectors.forEach(selector => {
+                                $(selector)
+                                    .empty()
+                                    .append('<option value="">-- Select --</option>')
+                                    .prop('disabled', true);
+                            });
+                        }
+
+                        // Set initial values and trigger cascade with proper timing
+                        if (defaultCompany) {
+                            $('#companyDropdown').val(defaultCompany).trigger('change');
+
+                            // Use a more reliable timing approach
+                            const setInitialValues = () => {
+                                    if (defaultKompartemen) {
+                                        $('#kompartemenDropdown').val(defaultKompartemen).trigger('change');
+
+                                        setTimeout(() => {
+                                                    if (defaultDepartemen) {
+                                                        $('#departemenDropdown').val(defaultDepartemen).trigger('change');
+                                                    }
+
+                                                    // Set job role after all hierarchy is loaded
+                                                    setTimeout(() => {
+                                                                if (defaultJobRole) {
+                                                                    console.log('Setting job role to:', defaultJobRole);
+                                                                    $('#job_role_id').val(defaultJobRole).trigger('change');
