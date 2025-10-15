@@ -228,8 +228,8 @@ class CheckpointService
                     $status = 'in_progress';
                 }
 
-                $nikPct = $totalNik ? round(min(100, $nikWithUnit / $totalNik * 100)) : 0;
-                $genPct = $totalGeneric ? round(min(100, $genericWithUnit / $totalGeneric * 100)) : 0;
+                $nikPct = $totalNik ? (int) floor(min(100, $nikWithUnit / $totalNik * 100)) : 0;
+                $genPct = $totalGeneric ? (int) floor(min(100, $genericWithUnit / $totalGeneric * 100)) : 0;
                 $sumWithUnit       = $nikWithUnit + $genericWithUnit;
                 $sumWithUnitTotal  = $totalNik + $totalGeneric;
 
@@ -273,8 +273,8 @@ class CheckpointService
                     $status = 'in_progress';
                 }
 
-                $nikPct = $totalNik ? round(min(100, $nikWithRole / $totalNik * 100)) : 0;
-                $genPct = $totalGeneric ? round(min(100, $genericWithRole / $totalGeneric * 100)) : 0;
+                $nikPct = $totalNik ? (int) floor(min(100, $nikWithRole / $totalNik * 100)) : 0;
+                $genPct = $totalGeneric ? (int) floor(min(100, $genericWithRole / $totalGeneric * 100)) : 0;
                 $sumWithRole      = $nikWithRole + $genericWithRole;
                 $sumWithRoleTotal = $totalNik + $totalGeneric;
 

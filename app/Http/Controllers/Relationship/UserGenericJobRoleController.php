@@ -22,6 +22,9 @@ class UserGenericJobRoleController extends Controller
         $periodes = Periode::select('id', 'definisi')->get();
         $userCompany = auth()->user()->loginDetail->company_code ?? null;
         $companyShortname = Company::where('company_code', $userCompany)->value('shortname');
+        if ($userCompany == 'A000') {
+            $companyShortname = null; // A000 => no filter
+        }
 
         if ($request->ajax()) {
             if (!$request->filled('periode')) {
@@ -39,7 +42,8 @@ class UserGenericJobRoleController extends Controller
                     'keterangan_flagged',
                     'user_profile as definisi'
                 ])
-                ->where('group', $companyShortname) // Filter by user's company
+                // Only filter by company for non-A000
+                ->when($companyShortname, fn($q) => $q->where('group', $companyShortname))
                 ->with(['periode', 'NIKJobRole' => function ($q) use ($periodeId) {
                     $q->where('periode_id', $periodeId)->with('jobRole');
                 }])
@@ -204,9 +208,11 @@ class UserGenericJobRoleController extends Controller
         $periodes = Periode::select('id', 'definisi')->get();
         $userCompany = auth()->user()->loginDetail->company_code ?? null;
         $companyShortname = Company::where('company_code', $userCompany)->value('shortname');
+        if ($userCompany == 'A000') {
+            $companyShortname = null; // A000 => no filter
+        }
 
         if ($request->ajax()) {
-            // Only load data if periode is selected
             if (!$request->filled('periode')) {
                 return DataTables::of(collect([]))->make(true);
             }
@@ -220,7 +226,8 @@ class UserGenericJobRoleController extends Controller
                     'user_code',
                     'last_login',
                 ])
-                ->where('group', $companyShortname) // Filter by user's company
+                // Only filter by company for non-A000
+                ->when($companyShortname, fn($q) => $q->where('group', $companyShortname))
                 // Collect wrong job_role_id(s) (not found in tr_job_roles or soft-deleted)
                 ->selectSub(function ($sub) use ($periodeId) {
                     $sub->from('tr_ussm_job_role as jr')
@@ -228,7 +235,6 @@ class UserGenericJobRoleController extends Controller
                             $join->on('jr.job_role_id', '=', 'j.job_role_id')
                                 ->whereNull('j.deleted_at'); // treat soft-deleted as missing
                         })
-                        // PostgreSQL string_agg with DISTINCT + ORDER BY must match argument
                         ->selectRaw("string_agg(DISTINCT jr.job_role_id::text, ',' ORDER BY jr.job_role_id::text)")
                         ->whereColumn('jr.nik', 'tr_user_generic.user_code')
                         ->where('jr.periode_id', $periodeId)
@@ -238,7 +244,6 @@ class UserGenericJobRoleController extends Controller
                 ->with(['periode', 'userGenericUnitKerja.kompartemen', 'userGenericUnitKerja.departemen'])
                 ->where('periode_id', $periodeId)
                 ->where(function ($q) use ($periodeId) {
-                    // Users with NO assignment in this period
                     $q->whereNotExists(function ($q1) use ($periodeId) {
                         $q1->selectRaw(1)
                             ->from('tr_ussm_job_role as jr')
@@ -246,7 +251,6 @@ class UserGenericJobRoleController extends Controller
                             ->where('jr.periode_id', $periodeId)
                             ->whereNull('jr.deleted_at');
                     })
-                        // OR users with at least one invalid assignment (job_role_id not present in tr_job_roles)
                         ->orWhereExists(function ($q2) use ($periodeId) {
                             $q2->selectRaw(1)
                                 ->from('tr_ussm_job_role as jr2')
@@ -283,19 +287,20 @@ class UserGenericJobRoleController extends Controller
         $periodeId = (int) $request->get('periode');
         $userCompany = auth()->user()->loginDetail->company_code ?? null;
         $companyShortname = Company::where('company_code', $userCompany)->value('shortname');
+        if ($userCompany == 'A000') {
+            $companyShortname = null; // A000 => no filter
+        }
 
         if (!$periodeId) {
             return redirect()->back()->with('error', 'Periode harus dipilih untuk export');
         }
 
-        // Get periode name for filename
         $periode = Periode::find($periodeId);
         $periodeName = $periode ? $periode->definisi : 'Unknown';
-
         $filename = 'User_Generic_Without_Job_Role_' . $periodeName . '_' . now()->format('Y-m-d_H-i-s') . '.xlsx';
 
         return Excel::download(
-            new UserGenericWithoutJobRoleExport($periodeId, $companyShortname),
+            new UserGenericWithoutJobRoleExport($periodeId, $companyShortname), // ensure export uses ->when($companyShortname, ...)
             $filename
         );
     }

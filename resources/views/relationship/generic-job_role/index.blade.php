@@ -2,12 +2,6 @@
 
 @section('content')
     <div class="container-fluid">
-        <h1>Relationship: User Generic &amp; Job Role</h1>
-
-        <a href="{{ route('user-generic-job-role.create') }}" target="_blank" class="btn btn-outline-secondary mb-3">
-            <i class="bi bi-plus"></i> Tambah Relasi User Generic - Job Role
-        </a>
-
         @if (session('success'))
             <div class="alert alert-success">
                 <h4>Success:</h4>
@@ -22,30 +16,60 @@
             </div>
         @endif
 
-        <div class="form-group">
-            <label for="periode">Periode</label>
-            <select name="periode" id="periode" class="form-control">
-                <option value="">Silahkan Pilih Periode Data</option>
-                @foreach ($periodes as $periode)
-                    <option value="{{ $periode->id }}">{{ $periode->definisi }}</option>
-                @endforeach
-            </select>
-        </div>
+        <div class="card shadow-sm">
+            <div class="card-header d-flex flex-column flex-md-row align-items-md-center gap-2">
+                <h4 class="mb-0 flex-grow-1">Relationship: User Generic &amp; Job Role</h4>
+                <div class="d-flex gap-2 align-items-center">
+                    <a href="{{ route('user-generic-job-role.create') }}" target="_blank" class="btn btn-primary">
+                        <i class="bi bi-plus"></i> Tambah Relasi User Generic - Job Role
+                    </a>
+                    <div id="dtButtons" class="btn-group"></div>
+                    <div class="d-flex align-items-center gap-2">
+                        <label for="periode" class="mb-0 small text-nowrap">Periode</label>
+                        <select name="periode" id="periode" class="form-select form-select-sm">
+                            <option value="">Silahkan Pilih Periode Data</option>
+                            @foreach ($periodes as $periode)
+                                <option value="{{ $periode->id }}">{{ $periode->definisi }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                </div>
+            </div>
 
-        <table id="user_generic_jobrole_table" class="table table-bordered table-striped table-hover cell-border mt-3">
-            <thead>
-                <tr>
-                    <th>ID</th>
-                    <th width="10%">Perusahaan</th>
-                    <th width="15%">User Generic</th>
-                    <th width="15%">PIC</th>
-                    <th width="15%">Job Role ID</th>
-                    <th>Job Role</th>
-                    <th width="10%">Status</th>
-                    <th width="15%">Action</th>
-                </tr>
-            </thead>
-        </table>
+            <div class="card-body">
+                <table id="user_generic_jobrole_table"
+                    class="table table-bordered table-striped table-hover cell-border w-100">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th width="10%">Perusahaan</th>
+                            <th width="15%">User Generic</th>
+                            <th width="15%">PIC</th>
+                            <th width="15%">Job Role ID</th>
+                            <th>Job Role</th>
+                            <th width="10%">Status</th>
+                            <th width="17.5%">Action</th>
+                        </tr>
+                        <tr class="filters">
+                            <th></th>
+                            <th><input data-col="1" type="text" class="form-control form-control-sm"
+                                    placeholder="Perusahaan"></th>
+                            <th><input data-col="2" type="text" class="form-control form-control-sm"
+                                    placeholder="User Generic"></th>
+                            <th><input data-col="3" type="text" class="form-control form-control-sm" placeholder="PIC">
+                            </th>
+                            <th><input data-col="4" type="text" class="form-control form-control-sm"
+                                    placeholder="Job Role ID"></th>
+                            <th><input data-col="5" type="text" class="form-control form-control-sm"
+                                    placeholder="Job Role"></th>
+                            <th><input data-col="6" type="text" class="form-control form-control-sm"
+                                    placeholder="Status"></th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                </table>
+            </div>
+        </div>
     </div>
 
     <!-- Detail/Edit Modal -->
@@ -111,14 +135,32 @@
     </div>
 @endsection
 
+@section('header-scripts')
+    <link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.4.1/css/buttons.bootstrap5.min.css">
+@endsection
+
 @section('scripts')
+    <!-- Export deps -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js" crossorigin="anonymous"
+        referrerpolicy="no-referrer"></script>
+    <script src="https://cdn.datatables.net/buttons/2.4.1/js/dataTables.buttons.min.js"></script>
+    <script src="https://cdn.datatables.net/buttons/2.4.1/js/buttons.bootstrap5.min.js"></script>
+    <script src="https://cdn.datatables.net/buttons/2.4.1/js/buttons.html5.min.js"></script>
+
     <script>
         $(document).ready(function() {
-            // Initialize DataTable with no ajax source
-            var table = $('#user_generic_jobrole_table').DataTable({
+            const table = $('#user_generic_jobrole_table').DataTable({
                 processing: true,
                 serverSide: false,
-                ajax: false, // Don't load data initially
+                ajax: {
+                    url: "{{ route('user-generic-job-role.index') }}",
+                    data: function(d) {
+                        d.periode = $('#periode').val() || '';
+                    },
+                    dataSrc: function(json) {
+                        return json && json.data ? json.data : [];
+                    }
+                },
                 columns: [{
                         data: 'id',
                         name: 'id'
@@ -167,7 +209,7 @@
                             }
                         },
                         orderable: true,
-                        searchable: false
+                        searchable: true
                     },
                     {
                         data: null,
@@ -179,7 +221,7 @@
                                 <button class="btn btn-info btn-sm show-detail" data-id="${row.id}">
                                     <i class="bi bi-eye"></i> Detail
                                 </button>
-                                <a href="/relationship/generic-job-role/${row.id}/edit" target="_blank" class="btn btn-sm btn-warning">
+                                <a href="/relationship/generic-job_role/${row.id}/edit" target="_blank" class="btn btn-sm btn-warning">
                                     <i class="bi bi-pencil-square"></i> Edit
                                 </a>
                                 <button onclick="deleteRelationship(${row.id})" class="btn btn-sm btn-danger">
@@ -194,28 +236,80 @@
                 paging: true,
                 ordering: true,
                 pageLength: 10,
-                lengthMenu: [5, 10, 25, 50, 100],
+                lengthMenu: [
+                    [5, 10, 25, 50, 100, -1],
+                    [5, 10, 25, 50, 100, 'All']
+                ],
                 columnDefs: [{
                     targets: [0],
                     visible: false
                 }],
                 order: [
                     [6, 'desc']
-                ]
+                ],
+                layout: {
+                    top1Start: {
+                        div: {
+                            className: 'pageLength'
+                        }
+                    },
+                    top1End: {
+                        div: {
+                            className: 'search'
+                        }
+                    },
+                    bottom1Start: {
+                        div: {
+                            className: 'info'
+                        }
+                    },
+                    bottom1End: {
+                        div: {
+                            className: 'paging'
+                        }
+                    }
+                },
+                buttons: [{
+                    extend: 'excelHtml5',
+                    text: 'Export Excel',
+                    className: 'btn btn-success btn-sm',
+                    title: 'UserGeneric_JobRole',
+                    filename: 'UserGeneric_JobRole_' + new Date().toISOString().slice(0, 10),
+                    exportOptions: {
+                        columns: ':visible:not(:last-child)'
+                    }
+                }],
+                initComplete: function() {
+                    const api = this.api();
+                    const wrapper = $(api.table().container());
+
+                    // Place built-in controls into their layout slots (inside card body)
+                    wrapper.find('.dt-length').appendTo(wrapper.find('.pageLength').first());
+                    wrapper.find('.dt-search').appendTo(wrapper.find('.search').first());
+                    wrapper.find('.dt-info').appendTo(wrapper.find('.info').first());
+                    wrapper.find('.dt-paging').appendTo(wrapper.find('.paging').first());
+
+                    // Move Excel button to card header group
+                    api.buttons().container().appendTo('#dtButtons');
+
+                    // Column filters
+                    $('#user_generic_jobrole_table thead tr.filters input').on('keyup change',
+                        function() {
+                            const colIdx = $(this).data('col');
+                            const val = this.value;
+                            if (api.column(colIdx).search() !== val) {
+                                api.column(colIdx).search(val).draw();
+                            }
+                        });
+                }
             });
 
-            // Only load data when periode is selected
+            // Reload on periode change
             $('#periode').on('change', function() {
-                var periode = $(this).val();
-                if (periode) {
-                    table.ajax.url("{{ route('user-generic-job-role.index') }}?periode=" + periode).load();
-                } else {
-                    table.clear().draw(); // Clear table if no periode selected
-                }
+                table.ajax.reload();
             });
         });
 
-        // Example delete function (unchanged)
         function deleteRelationship(id) {
             Swal.fire({
                 title: "Apakah anda yakin?",
@@ -229,7 +323,7 @@
             }).then((result) => {
                 if (result.isConfirmed) {
                     $.ajax({
-                        url: '/relationship/generic-job-role/' + id,
+                        url: '/relationship/generic-job_role/' + id,
                         type: 'DELETE',
                         data: {
                             _token: '{{ csrf_token() }}'
@@ -244,7 +338,7 @@
                             });
                             $('#user_generic_jobrole_table').DataTable().ajax.reload();
                         },
-                        error: function(xhr) {
+                        error: function() {
                             Swal.fire({
                                 title: "Error!",
                                 text: "Failed to delete record.",
@@ -256,11 +350,10 @@
             });
         }
 
-        // Show detail (view mode)
         $(document).on('click', '.show-detail', function() {
             var id = $(this).data('id');
             $.ajax({
-                url: '/relationship/generic-job-role/' + id,
+                url: '/relationship/generic-job_role/' + id,
                 method: 'GET',
                 success: function(response) {
                     $('#modal-id').val(id);
@@ -279,14 +372,12 @@
                         .keterangan_flagged.replace(/\n/g, '<br>') : '-');
                     $('#modal-keterangan-flagged-edit').val(response.keterangan_flagged || '');
 
-                    // Show view, hide edit
                     $('#modal-flagged-view, #modal-keterangan-flagged-view').removeClass('d-none');
                     $('#modal-flagged-edit, #modal-keterangan-flagged-edit, #save-flagged-btn')
                         .addClass('d-none');
                     $('#edit-flagged-btn').removeClass('d-none');
 
-                    var modal = new bootstrap.Modal(document.getElementById('detailModal'));
-                    modal.show();
+                    new bootstrap.Modal(document.getElementById('detailModal')).show();
                 },
                 error: function(xhr) {
                     Swal.fire({
@@ -299,27 +390,24 @@
             });
         });
 
-        // Switch to edit mode
         $('#edit-flagged-btn').on('click', function() {
             $('#modal-flagged-view, #modal-keterangan-flagged-view').addClass('d-none');
             $('#modal-flagged-edit, #modal-keterangan-flagged-edit, #save-flagged-btn').removeClass('d-none');
             $(this).addClass('d-none');
         });
 
-        // Save flagged/keterangan_flagged
         $('#flaggedForm').on('submit', function(e) {
             e.preventDefault();
             var id = $('#modal-id').val();
             $.ajax({
-                url: '/relationship/generic-job-role/' + id + '/flagged',
+                url: '/relationship/generic-job_role/' + id + '/flagged',
                 method: 'POST',
                 data: {
                     _token: '{{ csrf_token() }}',
                     flagged: $('#modal-flagged-edit').val(),
                     keterangan_flagged: $('#modal-keterangan-flagged-edit').val()
                 },
-                success: function(response) {
-                    // Optionally reload table or update row
+                success: function() {
                     $('#detailModal').modal('hide');
                     location.reload();
                 },
