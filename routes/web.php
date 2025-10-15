@@ -458,6 +458,7 @@ Route::middleware(['auth'])->group(function () {
     Route::put('cost-center/prev-user/full-update', [CostCenterController::class, 'full_update_prev_user'])->name('prev-user.full-update');
     Route::resource('cost-center', CostCenterController::class);
 
+    Route::get('relationship/nik-job/users-by-periode', [NIKJobController::class, 'usersByPeriode'])->name('nik-job.users-by-periode');
     Route::get('relationship/nik-job/get-by-periode-id', [NIKJobController::class, 'getNIKJobRolesByPeriodeId'])->name('nik-job.get-by-periode');
     Route::get('relationship/nik-job/without-job-role', [NIKJobController::class, 'indexWithoutJobRole'])->name('nik-job.null-relationship');
     Route::get('relationship/nik-job/without-job-role/export', [NIKJobController::class, 'exportWithoutJobRole'])->name('nik-job.without.export');

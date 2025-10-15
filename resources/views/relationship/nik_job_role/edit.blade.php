@@ -192,6 +192,53 @@
                     allowClear: true
                 });
 
+                const $periode = $('#periode_id');
+                const $company = $('#companyDropdown');
+                const $nik = $('#nik');
+
+                function lockNik() {
+                    $nik.prop('disabled', true).empty().append('<option value="">Select User</option>').trigger(
+                        'change');
+                }
+
+                function loadNikByPeriodeCompany(preselect = null) {
+                    const pid = $periode.val();
+                    if (!pid) {
+                        lockNik();
+                        return;
+                    }
+                    const company = $company.val();
+
+                    const params = new URLSearchParams({
+                        periode_id: pid
+                    });
+                    if (company) params.append('company', company);
+
+                    fetch(`{{ route('nik-job.users-by-periode') }}?` + params.toString(), {
+                            headers: {
+                                'Accept': 'application/json'
+                            }
+                        })
+                        .then(r => r.json())
+                        .then(items => {
+                            $nik.empty().append('<option value=""></option>');
+                            items.forEach(it => $nik.append(new Option(it.text, it.id)));
+                            $nik.prop('disabled', false);
+                            if (preselect) {
+                                $nik.val(preselect).trigger('change');
+                            } else {
+                                $nik.trigger('change');
+                            }
+                        })
+                        .catch(() => lockNik());
+                }
+
+                // Reload NIK when periode or company changes
+                $periode.on('change', () => loadNikByPeriodeCompany());
+                $company.on('change', () => {
+                    if ($periode.val()) loadNikByPeriodeCompany(@json($nikJobRole->nik));
+                });
+
                 // Get default values from server
                 const defaultCompany = "{{ $selectedCompanyId }}";
                 const defaultKompartemen = "{{ $nikJobRole->jobRole->kompartemen_id ?? '' }}";

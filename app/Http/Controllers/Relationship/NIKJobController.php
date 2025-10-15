@@ -33,9 +33,19 @@ class NIKJobController extends Controller
      */
     public function create()
     {
+        $userCompany = auth()->user()->loginDetail->company_code ?? null;
+        $companyShortname = Company::where('company_code', $userCompany)->value('shortname');
+
+        if ($userCompany && $userCompany !== 'A000') {
+            // If the user is associated with a specific company (not 'A000'), limit to that company
+            $companies = Company::where('company_code', $userCompany)->get();
+        } else {
+            // If the user is associated with 'A000', show all companies
+            $companies = Company::all();
+        }
+
         $periodes = Periode::select('id', 'definisi')->get();
         $userNIKs = userNIK::select('id', 'user_code')->get();
-        $companies  = Company::all();  // or ->select('id','name')->get();
 
         return view('relationship.nik_job_role.create', compact('periodes', 'companies', 'userNIKs'));
     }
@@ -179,6 +189,42 @@ class NIKJobController extends Controller
         //
     }
 
+    public function usersByPeriode(Request $request)
+    {
+        $periodeId = $request->query('periode_id');
+        if (!$periodeId) {
+            return response()->json([]);
+        }
+
+        // Accept company filter (company_code)
+        $userCompany = auth()->user()->loginDetail->company_code ?? null;
+        $companyShortname = Company::where('company_code', $userCompany)->value('shortname');
+        if ($userCompany == 'A000') {
+            $companyShortname = null; // A000 => no filter
+        }
+
+        $users = userNIK::query()
+            ->where('periode_id', $periodeId)
+            ->when($companyShortname, fn($q) => $q->where('group', $companyShortname))
+            ->with(['unitKerja.kompartemen', 'unitKerja.departemen'])
+            ->orderBy('user_code')
+            ->get();
+
+        $data = $users->map(function ($u) {
+            $uk = $u->unitKerja;
+            $komp = $uk?->kompartemen?->nama;
+            $dept = $uk?->departemen?->nama;
+            $suffix = $uk
+                ? ($uk->nama . ' | ' . ($komp ? "Kompartemen: $komp - " : '') . ($dept ? "Departemen: $dept" : 'Belum ada Data Karyawan'))
+                : 'Belum ada Data Karyawan';
+            return [
+                'id'   => $u->user_code,
+                'text' => $u->user_code . ' - ' . $suffix,
+            ];
+        });
+
+        return response()->json($data);
+    }
 
     /**
      * Get NIK Job Roles based on Periode ID from request input
