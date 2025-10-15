@@ -177,251 +177,337 @@
 
         function initializeDropdowns() {
             $(document).ready(function() {
-                        // Initialize Select2
-                        $('#nik').select2({
-                            placeholder: 'Select User',
-                            allowClear: true
-                        });
+                // Initialize Select2
+                $('#nik').select2({
+                    placeholder: 'Select User',
+                    allowClear: true
+                });
 
-                        $('#job_role_id').select2({
-                            placeholder: 'Select Job Role',
-                            allowClear: true
-                        });
+                $('#job_role_id').select2({
+                    placeholder: 'Select Job Role',
+                    allowClear: true
+                });
 
-                        // Get default values from server
-                        const defaultCompany = "{{ $selectedCompanyId }}";
-                        const defaultKompartemen = "{{ $nikJobRole->jobRole->kompartemen_id ?? '' }}";
-                        const defaultDepartemen = "{{ $nikJobRole->jobRole->departemen_id ?? '' }}";
-                        const defaultJobRole = "{{ $nikJobRole->job_role_id }}";
+                // Get default values from server
+                const defaultCompany = "{{ $selectedCompanyId }}";
+                const defaultKompartemen = "{{ $nikJobRole->jobRole->kompartemen_id ?? '' }}";
+                const defaultDepartemen = "{{ $nikJobRole->jobRole->departemen_id ?? '' }}";
+                const defaultJobRole = "{{ $nikJobRole->job_role_id }}";
 
-                        console.log('Default values:', {
-                            company: defaultCompany,
-                            kompartemen: defaultKompartemen,
-                            departemen: defaultDepartemen,
-                            jobRole: defaultJobRole
-                        });
+                console.log('Default values:', {
+                    company: defaultCompany,
+                    kompartemen: defaultKompartemen,
+                    departemen: defaultDepartemen,
+                    jobRole: defaultJobRole
+                });
 
-                        // Company dropdown handler
-                        $('#companyDropdown').on('change', function() {
-                            const companyId = $(this).val();
-                            console.log('Company changed to:', companyId);
+                // Flag to prevent cascade during initial setup
+                let isInitializing = true;
 
-                            if (!companyId) {
-                                resetDropdowns(['#kompartemenDropdown', '#departemenDropdown', '#job_role_id']);
-                                return;
-                            }
+                // Company dropdown handler
+                $('#companyDropdown').on('change', function() {
+                    const companyId = $(this).val();
+                    console.log('Company changed to:', companyId);
 
-                            const company = window.masterData.find(c => c.company_id === companyId);
-                            if (!company) return;
+                    if (!companyId) {
+                        if (!isInitializing) {
+                            resetDropdowns(['#kompartemenDropdown', '#departemenDropdown', '#job_role_id']);
+                        }
+                        return;
+                    }
 
-                            // Populate Kompartemen dropdown
-                            populateKompartemenDropdown(company.kompartemen);
+                    const company = window.masterData.find(c => c.company_id === companyId);
+                    if (!company) return;
 
-                            // Only show company level roles
-                            populateJobRolesDropdown(company.job_roles_without_relations);
-                        });
+                    // Populate Kompartemen dropdown
+                    populateKompartemenDropdown(company.kompartemen);
 
-                        // Kompartemen dropdown handler
-                        $('#kompartemenDropdown').on('change', function() {
-                            const companyId = $('#companyDropdown').val();
-                            const kompartemenId = $(this).val();
-                            console.log('Kompartemen changed to:', kompartemenId);
+                    // Only show company level roles if not initializing
+                    if (!isInitializing) {
+                        populateJobRolesDropdown(company.job_roles_without_relations);
+                    }
+                });
 
-                            if (!kompartemenId) {
-                                resetDropdowns(['#departemenDropdown', '#job_role_id']);
-                                return;
-                            }
+                // Kompartemen dropdown handler
+                $('#kompartemenDropdown').on('change', function() {
+                    const companyId = $('#companyDropdown').val();
+                    const kompartemenId = $(this).val();
+                    console.log('Kompartemen changed to:', kompartemenId);
 
-                            const company = window.masterData.find(c => c.company_id === companyId);
-                            const kompartemen = company?.kompartemen.find(k => k.kompartemen_id === kompartemenId);
-                            if (!kompartemen) return;
+                    if (!kompartemenId) {
+                        if (!isInitializing) {
+                            resetDropdowns(['#departemenDropdown', '#job_role_id']);
+                        }
+                        return;
+                    }
 
-                            // Populate Departemen under selected Kompartemen
-                            populateDepartemenDropdown(kompartemen.departemen);
+                    const company = window.masterData.find(c => c.company_id === companyId);
+                    const kompartemen = company?.kompartemen.find(k => k.kompartemen_id === kompartemenId);
+                    if (!kompartemen) return;
 
-                            // Show company + kompartemen level roles
+                    // Populate Departemen under selected Kompartemen
+                    populateDepartemenDropdown(kompartemen.departemen);
+
+                    // Show company + kompartemen level roles if not initializing
+                    if (!isInitializing) {
+                        const combinedRoles = [
+                            ...company.job_roles_without_relations,
+                            ...kompartemen.job_roles
+                        ];
+                        populateJobRolesDropdown(combinedRoles);
+                    }
+                });
+
+                // Departemen dropdown handler
+                $('#departemenDropdown').on('change', function() {
+                    const companyId = $('#companyDropdown').val();
+                    const kompartemenId = $('#kompartemenDropdown').val();
+                    const departemenId = $(this).val();
+                    console.log('Departemen changed to:', departemenId);
+
+                    if (!departemenId && !isInitializing) {
+                        // Reset job roles to kompartemen level
+                        const company = window.masterData.find(c => c.company_id === companyId);
+                        const kompartemen = company?.kompartemen.find(k => k.kompartemen_id ===
+                            kompartemenId);
+                        if (kompartemen) {
                             const combinedRoles = [
                                 ...company.job_roles_without_relations,
                                 ...kompartemen.job_roles
                             ];
                             populateJobRolesDropdown(combinedRoles);
-                        });
-
-                        // Departemen dropdown handler
-                        $('#departemenDropdown').on('change', function() {
-                            const companyId = $('#companyDropdown').val();
-                            const kompartemenId = $('#kompartemenDropdown').val();
-                            const departemenId = $(this).val();
-                            console.log('Departemen changed to:', departemenId);
-
-                            const company = window.masterData.find(c => c.company_id === companyId);
-                            let departemen;
-
-                            if (kompartemenId) {
-                                const kompartemen = company?.kompartemen.find(k => k.kompartemen_id ===
-                                    kompartemenId);
-                                departemen = kompartemen?.departemen.find(d => d.departemen_id === departemenId);
-                            } else {
-                                departemen = company?.departemen_without_kompartemen.find(d => d.departemen_id ===
-                                    departemenId);
-                            }
-
-                            if (!departemen) return;
-
-                            // All levels combined with proper grouping
-                            const combinedRoles = [
-                                ...company.job_roles_without_relations,
-                                ...(kompartemenId ? company.kompartemen.find(k => k.kompartemen_id ===
-                                    kompartemenId)?.job_roles || [] : []),
-                                ...departemen.job_roles
-                            ];
-
-                            populateJobRolesDropdown(combinedRoles);
-                        });
-
-                        // Helper functions
-                        function populateKompartemenDropdown(kompartemenList) {
-                            const dropdown = $('#kompartemenDropdown');
-                            dropdown.empty().append('<option value="">-- Select Kompartemen --</option>');
-
-                            if (kompartemenList?.length) {
-                                dropdown.prop('disabled', false);
-                                const sortedList = [...kompartemenList].sort((a, b) => a.nama.localeCompare(b.nama));
-                                sortedList.forEach(item => {
-                                    const isSelected = item.kompartemen_id === defaultKompartemen;
-                                    dropdown.append(
-                                        `<option value="${item.kompartemen_id}" ${isSelected ? 'selected' : ''}>${item.nama}</option>`
-                                        );
-                                });
-                            } else {
-                                dropdown.prop('disabled', true);
-                            }
                         }
+                        return;
+                    }
 
-                        function populateDepartemenDropdown(departemenList) {
-                            const dropdown = $('#departemenDropdown');
-                            dropdown.empty().append('<option value="">-- Select Departemen --</option>');
+                    if (!departemenId) return;
 
-                            if (departemenList?.length) {
-                                dropdown.prop('disabled', false);
-                                const sortedList = [...departemenList].sort((a, b) => a.nama.localeCompare(b.nama));
-                                sortedList.forEach(item => {
-                                    const isSelected = item.departemen_id === defaultDepartemen;
-                                    dropdown.append(
-                                        `<option value="${item.departemen_id}" ${isSelected ? 'selected' : ''}>${item.nama}</option>`
-                                        );
-                                });
-                            } else {
-                                dropdown.prop('disabled', true);
-                            }
+                    const company = window.masterData.find(c => c.company_id === companyId);
+                    let departemen;
+
+                    if (kompartemenId) {
+                        const kompartemen = company?.kompartemen.find(k => k.kompartemen_id ===
+                            kompartemenId);
+                        departemen = kompartemen?.departemen.find(d => d.departemen_id === departemenId);
+                    } else {
+                        departemen = company?.departemen_without_kompartemen.find(d => d.departemen_id ===
+                            departemenId);
+                    }
+
+                    if (!departemen) return;
+
+                    // All levels combined with proper grouping if not initializing
+                    if (!isInitializing) {
+                        const combinedRoles = [
+                            ...company.job_roles_without_relations,
+                            ...(kompartemenId ? company.kompartemen.find(k => k.kompartemen_id ===
+                                kompartemenId)?.job_roles || [] : []),
+                            ...departemen.job_roles
+                        ];
+                        populateJobRolesDropdown(combinedRoles);
+                    }
+                });
+
+                // Helper functions
+                function populateKompartemenDropdown(kompartemenList) {
+                    const dropdown = $('#kompartemenDropdown');
+                    dropdown.empty().append('<option value="">-- Select Kompartemen --</option>');
+
+                    if (kompartemenList?.length) {
+                        dropdown.prop('disabled', false);
+                        const sortedList = [...kompartemenList].sort((a, b) => a.nama.localeCompare(b.nama));
+                        sortedList.forEach(item => {
+                            dropdown.append(`<option value="${item.kompartemen_id}">${item.nama}</option>`);
+                        });
+                    } else {
+                        dropdown.prop('disabled', true);
+                    }
+                }
+
+                function populateDepartemenDropdown(departemenList) {
+                    const dropdown = $('#departemenDropdown');
+                    dropdown.empty().append('<option value="">-- Select Departemen --</option>');
+
+                    if (departemenList?.length) {
+                        dropdown.prop('disabled', false);
+                        const sortedList = [...departemenList].sort((a, b) => a.nama.localeCompare(b.nama));
+                        sortedList.forEach(item => {
+                            dropdown.append(`<option value="${item.departemen_id}">${item.nama}</option>`);
+                        });
+                    } else {
+                        dropdown.prop('disabled', true);
+                    }
+                }
+
+                function populateJobRolesDropdown(jobRoles) {
+                    const dropdown = $('#job_role_id');
+                    dropdown.empty().append('<option value="">-- Select Job Role --</option>');
+
+                    if (!jobRoles?.length) {
+                        dropdown.prop('disabled', true);
+                        return;
+                    }
+
+                    // Create optgroup structure
+                    const groups = {
+                        company: {
+                            label: 'Company Level Job Roles',
+                            roles: []
+                        },
+                        kompartemen: {
+                            label: 'Kompartemen Level Job Roles',
+                            roles: []
+                        },
+                        departemen: {
+                            label: 'Departemen Level Job Roles',
+                            roles: []
                         }
+                    };
 
-                        function populateJobRolesDropdown(jobRoles) {
-                            const dropdown = $('#job_role_id');
-                            dropdown.empty().append('<option value="">-- Select Job Role --</option>');
+                    const currentKompartemenId = $('#kompartemenDropdown').val();
+                    const currentDepartemenId = $('#departemenDropdown').val();
+                    const companyId = $('#companyDropdown').val();
 
-                            if (!jobRoles?.length) {
-                                dropdown.prop('disabled', true);
-                                return;
-                            }
+                    const company = window.masterData.find(c => c.company_id === companyId);
+                    if (!company) return;
 
-                            // Create optgroup structure
-                            const groups = {
-                                company: {
-                                    label: 'Company Level Job Roles',
-                                    roles: []
-                                },
-                                kompartemen: {
-                                    label: 'Kompartemen Level Job Roles',
-                                    roles: []
-                                },
-                                departemen: {
-                                    label: 'Departemen Level Job Roles',
-                                    roles: []
+                    // Group based on source location in JSON structure
+                    jobRoles.forEach(role => {
+                        if (role.status !== 'Active') return;
+
+                        if (company.job_roles_without_relations.some(r => r.id === role.id)) {
+                            groups.company.roles.push(role);
+                        } else if (currentKompartemenId) {
+                            const kompartemen = company.kompartemen.find(k => k.kompartemen_id ===
+                                currentKompartemenId);
+                            if (kompartemen?.job_roles.some(r => r.id === role.id)) {
+                                groups.kompartemen.roles.push(role);
+                            } else if (currentDepartemenId) {
+                                const departemen = kompartemen?.departemen.find(d => d.departemen_id ===
+                                    currentDepartemenId);
+                                if (departemen?.job_roles.some(r => r.id === role.id)) {
+                                    groups.departemen.roles.push(role);
                                 }
-                            };
+                            }
+                        }
+                    });
 
-                            const currentKompartemenId = $('#kompartemenDropdown').val();
-                            const currentDepartemenId = $('#departemenDropdown').val();
-                            const companyId = $('#companyDropdown').val();
+                    // Add optgroups and options
+                    Object.values(groups).forEach(group => {
+                        if (group.roles.length > 0) {
+                            const optgroup = $('<optgroup>', {
+                                label: group.label
+                            });
 
-                            const company = window.masterData.find(c => c.company_id === companyId);
-                            if (!company) return;
+                            group.roles.forEach(role => {
+                                optgroup.append($('<option>', {
+                                    value: role.job_role_id,
+                                    text: role.nama
+                                }));
+                            });
 
-                            // Group based on source location in JSON structure
-                            jobRoles.forEach(role => {
-                                if (role.status !== 'Active') return;
+                            dropdown.append(optgroup);
+                        }
+                    });
 
-                                if (company.job_roles_without_relations.some(r => r.id === role.id)) {
-                                    groups.company.roles.push(role);
-                                } else if (currentKompartemenId) {
-                                    const kompartemen = company.kompartemen.find(k => k.kompartemen_id ===
-                                        currentKompartemenId);
-                                    if (kompartemen?.job_roles.some(r => r.id === role.id)) {
-                                        groups.kompartemen.roles.push(role);
-                                    } else if (currentDepartemenId) {
-                                        const departemen = kompartemen?.departemen.find(d => d.departemen_id ===
-                                            currentDepartemenId);
-                                        if (departemen?.job_roles.some(r => r.id === role.id)) {
-                                            groups.departemen.roles.push(role);
+                    dropdown.prop('disabled', false);
+                }
+
+                function resetDropdowns(selectors) {
+                    selectors.forEach(selector => {
+                        $(selector)
+                            .empty()
+                            .append('<option value="">-- Select --</option>')
+                            .prop('disabled', true);
+                    });
+                }
+
+                // Initialize with default values
+                function setInitialValues() {
+                    // Set company first
+                    if (defaultCompany) {
+                        $('#companyDropdown').val(defaultCompany).trigger('change');
+                    }
+
+                    // Wait for company data to load, then set kompartemen
+                    setTimeout(() => {
+                        if (defaultKompartemen) {
+                            $('#kompartemenDropdown').val(defaultKompartemen).trigger('change');
+                        }
+
+                        // Wait for kompartemen data to load, then set departemen
+                        setTimeout(() => {
+                            if (defaultDepartemen) {
+                                $('#departemenDropdown').val(defaultDepartemen).trigger('change');
+                            }
+
+                            // Wait for departemen data to load, then populate and set job roles
+                            setTimeout(() => {
+                                // Now populate job roles with all appropriate levels
+                                const companyId = $('#companyDropdown').val();
+                                const kompartemenId = $('#kompartemenDropdown').val();
+                                const departemenId = $('#departemenDropdown').val();
+
+                                const company = window.masterData.find(c => c.company_id ===
+                                    companyId);
+                                if (company) {
+                                    let combinedRoles = [...company
+                                        .job_roles_without_relations
+                                    ];
+
+                                    if (kompartemenId) {
+                                        const kompartemen = company.kompartemen.find(k => k
+                                            .kompartemen_id === kompartemenId);
+                                        if (kompartemen) {
+                                            combinedRoles = [...combinedRoles, ...
+                                                kompartemen.job_roles
+                                            ];
+
+                                            if (departemenId) {
+                                                const departemen = kompartemen.departemen
+                                                    .find(d => d.departemen_id ===
+                                                        departemenId);
+                                                if (departemen) {
+                                                    combinedRoles = [...combinedRoles, ...
+                                                        departemen.job_roles
+                                                    ];
+                                                }
+                                            }
+                                        }
+                                    } else if (departemenId) {
+                                        const departemen = company
+                                            .departemen_without_kompartemen.find(d => d
+                                                .departemen_id === departemenId);
+                                        if (departemen) {
+                                            combinedRoles = [...combinedRoles, ...departemen
+                                                .job_roles
+                                            ];
                                         }
                                     }
+
+                                    populateJobRolesDropdown(combinedRoles);
+
+                                    // Set the job role value
+                                    setTimeout(() => {
+                                        if (defaultJobRole) {
+                                            console.log('Setting job role to:',
+                                                defaultJobRole);
+                                            $('#job_role_id').val(defaultJobRole)
+                                                .trigger('change');
+                                        }
+
+                                        // Mark initialization as complete
+                                        isInitializing = false;
+                                    }, 100);
                                 }
-                            });
+                            }, 300);
+                        }, 300);
+                    }, 300);
+                }
 
-                            // Add optgroups and options
-                            Object.values(groups).forEach(group => {
-                                if (group.roles.length > 0) {
-                                    const optgroup = $('<optgroup>', {
-                                        label: group.label
-                                    });
-
-                                    group.roles.forEach(role => {
-                                        const isSelected = role.job_role_id === defaultJobRole;
-                                        console.log(
-                                            `Comparing role.job_role_id (${role.job_role_id}) with defaultJobRole (${defaultJobRole}): ${isSelected}`
-                                            );
-
-                                        optgroup.append($('<option>', {
-                                            value: role.job_role_id,
-                                            text: role.nama,
-                                            selected: isSelected
-                                        }));
-                                    });
-
-                                    dropdown.append(optgroup);
-                                }
-                            });
-
-                            dropdown.prop('disabled', false);
-                            dropdown.trigger('change');
-                        }
-
-                        function resetDropdowns(selectors) {
-                            selectors.forEach(selector => {
-                                $(selector)
-                                    .empty()
-                                    .append('<option value="">-- Select --</option>')
-                                    .prop('disabled', true);
-                            });
-                        }
-
-                        // Set initial values and trigger cascade with proper timing
-                        if (defaultCompany) {
-                            $('#companyDropdown').val(defaultCompany).trigger('change');
-
-                            // Use a more reliable timing approach
-                            const setInitialValues = () => {
-                                    if (defaultKompartemen) {
-                                        $('#kompartemenDropdown').val(defaultKompartemen).trigger('change');
-
-                                        setTimeout(() => {
-                                                    if (defaultDepartemen) {
-                                                        $('#departemenDropdown').val(defaultDepartemen).trigger('change');
-                                                    }
-
-                                                    // Set job role after all hierarchy is loaded
-                                                    setTimeout(() => {
-                                                                if (defaultJobRole) {
-                                                                    console.log('Setting job role to:', defaultJobRole);
-                                                                    $('#job_role_id').val(defaultJobRole).trigger('change');
+                // Start the initialization process
+                setInitialValues();
+            });
+        }
+    </script>
+@endsection
