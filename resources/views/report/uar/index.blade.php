@@ -97,11 +97,11 @@
                         <td id="jumlah-awal-user-cell"><strong>0</strong></td>
                     </tr>
                     <tr>
-                        <td>Jumlah User Dihapus</td>
+                        <td>Jumlah User Berubah</td>
                         <td></td>
                     </tr>
                     <tr>
-                        <td>Jumlah User Baru</td>
+                        <td>Jumlah User yang Belum Terdata (Baru)</td>
                         <td></td>
                     </tr>
                     <tr>

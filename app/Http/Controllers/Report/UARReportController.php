@@ -808,13 +808,13 @@ class UARReportController extends Controller
         $reviewTable->addCell(4000)->addText('Cost Center', ['size' => 8], ['space' => ['after' => 0]]);
         $reviewTable->addCell(8000)->addText($cost_center ? $cost_center : '-', ['size' => 8], ['space' => ['after' => 0]]);
         $reviewTable->addRow();
-        $reviewTable->addCell(4000)->addText('Jumlah Awal User', ['size' => 8], ['space' => ['after' => 0]]);
+        $reviewTable->addCell(4000)->addText('Jumlah User', ['size' => 8], ['space' => ['after' => 0]]);
         $reviewTable->addCell(8000)->addText($jumlahAwalUser, ['italic' => true, 'size' => 8], ['space' => ['after' => 0]]);
         $reviewTable->addRow();
-        $reviewTable->addCell(4000)->addText('Jumlah User Dihapus', ['size' => 8], ['space' => ['after' => 0]]);
+        $reviewTable->addCell(4000)->addText('Jumlah User Berubah', ['size' => 8], ['space' => ['after' => 0]]);
         $reviewTable->addCell(8000)->addText('', ['size' => 8], ['space' => ['after' => 0]]);
         $reviewTable->addRow();
-        $reviewTable->addCell(4000)->addText('Jumlah User Baru', ['size' => 8], ['space' => ['after' => 0]]);
+        $reviewTable->addCell(4000)->addText('Jumlah User yang Belum Terdata (Baru)', ['size' => 8], ['space' => ['after' => 0]]);
         $reviewTable->addCell(8000)->addText('', ['size' => 8], ['space' => ['after' => 0]]);
         $reviewTable->addRow();
         $reviewTable->addCell(4000)->addText('Jumlah Akhir User', ['size' => 8], ['space' => ['after' => 0]]);
