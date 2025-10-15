@@ -30,7 +30,7 @@
                 </div>
             </div>
             <div class="card-body">
-                <div class="table-responsive">
+                <div class="table-responsive table-sticky-header">
                     <table class="table table-bordered align-middle">
                         <thead class="table-light align-top">
                             <tr>
@@ -80,12 +80,55 @@
     </div>
 @endsection
 
+@section('header-scripts')
+    <style>
+        /* Make the table body scroll while keeping header visible */
+        .table-sticky-header {
+            /* Height will be adjusted by JS to fit viewport; this is a safe fallback */
+            max-height: 70vh;
+            overflow-y: auto;
+        }
+
+        /* Sticky header cells */
+        .table-sticky-header thead th {
+            position: sticky;
+            top: 0;
+            z-index: 2;
+            /* above body cells */
+            background-color: #f8f9fa;
+            /* matches .table-light */
+        }
+
+        /* Ensure shadow/border is visible on sticky header */
+        .table-sticky-header thead {
+            position: sticky;
+            top: 0;
+            z-index: 2;
+        }
+    </style>
+@endsection
+
 @section('scripts')
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             const select = document.getElementById('periode-select');
             const hidden = document.querySelector('#refresh-form input[name="periode_id"]');
             select.addEventListener('change', () => hidden.value = select.value);
+
+            // Adjust scrollable height to viewport so header stays visible on zoom/resize
+            const container = document.querySelector('.table-sticky-header');
+
+            function adjustMaxHeight() {
+                if (!container) return;
+                const rect = container.getBoundingClientRect();
+                const bottomPadding = 24; // space to card bottom
+                const max = window.innerHeight - rect.top - bottomPadding;
+                container.style.maxHeight = (max > 200 ? max : 200) + 'px';
+            }
+
+            // Initial and on resize (zoom triggers resize too)
+            adjustMaxHeight();
+            window.addEventListener('resize', adjustMaxHeight);
         });
     </script>
 @endsection

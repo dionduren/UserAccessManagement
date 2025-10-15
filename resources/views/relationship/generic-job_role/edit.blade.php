@@ -80,19 +80,68 @@
 
 @section('scripts')
     <script>
+        // Whether current user is A000 (can see roles without job_role_id)
+        window.isSuper =
+            {{ auth()->check() && optional(auth()->user()->loginDetail)->company_code === 'A000' ? 'true' : 'false' }};
+
         $(document).ready(function() {
-            $('#job_role_id, #user_generic_id, #periode_id').select2({
-                // placeholder: 'Pilih',
-                // allowClear: true
-            });
+            $('#job_role_id, #user_generic_id, #periode_id').select2({});
 
-            // Set job_role_name when job_role_id changes
+            function sortAndFilterJobRoles() {
+                const $sel = $('#job_role_id');
+                // preserve current/initial selection
+                const selectedVal = $sel.val() || '{{ $nikJobRole->job_role_id }}';
+
+                const options = [];
+                $sel.find('option').each(function(idx) {
+                    // keep placeholder at index 0
+                    if (idx === 0) return;
+                    const val = ($(this).attr('value') ?? '').trim();
+                    const text = ($(this).text() ?? '').trim();
+                    options.push({
+                        val,
+                        text,
+                        hasId: val !== '' // empty value means no job_role_id
+                    });
+                });
+
+                // split by presence of job_role_id
+                let withId = options.filter(o => o.hasId);
+                let withoutId = options.filter(o => !o.hasId);
+
+                // sort by name within each group
+                withId.sort((a, b) => a.text.localeCompare(b.text));
+                withoutId.sort((a, b) => a.text.localeCompare(b.text));
+
+                // for non-A000 users, drop "withoutId"
+                const finalOptions = window.isSuper ? withId.concat(withoutId) : withId;
+
+                // rebuild dropdown (preserve first placeholder)
+                const placeholder = $sel.find('option').first().clone();
+                $sel.empty().append(placeholder);
+                finalOptions.forEach(o => {
+                    $sel.append(new Option(o.text, o.val, false, false));
+                });
+
+                // restore selection if still available
+                if (selectedVal && $sel.find(`option[value="${selectedVal}"]`).length) {
+                    $sel.val(selectedVal).trigger('change');
+                } else if (!window.isSuper && (!selectedVal || selectedVal === '')) {
+                    // selected was a no-id role but user is not A000; leave unselected
+                    $sel.val('').trigger('change');
+                }
+            }
+
+            // run once on load and whenever the dropdown opens (defense in depth)
+            sortAndFilterJobRoles();
+            $('#job_role_id').on('select2:open', sortAndFilterJobRoles);
+
+            // keep the name box synced
             $('#job_role_id').on('change', function() {
-                var nama = $(this).find('option:selected').data('nama') || '';
-                $('#job_role_name').val(nama);
+                var nama = $(this).find('option:selected').data('nama') || $(this).find('option:selected')
+                    .text().split(' - ').slice(1).join(' - ');
+                $('#job_role_name').val(nama || '');
             });
-
-            // Trigger change on page load to set job_role_name
             $('#job_role_id').trigger('change');
         });
     </script>

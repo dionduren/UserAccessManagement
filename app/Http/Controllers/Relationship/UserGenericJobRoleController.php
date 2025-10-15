@@ -110,11 +110,20 @@ class UserGenericJobRoleController extends Controller
         $periodes = Periode::select('id', 'definisi')->get();
 
         $userGeneric = userGeneric::with(['NIKJobRole.jobRole'])->findOrFail($id);
-        $jobRoles = JobRole::select('job_role_id', 'nama')->get();
         $nikJobRole = $userGeneric->NIKJobRole->first();
         if (!$nikJobRole) {
             return redirect()->route('user-generic-job-role.index')->with('error', 'Tidak ada Job Role yang terkait dengan User Generic ini.');
         }
+
+        $isSuper = auth()->check() && optional(auth()->user()->loginDetail)->company_code === 'A000';
+
+        // assuming $jobRoles is a Collection of JobRole models
+        $jobRoles = JobRole::query()
+            ->when(!$isSuper, fn($q) => $q->whereNotNull('job_role_id'))
+            ->orderByRaw('CASE WHEN job_role_id IS NULL OR job_role_id = \'\' THEN 1 ELSE 0 END') // no-id last
+            ->orderBy('nama')
+            ->get(['id', 'job_role_id', 'nama', 'status', 'flagged']); // adjust fields as needed
+
         return view('relationship.generic-job_role.edit', compact('userGeneric', 'jobRoles', 'nikJobRole', 'userGenerics', 'periodes'));
     }
 

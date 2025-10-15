@@ -81,7 +81,7 @@ class UIDNIKUnitKerjaController extends Controller
 
         $row = UserNIKUnitKerja::create($data);
 
-        return redirect()->route('unit-kerja.user-nik.index')->with('success', 'Created: ID ' . $row->id);
+        return redirect()->route('unit_kerja.user_nik.index')->with('success', 'Created: ID ' . $row->id);
     }
 
     public function show(UserNIKUnitKerja $userNIKUnitKerja)
@@ -134,7 +134,7 @@ class UIDNIKUnitKerjaController extends Controller
 
         $userNIKUnitKerja->update($data);
 
-        return redirect()->route('unit-kerja.user-nik.index')->with('success', 'Updated: ID ' . $userNIKUnitKerja->id);
+        return redirect()->route('unit_kerja.user_nik.index')->with('success', 'Updated: ID ' . $userNIKUnitKerja->id);
     }
 
     public function destroy(UserNIKUnitKerja $userNIKUnitKerja)
