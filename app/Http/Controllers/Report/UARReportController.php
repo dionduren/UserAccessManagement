@@ -809,7 +809,7 @@ class UARReportController extends Controller
         $reviewTable->addCell(8000)->addText('User ID SAP', ['size' => 8], ['space' => ['after' => 0]]);
         $reviewTable->addRow();
         $reviewTable->addCell(4000)->addText('Unit Kerja', ['size' => 8], ['space' => ['after' => 0]]);
-        $reviewTable->addCell(8000)->addText($unitKerja ? "$unitKerja" : '-', ['size' => 8], ['space' => ['after' => 0]]);
+        $reviewTable->addCell(8000)->addText($unitKerja ? $this->sanitizeForFilename($unitKerja) : '-', ['size' => 8], ['space' => ['after' => 0]]);
         $reviewTable->addRow();
         $reviewTable->addCell(4000)->addText('Cost Center', ['size' => 8], ['space' => ['after' => 0]]);
         $reviewTable->addCell(8000)->addText($cost_center ? $cost_center : '-', ['size' => 8], ['space' => ['after' => 0]]);
@@ -862,12 +862,12 @@ class UARReportController extends Controller
             );
             $table->addCell(3000, ['valign' => 'center'])->addText($data['user_id'], ['size' => 8], ['space' => ['after' => 0]]);
             $table->addCell(3000, ['valign' => 'center'])->addText(
-                $this->sanitizeForDocx($data['user_name']),
+                $this->sanitizeForFilename($data['user_name']), // SANITIZED NAMA COLUMN
                 ['size' => 8],
                 ['space' => ['after' => 0]]
             );
             $table->addCell(3000, ['valign' => 'center'])->addText(
-                $this->sanitizeForDocx($data['job_role_name']),
+                $this->sanitizeForFilename($data['job_role_name']), // SANITIZED JOB ROLE
                 ['size' => 8],
                 ['space' => ['after' => 0]]
             );
@@ -942,12 +942,12 @@ class UARReportController extends Controller
                 );
                 $table->addCell(3000, ['valign' => 'center'])->addText($userSystem->user_code, ['size' => 8], ['space' => ['after' => 0]]);
                 $table->addCell(4500, ['valign' => 'center'])->addText(
-                    $userSystem->user_profile,
+                    $this->sanitizeForFilename($userSystem->user_profile), // SANITIZED USER PROFILE
                     ['size' => 8],
                     ['space' => ['after' => 0]]
                 );
                 $table->addCell(4000, ['valign' => 'center'])->addText(
-                    $this->sanitizeForDocx(
+                    $this->sanitizeForFilename(
                         $userSystem->last_login
                             ? \Carbon\Carbon::parse($userSystem->last_login)->format('d F Y')
                             : '-'
@@ -1010,7 +1010,7 @@ class UARReportController extends Controller
 
         // VP Unit Kerja
         $approvalTable->addRow();
-        $approvalTable->addCell(2500)->addText($jabatanUnitKerja . ' ' . $unitKerjaName, ['size' => 8], ['space' => ['after' => 0]]);
+        $approvalTable->addCell(2500)->addText($this->sanitizeForFilename($jabatanUnitKerja . ' ' . $unitKerjaName), ['size' => 8], ['space' => ['after' => 0]]);
         $approvalTable->addCell(2500)->addText('', ['size' => 8], ['space' => ['after' => 0]]);
         $approvalTable->addCell(2500)->addText('', ['size' => 8], ['space' => ['after' => 0]]);
         $approvalTable->addCell(2500)->addText('', ['size' => 8], ['space' => ['after' => 0]]);
@@ -1040,8 +1040,8 @@ class UARReportController extends Controller
         exit;
     }
 
-    // Add this helper method if it doesn't exist
-    private function sanitizeForDocx($text)
+    // Add this new method specifically for filename sanitization
+    private function sanitizeForFilename($text)
     {
         if (is_null($text)) {
             return '';
@@ -1050,79 +1050,7 @@ class UARReportController extends Controller
         // Remove control characters and normalize text
         $text = preg_replace('/[^\P{C}\n]+/u', '', (string) $text);
 
-        // Replace problematic characters for filenames and Word processing
-        $text = str_replace([
-            '&',
-            '<',
-            '>',
-            '"',
-            "'",
-            '/',
-            '\\',
-            '|',
-            '?',
-            '*',
-            ':',
-            ';',
-            '[',
-            ']',
-            '{',
-            '}',
-            '(',
-            ')',
-            '=',
-            '+',
-            '@',
-            '#',
-            '$',
-            '%',
-            '^'
-        ], [
-            'dan',
-            '',
-            '',
-            '',
-            '',
-            '-',
-            '-',
-            '-',
-            '',
-            '',
-            '-',
-            '-',
-            '',
-            '',
-            '',
-            '',
-            '',
-            '',
-            '',
-            '',
-            '',
-            '',
-            '',
-            '',
-            '',
-            ''
-        ], $text);
-
-        // Remove multiple spaces and trim
-        $text = preg_replace('/\s+/', ' ', trim($text));
-
-        return $text;
-    }
-
-    // Add this new method specifically for filename sanitization
-    private function sanitizeForFilename($text)
-    {
-        if (is_null($text)) {
-            return '';
-        }
-
-        // First apply general sanitization
-        $text = $this->sanitizeForDocx($text);
-
-        // Additional filename-specific sanitization
+        // Replace problematic characters for both content and filenames
         $text = str_replace([
             '&',
             '<',
