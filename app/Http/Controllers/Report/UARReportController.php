@@ -661,8 +661,8 @@ class UARReportController extends Controller
             } else {
                 $unitKerja = $displayName;
             }
-            $unitKerja = $this->sanitizeForDocx($unitKerja);
-            $unitKerjaName = $this->sanitizeForDocx($displayName);
+            $unitKerja = $this->sanitizeForFilename($unitKerja);
+            $unitKerjaName = $this->sanitizeForFilename($displayName);
             $jabatanUnitKerja = 'VP';
         } elseif ($kompartemenId) {
             $kompartemen = Kompartemen::find($kompartemenId);
@@ -677,15 +677,15 @@ class UARReportController extends Controller
             } else {
                 $unitKerja = $displayName;
             }
-            $unitKerja = $this->sanitizeForDocx($unitKerja);
-            $unitKerjaName = $this->sanitizeForDocx($displayName);
+            $unitKerja = $this->sanitizeForFilename($unitKerja);
+            $unitKerjaName = $this->sanitizeForFilename($displayName);
             $jabatanUnitKerja = 'SVP';
         } elseif ($companyId) {
             $company = Company::where('company_code', $companyId)->first();
             $displayName = $company ? $company->nama : '-';
             $displayName = preg_replace('/[^\P{C}\n]+/u', '', $displayName);
-            $unitKerja = $this->sanitizeForDocx($displayName);
-            $unitKerjaName = $this->sanitizeForDocx($displayName);
+            $unitKerja = $this->sanitizeForFilename($displayName);
+            $unitKerjaName = $this->sanitizeForFilename($displayName);
             $jabatanUnitKerja = 'Direktur';
             $cost_center = 'Tidak ada Cost Center untuk Level Perusahaan';
         }
