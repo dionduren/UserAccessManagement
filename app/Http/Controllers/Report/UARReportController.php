@@ -1106,8 +1106,8 @@ class UARReportController extends Controller
             ''
         ], $text);
 
-        // Remove any remaining problematic characters for Windows filenames
-        $text = preg_replace('/[<>:"/\\|?*]/', '', $text);
+        // FIXED: Escape the backslash properly in the regex pattern
+        $text = preg_replace('/[<>:"\/\\\|?*]/', '', $text);
 
         // Replace multiple hyphens/spaces with single ones
         $text = preg_replace('/[-\s]+/', ' ', $text);
