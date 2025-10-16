@@ -128,7 +128,7 @@ class CheckpointService
                 $costCount = CostCenter::where('company_id', $code)->count();
                 $mdkCount  = MasterDataKaryawanLocal::where(fn($q) => $q->where('company', $code))->count();
 
-                $completed = $komCount > 0 && $depCount > 0 && $costCount > 0 && $mdkCount > 0;
+                $completed = $komCount > 0 || $depCount > 0 || $costCount > 0 || $mdkCount > 0;
 
                 return [
                     'completed' => $completed,

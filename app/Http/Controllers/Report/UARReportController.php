@@ -104,6 +104,7 @@ class UARReportController extends Controller
         }
 
         $periodeYear  = $periode->created_at ? $periode->created_at->format('Y') : date('Y');
+        $headerNomorSurat = 'PI-TIN-UAR-';
         $nomorSurat   = 'XXX - Belum terdaftar';
         $cost_center  = '-';
         $dataUserSystem = [];
@@ -135,7 +136,11 @@ class UARReportController extends Controller
             }
         }
 
-        $nomorSurat = "PI-TIN-UAR-{$periodeYear}-{$nomorSurat}";
+        if ($companyId == 'F000') {
+            $headerNomorSurat = "PSP-LTI-UAR";
+        }
+
+        $nomorSurat = "{$headerNomorSurat}-{$periodeYear}-{$nomorSurat}";
 
         // Query UserNIKUnitKerja with NIKJobRole filter
         $userNIKQuery = UserNIKUnitKerja::query()
@@ -418,6 +423,7 @@ class UARReportController extends Controller
         }
 
         $periodeYear  = $periode->created_at ? $periode->created_at->format('Y') : date('Y');
+        $headerNomorSurat = 'PI-TIN-UAR-';
         $nomorSurat   = 'XXX - Belum terdaftar';
         $cost_center  = '-';
         $dataUserSystem = [];
@@ -839,7 +845,7 @@ class UARReportController extends Controller
         $table->addCell(3000, ['bgColor' => 'D9E1F2'])->addText('User ID', ['bold' => true, 'color' => '000000', 'size' => 8], ['alignment' => Jc::CENTER, 'space' => ['after' => 0]]);
         $table->addCell(3000, ['bgColor' => 'D9E1F2'])->addText('Nama', ['bold' => true, 'color' => '000000', 'size' => 8], ['alignment' => Jc::CENTER, 'space' => ['after' => 0]]);
         $table->addCell(3000, ['bgColor' => 'D9E1F2'])->addText('Job Role', ['bold' => true, 'color' => '000000', 'size' => 8], ['alignment' => Jc::CENTER, 'space' => ['after' => 0]]);
-        $table->addCell(1000, ['bgColor' => 'D9E1F2'])->addText('NIK', ['bold' => true, 'color' => '000000', 'size' => 8], ['alignment' => Jc::CENTER, 'space' => ['after' => 0]]);
+        $table->addCell(2000, ['bgColor' => 'D9E1F2'])->addText('NIK', ['bold' => true, 'color' => '000000', 'size' => 8], ['alignment' => Jc::CENTER, 'space' => ['after' => 0]]);
         $table->addCell(1750, ['bgColor' => 'D9E1F2'])->addText('Tetap*', ['bold' => true, 'color' => '000000', 'size' => 8], ['alignment' => Jc::CENTER, 'space' => ['after' => 0]]);
         $table->addCell(1750, ['bgColor' => 'D9E1F2'])->addText('Berubah*', ['bold' => true, 'color' => '000000', 'size' => 8], ['alignment' => Jc::CENTER, 'space' => ['after' => 0]]);
         $table->addCell(2000, ['bgColor' => 'D9E1F2'])->addText('Keterangan', ['bold' => true, 'color' => '000000', 'size' => 8], ['alignment' => Jc::CENTER, 'space' => ['after' => 0]]);
@@ -865,7 +871,7 @@ class UARReportController extends Controller
                 ['size' => 8],
                 ['space' => ['after' => 0]]
             );
-            $table->addCell(1000, ['valign' => 'center'])->addText(
+            $table->addCell(2000, ['valign' => 'center'])->addText(
                 $data['nik_value'],
                 ['size' => 8],
                 ['space' => ['after' => 0]]
@@ -889,7 +895,7 @@ class UARReportController extends Controller
             $table->addCell(3000, ['valign' => 'center'])->addText('-', ['size' => 8]);
             $table->addCell(3000, ['valign' => 'center'])->addText('-', ['size' => 8]);
             $table->addCell(3000, ['valign' => 'center'])->addText('-', ['size' => 8]);
-            $table->addCell(1000, ['valign' => 'center'])->addText('-', ['size' => 8], ['alignment' => Jc::CENTER]);
+            $table->addCell(2000, ['valign' => 'center'])->addText('-', ['size' => 8], ['alignment' => Jc::CENTER]);
             $table->addCell(1750, ['valign' => 'center'])->addText('-', ['size' => 8]);
             $table->addCell(1750, ['valign' => 'center'])->addText('-', ['size' => 8]);
             $table->addCell(2000, ['valign' => 'center'])->addText('-', ['size' => 8]);
@@ -1009,21 +1015,24 @@ class UARReportController extends Controller
         $approvalTable->addCell(2500)->addText('', ['size' => 8], ['space' => ['after' => 0]]);
         $approvalTable->addCell(2500)->addText('', ['size' => 8], ['space' => ['after' => 0]]);
 
-        // Output
-        $fileName = 'PI-TIN-UAR-' . $latestPeriodeYear . '-' . $nomorSurat . '_' . $unitKerja . ' ' . $latestPeriodeYear .  '.docx';
+        // Output - Use filename-safe sanitization
+        $sanitizedUnitKerja = $this->sanitizeForFilename($unitKerja);
+        $sanitizedNomorSurat = $this->sanitizeForFilename($nomorSurat);
+        $fileName = 'PI-TIN-UAR-' . $latestPeriodeYear . '-' . $sanitizedNomorSurat . '_' . $sanitizedUnitKerja . '_' . $latestPeriodeYear . '.docx';
         $filePath = storage_path('app/public/' . $fileName);
 
         // Save using IOFactory
         $objWriter = \PhpOffice\PhpWord\IOFactory::createWriter($phpWord, 'Word2007');
         $objWriter->save($filePath);
 
-        // Set headers for download
+        // Set headers for download with properly encoded filename
+        $safeFileName = rawurlencode($fileName);
         header("Expires: Mon, 1 Apr 1974 05:00:00 GMT");
         header("Last-Modified: " . gmdate("D, d M Y H:i:s") . " GMT");
         header("Cache-Control: no-cache, must-revalidate");
         header("Pragma: no-cache");
         header('Content-type: application/vnd.openxmlformats-officedocument.wordprocessingml.document');
-        header("Content-Disposition: attachment; filename=\"" . $fileName . "\"");
+        header("Content-Disposition: attachment; filename*=UTF-8''" . $safeFileName);
 
         // Output file and delete after send
         readfile($filePath);
@@ -1037,7 +1046,147 @@ class UARReportController extends Controller
         if (is_null($text)) {
             return '';
         }
+
         // Remove control characters and normalize text
-        return preg_replace('/[^\P{C}\n]+/u', '', (string) $text);
+        $text = preg_replace('/[^\P{C}\n]+/u', '', (string) $text);
+
+        // Replace problematic characters for filenames and Word processing
+        $text = str_replace([
+            '&',
+            '<',
+            '>',
+            '"',
+            "'",
+            '/',
+            '\\',
+            '|',
+            '?',
+            '*',
+            ':',
+            ';',
+            '[',
+            ']',
+            '{',
+            '}',
+            '(',
+            ')',
+            '=',
+            '+',
+            '@',
+            '#',
+            '$',
+            '%',
+            '^'
+        ], [
+            'dan',
+            '',
+            '',
+            '',
+            '',
+            '-',
+            '-',
+            '-',
+            '',
+            '',
+            '-',
+            '-',
+            '',
+            '',
+            '',
+            '',
+            '',
+            '',
+            '',
+            '',
+            '',
+            '',
+            '',
+            '',
+            '',
+            ''
+        ], $text);
+
+        // Remove multiple spaces and trim
+        $text = preg_replace('/\s+/', ' ', trim($text));
+
+        return $text;
+    }
+
+    // Add this new method specifically for filename sanitization
+    private function sanitizeForFilename($text)
+    {
+        if (is_null($text)) {
+            return '';
+        }
+
+        // First apply general sanitization
+        $text = $this->sanitizeForDocx($text);
+
+        // Additional filename-specific sanitization
+        $text = str_replace([
+            '&',
+            '<',
+            '>',
+            '"',
+            "'",
+            '/',
+            '\\',
+            '|',
+            '?',
+            '*',
+            ':',
+            ';',
+            '[',
+            ']',
+            '{',
+            '}',
+            '(',
+            ')',
+            '=',
+            '+',
+            '@',
+            '#',
+            '$',
+            '%',
+            '^'
+        ], [
+            'dan',
+            '',
+            '',
+            '',
+            '',
+            '-',
+            '-',
+            '-',
+            '',
+            '',
+            '-',
+            '-',
+            '',
+            '',
+            '',
+            '',
+            '',
+            '',
+            '',
+            '',
+            '',
+            '',
+            '',
+            '',
+            '',
+            ''
+        ], $text);
+
+        // Remove any remaining problematic characters for Windows filenames
+        $text = preg_replace('/[<>:"/\\|?*]/', '', $text);
+
+        // Replace multiple hyphens/spaces with single ones
+        $text = preg_replace('/[-\s]+/', ' ', $text);
+
+        // Trim and limit length for filename safety
+        $text = substr(trim($text), 0, 100);
+
+        return $text;
     }
 }
