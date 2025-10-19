@@ -126,10 +126,10 @@ class UIDGenericUnitKerjaController extends Controller
                 'required',
                 'string',
                 'max:255',
-                // Keep unique across table, ignore this record, still exclude soft-deleted rows
-                Rule::unique('ms_generic_unit_kerja', 'user_cc')
-                    ->ignore($userGenericUnitKerja->id)
-                    ->whereNull('deleted_at'),
+                // // Keep unique across table, ignore this record, still exclude soft-deleted rows
+                // Rule::unique('ms_generic_unit_kerja', 'user_cc')
+                //     ->ignore($userGenericUnitKerja->id)
+                //     ->whereNull('deleted_at'),
             ],
             'kompartemen_id' => ['nullable', 'string', 'max:255'],
             'departemen_id'  => ['nullable', 'string', 'max:255'],
