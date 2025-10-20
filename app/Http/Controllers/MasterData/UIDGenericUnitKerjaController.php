@@ -81,8 +81,11 @@ class UIDGenericUnitKerjaController extends Controller
                 'required',
                 'string',
                 'max:255',
-                // Exclude existing (not soft-deleted) user_cc across the table
-                Rule::unique('ms_generic_unit_kerja', 'user_cc')->whereNull('deleted_at'),
+                Rule::unique('ms_generic_unit_kerja', 'user_cc')
+                    ->where(function ($q) use ($request) {
+                        return $q->where('periode_id', $request->input('periode_id'))
+                            ->whereNull('deleted_at');
+                    }),
             ],
             'kompartemen_id' => ['nullable', 'string', 'max:255'],
             'departemen_id'  => ['nullable', 'string', 'max:255'],
@@ -126,10 +129,15 @@ class UIDGenericUnitKerjaController extends Controller
                 'required',
                 'string',
                 'max:255',
-                // Keep unique across table, ignore this record, still exclude soft-deleted rows
+                // // Keep unique across table, ignore this record, still exclude soft-deleted rows
+                // Rule::unique('ms_generic_unit_kerja', 'user_cc')
+                //     ->ignore($userGenericUnitKerja->id)
+                //     ->whereNull('deleted_at'),
                 Rule::unique('ms_generic_unit_kerja', 'user_cc')
-                    ->ignore($userGenericUnitKerja->id)
-                    ->whereNull('deleted_at'),
+                    ->where(function ($q) use ($request) {
+                        return $q->where('periode_id', $request->input('periode_id'))
+                            ->whereNull('deleted_at');
+                    }),
             ],
             'kompartemen_id' => ['nullable', 'string', 'max:255'],
             'departemen_id'  => ['nullable', 'string', 'max:255'],
