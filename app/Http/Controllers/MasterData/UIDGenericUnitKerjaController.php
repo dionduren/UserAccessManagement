@@ -133,11 +133,14 @@ class UIDGenericUnitKerjaController extends Controller
                 // Rule::unique('ms_generic_unit_kerja', 'user_cc')
                 //     ->ignore($userGenericUnitKerja->id)
                 //     ->whereNull('deleted_at'),
+<<<<<<< HEAD
                 Rule::unique('ms_generic_unit_kerja', 'user_cc')
                     ->where(function ($q) use ($request) {
                         return $q->where('periode_id', $request->input('periode_id'))
                             ->whereNull('deleted_at');
                     }),
+=======
+>>>>>>> 1d6873434d34f4aa989523c6848ba461ecde21c4
             ],
             'kompartemen_id' => ['nullable', 'string', 'max:255'],
             'departemen_id'  => ['nullable', 'string', 'max:255'],

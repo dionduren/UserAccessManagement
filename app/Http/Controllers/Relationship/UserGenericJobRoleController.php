@@ -134,30 +134,22 @@ class UserGenericJobRoleController extends Controller
     public function update(Request $request, $id)
     {
         $request->validate([
-            'user_generic_id' => 'required|exists:tr_user_generic,user_code', // user_code sekarang
+            'user_generic_id' => 'required|exists:tr_user_generic,user_code',
             'job_role_id'     => 'required|string',
             'periode_id'      => 'required|exists:ms_periode,id',
         ]);
 
-        $nik = $request->user_generic_id;
+        // Find the existing NIKJobRole record by ID
+        $record = NIKJobRole::findOrFail($id);
 
-        $record = NIKJobRole::where('nik', $nik)
-            ->where('periode_id', $request->periode_id)
-            ->first();
+        // Update all fields
+        $record->update([
+            'nik'                => $request->user_generic_id,
+            'job_role_id'        => $request->job_role_id,
+            'periode_id'         => $request->periode_id,
+        ]);
 
-        if ($record) {
-            $record->job_role_id = $request->job_role_id;
-            $record->save();
-        } else {
-            NIKJobRole::create([
-                'nik'         => $nik,
-                'job_role_id' => $request->job_role_id,
-                'periode_id'  => $request->periode_id,
-            ]);
-        }
-
-        return redirect()
-            ->route('user-generic-job-role.index')
+        return redirect()->route('user-generic-job-role.index')
             ->with('success', 'Relasi berhasil diperbarui.');
     }
 
