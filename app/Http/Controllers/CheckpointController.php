@@ -22,7 +22,9 @@ class CheckpointController extends Controller
             ->where('company_code', '!=', 'Z000');
 
         if ($userCompanyCode && $userCompanyCode !== 'A000') {
-            $companiesQuery->where('company_code', $userCompanyCode);
+            // Get all companies with the same first character as userCompany
+            $firstChar = substr($userCompanyCode, 0, 1);
+            $companiesQuery->where('company_code', 'LIKE', $firstChar . '%');
         }
 
         $companies = $companiesQuery

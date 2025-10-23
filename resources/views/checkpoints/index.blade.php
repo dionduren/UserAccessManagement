@@ -73,7 +73,8 @@
                     </table>
                 </div>
                 <div class="mt-3 small text-muted">
-                    *Status default: Pending (belum diproses), Completed (selesai), Failed (gagal – periksa log).
+                    *Status default: Pending (belum diproses), In_progress (sedang diproses), Completed (selesai), Failed
+                    (gagal).
                 </div>
             </div>
         </div>

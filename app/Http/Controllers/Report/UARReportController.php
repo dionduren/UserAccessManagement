@@ -25,10 +25,19 @@ class UARReportController extends Controller
     public function index(Request $request)
     {
         $userCompany = auth()->user()->loginDetail->company_code;
+
         if ($userCompany !== 'A000') {
-            $companies = Company::select('company_code', 'nama')->where('company_code', $userCompany)->get();
+            // Get all companies with the same first character as userCompany
+            $firstChar = substr($userCompany, 0, 1);
+            $companies = Company::select('company_code', 'nama')
+                ->where('company_code', 'LIKE', $firstChar . '%')
+                ->orderBy('company_code')
+                ->get();
         } else {
-            $companies = Company::select('company_code', 'nama')->get();
+            // A000 users see all companies
+            $companies = Company::select('company_code', 'nama')
+                ->orderBy('company_code')
+                ->get();
         }
 
         $periodes = Periode::orderByDesc('id')->get(['id', 'definisi', 'created_at']);
@@ -104,10 +113,31 @@ class UARReportController extends Controller
         }
 
         $periodeYear  = $periode->created_at ? $periode->created_at->format('Y') : date('Y');
-        $headerNomorSurat = 'PI-TIN-UAR-';
+        $headerNomorSurat = 'PI-TIN-UAR';
         $nomorSurat   = 'XXX - Belum terdaftar';
         $cost_center  = '-';
         $dataUserSystem = [];
+
+        // Add company filtering based on user permissions
+        $userCompany = auth()->user()->loginDetail->company_code;
+
+        // Validate company access for non-A000 users
+        if ($userCompany !== 'A000' && $companyId) {
+            $firstChar = substr($userCompany, 0, 1);
+            $allowedCompanies = Company::where('company_code', 'LIKE', $firstChar . '%')
+                ->pluck('company_code')
+                ->toArray();
+
+            if (!in_array($companyId, $allowedCompanies)) {
+                return response()->json([
+                    'data'             => [],
+                    'nomorSurat'       => '-',
+                    'composite_roles'  => [],
+                    'single_roles'     => [],
+                    'message'          => 'Access denied to selected company'
+                ], 403);
+            }
+        }
 
         // Get nomor surat & cost center logic (same as before)
         if ($departemenId) {
@@ -136,13 +166,31 @@ class UARReportController extends Controller
             }
         }
 
-        if ($companyId == 'F000') {
-            $headerNomorSurat = "PSP-LTI-UAR";
-        } else if ($companyId == 'C000') {
-            $headerNomorSurat = "PK-LTI-UAR";
+        // Set header nomor surat based on company
+        switch ($companyId) {
+            case 'F000':
+                $headerNomorSurat = "PSP-LTI-UAR-{$periodeYear}";
+                break;
+            case 'C000':
+                $headerNomorSurat = "PK-LTI-UAR-{$periodeYear}";
+                break;
+            case 'E000':
+                $headerNomorSurat = "PIM-TI-UAR-{$periodeYear}";
+                break;
+            case 'B000':
+                $headerNomorSurat = "PKG_TI.03.04_UAR_{$periodeYear}";
+                break;
+            default: // A000 or any other
+                $headerNomorSurat = "PI-TIN-UAR-{$periodeYear}";
+                break;
         }
 
-        $nomorSurat = "{$headerNomorSurat}-{$periodeYear}-{$nomorSurat}";
+        // Format final nomor surat based on company
+        if ($companyId === 'B000') {
+            $nomorSurat = "{$nomorSurat}_{$headerNomorSurat}";
+        } else {
+            $nomorSurat = "{$headerNomorSurat}-{$nomorSurat}";
+        }
 
         // Query UserNIKUnitKerja with NIKJobRole filter
         $userNIKQuery = UserNIKUnitKerja::query()
@@ -426,12 +474,7 @@ class UARReportController extends Controller
 
         $periodeYear  = $periode->created_at ? $periode->created_at->format('Y') : date('Y');
 
-        $headerNomorSurat = 'PI-TIN-UAR-';
-        if ($companyId == 'F000') {
-            $headerNomorSurat = "PSP-LTI-UAR";
-        } else if ($companyId == 'C000') {
-            $headerNomorSurat = "PK-LTI-UAR-" . $companyId;
-        }
+        $headerNomorSurat = 'PI-TIN-UAR';
         $nomorSurat   = 'XXX - Belum terdaftar';
         $cost_center  = '-';
         $dataUserSystem = [];
@@ -461,6 +504,32 @@ class UARReportController extends Controller
                 $nomorSurat  = 'XXX (Belum terdaftar)';
                 $cost_center = Kompartemen::find($kompartemenId)?->cost_center ?? 'Belum terdaftar';
             }
+        }
+
+        // Set header nomor surat based on company
+        switch ($companyId) {
+            case 'F000':
+                $headerNomorSurat = "PSP-LTI-UAR-{$periodeYear}";
+                break;
+            case 'C000':
+                $headerNomorSurat = "PK-LTI-UAR-{$periodeYear}";
+                break;
+            case 'E000':
+                $headerNomorSurat = "PIM-TI-UAR-{$periodeYear}";
+                break;
+            case 'B000':
+                $headerNomorSurat = "PKG_TI.03.04_UAR_{$periodeYear}";
+                break;
+            default: // A000 or any other
+                $headerNomorSurat = "PI-TIN-UAR-{$periodeYear}";
+                break;
+        }
+
+        // Format final nomor surat based on company
+        if ($companyId === 'B000') {
+            $finalNomorSurat = "{$nomorSurat}_{$headerNomorSurat}";
+        } else {
+            $finalNomorSurat = "{$headerNomorSurat}-{$nomorSurat}";
         }
 
         // ADOPTED LOGIC FROM jobRolesData - Query UserNIKUnitKerja with NIKJobRole filter
@@ -769,7 +838,7 @@ class UARReportController extends Controller
             'valign' => 'center',
             'borderBottomSize' => 6,
             'borderBottomColor' => '000000',
-        ])->addText($headerNomorSurat . '-' . $latestPeriodeYear . '-' . $nomorSurat, ['size' => 8]);
+        ])->addText($finalNomorSurat, ['size' => 8]);
 
         // Row 3: Periode
         $nestedTable->addRow();
@@ -1023,10 +1092,10 @@ class UARReportController extends Controller
         $approvalTable->addCell(2500)->addText('', ['size' => 8], ['space' => ['after' => 0]]);
         $approvalTable->addCell(2500)->addText('', ['size' => 8], ['space' => ['after' => 0]]);
 
-        // Output - Use filename-safe sanitization
+        // Output - Use final nomor surat for filename
         $sanitizedUnitKerja = $this->sanitizeForFilename($unitKerja);
-        $sanitizedNomorSurat = $this->sanitizeForFilename($nomorSurat);
-        $fileName = $headerNomorSurat . '-UAR-' . $latestPeriodeYear . '-' . $sanitizedNomorSurat . '_' . $sanitizedUnitKerja . '_' . $latestPeriodeYear . '.docx';
+        $sanitizedNomorSurat = $this->sanitizeForFilename($finalNomorSurat);
+        $fileName = $sanitizedNomorSurat . '_' . $sanitizedUnitKerja . '.docx';
         $filePath = storage_path('app/public/' . $fileName);
 
         // Save using IOFactory

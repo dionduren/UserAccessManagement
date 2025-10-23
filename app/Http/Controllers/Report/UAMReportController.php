@@ -30,9 +30,20 @@ class UAMReportController extends Controller
     public function index(Request $request)
     {
         $userCompany = auth()->user()->loginDetail->company_code;
-        $companies = $userCompany !== 'A000'
-            ? Company::select('company_code', 'nama')->where('company_code', $userCompany)->get()
-            : Company::select('company_code', 'nama')->get();
+
+        if ($userCompany !== 'A000') {
+            // Get all companies with the same first character as userCompany
+            $firstChar = substr($userCompany, 0, 1);
+            $companies = Company::select('company_code', 'nama')
+                ->where('company_code', 'LIKE', $firstChar . '%')
+                ->orderBy('company_code')
+                ->get();
+        } else {
+            // A000 users see all companies
+            $companies = Company::select('company_code', 'nama')
+                ->orderBy('company_code')
+                ->get();
+        }
 
         $companyId = $request->company_id;
         $kompartemenId = $request->kompartemen_id;
@@ -140,9 +151,30 @@ class UAMReportController extends Controller
 
         $periode        = $periodeId ? Periode::find($periodeId) : Periode::latest()->first();
         $periodeYear    = $periode ? $periode->created_at?->format('Y') : now()->format('Y');
-        $headerNomorSurat = 'PI-TIN-UAM-';
+        $headerNomorSurat = 'PI-TIN-UAM';
         $nomorSurat     = 'XXX - Belum terdaftar';
         $usedMDBSingles = false;
+
+        // Add company filtering based on user permissions
+        $userCompany = auth()->user()->loginDetail->company_code;
+
+        // Validate company access for non-A000 users
+        if ($userCompany !== 'A000' && $companyId) {
+            $firstChar = substr($userCompany, 0, 1);
+            $allowedCompanies = Company::where('company_code', 'LIKE', $firstChar . '%')
+                ->pluck('company_code')
+                ->toArray();
+
+            if (!in_array($companyId, $allowedCompanies)) {
+                return response()->json([
+                    'data'             => [],
+                    'nomorSurat'       => '-',
+                    'composite_roles'  => [],
+                    'single_roles'     => [],
+                    'message'          => 'Access denied to selected company'
+                ], 403);
+            }
+        }
 
         $query = JobRole::query()
             ->with([
@@ -176,13 +208,31 @@ class UAMReportController extends Controller
         $data = [];
 
 
-        if ($companyId == 'F000') {
-            $headerNomorSurat = "PSP-LTI-UAM";
-        } else if ($companyId == 'C000') {
-            $headerNomorSurat = "PK-LTI-UAM";
+        // Set header nomor surat based on company - ALL include year
+        switch ($companyId) {
+            case 'F000':
+                $headerNomorSurat = "PSP-LTI-UAM-{$periodeYear}";
+                break;
+            case 'C000':
+                $headerNomorSurat = "PK-LTI-UAM-{$periodeYear}";
+                break;
+            case 'E000':
+                $headerNomorSurat = "PIM-TI-UAM-{$periodeYear}";
+                break;
+            case 'B000':
+                $headerNomorSurat = "PKG_TI.03.04_UAM_{$periodeYear}";
+                break;
+            default: // A000 or any other
+                $headerNomorSurat = "PI-TIN-UAM-{$periodeYear}";
+                break;
         }
 
-        $nomorSurat = "{$headerNomorSurat}-{$periodeYear}-{$nomorSurat}";
+        // Format final nomor surat based on company
+        if ($companyId === 'B000') {
+            $nomorSurat = "{$nomorSurat}_{$headerNomorSurat}";
+        } else {
+            $nomorSurat = "{$headerNomorSurat}-{$nomorSurat}";
+        }
 
         // Collect composite names (for possible middle-db fallback)
         $compositeNames = $jobRoles
@@ -566,6 +616,21 @@ class UAMReportController extends Controller
         $departemenId  = $request->departemen_id;
         $periodeId     = $request->periode_id;
 
+        // Add company filtering based on user permissions
+        $userCompany = auth()->user()->loginDetail->company_code;
+
+        // Validate company access for non-A000 users
+        if ($userCompany !== 'A000' && $companyId) {
+            $firstChar = substr($userCompany, 0, 1);
+            $allowedCompanies = Company::where('company_code', 'LIKE', $firstChar . '%')
+                ->pluck('company_code')
+                ->toArray();
+
+            if (!in_array($companyId, $allowedCompanies)) {
+                abort(403, 'Access denied to selected company');
+            }
+        }
+
         $unitKerja = '-';
         $jabatanUnitKerja = '';
         $unitKerjaName = '';
@@ -573,18 +638,32 @@ class UAMReportController extends Controller
         $latestPeriode      = $periodeObj ? $periodeObj->definisi : '-';
         $latestPeriodeYear  = $periodeObj ? $periodeObj->created_at?->format('Y') : now()->format('Y');
 
-        $headerNomorSurat = 'PI-TIN-UAM-';
-        if ($companyId == 'F000') {
-            $headerNomorSurat = "PSP-LTI-UAM";
-        } else if ($companyId == 'C000') {
-            $headerNomorSurat = "PK-LTI-UAM-" . $companyId;
+        $headerNomorSurat = 'PI-TIN-UAM';
+
+        // Set header nomor surat based on company - ALL include year
+        switch ($companyId) {
+            case 'F000':
+                $headerNomorSurat = "PSP-LTI-UAM-{$latestPeriodeYear}";
+                break;
+            case 'C000':
+                $headerNomorSurat = "PK-LTI-UAM-{$latestPeriodeYear}";
+                break;
+            case 'E000':
+                $headerNomorSurat = "PIM-TI-UAM-{$latestPeriodeYear}";
+                break;
+            case 'B000':
+                $headerNomorSurat = "PKG_TI.03.04_UAM_{$latestPeriodeYear}";
+                break;
+            default: // A000 or any other
+                $headerNomorSurat = "PI-TIN-UAM-{$latestPeriodeYear}";
+                break;
         }
+
         $nomorSurat   = 'XXX';
         // $maxSingleRoles = 150; // Maximum single roles viewed per document
         $maxTcodes = 600; // Maximum tcodes viewed per document
 
         // Rename unit kerja untuk display info di judul & tabel word
-
         if ($departemenId) {
             $departemen = Departemen::find($departemenId);
             $displayName = $departemen ? $departemen->nama : '';
@@ -637,6 +716,13 @@ class UAMReportController extends Controller
             $unitKerjaName = $this->sanitizeForDocx($displayName);
             $jabatanUnitKerja = 'Direktur';
             $cost_center = 'Tidak ada Cost Center untuk Level Perusahaan';
+        }
+
+        // Format final nomor surat based on company
+        if ($companyId === 'B000') {
+            $finalNomorSurat = "{$nomorSurat}_{$headerNomorSurat}";
+        } else {
+            $finalNomorSurat = "{$headerNomorSurat}-{$nomorSurat}";
         }
 
         // Fetch job roles and users
@@ -826,7 +912,7 @@ class UAMReportController extends Controller
         $docInfoTable->addCell(5150, [
             'valign' => 'center',
         ])->addText(
-            $headerNomorSurat . "-" . $latestPeriodeYear . "-" . $nomorSurat,
+            $finalNomorSurat,
             ['bold' => true, 'size' => 14],
             ['alignment' => Jc::CENTER, 'spaceAfter' => 0]
         );
@@ -937,7 +1023,7 @@ class UAMReportController extends Controller
         $headerTable->addCell(null, ['vMerge' => 'continue']);
         $headerTable->addCell(null, ['vMerge' => 'continue']);
         $headerTable->addCell(1200, ['valign' => 'center'])->addText('No Dok', ['size' => 9], ['spaceBefore' => 0, 'spaceAfter' => 0]);
-        $headerTable->addCell(3000, ['valign' => 'center'])->addText($headerNomorSurat . '-' . $latestPeriodeYear . '-' . $nomorSurat, ['size' => 9], ['spaceBefore' => 0, 'spaceAfter' => 0]);
+        $headerTable->addCell(3000, ['valign' => 'center'])->addText($finalNomorSurat, ['size' => 9], ['spaceBefore' => 0, 'spaceAfter' => 0]);
 
         // Row 3: Rowspan + Judul  + Rev. Ke + 0
         $headerTable->addRow(250, ['exactHeight' => true]);
@@ -1129,8 +1215,10 @@ class UAMReportController extends Controller
             }
         }
 
-        // Output
-        $fileName = $headerNomorSurat . '-' . $latestPeriodeYear . '-' . $nomorSurat . '_' . $unitKerja . ' ' . $latestPeriodeYear .  '.docx';
+        // Output - Use final nomor surat for filename
+        $sanitizedUnitKerja = $this->sanitizeForDocx($unitKerja);
+        $sanitizedNomorSurat = $this->sanitizeForDocx($finalNomorSurat);
+        $fileName = $sanitizedNomorSurat . '_' . $sanitizedUnitKerja . '.docx';
         $filePath = storage_path('app/public/' . $fileName);
 
         // Save using IOFactory
@@ -1140,15 +1228,81 @@ class UAMReportController extends Controller
         return response()->download($filePath, $fileName)->deleteFileAfterSend(true);
     }
 
-    private function sanitizeForDocx($string)
+    // Update the sanitizeForDocx method to match UAR controller
+    private function sanitizeForDocx($text)
     {
-        // Remove control characters except newline and tab
-        $string = preg_replace('/[^\P{C}\n\t]+/u', '', $string);
-        // Convert to UTF-8 if not already
-        $string = mb_convert_encoding($string, 'UTF-8', 'UTF-8');
-        // Encode XML special chars
-        $string = htmlspecialchars($string, ENT_QUOTES | ENT_XML1, 'UTF-8');
-        $string = str_replace('&', 'dan', $string);
-        return $string;
+        if (is_null($text)) {
+            return '';
+        }
+
+        // Remove control characters and normalize text
+        $text = preg_replace('/[^\P{C}\n]+/u', '', (string) $text);
+
+        // Replace problematic characters for both content and filenames
+        $text = str_replace([
+            '&',
+            '<',
+            '>',
+            '"',
+            "'",
+            '/',
+            '\\',
+            '|',
+            '?',
+            '*',
+            ':',
+            ';',
+            '[',
+            ']',
+            '{',
+            '}',
+            '(',
+            ')',
+            '=',
+            '+',
+            '@',
+            '#',
+            '$',
+            '%',
+            '^'
+        ], [
+            'dan',
+            '',
+            '',
+            '',
+            '',
+            '-',
+            '-',
+            '-',
+            '',
+            '',
+            '-',
+            '-',
+            '',
+            '',
+            '',
+            '',
+            '',
+            '',
+            '',
+            '',
+            '',
+            '',
+            '',
+            '',
+            '',
+            ''
+        ], $text);
+
+        // Remove any remaining problematic characters for Windows filenames
+        $text = preg_replace('/[<>:"\/\\\|?*]/', '', $text);
+
+        // Replace multiple hyphens/spaces with single ones
+        $text = preg_replace('/[-\s]+/', ' ', $text);
+
+        // Trim and limit length for filename safety
+        $text = substr(trim($text), 0, 100);
+
+        return $text;
     }
 }
