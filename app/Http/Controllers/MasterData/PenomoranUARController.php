@@ -31,7 +31,7 @@ class PenomoranUARController extends Controller
             $data = PenomoranUAR::with(['kompartemen', 'departemen'])
                 ->select('ms_penomoran_uar.*')
                 ->when(
-                    $userCompany && $userCompany !== 'A000',
+                    $userCompany && $userCompany !== 'A000',  // Only filter if NOT A000
                     fn($q) => $q->where('company_id', $userCompany)
                 );
 

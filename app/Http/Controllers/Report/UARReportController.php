@@ -138,6 +138,8 @@ class UARReportController extends Controller
 
         if ($companyId == 'F000') {
             $headerNomorSurat = "PSP-LTI-UAR";
+        } else if ($companyId == 'C000') {
+            $headerNomorSurat = "PK-LTI-UAR";
         }
 
         $nomorSurat = "{$headerNomorSurat}-{$periodeYear}-{$nomorSurat}";
@@ -423,7 +425,13 @@ class UARReportController extends Controller
         }
 
         $periodeYear  = $periode->created_at ? $periode->created_at->format('Y') : date('Y');
+
         $headerNomorSurat = 'PI-TIN-UAR-';
+        if ($companyId == 'F000') {
+            $headerNomorSurat = "PSP-LTI-UAR";
+        } else if ($companyId == 'C000') {
+            $headerNomorSurat = "PK-LTI-UAR-" . $companyId;
+        }
         $nomorSurat   = 'XXX - Belum terdaftar';
         $cost_center  = '-';
         $dataUserSystem = [];
@@ -761,7 +769,7 @@ class UARReportController extends Controller
             'valign' => 'center',
             'borderBottomSize' => 6,
             'borderBottomColor' => '000000',
-        ])->addText('PI-TIN-UAR-' . $latestPeriodeYear . '-' . $nomorSurat, ['size' => 8]);
+        ])->addText($headerNomorSurat . '-' . $latestPeriodeYear . '-' . $nomorSurat, ['size' => 8]);
 
         // Row 3: Periode
         $nestedTable->addRow();
@@ -1018,7 +1026,7 @@ class UARReportController extends Controller
         // Output - Use filename-safe sanitization
         $sanitizedUnitKerja = $this->sanitizeForFilename($unitKerja);
         $sanitizedNomorSurat = $this->sanitizeForFilename($nomorSurat);
-        $fileName = 'PI-TIN-UAR-' . $latestPeriodeYear . '-' . $sanitizedNomorSurat . '_' . $sanitizedUnitKerja . '_' . $latestPeriodeYear . '.docx';
+        $fileName = $headerNomorSurat . '-UAR-' . $latestPeriodeYear . '-' . $sanitizedNomorSurat . '_' . $sanitizedUnitKerja . '_' . $latestPeriodeYear . '.docx';
         $filePath = storage_path('app/public/' . $fileName);
 
         // Save using IOFactory

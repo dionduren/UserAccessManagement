@@ -23,7 +23,7 @@ class PenomoranUAMController extends Controller
             $data = PenomoranUAM::with(['kompartemen', 'departemen'])
                 ->select('ms_penomoran_uam.*')
                 ->when(
-                    $userCompany && $userCompany !== 'A000',
+                    $userCompany && $userCompany !== 'A000',  // Only filter if NOT A000
                     fn($q) => $q->where('company_id', $userCompany)
                 );
 

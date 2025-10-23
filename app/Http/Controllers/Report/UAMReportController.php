@@ -140,6 +140,7 @@ class UAMReportController extends Controller
 
         $periode        = $periodeId ? Periode::find($periodeId) : Periode::latest()->first();
         $periodeYear    = $periode ? $periode->created_at?->format('Y') : now()->format('Y');
+        $headerNomorSurat = 'PI-TIN-UAM-';
         $nomorSurat     = 'XXX - Belum terdaftar';
         $usedMDBSingles = false;
 
@@ -174,7 +175,14 @@ class UAMReportController extends Controller
         $jobRoles = $query->get();
         $data = [];
 
-        $nomorSurat = "PI-TIN-UAM-{$periodeYear}-{$nomorSurat}";
+
+        if ($companyId == 'F000') {
+            $headerNomorSurat = "PSP-LTI-UAM";
+        } else if ($companyId == 'C000') {
+            $headerNomorSurat = "PK-LTI-UAM";
+        }
+
+        $nomorSurat = "{$headerNomorSurat}-{$periodeYear}-{$nomorSurat}";
 
         // Collect composite names (for possible middle-db fallback)
         $compositeNames = $jobRoles
@@ -564,7 +572,14 @@ class UAMReportController extends Controller
         $periodeObj         = $periodeId ? Periode::find($periodeId) : Periode::latest()->first();
         $latestPeriode      = $periodeObj ? $periodeObj->definisi : '-';
         $latestPeriodeYear  = $periodeObj ? $periodeObj->created_at?->format('Y') : now()->format('Y');
-        $nomorSurat         = 'XXX';
+
+        $headerNomorSurat = 'PI-TIN-UAM-';
+        if ($companyId == 'F000') {
+            $headerNomorSurat = "PSP-LTI-UAM";
+        } else if ($companyId == 'C000') {
+            $headerNomorSurat = "PK-LTI-UAM-" . $companyId;
+        }
+        $nomorSurat   = 'XXX';
         // $maxSingleRoles = 150; // Maximum single roles viewed per document
         $maxTcodes = 600; // Maximum tcodes viewed per document
 
@@ -811,7 +826,7 @@ class UAMReportController extends Controller
         $docInfoTable->addCell(5150, [
             'valign' => 'center',
         ])->addText(
-            "PI-TIN-UAM-" . $latestPeriodeYear . "-" . $nomorSurat,
+            $headerNomorSurat . "-" . $latestPeriodeYear . "-" . $nomorSurat,
             ['bold' => true, 'size' => 14],
             ['alignment' => Jc::CENTER, 'spaceAfter' => 0]
         );
@@ -922,7 +937,7 @@ class UAMReportController extends Controller
         $headerTable->addCell(null, ['vMerge' => 'continue']);
         $headerTable->addCell(null, ['vMerge' => 'continue']);
         $headerTable->addCell(1200, ['valign' => 'center'])->addText('No Dok', ['size' => 9], ['spaceBefore' => 0, 'spaceAfter' => 0]);
-        $headerTable->addCell(3000, ['valign' => 'center'])->addText('PI-TIN-UAM-' . $latestPeriodeYear . '-' . $nomorSurat, ['size' => 9], ['spaceBefore' => 0, 'spaceAfter' => 0]);
+        $headerTable->addCell(3000, ['valign' => 'center'])->addText($headerNomorSurat . '-' . $latestPeriodeYear . '-' . $nomorSurat, ['size' => 9], ['spaceBefore' => 0, 'spaceAfter' => 0]);
 
         // Row 3: Rowspan + Judul  + Rev. Ke + 0
         $headerTable->addRow(250, ['exactHeight' => true]);
@@ -1115,7 +1130,7 @@ class UAMReportController extends Controller
         }
 
         // Output
-        $fileName = 'PI-TIN-UAM-' . $latestPeriodeYear . '-' . $nomorSurat . '_' . $unitKerja . ' ' . $latestPeriodeYear .  '.docx';
+        $fileName = $headerNomorSurat . '-' . $latestPeriodeYear . '-' . $nomorSurat . '_' . $unitKerja . ' ' . $latestPeriodeYear .  '.docx';
         $filePath = storage_path('app/public/' . $fileName);
 
         // Save using IOFactory

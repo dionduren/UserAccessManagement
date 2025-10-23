@@ -21,6 +21,19 @@
                     <th width="10%">Nomor</th>
                     <th width="10%">Actions</th>
                 </tr>
+                <tr class="filters">
+                    <th><input type="text" class="form-control form-control-sm" placeholder="Cari Perusahaan"
+                            data-col="0"></th>
+                    <th><input type="text" class="form-control form-control-sm" placeholder="Cari Unit Kerja ID"
+                            data-col="1"></th>
+                    <th><input type="text" class="form-control form-control-sm" placeholder="Cari Level" data-col="2">
+                    </th>
+                    <th><input type="text" class="form-control form-control-sm" placeholder="Cari Unit Kerja"
+                            data-col="3"></th>
+                    <th><input type="text" class="form-control form-control-sm" placeholder="Cari Nomor" data-col="4">
+                    </th>
+                    <th></th>
+                </tr>
             </thead>
         </table>
     </div>
@@ -29,7 +42,7 @@
 @section('scripts')
     <script>
         $(function() {
-            $('#penomoran-uar-table').DataTable({
+            const table = $('#penomoran-uar-table').DataTable({
                 processing: true,
                 serverSide: false,
                 ajax: '{{ route('penomoran-uar.index') }}',
@@ -68,6 +81,16 @@
                 order: [
                     [3, 'asc']
                 ],
+                initComplete: function() {
+                    // Wire column filters
+                    $('#penomoran-uar-table thead tr.filters input').on('keyup change', function() {
+                        const colIdx = $(this).data('col');
+                        const val = this.value;
+                        if (table.column(colIdx).search() !== val) {
+                            table.column(colIdx).search(val).draw();
+                        }
+                    });
+                }
             });
         });
     </script>
