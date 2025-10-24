@@ -206,7 +206,7 @@ class ImportUAMController extends Controller
         $batchSize   = $opts['batchSize'] ?? 1000;
         $fieldA      = $opts['fieldA'] ?? null;
         $fieldB      = $opts['fieldB'] ?? null;
-        $extraCols   = $opts['extraColumns'] ?? []; // <-- add
+        $extraCols   = $opts['extraColumns'] ?? [];
 
         $summary = [
             'source_total'      => (clone $viewQuery)->count(),
@@ -229,6 +229,9 @@ class ImportUAMController extends Controller
                     DB::table($pivotTable)->truncate();
                 }
             }
+
+            // Ensure sequence is aligned before any insert (handles prior manual inserts)
+            $this->ensurePgSequence($pivotTable, 'id');
 
             $existingPairs = [];
             if (!$fullRefresh) {
@@ -279,7 +282,7 @@ class ImportUAMController extends Controller
                         continue;
                     }
 
-                    $batch[] = array_merge($extraCols, [ // <-- add
+                    $batch[] = array_merge($extraCols, [
                         $colA        => $idA,
                         $colB        => $idB,
                         'created_at' => $now,
@@ -294,14 +297,15 @@ class ImportUAMController extends Controller
                     }
 
                     if (count($batch) === $batchSize) {
-                        DB::table($pivotTable)->insert($batch);
+                        // Use insertOrIgnore to bypass any residual conflicts
+                        DB::table($pivotTable)->insertOrIgnore($batch);
                         $batch = [];
                     }
                 }
             });
 
             if ($batch) {
-                DB::table($pivotTable)->insert($batch);
+                DB::table($pivotTable)->insertOrIgnore($batch);
             }
 
             DB::commit();
@@ -546,6 +550,7 @@ class ImportUAMController extends Controller
             'fullRefresh' => $full,
             'fieldA'      => 'single_role',   // IMPORTANT
             'fieldB'      => 'tcode',         // IMPORTANT
+            'extraColumns' => ['source' => 'import'], // <-- add source
         ]);
 
         return response()->json(['message' => 'Single Role - Tcode sync done', 'summary' => $summary]);
@@ -590,7 +595,7 @@ class ImportUAMController extends Controller
 
         $viewQuery = UAMCompositeSingle::query()
             ->select(['composite_role', 'single_role'])
-            ->where('single_role', 'NOT LIKE', '%-AO') // exclude AO variants
+            ->where('single_role', 'NOT LIKE', '%-AO')
             ->orderBy('composite_role')
             ->orderBy('single_role');
 
@@ -610,7 +615,7 @@ class ImportUAMController extends Controller
             'fullRefresh' => $full,
             'fieldA'      => 'composite_role',
             'fieldB'      => 'single_role',
-            'extraColumns' => ['source' => 'import'], // <-- add
+            'extraColumns' => ['source' => 'import'], // already present, keep it
         ]);
 
         return response()->json([
@@ -720,4 +725,18 @@ class ImportUAMController extends Controller
        - Use syncPivotGeneric() for composite_role <-> single_role pivot.
        Just prepare source queries & local maps similarly.
        ================================================================ */
+
+    private function ensurePgSequence(string $table, string $pk = 'id'): void
+    {
+        if (DB::getDriverName() !== 'pgsql') return;
+
+        // Align the sequence with current max(id)
+        DB::statement("
+        SELECT setval(
+            pg_get_serial_sequence(?, ?),
+            COALESCE((SELECT MAX($pk) FROM $table), 0) + 1,
+            false
+        )
+    ", [$table, $pk]);
+    }
 }

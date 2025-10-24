@@ -299,7 +299,7 @@ class CompositeSingleController extends Controller
                 ? '<a href="' . route('composite-single.edit', $comp->id) . '" class="btn btn-primary btn-sm mb-1 w-100">Edit</a>'
                 . '<form action="' . route('composite-single.destroy', $comp->id) . '" method="POST" onsubmit="return confirm(\'Delete all links for this composite role?\')">'
                 . csrf_field() . method_field('DELETE')
-                . '<button class="btn btn-danger btn-sm w-100">Delete</button></form>'
+                . '<button class="btn btn-danger btn-sm w-100">Delete Relationship</button></form>'
                 : '<span class="text-muted small">Read only</span>';
 
             // If no single roles, still show a placeholder row
