@@ -28,9 +28,14 @@ class DepartemenController extends Controller
             $kompartemens = Kompartemen::orderBy('nama')->get();
             $departemens = Departemen::with(['company'])->get();
         } else {
-            $companies = Company::where('company_code', $userCompanyCode)->get();
-            $kompartemens = Kompartemen::where('company_id', $userCompanyCode)->orderBy('nama')->get();
-            $departemens = Departemen::where('company_id', $userCompanyCode)->get();
+            $firstChar = substr($userCompanyCode, 0, 1);
+            $companies = Company::where('company_code', 'LIKE', $firstChar . '%')
+                ->orderBy('company_code')
+                ->get();
+            $kompartemens = Kompartemen::where('company_id', 'LIKE', $firstChar . '%')
+                ->orderBy('nama')
+                ->get();
+            $departemens = Departemen::where('company_id', 'LIKE', $firstChar . '%')->get();
         }
 
         return view('master-data.departemen.index', compact('companies', 'departemens', 'kompartemens'));
@@ -57,6 +62,7 @@ class DepartemenController extends Controller
                 'departemen_id' => 'required|string|unique:ms_departemen,departemen_id',
                 'nama' => 'required|string|max:255',
                 'deskripsi' => 'nullable|string',
+                'cost_center' => 'nullable|string|unique:ms_departemen,cost_center',
             ]);
 
             Departemen::create($request->all() + [
@@ -105,11 +111,22 @@ class DepartemenController extends Controller
     {
         // Validate the request data
         $request->validate([
-            'company_id' => 'required|string',
-            'kompartemen_id' => 'required|string',
-            'departemen_id' => 'required|string|unique:ms_departemen,departemen_id',
-            'nama' => 'required|string|max:255',
-            'deskripsi' => 'nullable|string',
+            'company_id' => ['required', 'exists:ms_company,company_code'],
+            'kompartemen_id' => ['nullable', 'exists:ms_kompartemen,kompartemen_id'],
+            'departemen_id' => [
+                'required',
+                'string',
+                \Illuminate\Validation\Rule::unique('ms_departemen', 'departemen_id')
+                    ->ignore($departemen->departemen_id, 'departemen_id'),
+            ],
+            'nama' => ['required', 'string', 'max:255'],
+            'deskripsi' => ['nullable', 'string'],
+            'cost_center' => [
+                'nullable',
+                'string',
+                \Illuminate\Validation\Rule::unique('ms_departemen', 'cost_center')
+                    ->ignore($departemen->departemen_id, 'departemen_id'),
+            ],
         ]);
 
         // Update the departemen with the validated data
@@ -119,6 +136,7 @@ class DepartemenController extends Controller
             'departemen_id' => $request->input('departemen_id'),
             'nama' => $request->input('nama'),
             'deskripsi' => $request->input('deskripsi'),
+            'cost_center' => $request->input('cost_center'),
             'updated_by' => auth()->user()->name // Assuming you're tracking the user who updated the record
         ]);
 

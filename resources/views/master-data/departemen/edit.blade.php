@@ -52,7 +52,7 @@
                     <!-- Kompartemen Dropdown -->
                     <div class="mb-3">
                         <label for="kompartemen_id" class="form-label">Kompartemen</label>
-                        <select name="kompartemen_id" id="kompartemen_id" class="form-control select2" required>
+                        <select name="kompartemen_id" id="kompartemen_id" class="form-control select2">
                         </select>
                     </div>
 
@@ -69,11 +69,19 @@
                         <input type="text" class="form-control" name="nama" value="{{ $departemen->nama }}" required>
                     </div>
 
+
+                    <div class="mb-3">
+                        <label for="cost_center" class="form-label">Cost Center</label>
+                        <input type="text" class="form-control" name="cost_center"
+                            value="{{ $departemen->cost_center }}">
+                    </div>
+
                     <!-- Description -->
                     <div class="mb-3">
                         <label for="deskripsi" class="form-label">Deskripsi</label>
                         <textarea class="form-control" name="deskripsi">{{ $departemen->deskripsi }}</textarea>
                     </div>
+
 
                     <button type="submit" class="btn btn-primary">Update Departemen</button>
                 </form>

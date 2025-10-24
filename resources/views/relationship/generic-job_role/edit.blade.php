@@ -41,15 +41,21 @@
 
             <div class="form-group mb-3">
                 <label for="job_role_id">Job Role</label>
-                <select name="job_role_id" id="job_role_id" class="form-control" required>
-                    <option value="">Pilih Job Role</option>
-                    @foreach ($jobRoles as $jobRole)
-                        <option value="{{ $jobRole->job_role_id }}" data-nama="{{ $jobRole->nama }}"
-                            {{ $nikJobRole->job_role_id == $jobRole->job_role_id ? 'selected' : '' }}>
-                            {{ $jobRole->job_role_id }} - {{ $jobRole->nama }}
-                        </option>
-                    @endforeach
-                </select>
+                <div class="input-group">
+                    <select name="job_role_id" id="job_role_id" class="form-control" required>
+                        <option value="">Pilih Job Role</option>
+                        @foreach ($jobRoles as $jobRole)
+                            <option value="{{ $jobRole->job_role_id }}" data-nama="{{ $jobRole->nama }}"
+                                {{ $nikJobRole->job_role_id == $jobRole->job_role_id ? 'selected' : '' }}>
+                                {{ $jobRole->job_role_id }} - {{ $jobRole->nama }}
+                            </option>
+                        @endforeach
+                    </select>
+                    <button type="button" id="editJobRoleBtn" class="btn btn-outline-primary"
+                        {{ $nikJobRole->job_role_id ? '' : 'disabled' }}>
+                        <i class="fas fa-edit"></i> Edit Job Role
+                    </button>
+                </div>
             </div>
 
             <div class="form-group mb-3">
@@ -136,12 +142,34 @@
             sortAndFilterJobRoles();
             $('#job_role_id').on('select2:open', sortAndFilterJobRoles);
 
-            // keep the name box synced
+            // Job Role edit button handler
             $('#job_role_id').on('change', function() {
+                const selectedJobRoleId = $(this).val();
+                const editBtn = $('#editJobRoleBtn');
+
+                if (selectedJobRoleId) {
+                    editBtn.prop('disabled', false);
+                    editBtn.data('job-role-id', selectedJobRoleId);
+                } else {
+                    editBtn.prop('disabled', true);
+                    editBtn.removeData('job-role-id');
+                }
+
+                // Update job role name field (existing functionality)
                 var nama = $(this).find('option:selected').data('nama') || $(this).find('option:selected')
                     .text().split(' - ').slice(1).join(' - ');
                 $('#job_role_name').val(nama || '');
             });
+
+            $('#editJobRoleBtn').on('click', function() {
+                const jobRoleId = $(this).data('job-role-id');
+                if (jobRoleId) {
+                    // Open in new tab to preserve current form data
+                    window.open(`{{ route('job-roles.index') }}/${jobRoleId}/edit`, '_blank');
+                }
+            });
+
+            // Set initial state on page load
             $('#job_role_id').trigger('change');
         });
     </script>

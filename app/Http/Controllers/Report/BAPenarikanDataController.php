@@ -25,8 +25,10 @@ class BAPenarikanDataController extends Controller
                 ->orderBy('company_code')
                 ->get();
         } else {
+            $firstChar = substr($user_company, 0, 1); // $firstChar = 'A'
             $companies = Company::select('company_code', 'shortname', 'nama')
-                ->where('company_code', $user_company)
+                ->where('company_code', 'LIKE', $firstChar . '%') // Gets A000, A001, etc.
+                ->orderBy('company_code')
                 ->get();
         }
 
@@ -47,17 +49,48 @@ class BAPenarikanDataController extends Controller
 
         $companyKey = trim((string) $request->get('company_id'));
 
-        $company = null;
-        if ($companyKey !== '') {
-            $company = Company::where('shortname', $companyKey)
-                ->orWhere('company_code', $companyKey)
-                ->orWhere('nama', $companyKey)
-                ->first();
+        // dd($companyKey, $request->get('company_id'));
+
+        // Return empty result if no company is selected
+        if ($companyKey == '') {
+            return response()->json([
+                'draw'            => $draw,
+                'recordsTotal'    => 0,
+                'recordsFiltered' => 0,
+                'data'            => [],
+                'summary' => [
+                    'company'               => '-',
+                    'total_active_generic'  => 0,
+                ],
+                'syncdate' => $syncdate,
+                'company-name' => '-'
+            ]);
         }
 
-        $shortname   = $company?->shortname;
-        $companyCode = $company?->company_code;
-        $companyName = $company?->nama;
+        $company = Company::where('shortname', $companyKey)
+            ->orWhere('company_code', $companyKey)
+            ->orWhere('nama', $companyKey)
+            ->first();
+
+        // Return empty result if company not found
+        if (!$company) {
+            return response()->json([
+                'draw'            => $draw,
+                'recordsTotal'    => 0,
+                'recordsFiltered' => 0,
+                'data'            => [],
+                'summary' => [
+                    'company'               => $companyKey,
+                    'total_active_generic'  => 0,
+                ],
+                'syncdate' => $syncdate,
+                'company-name' => 'Company not found'
+            ]);
+        }
+
+        $shortname   = $company->shortname;
+        $companyCode = $company->company_code;
+        $companyName = $company->nama;
 
         // Base (all active generic users) – this defines the dataset scope
         $base = DB::table('mdb_usmm_master')
@@ -66,21 +99,17 @@ class BAPenarikanDataController extends Controller
                     ->orWhere('valid_to', '00000000')
                     ->orWhereRaw("to_date(valid_to,'YYYYMMDD') >= current_date");
             });
-        // ->whereRaw("sap_user_id ~* '^[A-K]'");
 
-        $recordsTotal = (clone $base)->count(); // total before company filter
-
-        // Apply company filter (try match any representation stored in mdb_usmm_master.company)
+        // Apply company filter (required now)
         $filtered = clone $base;
-        if ($shortname || $companyCode || $companyName) {
-            $filtered->where(function ($q) use ($shortname, $companyCode, $companyName) {
-                if ($shortname)   $q->orWhere('company', $shortname);
-                if ($companyCode) $q->orWhere('company', $companyCode);
-                if ($companyName) $q->orWhere('company', $companyName);
-            });
-        }
+        $filtered->where(function ($q) use ($shortname, $companyCode, $companyName) {
+            if ($shortname)   $q->orWhere('company', $shortname);
+            if ($companyCode) $q->orWhere('company', $companyCode);
+            if ($companyName) $q->orWhere('company', $companyName);
+        });
 
-        $recordsFiltered = (clone $filtered)->count();
+        $recordsTotal = $filtered->count(); // Only count filtered records now
+        $recordsFiltered = $recordsTotal;
 
         // Ordering (must map displayed columns)
         // 0 No, 1 company, 2 user_type, 3 sap_user_id, 4 creator, 5 created_on, 6 valid_from, 7 valid_to, 8 last_logon_date, 9 last_logon_time
@@ -94,7 +123,7 @@ class BAPenarikanDataController extends Controller
             2 => 'user_type',
             3 => 'sap_user_id',
             4 => 'creator',
-            5 => 'creator_created_at',       // adjust if actual column differs
+            5 => 'creator_created_at',
             6 => 'valid_from',
             7 => 'valid_to',
             8 => 'last_logon_date',
@@ -131,31 +160,38 @@ class BAPenarikanDataController extends Controller
         $companyKey = trim((string)$request->get('company_id'));
         $syncdate   = Periode::max('tanggal_create_periode');
 
-        $company = null;
-        if ($companyKey !== '') {
-            $company = Company::where('shortname', $companyKey)->first();
+        // Prevent export if no company is selected
+        if ($companyKey === '') {
+            abort(400, 'Company must be selected');
         }
-        $shortname   = $company?->shortname;
-        $companyName = $company?->nama;
 
-        // Base active generic users
+        $company = Company::where('shortname', $companyKey)
+            ->orWhere('company_code', $companyKey)
+            ->orWhere('nama', $companyKey)
+            ->first();
+
+        if (!$company) {
+            abort(404, 'Company not found');
+        }
+
+        $shortname   = $company->shortname;
+        $companyCode = $company->company_code;
+        $companyName = $company->nama;
+
+        // Base active generic users with required company filter
         $query = DB::table('mdb_usmm_master')
             ->where(function ($w) {
                 $w->whereNull('valid_to')
                     ->orWhere('valid_to', '00000000')
                     ->orWhereRaw("to_date(valid_to,'YYYYMMDD') >= current_date");
-            });
-        // ->whereRaw("sap_user_id ~* '^[A-K]'");
-
-        if ($shortname) {
-            $query->where(function ($q) use ($shortname) {
+            })
+            ->where(function ($q) use ($shortname, $companyCode, $companyName) {
                 if ($shortname)   $q->orWhere('company', $shortname);
+                if ($companyCode) $q->orWhere('company', $companyCode);
+                if ($companyName) $q->orWhere('company', $companyName);
             });
-        }
 
-        $rows = $query
-            ->orderBy('sap_user_id')
-            ->get();
+        $rows = $query->orderBy('sap_user_id')->get();
 
         $total = $rows->count();
         $companyLabel = $companyName ?? '-';

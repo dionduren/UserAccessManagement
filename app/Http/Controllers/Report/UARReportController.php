@@ -12,11 +12,12 @@ use App\Models\NIKJobRole;
 use App\Models\PenomoranUAR;
 use App\Models\Periode;
 use App\Models\userGenericSystem;
-use App\Models\UserNIKUnitKerja;
 use App\Models\UserGenericUnitKerja;
+use App\Models\UserNIKUnitKerja;
 
 use Illuminate\Http\Request;
 
+use Illuminate\Support\Facades\Log;
 use PhpOffice\PhpWord\PhpWord;
 use PhpOffice\PhpWord\SimpleType\Jc;
 
@@ -149,6 +150,8 @@ class UARReportController extends Controller
             } else {
                 $nomorSurat  = 'XXX (Belum terdaftar)';
                 $cost_center = Departemen::find($departemenId)?->cost_center ?? 'Belum terdaftar';
+                Log::info('Departemen ID not found for PenomoranUAR: ' . $departemenId);
+                Log::info('Departemen Cost Center: ' . (Departemen::find($departemenId) ?? 'Not Found'));
             }
         } elseif ($kompartemenId) {
             $penomoranUAR = PenomoranUAR::where('unit_kerja_id', $kompartemenId)

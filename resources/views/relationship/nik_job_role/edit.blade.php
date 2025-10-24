@@ -95,9 +95,14 @@
                             <div class="mb-3">
                                 <label for="job_role_id" class="form-label">Job Role <span
                                         class="text-danger">*</span></label>
-                                <select name="job_role_id" id="job_role_id" class="form-control select2" required>
-                                    <option value="">Select Job Role</option>
-                                </select>
+                                <div class="input-group">
+                                    <select name="job_role_id" id="job_role_id" class="form-control select2" required>
+                                        <option value="">Select Job Role</option>
+                                    </select>
+                                    <button type="button" id="editJobRoleBtn" class="btn btn-outline-primary" disabled>
+                                        <i class="fas fa-edit"></i> Edit Job Role
+                                    </button>
+                                </div>
                             </div>
 
                             <!-- User Dropdown -->
@@ -563,5 +568,30 @@
                 setInitialValues();
             });
         }
+
+        // Job Role edit button handler
+        $('#job_role_id').on('change', function() {
+            const selectedJobRoleId = $(this).val();
+            const editBtn = $('#editJobRoleBtn');
+
+            if (selectedJobRoleId) {
+                editBtn.prop('disabled', false);
+                editBtn.data('job-role-id', selectedJobRoleId);
+            } else {
+                editBtn.prop('disabled', true);
+                editBtn.removeData('job-role-id');
+            }
+        });
+
+        $('#editJobRoleBtn').on('click', function() {
+            const jobRoleId = $(this).data('job-role-id');
+            if (jobRoleId) {
+                // Open in new tab to preserve current form data
+                window.open(`{{ route('job-roles.index') }}/${jobRoleId}/edit`, '_blank');
+            }
+        });
+
+        // Trigger change on page load to set initial state
+        $('#job_role_id').trigger('change');
     </script>
 @endsection

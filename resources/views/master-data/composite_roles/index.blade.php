@@ -73,8 +73,6 @@
                             <th>Composite Role</th>
                             <th>Deskripsi</th>
                             <th width="10%">Sumber</th>
-                            {{-- <th>Job Role</th> --}}
-                            {{-- <th>Single Roles</th> --}}
                             <th>Actions</th>
                         </tr>
                     </thead>
@@ -101,29 +99,12 @@
             </div>
         </div>
     </div>
-
-    {{-- <div class="modal fade" id="createEditCompositeRoleModal" tabindex="-1"
-        aria-labelledby="createEditCompositeRoleModalLabel" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="createEditCompositeRoleModalLabel">Create/Edit Composite Role</h5>
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                        <span aria-hidden="true">&times;</span>
-                    </button>
-                </div>
-                <div class="modal-body">
-                    <!-- Form content will be loaded dynamically -->
-                </div>
-            </div>
-        </div>
-    </div> --}}
 @endsection
 
 @section('scripts')
     <script>
         $(document).ready(function() {
-            let masterData = {}; // Store parsed JSON for efficient lookups
+            let masterData = {}; // Store master data for efficient lookups
 
             let compositeRolesTable = $('#composite_roles_table').DataTable({
                 processing: true,
@@ -131,15 +112,10 @@
                 ajax: {
                     url: '/composite-roles/data',
                     data: function(d) {
-                        // console.log('data d :', d);
                         d.company_id = $('#companyDropdown').val();
-                        // console.log('data company :', d.company_id);
                         d.kompartemen_id = $('#kompartemenDropdown').val();
-                        // console.log('data kompartemen :', d.kompartemen_id);
                         d.departemen_id = $('#departemenDropdown').val();
-                        // console.log('data departemen :', d.departemen_id);
                         d.job_role_id = $('#jobRoleDropdown').val();
-                        // console.log('data job_role :', d.job_role_id);
                     },
                 },
                 columns: [{
@@ -168,15 +144,6 @@
                             return data;
                         }
                     },
-                    // {
-                    //     data: 'job_role',
-                    //     name: 'job_role'
-                    // },
-                    // {
-                    //     data: 'single_roles',
-                    //     name: 'single_roles',
-                    //     orderable: false
-                    // },
                     {
                         data: 'actions',
                         name: 'actions',
@@ -186,25 +153,32 @@
                 ],
             });
 
+            // Load master data using the API endpoint
+            function loadMasterData() {
+                $.ajax({
+                    url: '/api/master-data',
+                    method: 'GET',
+                    data: {
+                        active_only: true // Only get active records
+                    },
+                    success: function(data) {
+                        // Convert array to object for efficient lookups
+                        masterData = data.reduce((acc, company) => {
+                            acc[company.company_id] = company;
+                            return acc;
+                        }, {});
 
-            // Fetch JSON data
-            $.ajax({
-                url: '/storage/master_data.json',
-                dataType: 'json',
-                success: function(data) {
-                    masterData = data.reduce((acc, company) => {
-                        acc[company.company_id] = company;
-                        return acc;
-                    }, {});
-                    // populateDropdown('#companyDropdown', masterData, 'company_id', 'company_name');
-                    // populateDropdown('#companyDropdown', Object.values(masterData), 'company_id',
-                    //     'company_name');
+                        console.log('Master data loaded:', masterData);
+                    },
+                    error: function(xhr, status, error) {
+                        console.error('Failed to load master data:', error);
+                        alert('Failed to load master data. Please refresh the page.');
+                    }
+                });
+            }
 
-                },
-                error: function() {
-                    alert('Failed to load master data.');
-                }
-            });
+            // Load master data on page load
+            loadMasterData();
 
             // Handle Company dropdown change
             $('#companyDropdown').on('change', function() {
@@ -225,13 +199,13 @@
                 const companyId = $('#companyDropdown').val();
                 const kompartemenId = $(this).val();
                 const selectedCompany = masterData[companyId];
-                const kompartemen = selectedCompany.kompartemen.find((k) => k.kompartemen_id ==
+                const kompartemen = selectedCompany?.kompartemen?.find((k) => k.kompartemen_id ==
                     kompartemenId);
 
                 resetDropdowns(['#departemenDropdown', '#jobRoleDropdown']);
                 if (kompartemen) {
                     populateDropdown('#departemenDropdown', kompartemen.departemen, 'departemen_id',
-                        'nama');
+                    'nama');
                 }
             });
 
@@ -248,14 +222,13 @@
 
                     // Check if departemen belongs to a kompartemen
                     if (kompartemenId) {
-                        const selectedKompartemen = selectedCompany.kompartemen?.find((k) => k
-                            .kompartemen_id ==
-                            kompartemenId);
+                        const selectedKompartemen = selectedCompany?.kompartemen?.find((k) => k
+                            .kompartemen_id == kompartemenId);
                         selectedDepartemen = selectedKompartemen?.departemen?.find((d) => d.departemen_id ==
                             departemenId);
                     } else {
                         // Fallback to departemen_without_kompartemen
-                        selectedDepartemen = selectedCompany.departemen_without_kompartemen?.find((d) => d
+                        selectedDepartemen = selectedCompany?.departemen_without_kompartemen?.find((d) => d
                             .departemen_id == departemenId);
                     }
 
@@ -264,7 +237,9 @@
                     }
                 } else {
                     // Populate job_roles_without_relations if no departemen is selected
-                    jobRoles.push(...selectedCompany.job_roles_without_relations || []);
+                    if (selectedCompany?.job_roles_without_relations) {
+                        jobRoles.push(...selectedCompany.job_roles_without_relations);
+                    }
                 }
 
                 console.log('Job Roles:', jobRoles);
@@ -273,31 +248,22 @@
                 populateDropdown('#jobRoleDropdown', jobRoles, 'id', 'nama');
             });
 
-
-
             function reloadTable() {
-                const companyId = $('#companyDropdown').val();
-                const kompartemenId = $('#kompartemenDropdown').val();
-                const departemenId = $('#departemenDropdown').val();
-                const jobRoleId = $('#jobRoleDropdown').val();
-
                 compositeRolesTable.ajax.reload(null, false); // Reloads the data without resetting pagination
             }
-
-
 
             // Reload DataTable on dropdown changes
             $('#companyDropdown, #kompartemenDropdown, #departemenDropdown, #jobRoleDropdown').on('change',
                 reloadTable);
-
 
             function populateDropdown(selector, items, valueField, textField) {
                 const dropdown = $(selector);
                 dropdown.empty().append('<option value="">-- Select --</option>');
 
                 if (Array.isArray(items) && items.length) {
-                    items.sort((a, b) => a[textField].localeCompare(b[textField])).forEach((item) => {
-                        dropdown.append(`<option value="${item[valueField]}">${item[textField]}</option>`);
+                    items.sort((a, b) => (a[textField] || '').localeCompare(b[textField] || '')).forEach((item) => {
+                        dropdown.append(
+                            `<option value="${item[valueField]}">${item[textField] || 'N/A'}</option>`);
                     });
                     dropdown.prop('disabled', false);
                 } else {
@@ -311,8 +277,6 @@
                         true);
                 });
             }
-
-
 
             // Show modal for composite role details
             $(document).on('click', '.show-composite-role', function(e) {

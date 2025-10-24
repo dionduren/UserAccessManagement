@@ -6,6 +6,9 @@
             <div class="card-header d-flex align-items-center justify-content-between">
                 <h5 class="mb-0">User Generic Tanpa Relasi Job Role</h5>
                 <div class="d-flex gap-2">
+                    <a href="{{ route('job-roles.index') }}" class="btn btn-primary btn-sm">
+                        <i class="bi bi-person-badge me-1"></i> Buat Job Roles Baru
+                    </a>
                     <button id="export-excel" class="btn btn-success btn-sm" disabled>
                         <i class="fas fa-file-excel"></i> Export Excel
                     </button>

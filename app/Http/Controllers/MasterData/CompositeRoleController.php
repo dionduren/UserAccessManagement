@@ -26,7 +26,11 @@ class CompositeRoleController extends Controller
         if ($userCompanyCode === 'A000') {
             $companies = Company::all();
         } else {
-            $companies = Company::where('company_code', $userCompanyCode)->get();
+            // Get all companies with the same first character as userCompany
+            $firstChar = substr($userCompanyCode, 0, 1);
+            $companies = Company::where('company_code', 'LIKE', $firstChar . '%')
+                ->orderBy('company_code')
+                ->get();
         }
 
         return view('master-data.composite_roles.index', compact('companies'));
@@ -172,7 +176,20 @@ class CompositeRoleController extends Controller
 
     public function getCompositeRoles(Request $request)
     {
+        $user = auth()->user();
+        $userCompanyCode = $user->loginDetail->company_code ?? null;
+
         $query = CompositeRole::with(['company', 'jobRole', 'singleRoles']);
+
+        // Apply company-based access control
+        if ($userCompanyCode !== 'A000') {
+            // Non-A000 users: filter by companies with same first character
+            $firstChar = substr($userCompanyCode, 0, 1);
+            $allowedCompanies = Company::where('company_code', 'LIKE', $firstChar . '%')
+                ->pluck('company_code')
+                ->toArray();
+            $query->whereIn('company_id', $allowedCompanies);
+        }
 
         if ($request->filled('company_id')) {
             $query->where('company_id', $request->company_id);
@@ -194,7 +211,7 @@ class CompositeRoleController extends Controller
             $query->where('jabatan_id', $request->job_role_id);
         }
 
-        // ✅ Apply general search
+        // Apply general search
         if ($search = $request->input('search.value')) {
             $query->where(function ($q) use ($search) {
                 $q->where('nama', 'like', "%{$search}%")

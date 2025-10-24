@@ -24,8 +24,13 @@ class KompartemenController extends Controller
             $companies = Company::all();
             $kompartemens = Kompartemen::all();
         } else {
-            $companies = Company::where('company_code', $userCompanyCode)->get();
-            $kompartemens = Kompartemen::where('company_id', $userCompanyCode)->get();
+            $firstChar = substr($userCompanyCode, 0, 1);
+            $companies = Company::where('company_code', 'LIKE', $firstChar . '%')
+                ->orderBy('company_code')
+                ->get();
+            $kompartemens = Kompartemen::where('company_id', 'LIKE', $firstChar . '%')
+                ->orderBy('nama')
+                ->get();
         }
 
         return view('master-data.kompartemen.index', compact('companies', 'kompartemens'));

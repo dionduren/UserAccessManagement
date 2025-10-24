@@ -24,7 +24,11 @@ class CostCenterController extends Controller
         if ($userCompanyCode === 'A000') {
             $companies = Company::all();
         } else {
-            $companies = Company::where('company_code', $userCompanyCode)->get();
+            // Get all companies with the same first character as userCompany
+            $firstChar = substr($userCompanyCode, 0, 1);
+            $companies = Company::where('company_code', 'LIKE', $firstChar . '%')
+                ->orderBy('company_code')
+                ->get();
         }
 
         if ($request->ajax()) {

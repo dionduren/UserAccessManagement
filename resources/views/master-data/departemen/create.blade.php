@@ -65,9 +65,15 @@
                     </div>
 
                     <div class="mb-3">
+                        <label for="cost_center" class="form-label">Cost Center</label>
+                        <input type="text" class="form-control" name="cost_center">
+                    </div>
+
+                    <div class="mb-3">
                         <label for="deskripsi" class="form-label">Deskripsi</label>
                         <textarea class="form-control" name="deskripsi"></textarea>
                     </div>
+
 
                     <button type="submit" class="btn btn-primary">Buat Departemen</button>
                 </form>
