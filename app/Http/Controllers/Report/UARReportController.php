@@ -150,8 +150,8 @@ class UARReportController extends Controller
             } else {
                 $nomorSurat  = 'XXX (Belum terdaftar)';
                 $cost_center = Departemen::find($departemenId)?->cost_center ?? 'Belum terdaftar';
-                Log::info('Departemen ID not found for PenomoranUAR: ' . $departemenId);
-                Log::info('Departemen Cost Center: ' . (Departemen::find($departemenId) ?? 'Not Found'));
+                // Log::info('Departemen ID not found for PenomoranUAR: ' . $departemenId);
+                // Log::info('Departemen Cost Center: ' . (Departemen::find($departemenId) ?? 'Not Found'));
             }
         } elseif ($kompartemenId) {
             $penomoranUAR = PenomoranUAR::where('unit_kerja_id', $kompartemenId)
@@ -182,6 +182,9 @@ class UARReportController extends Controller
                 break;
             case 'B000':
                 $headerNomorSurat = "PKG_TI.03.04_UAR_{$periodeYear}";
+                break;
+            case 'G000':
+                $headerNomorSurat = "REK-TI-UAR-{$periodeYear}";
                 break;
             default: // A000 or any other
                 $headerNomorSurat = "PI-TIN-UAR-{$periodeYear}";
@@ -522,6 +525,9 @@ class UARReportController extends Controller
                 break;
             case 'B000':
                 $headerNomorSurat = "PKG_TI.03.04_UAR_{$periodeYear}";
+                break;
+            case 'G000':
+                $headerNomorSurat = "REK-TI-UAR-{$periodeYear}";
                 break;
             default: // A000 or any other
                 $headerNomorSurat = "PI-TIN-UAR-{$periodeYear}";

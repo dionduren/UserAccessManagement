@@ -178,16 +178,19 @@ class CompositeSingleController extends Controller
         $userCompanyCode = $user->loginDetail->company_code ?? null;
 
         $draw   = (int)$request->input('draw');
-        $length = (int)$request->input('length', 10);     // composites per page
-        $start  = (int)$request->input('start', 0);       // offset in composites
+        $length = (int)$request->input('length', 10);
+        $start  = (int)$request->input('start', 0);
         $search = $request->input('search.value');
 
-        // Base query (one row per composite role)
+        // Base query (one row per composite role) - ADD PROPER SOFT DELETE FILTERS
         $base = CompositeRole::query()
+            ->whereNull('tr_composite_roles.deleted_at') // ✅ Non-deleted composite roles
             ->leftJoin('ms_company', 'ms_company.company_code', '=', 'tr_composite_roles.company_id')
+            ->whereNull('ms_company.deleted_at') // ✅ Non-deleted companies
             ->select('tr_composite_roles.*', 'ms_company.nama as company_name')
             ->with(['singleRoles' => function ($q) {
-                $q->orderBy('nama');
+                $q->whereNull('tr_single_roles.deleted_at') // ✅ Non-deleted single roles
+                    ->orderBy('nama');
             }])
             ->orderBy('tr_composite_roles.company_id');
 
@@ -201,7 +204,7 @@ class CompositeSingleController extends Controller
         // Total BEFORE search filter (company scope already applied)
         $recordsTotal = (clone $base)->count();
 
-        // Search filter (composite, company, any single role name / description)
+        // Global search filter
         if ($search) {
             $driver = DB::getDriverName();
             $like   = $driver === 'pgsql' ? 'ILIKE' : 'LIKE';
@@ -211,17 +214,53 @@ class CompositeSingleController extends Controller
                     ->orWhere('tr_composite_roles.company_id', $like, "%$search%")
                     ->orWhere('ms_company.nama', $like, "%$search%")
                     ->orWhereHas('singleRoles', function ($sq) use ($search, $like) {
-                        $sq->where('tr_single_roles.nama', $like, "%$search%")
-                            ->orWhere('tr_single_roles.deskripsi', $like, "%$search%");
+                        $sq->whereNull('tr_single_roles.deleted_at') // ✅ Ensure search only in non-deleted single roles
+                            ->where(function ($innerQ) use ($search, $like) {
+                                $innerQ->where('tr_single_roles.nama', $like, "%$search%")
+                                    ->orWhere('tr_single_roles.deskripsi', $like, "%$search%");
+                            });
                     });
             });
+        }
+
+        // Individual column search filters
+        $columns = $request->input('columns', []);
+        $driver = DB::getDriverName();
+        $like = $driver === 'pgsql' ? 'ILIKE' : 'LIKE';
+
+        foreach ($columns as $index => $column) {
+            $columnSearch = $column['search']['value'] ?? '';
+            if (!empty($columnSearch)) {
+                switch ($index) {
+                    case 0: // Company column
+                        $base->where(function ($q) use ($columnSearch, $like) {
+                            $q->where('tr_composite_roles.company_id', $like, "%$columnSearch%")
+                                ->orWhere('ms_company.nama', $like, "%$columnSearch%");
+                        });
+                        break;
+                    case 1: // Composite Role column
+                        $base->where('tr_composite_roles.nama', $like, "%$columnSearch%");
+                        break;
+                    case 2: // Single Role column
+                        $base->whereHas('singleRoles', function ($sq) use ($columnSearch, $like) {
+                            $sq->whereNull('tr_single_roles.deleted_at') // ✅ Non-deleted single roles only
+                                ->where('tr_single_roles.nama', $like, "%$columnSearch%");
+                        });
+                        break;
+                    case 3: // Description column
+                        $base->whereHas('singleRoles', function ($sq) use ($columnSearch, $like) {
+                            $sq->whereNull('tr_single_roles.deleted_at') // ✅ Non-deleted single roles only
+                                ->where('tr_single_roles.deskripsi', $like, "%$columnSearch%");
+                        });
+                        break;
+                }
+            }
         }
 
         // Count AFTER filtering
         $recordsFiltered = (clone $base)->count();
 
         // Ordering (applied at composite level)
-        // DataTables columns: 0 company, 1 composite_role, 2 single_role, 3 description, 4 actions
         if ($request->has('order')) {
             foreach ($request->input('order') as $ord) {
                 $idx = (int)$ord['column'];
@@ -253,7 +292,7 @@ class CompositeSingleController extends Controller
         // Build flattened row set (expanded single roles)
         $data = [];
         foreach ($composites as $comp) {
-            $companyDisplay = ($comp->company_id ?? '-');
+            $companyDisplay = ($comp->company_name ?? $comp->company_id ?? '-');
             $canModify = $userCompanyCode === 'A000' || $comp->company_id === $userCompanyCode;
 
             $actionsHtml = $canModify
@@ -290,9 +329,9 @@ class CompositeSingleController extends Controller
 
         return response()->json([
             'draw'            => $draw,
-            'recordsTotal'    => $recordsTotal,      // total composites (after company scope)
-            'recordsFiltered' => $recordsFiltered,   // filtered composites
-            'data'            => $data,              // expanded rows
+            'recordsTotal'    => $recordsTotal,
+            'recordsFiltered' => $recordsFiltered,
+            'data'            => $data,
         ]);
     }
 
@@ -324,8 +363,15 @@ class CompositeSingleController extends Controller
 
         // Base query: join to composite role (by name) to derive company, then to company table
         $base = CompositeAO::query()
-            ->leftJoin('tr_composite_roles', 'tr_composite_roles.nama', '=', 'tr_composite_ao.composite_role')
-            ->leftJoin('ms_company', 'ms_company.company_code', '=', 'tr_composite_roles.company_id')
+            ->whereNull('tr_composite_ao.deleted_at') // ✅ Non-deleted composite AOs
+            ->leftJoin('tr_composite_roles', function ($join) {
+                $join->on('tr_composite_roles.nama', '=', 'tr_composite_ao.composite_role')
+                    ->whereNull('tr_composite_roles.deleted_at'); // ✅ Non-deleted composite roles
+            })
+            ->leftJoin('ms_company', function ($join) {
+                $join->on('ms_company.company_code', '=', 'tr_composite_roles.company_id')
+                    ->whereNull('ms_company.deleted_at'); // ✅ Non-deleted companies
+            })
             ->select([
                 'tr_composite_ao.id',
                 'tr_composite_ao.composite_role',
@@ -391,7 +437,7 @@ class CompositeSingleController extends Controller
                 : '<span class="text-muted small">Read only</span>';
 
             $data[] = [
-                'company'        => $r->company_id ?? '-BELUM TERDAFTAR-',
+                'company'        => $r->company_name ?? $r->company_id ?? '-BELUM TERDAFTAR-',
                 'composite_role' => $r->composite_role,
                 'ao_name'        => $r->ao_name,
                 'description'    => $r->deskripsi ?: '-',

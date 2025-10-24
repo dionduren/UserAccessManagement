@@ -12,6 +12,11 @@
         td._grp-hidden {
             display: none;
         }
+
+        /* Column search styling */
+        .filters input {
+            font-size: 0.875rem;
+        }
     </style>
 @endsection
 
@@ -65,7 +70,7 @@
                 @endif
 
                 <div class="table-responsive">
-                    <table id="compositeRolesTable" class="table table-sm table-bordered w-100">
+                    <table id="compositeRolesTable" class="table table-sm table-bordered w-100" style="width:100%">
                         <thead class="table-light">
                             <tr>
                                 <th width="15%">Company</th>
@@ -73,6 +78,17 @@
                                 <th width="20%">Single Role</th>
                                 <th width="auto">Description</th>
                                 <th width="10%">Actions</th>
+                            </tr>
+                            <tr class="filters">
+                                <th><input type="text" class="form-control form-control-sm" placeholder="Cari Company"
+                                        data-col="0"></th>
+                                <th><input type="text" class="form-control form-control-sm"
+                                        placeholder="Cari Composite Role" data-col="1"></th>
+                                <th><input type="text" class="form-control form-control-sm"
+                                        placeholder="Cari Single Role" data-col="2"></th>
+                                <th><input type="text" class="form-control form-control-sm"
+                                        placeholder="Cari Description" data-col="3"></th>
+                                <th></th>
                             </tr>
                         </thead>
                         <tbody></tbody>
@@ -90,6 +106,9 @@
                 processing: true,
                 serverSide: true,
                 lengthMenu: [10, 25, 50, 100],
+                pageLength: 25,
+                searching: true,
+                ordering: true,
                 ajax: {
                     url: '{{ route('composite-single.datatable') }}',
                     data: function(d) {
@@ -122,13 +141,23 @@
                         className: 'actions-col'
                     }
                 ],
-                // order: [
-                //     [0, 'asc'],
-                //     [1, 'asc'],
-                //     [2, 'asc']
-                // ],
+                order: [
+                    [0, 'asc'],
+                    [1, 'asc'],
+                    [2, 'asc']
+                ],
                 drawCallback: function(settings) {
                     applyRowSpans(this.api());
+                },
+                initComplete: function() {
+                    // Wire column filters
+                    $('#compositeRolesTable thead tr.filters input').on('keyup change', function() {
+                        const colIdx = $(this).data('col');
+                        const val = this.value;
+                        if (table.column(colIdx).search() !== val) {
+                            table.column(colIdx).search(val).draw();
+                        }
+                    });
                 }
             });
 

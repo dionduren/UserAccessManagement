@@ -222,6 +222,9 @@ class UAMReportController extends Controller
             case 'B000':
                 $headerNomorSurat = "PKG_TI.03.04_UAM_{$periodeYear}";
                 break;
+            case 'G000':
+                $headerNomorSurat = "REK-TI-UAM-{$periodeYear}";
+                break;
             default: // A000 or any other
                 $headerNomorSurat = "PI-TIN-UAM-{$periodeYear}";
                 break;
@@ -653,6 +656,9 @@ class UAMReportController extends Controller
                 break;
             case 'B000':
                 $headerNomorSurat = "PKG_TI.03.04_UAM_{$latestPeriodeYear}";
+                break;
+            case 'G000':
+                $headerNomorSurat = "REK-TI-UAM-{$latestPeriodeYear}";
                 break;
             default: // A000 or any other
                 $headerNomorSurat = "PI-TIN-UAM-{$latestPeriodeYear}";
