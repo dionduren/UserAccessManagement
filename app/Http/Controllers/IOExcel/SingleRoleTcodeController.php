@@ -13,6 +13,9 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\Auth; // added
+use Illuminate\Support\Facades\DB;   // added
+use Illuminate\Database\QueryException; // added
 
 use Maatwebsite\Excel\Facades\Excel;
 use Yajra\DataTables\Facades\DataTables;
@@ -158,30 +161,91 @@ class SingleRoleTcodeController extends Controller
                 $lastUpdate = microtime(true);
                 $send(['progress' => 0]);
 
-                foreach ($dataArray as $row) {
-                    if (($row['single_role'] ?? null) === null || ($row['tcode'] ?? null) === null) {
-                        Log::warning('Skipping invalid row.', ['row' => $row]);
+                $warnings = [];
+                $seenPairs = []; // de-dupe within same upload
+                $actor = Auth::user()?->name ?? 'system';
+
+                // Align PG sequence before inserting into pivot (prevents PK collisions)
+                $this->ensurePgSequence('pt_single_role_tcode', 'id');
+
+                foreach ($dataArray as $idx => $row) {
+                    $singleName = trim((string)($row['single_role'] ?? ''));
+                    $singleDesc = isset($row['single_role_description']) ? (string)$row['single_role_description'] : null;
+                    $tcodeCode  = trim((string)($row['tcode'] ?? ''));
+                    $tcodeDesc  = isset($row['tcode_description']) ? (string)$row['tcode_description'] : null;
+
+                    if ($singleName === '' || $tcodeCode === '') {
+                        Log::warning('Skipping invalid row.', ['row_index' => $idx + 1, 'row' => $row]);
                         continue;
                     }
 
-                    $singleRole = SingleRole::updateOrCreate(
-                        ['nama' => $row['single_role']],
-                        [
-                            'deskripsi' => $row['single_role_description'],
-                            'source' => 'upload'
-                        ]
-                    );
+                    // Upsert SingleRole without overriding existing source
+                    $singleRole = SingleRole::firstOrNew(['nama' => $singleName]);
+                    $singleRole->deskripsi = $singleDesc;
+                    if (!$singleRole->exists) {
+                        $singleRole->source = 'upload';
+                    }
+                    $singleRole->save();
 
-                    $tCode = Tcode::updateOrCreate(
-                        ['code' => $row['tcode']],
-                        [
-                            'deskripsi' => $row['tcode_description'],
-                            'source' => 'upload'
-                        ]
-                    );
+                    // Upsert Tcode without overriding existing source
+                    $tCode = Tcode::firstOrNew(['code' => $tcodeCode]);
+                    $tCode->deskripsi = $tcodeDesc;
+                    if (!$tCode->exists) {
+                        $tCode->source = 'upload';
+                    }
+                    $tCode->save();
 
-                    if (!$singleRole->tcodes()->where('tcode_id', $tCode->id)->exists()) {
-                        $singleRole->tcodes()->attach($tCode->id);
+                    // De-dupe within the same file
+                    $pairKey = strtoupper($singleRole->nama) . '|' . strtoupper($tCode->code);
+                    if (isset($seenPairs[$pairKey])) {
+                        $warnings[] = "Row " . ($idx + 1) . ": Duplicate mapping in file skipped.";
+                    } else {
+                        $seenPairs[$pairKey] = true;
+
+                        // Skip if mapping already exists (from import/sync/upload)
+                        $exists = DB::table('pt_single_role_tcode')
+                            ->where('single_role_id', $singleRole->id)
+                            ->where('tcode_id', $tCode->id)
+                            ->exists();
+
+                        if ($exists) {
+                            $warnings[] = "Row " . ($idx + 1) . ": Mapping already exists (skipped).";
+                        } else {
+                            // Safe insert to pivot with audit fields; ignore residual conflicts
+                            try {
+                                DB::table('pt_single_role_tcode')->insertOrIgnore([
+                                    'single_role_id' => $singleRole->id,
+                                    'tcode_id'       => $tCode->id,
+                                    'source'         => 'upload',
+                                    'created_at'     => now(),
+                                    'updated_at'     => now(),
+                                    'created_by'     => $actor,
+                                    'updated_by'     => $actor,
+                                ]);
+                            } catch (QueryException $e) {
+                                if ((string)$e->getCode() === '23505') {
+                                    // Sequence drift fallback: re-align and retry once
+                                    $this->ensurePgSequence('pt_single_role_tcode', 'id');
+                                    DB::table('pt_single_role_tcode')->insertOrIgnore([
+                                        'single_role_id' => $singleRole->id,
+                                        'tcode_id'       => $tCode->id,
+                                        'source'         => 'upload',
+                                        'created_at'     => now(),
+                                        'updated_at'     => now(),
+                                        'created_by'     => $actor,
+                                        'updated_by'     => $actor,
+                                    ]);
+                                    $warnings[] = "Row " . ($idx + 1) . ": Duplicate pivot detected, auto-recovered.";
+                                    Log::warning('Duplicate pivot ignored on upload (SingleRole-Tcode)', [
+                                        'single_role_id' => $singleRole->id,
+                                        'tcode_id'       => $tCode->id,
+                                        'error'          => $e->getMessage(),
+                                    ]);
+                                } else {
+                                    throw $e;
+                                }
+                            }
+                        }
                     }
 
                     $processedRows++;
@@ -191,7 +255,7 @@ class SingleRoleTcodeController extends Controller
                     }
                 }
 
-                $send(['success' => 'Data imported successfully!']);
+                $send(['success' => 'Data imported successfully!', 'warnings' => $warnings]);
             });
 
             session()->forget('parsedData');
@@ -210,5 +274,20 @@ class SingleRoleTcodeController extends Controller
 
             return response()->json(['error' => 'Error during import: ' . $e->getMessage()], 500);
         }
+    }
+
+    // Align Postgres sequence to avoid PK collisions on pivot inserts
+    private function ensurePgSequence(string $table, string $pk = 'id'): void
+    {
+        if (DB::getDriverName() !== 'pgsql') {
+            return;
+        }
+        DB::statement("
+            SELECT setval(
+                pg_get_serial_sequence(?, ?),
+                COALESCE((SELECT MAX($pk) FROM $table), 0) + 1,
+                false
+            )
+        ", [$table, $pk]);
     }
 }
