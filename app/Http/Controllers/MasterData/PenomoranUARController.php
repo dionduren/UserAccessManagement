@@ -197,8 +197,6 @@ class PenomoranUARController extends Controller
     {
         $penomoranUAR = PenomoranUAR::findOrFail($id);
         $penomoranUAR->number = null; // Set number to null before deletion
-        $penomoranUAR->updated_by = auth()->user()->nama; // Set updated_by to the current user
-        $penomoranUAR->deleted_by = auth()->user()->nama; // Set deleted_by to the current user
         $penomoranUAR->save(); // Save the change to nullify the number
         $penomoranUAR->delete();
         return redirect()->route('penomoran-uar.index')->with('success', 'Record deleted successfully.');

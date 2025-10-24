@@ -237,8 +237,6 @@ class PenomoranUAMController extends Controller
     {
         $penomoranUAM = PenomoranUAM::findOrFail($id);
         $penomoranUAM->number = null; // Set number to null before deletion
-        $penomoranUAM->updated_by = auth()->user()->nama; // Set updated_by to the current user
-        $penomoranUAM->deleted_by = auth()->user()->nama; // Set deleted_by to the current user
         $penomoranUAM->save(); // Save the change to nullify the number
         $penomoranUAM->delete();
         return redirect()->route('penomoran-uam.index')->with('success', 'Record deleted successfully.');
@@ -250,18 +248,20 @@ class PenomoranUAMController extends Controller
     public function checkNumber(Request $request)
     {
         $companyId = $request->input('company_id');
+        $exceptId  = $request->input('except'); // optional on edit
         $unitKerjaInfo = '';
 
-        $exists = PenomoranUAM::where('number', $request->number)
+        $query = PenomoranUAM::where('number', $request->number)
             ->where('company_id', $companyId)
-            ->exists();
+            ->when($exceptId, fn($q) => $q->where('id', '!=', $exceptId));
+
+        $exists = $query->exists();
 
         if ($exists) {
-            $unitKerjaId = PenomoranUAM::where('number', $request->number)
-                ->where('company_id', $companyId)
-                ->first()
-                ->unit_kerja_id;
-            $unitKerjaInfo = Kompartemen::where('kompartemen_id', $unitKerjaId)->first()?->nama ?? Departemen::where('departemen_id', $unitKerjaId)->first()?->nama ?? 'N/A';
+            $unitKerjaId = (clone $query)->first()->unit_kerja_id;
+            $unitKerjaInfo = Kompartemen::where('kompartemen_id', $unitKerjaId)->value('nama')
+                ?? Departemen::where('departemen_id', $unitKerjaId)->value('nama')
+                ?? 'N/A';
         }
 
         return response()->json(['exists' => $exists, 'unit_kerja_id' => $unitKerjaInfo]);

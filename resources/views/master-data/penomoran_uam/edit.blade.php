@@ -22,9 +22,9 @@
                 <select id="company_id" name="company_id" class="form-control" required>
                     <option value="">-- Select Company --</option>
                     @foreach ($companySet as $company)
-                        <option value="{{ $company['company_code'] }}"
-                            {{ $selectedCompany == $company['company_code'] ? 'selected' : '' }}>
-                            {{ $company['nama'] }}
+                        <option value="{{ $company->company_code }}"
+                            {{ $selectedCompany == $company->company_code ? 'selected' : '' }}>
+                            {{ $company->nama }}
                         </option>
                     @endforeach
                 </select>
@@ -132,11 +132,11 @@
             $('#number').on('blur', function() {
                 $.get('{{ route('penomoran-uam.checkNumber') }}', {
                     number: $(this).val(),
-                    except: {{ $penomoranUAM->id }}
+                    except: {{ $penomoranUAM->id }},
                     company_id: $('#company_id').val()
-                }, data => $('#number-error').text(data.exists ? 'Nomor sudah digunakan oleh ' +
-                    data
-                    .unit_kerja_id + '!' : ''))
+                }, data => $('#number-error').text(
+                    data.exists ? ('Nomor sudah digunakan oleh ' + data.unit_kerja_id + '!') : ''
+                ));
             });
         });
     </script>
