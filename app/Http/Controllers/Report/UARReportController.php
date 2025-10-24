@@ -181,7 +181,7 @@ class UARReportController extends Controller
                 $headerNomorSurat = "PIM-TI-UAR-{$periodeYear}";
                 break;
             case 'B000':
-                $headerNomorSurat = "PKG_TI.03.04_UAR_{$periodeYear}";
+                $headerNomorSurat = "PKG_TI.02.01_UAR_{$periodeYear}";
                 break;
             case 'G000':
                 $headerNomorSurat = "REK-TI-UAR-{$periodeYear}";
@@ -524,7 +524,7 @@ class UARReportController extends Controller
                 $headerNomorSurat = "PIM-TI-UAR-{$periodeYear}";
                 break;
             case 'B000':
-                $headerNomorSurat = "PKG_TI.03.04_UAR_{$periodeYear}";
+                $headerNomorSurat = "PKG_TI.02.01_UAR_{$periodeYear}";
                 break;
             case 'G000':
                 $headerNomorSurat = "REK-TI-UAR-{$periodeYear}";

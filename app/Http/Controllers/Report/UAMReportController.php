@@ -220,7 +220,7 @@ class UAMReportController extends Controller
                 $headerNomorSurat = "PIM-TI-UAM-{$periodeYear}";
                 break;
             case 'B000':
-                $headerNomorSurat = "PKG_TI.03.04_UAM_{$periodeYear}";
+                $headerNomorSurat = "PKG_TI.02.01_UAM_{$periodeYear}";
                 break;
             case 'G000':
                 $headerNomorSurat = "REK-TI-UAM-{$periodeYear}";
@@ -655,7 +655,7 @@ class UAMReportController extends Controller
                 $headerNomorSurat = "PIM-TI-UAM-{$latestPeriodeYear}";
                 break;
             case 'B000':
-                $headerNomorSurat = "PKG_TI.03.04_UAM_{$latestPeriodeYear}";
+                $headerNomorSurat = "PKG_TI.02.01_UAM_{$latestPeriodeYear}";
                 break;
             case 'G000':
                 $headerNomorSurat = "REK-TI-UAM-{$latestPeriodeYear}";
