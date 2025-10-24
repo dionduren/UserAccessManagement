@@ -17,7 +17,7 @@ return new class extends Migration
             $table->string('kompartemen_id')->nullable();
             $table->string('departemen_id')->nullable();
             $table->string('unit_kerja_id');
-            $table->integer('number');
+            $table->string('number');
             $table->softDeletes();
             $table->timestamps();
             $table->string('created_by')->nullable();

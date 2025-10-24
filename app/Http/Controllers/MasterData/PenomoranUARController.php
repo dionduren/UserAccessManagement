@@ -115,7 +115,7 @@ class PenomoranUARController extends Controller
             'kompartemen_id' => 'nullable|string',
             'departemen_id' => 'nullable|string',
             'unit_kerja_id' => 'required|string',
-            'number' => 'required|integer',
+            'number' => 'required|string',
         ]);
 
         PenomoranUAR::create($request->all());
@@ -182,7 +182,7 @@ class PenomoranUARController extends Controller
             'kompartemen_id' => 'nullable|string',
             'departemen_id' => 'nullable|string',
             'unit_kerja_id' => 'required|string',
-            'number' => 'required|integer',
+            'number' => 'required|string',
         ]);
 
         $penomoranUAR->update($request->all());
