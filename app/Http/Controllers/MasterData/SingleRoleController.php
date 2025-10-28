@@ -70,16 +70,19 @@ class SingleRoleController extends Controller
 
     public function edit($id)
     {
-        $userCompanyCode = auth()->user()->loginDetail->company_code ?? null;
-        if ($userCompanyCode === 'A000') {
-            $singleRole = SingleRole::findOrFail($id);
+        $singleRole = SingleRole::findOrFail($id);
 
-            return view('master-data.single_roles.edit', compact('singleRole', 'userCompanyCode'))->render();
-        } else {
-            return redirect()
-                ->route('single-roles.index')
-                ->with('error', 'You are not authorized to edit a Single Role.');
-        }
+        return view('master-data.single_roles.edit', compact('singleRole'))->render();
+        // $userCompanyCode = auth()->user()->loginDetail->company_code ?? null;
+        // if ($userCompanyCode === 'A000') {
+        //     $singleRole = SingleRole::findOrFail($id);
+
+        //     return view('master-data.single_roles.edit', compact('singleRole', 'userCompanyCode'))->render();
+        // } else {
+        //     return redirect()
+        //         ->route('single-roles.index')
+        //         ->with('error', 'You are not authorized to edit a Single Role.');
+        // }
     }
 
     public function update(Request $request, $id)

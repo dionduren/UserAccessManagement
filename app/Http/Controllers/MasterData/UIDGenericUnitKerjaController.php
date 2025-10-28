@@ -129,11 +129,8 @@ class UIDGenericUnitKerjaController extends Controller
                 'required',
                 'string',
                 'max:255',
-                // // Keep unique across table, ignore this record, still exclude soft-deleted rows
-                // Rule::unique('ms_generic_unit_kerja', 'user_cc')
-                //     ->ignore($userGenericUnitKerja->id)
-                //     ->whereNull('deleted_at'),
                 Rule::unique('ms_generic_unit_kerja', 'user_cc')
+                    ->ignore($userGenericUnitKerja->id, 'id') // <-- ignore current row
                     ->where(function ($q) use ($request) {
                         return $q->where('periode_id', $request->input('periode_id'))
                             ->whereNull('deleted_at');
@@ -145,7 +142,8 @@ class UIDGenericUnitKerjaController extends Controller
 
         $userGenericUnitKerja->update($data);
 
-        return redirect()->route('unit_kerja.user_generic.index')->with('success', 'Updated: ID ' . $userGenericUnitKerja->id);
+        return redirect()->route('unit_kerja.user_generic.index')
+            ->with('success', 'Updated: ID ' . $userGenericUnitKerja->id);
     }
 
     public function destroy(UserGenericUnitKerja $userGenericUnitKerja)

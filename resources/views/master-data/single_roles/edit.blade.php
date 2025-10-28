@@ -9,10 +9,11 @@
             <input type="text" class="form-control" name="nama" id="nama" value="{{ $singleRole->nama }}"
                 required>
         </div>
-        <div class="form-group">
+        <div class="form-group mb-2">
             <label for="deskripsi">Description</label>
             <textarea class="form-control" name="deskripsi" id="deskripsi">{{ $singleRole->deskripsi }}</textarea>
         </div>
+
         <button type="submit" class="btn btn-primary">Save Changes</button>
     </form>
 </div>

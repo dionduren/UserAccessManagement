@@ -11,6 +11,7 @@ use App\Models\UserNIKUnitKerja;
 use App\Exports\UserNIKWithoutUnitKerjaExport;
 use Maatwebsite\Excel\Facades\Excel;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 
 class UIDNIKUnitKerjaController extends Controller
 {
@@ -67,7 +68,14 @@ class UIDNIKUnitKerjaController extends Controller
         $data = $request->validate([
             'periode_id' => ['required', 'integer'],
             'nama' => ['required', 'string', 'max:255'],
-            'nik' => ['required', 'string', 'max:255'],
+            'nik' => [
+                'required',
+                'string',
+                'max:255',
+                Rule::unique('ms_nik_unit_kerja', 'nik')
+                    ->where(fn($q) => $q->where('periode_id', $request->input('periode_id'))
+                        ->whereNull('deleted_at')),
+            ],
             'company_id' => ['nullable', 'string', 'max:255'],
             'direktorat_id' => ['nullable', 'string', 'max:255'],
             'kompartemen_id' => ['nullable', 'string', 'max:255'],
@@ -114,7 +122,15 @@ class UIDNIKUnitKerjaController extends Controller
         $data = $request->validate([
             'periode_id' => ['required', 'integer'],
             'nama' => ['required', 'string', 'max:255'],
-            'nik' => ['required', 'string', 'max:255'],
+            'nik' => [
+                'required',
+                'string',
+                'max:255',
+                Rule::unique('ms_nik_unit_kerja', 'nik')
+                    ->ignore($userNIKUnitKerja->id, 'id') // <-- ignore this row
+                    ->where(fn($q) => $q->where('periode_id', $request->input('periode_id'))
+                        ->whereNull('deleted_at')),
+            ],
             'company_id' => ['nullable', 'string', 'max:255'],
             'direktorat_id' => ['nullable', 'string', 'max:255'],
             'kompartemen_id' => ['nullable', 'string', 'max:255'],
