@@ -20,6 +20,9 @@
         <div class="card shadow-sm">
             <div class="card-header">
                 <h2>Edit Relationship Single Tcode - Single Role</h2>
+                <a href="{{ route('single-tcode.index') }}" class="btn btn-secondary btn-sm">
+                    <i class="bi bi-arrow-left"></i> Back to Index
+                </a>
             </div>
             <div class="card-body">
 

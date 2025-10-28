@@ -19,11 +19,7 @@ class SingleTcodeController extends Controller
      */
     public function index(Request $request)
     {
-        $userCompanyCode = auth()->user()->loginDetail->company_code ?? null;
-
-        return view('relationship.single-tcode.index', [
-            'userCompanyCode' => $userCompanyCode
-        ]);
+        return view('relationship.single-tcode.index');
     }
 
     /**
@@ -44,17 +40,27 @@ class SingleTcodeController extends Controller
     {
         $validatedData = $request->validate([
             'single_role_id' => 'required|exists:tr_single_roles,id',
-            'tcode_id' => 'required|array|exists:tr_tcodes,code',
+            'tcode_id' => 'required|array',
+            'tcode_id.*' => 'exists:tr_tcodes,code',
         ]);
-
-        $validatedData->merge(['source' => 'upload']);
 
         $singleRole = SingleRole::findOrFail($validatedData['single_role_id']);
-        $singleRole->tcodes()->syncWithoutDetaching($validatedData['tcode_id']);
 
-        $singleRole->update([
-            'created_by' => auth()->user()->name ?? null
-        ]);
+        // Convert codes to IDs before syncing
+        $tcodeIds = Tcode::whereIn('code', $validatedData['tcode_id'])->pluck('id')->toArray();
+
+        // Sync with source = 'upload' via withPivotValues
+        $pivotData = [];
+        foreach ($tcodeIds as $tcodeId) {
+            $pivotData[$tcodeId] = [
+                'source'     => 'upload',
+                'created_by' => auth()->user()->name ?? null,
+                'updated_by' => auth()->user()->name ?? null,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ];
+        }
+        $singleRole->tcodes()->syncWithoutDetaching($pivotData);
 
         return redirect()->route('single-tcode.index')->with('success', 'Relationship created successfully.');
     }
@@ -75,23 +81,11 @@ class SingleTcodeController extends Controller
     public function edit(string $id) // $id = single_role_id
     {
         $singleRole = SingleRole::with('tcodes')->findOrFail($id);
-
-        $userCompanyCode = auth()->user()->loginDetail->company_code ?? null;
-
-        if ($userCompanyCode !== 'A000') {
-            return redirect()
-                ->route('single-tcode.index')
-                ->withErrors(['error' => 'You are not authorized to edit this single role.']);
-        }
-
+        $singleRoles = SingleRole::all(); // add this if view needs it for a dropdown
         $tcodes = Tcode::all();
         $selectedTcodes = $singleRole->tcodes->pluck('code')->toArray();
 
-        return view('relationship.single-tcode.edit', compact(
-            'singleRole',
-            'tcodes',
-            'selectedTcodes'
-        ));
+        return view('relationship.single-tcode.edit', compact('singleRoles', 'singleRole', 'tcodes', 'selectedTcodes'));
     }
 
 
@@ -106,13 +100,23 @@ class SingleTcodeController extends Controller
         ]);
 
         $singleRole = SingleRole::findOrFail($id);
-        $tcodeIds = $request->input('tcode_id', []); // 💥 THIS IS THE KEY
+        $tcodeCodes = $request->input('tcode_id', []);
 
-        $singleRole->tcodes()->sync($tcodeIds);
+        // Convert codes to IDs
+        $tcodeIds = Tcode::whereIn('code', $tcodeCodes)->pluck('id')->toArray();
 
-        $singleRole->update([
-            'updated_by' => auth()->user()->name ?? null
-        ]);
+        // Build pivot data with source = 'upload' for new/updated rows
+        $pivotData = [];
+        foreach ($tcodeIds as $tcodeId) {
+            $pivotData[$tcodeId] = [
+                'source'     => 'upload',
+                'updated_by' => auth()->user()->name ?? null,
+                'updated_at' => now(),
+            ];
+        }
+
+        // sync() replaces all; detaches removed tcodes and attaches/updates specified ones
+        $singleRole->tcodes()->sync($pivotData);
 
         return redirect()->route('single-tcode.index')->with('success', 'Relationship updated successfully.');
     }
@@ -170,18 +174,20 @@ class SingleTcodeController extends Controller
     // DataTables JSON – server-side (row = single_role + optional tcode)
     public function datatable(Request $request)
     {
-        $user = auth()->user();
-        $userCompanyCode = $user->loginDetail->company_code ?? null;
-
         $draw   = (int)$request->input('draw');
         $length = (int)$request->input('length', 10);
         $start  = (int)$request->input('start', 0);
         $search = $request->input('search.value');
 
-        // Base (flattened) query: one row per SingleRole–Tcode (or single role with null tcode)
+        $columns = $request->input('columns', []);
+        $colSingleRole = $columns[0]['search']['value'] ?? null;
+        $colTcode      = $columns[1]['search']['value'] ?? null;
+        $colDesc       = $columns[2]['search']['value'] ?? null;
+
+        // FIX: join on pivot.tcode_id = t.id (both bigint)
         $base = DB::table('tr_single_roles as sr')
             ->leftJoin('pt_single_role_tcode as pivot', 'pivot.single_role_id', '=', 'sr.id')
-            ->leftJoin('tr_tcodes as t', 'pivot.tcode_id', '=', 't.id') // FIX: pivot.tcode_id references tr_tcodes.id
+            ->leftJoin('tr_tcodes as t', 'pivot.tcode_id', '=', 't.id') // <-- changed from t.code
             ->selectRaw('
                 sr.id as single_role_id,
                 sr.nama as single_role,
@@ -189,12 +195,22 @@ class SingleTcodeController extends Controller
                 t.deskripsi as tcode_desc
             ');
 
-        // Total rows (before search)
         $recordsTotal = (clone $base)->count();
 
+        $driver = DB::getDriverName();
+        $like = $driver === 'pgsql' ? 'ILIKE' : 'LIKE';
+
+        if ($colSingleRole) {
+            $base->where('sr.nama', $like, "%{$colSingleRole}%");
+        }
+        if ($colTcode) {
+            $base->where('t.code', $like, "%{$colTcode}%");
+        }
+        if ($colDesc) {
+            $base->where('t.deskripsi', $like, "%{$colDesc}%");
+        }
+
         if ($search) {
-            $driver = DB::getDriverName();
-            $like = $driver === 'pgsql' ? 'ILIKE' : 'LIKE';
             $base->where(function ($q) use ($like, $search) {
                 $q->where('sr.nama', $like, "%{$search}%")
                     ->orWhere('t.code', $like, "%{$search}%")
@@ -204,25 +220,23 @@ class SingleTcodeController extends Controller
 
         $recordsFiltered = (clone $base)->count();
 
-        // Ordering
         if ($request->has('order')) {
             foreach ($request->input('order') as $ord) {
                 $idx = (int)$ord['column'];
                 $dir = $ord['dir'] === 'desc' ? 'desc' : 'asc';
                 switch ($idx) {
-                    case 0: // single_role
+                    case 0:
                         $base->orderBy('sr.nama', $dir)->orderBy('t.code');
                         break;
-                    case 1: // tcode
-                        // Order by tcode with NULLS last (pgsql) / emulate for others
-                        if (DB::getDriverName() === 'pgsql') {
+                    case 1:
+                        if ($driver === 'pgsql') {
                             $base->orderByRaw("t.code IS NULL")->orderBy('t.code', $dir);
                         } else {
                             $base->orderByRaw("(t.code IS NULL) asc")->orderBy('t.code', $dir);
                         }
                         break;
-                    case 2: // description
-                        if (DB::getDriverName() === 'pgsql') {
+                    case 2:
+                        if ($driver === 'pgsql') {
                             $base->orderByRaw("t.deskripsi IS NULL")->orderBy('t.deskripsi', $dir);
                         } else {
                             $base->orderByRaw("(t.deskripsi IS NULL) asc")->orderBy('t.deskripsi', $dir);
@@ -236,18 +250,14 @@ class SingleTcodeController extends Controller
             $base->orderBy('sr.nama')->orderBy('t.code');
         }
 
-        // Pagination
         $rows = $base->skip($start)->take($length)->get();
 
         $data = [];
         foreach ($rows as $r) {
-            $canModify = $userCompanyCode === 'A000';
-            $actionsHtml = $canModify
-                ? '<a href="' . route('single-tcode.edit', $r->single_role_id) . '" class="btn btn-primary btn-sm mb-1 w-100">Edit</a>'
+            $actionsHtml = '<a href="' . route('single-tcode.edit', $r->single_role_id) . '" class="btn btn-primary btn-sm mb-1 w-100">Edit</a>'
                 . '<form action="' . route('single-tcode.destroy', $r->single_role_id) . '" method="POST" onsubmit="return confirm(\'Remove all tcodes for this Single Role?\')">'
                 . csrf_field() . method_field('DELETE')
-                . '<button class="btn btn-danger btn-sm w-100">Delete</button></form>'
-                : '<span class="text-muted small">Read only</span>';
+                . '<button class="btn btn-danger btn-sm w-100">Delete</button></form>';
 
             $data[] = [
                 'single_role' => $r->single_role,

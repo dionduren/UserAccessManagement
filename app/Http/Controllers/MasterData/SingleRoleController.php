@@ -8,6 +8,7 @@ use App\Models\SingleRole;
 
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
+use Illuminate\Support\Facades\Validator;
 
 class SingleRoleController extends Controller
 {
@@ -42,25 +43,44 @@ class SingleRoleController extends Controller
     // Store a new Single Role
     public function store(Request $request)
     {
-        $request->validate([
+        $rules = [
             'nama' => [
                 'required',
                 'string',
                 Rule::unique('tr_single_roles', 'nama')
-                    ->where(function ($query) use ($request) {
-                        return $query->where('company_id', $request->company_id);
-                    }),
+                    ->where(fn($q) => $q->whereNull('deleted_at')),
             ],
             'deskripsi' => 'nullable|string',
-        ]);
+        ];
+
+        $validator = Validator::make($request->all(), $rules);
+
+        if ($validator->fails()) {
+            if ($request->ajax()) {
+                $existing = SingleRole::where('nama', $request->nama)
+                    ->whereNull('deleted_at')
+                    ->first();
+
+                return response()->json([
+                    'message' => 'Validation failed.',
+                    'errors'  => $validator->errors(),
+                    'meta'    => $existing ? [
+                        'role_id' => $existing->id,
+                        'links' => [
+                            'single_tcode_edit'       => route('single-tcode.edit', $existing->id),
+                            'composite_single_index'  => route('composite-single.index', ['search_single_role' => $request->nama]),
+                            'single_tcode_index'      => route('single-tcode.index'),
+                        ],
+                    ] : null,
+                ], 422);
+            }
+            return back()->withErrors($validator)->withInput();
+        }
 
         $request->merge(['source' => 'upload']);
-
         $singleRole = SingleRole::create($request->all());
 
-        // Check if the request is an AJAX request
         if ($request->ajax()) {
-            // Return HTML for the table row or a success message
             $view = view('master-data.single_roles.partials.actions', ['role' => $singleRole])->render();
             return response()->json(['status' => 'success', 'html' => $view]);
         }
@@ -71,39 +91,52 @@ class SingleRoleController extends Controller
     public function edit($id)
     {
         $singleRole = SingleRole::findOrFail($id);
-
         return view('master-data.single_roles.edit', compact('singleRole'))->render();
-        // $userCompanyCode = auth()->user()->loginDetail->company_code ?? null;
-        // if ($userCompanyCode === 'A000') {
-        //     $singleRole = SingleRole::findOrFail($id);
-
-        //     return view('master-data.single_roles.edit', compact('singleRole', 'userCompanyCode'))->render();
-        // } else {
-        //     return redirect()
-        //         ->route('single-roles.index')
-        //         ->with('error', 'You are not authorized to edit a Single Role.');
-        // }
     }
 
     public function update(Request $request, $id)
     {
         $singleRole = SingleRole::findOrFail($id);
 
-        $request->validate([
+        $rules = [
             'nama' => [
                 'required',
                 'string',
                 Rule::unique('tr_single_roles', 'nama')
-                    ->where('company_id', $request->company_id)
-                    ->ignore($singleRole->id),
+                    ->ignore($singleRole->id)
+                    ->where(fn($q) => $q->whereNull('deleted_at')),
             ],
-            'deskripsi' => 'nullable|string',
-        ]);
+            'deskripsi'  => 'nullable|string',
+        ];
+
+        $validator = Validator::make($request->all(), $rules);
+
+        if ($validator->fails()) {
+            if ($request->ajax()) {
+                $existing = SingleRole::where('nama', $request->nama)
+                    ->where('id', '!=', $singleRole->id)
+                    ->whereNull('deleted_at')
+                    ->first();
+
+                return response()->json([
+                    'message' => 'Validation failed.',
+                    'errors'  => $validator->errors(),
+                    'meta'    => ($existing ?: $singleRole) ? [
+                        'role_id' => ($existing ? $existing->id : $singleRole->id),
+                        'links' => [
+                            'single_tcode_edit'       => route('single-tcode.edit', ($existing ? $existing->id : $singleRole->id)),
+                            'composite_single_index'  => route('composite-single.index', ['search_single_role' => $request->nama]),
+                            'single_tcode_index'      => route('single-tcode.index'),
+                        ],
+                    ] : null,
+                ], 422);
+            }
+            return back()->withErrors($validator)->withInput();
+        }
 
         $singleRole->update($request->all());
 
         if ($request->ajax()) {
-            // Pass the variable as `$role` to match the partial view expectation
             $view = view('master-data.single_roles.partials.actions', ['role' => $singleRole])->render();
             return response()->json(['status' => 'success', 'html' => $view]);
         }
@@ -127,10 +160,24 @@ class SingleRoleController extends Controller
 
     public function getSingleRoles(Request $request)
     {
-        // Base query with relations
         $query = SingleRole::with(['tcodes', 'compositeRoles'])
             ->select('tr_single_roles.*');
 
+        // Column-specific search
+        $columns = $request->input('columns', []);
+        $colNama      = $columns[0]['search']['value'] ?? null;
+        $colDeskripsi = $columns[1]['search']['value'] ?? null;
+        $colSource    = $columns[2]['search']['value'] ?? null;
+
+        if ($colNama) {
+            $query->where('tr_single_roles.nama', 'like', "%{$colNama}%");
+        }
+        if ($colDeskripsi) {
+            $query->where('tr_single_roles.deskripsi', 'like', "%{$colDeskripsi}%");
+        }
+        if ($colSource) {
+            $query->where('tr_single_roles.source', 'like', "%{$colSource}%");
+        }
 
         // Global search
         if ($request->filled('search.value')) {
@@ -142,30 +189,23 @@ class SingleRoleController extends Controller
             });
         }
 
-        // Clone before adding joins for accurate filtered count
         $recordsFiltered = (clone $query)->count();
 
-        // Ordering (may add join)
         if ($request->filled('order.0.column')) {
             $orderableColumns = ['tr_single_roles.nama', 'tr_single_roles.deskripsi', 'tr_single_roles.source'];
             $columnIndex      = $request->input('order.0.column');
             $columnDirection  = $request->input('order.0.dir', 'asc');
             $columnName       = $orderableColumns[$columnIndex] ?? 'tr_single_roles.nama';
-
             $query->orderBy($columnName, $columnDirection);
         }
 
-        // Pagination
         $singleRoles = $query
             ->skip(intval($request->start))
             ->take(intval($request->length))
             ->get();
 
-        // Total records the user is allowed to see (before search)
-        $totalQuery = SingleRole::query();
-        $recordsTotal = $totalQuery->count();
+        $recordsTotal = SingleRole::count();
 
-        // Format rows
         $data = $singleRoles->map(function ($role) {
             return [
                 'nama'      => $role->nama,

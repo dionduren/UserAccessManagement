@@ -44,6 +44,8 @@ class SingleRole extends Model
     // A single role can have many tcodes (many-to-many relationship)
     public function tcodes()
     {
-        return $this->belongsToMany(Tcode::class, 'pt_single_role_tcode', 'single_role_id', 'tcode_id');
+        return $this->belongsToMany(Tcode::class, 'pt_single_role_tcode', 'single_role_id', 'tcode_id')
+            ->withPivot('source', 'created_by', 'updated_by')
+            ->withTimestamps();
     }
 }

@@ -2,7 +2,6 @@
 
 @section('content')
     <div class="container-fluid">
-        <!-- General Error -->
         @if ($errors->any())
             <div class="alert alert-danger">
                 <ul class="mb-0">
@@ -13,7 +12,6 @@
             </div>
         @endif
 
-        <!-- Status Messages -->
         @if (session('status'))
             <div class="alert alert-success">{{ session('status') }}</div>
         @endif
@@ -23,17 +21,18 @@
                 <h2>Master Data Single Roles</h2>
             </div>
             <div class="card-body">
-
-                <!-- Trigger button for Create Modal -->
                 @if (isset($userCompanyCode) && $userCompanyCode == 'A000')
                     <button type="button" id="triggerCreateModal" class="btn btn-primary mb-3">
                         Buat Single Role Baru
                     </button>
                 @endif
 
+                <style>
+                    /* remove tfoot hack since we use header filters now */
+                </style>
 
-                <!-- Table for displaying Single Roles -->
-                <table id="single_roles_table" class="table table-bordered table-striped table-hover cell-border mt-3">
+                <table id="single_roles_table" class="table table-bordered table-striped table-hover cell-border mt-3"
+                    style="width:100%">
                     <thead>
                         <tr>
                             <th>Single Role</th>
@@ -41,14 +40,18 @@
                             <th width="10%">Sumber</th>
                             <th>Actions</th>
                         </tr>
+                        <tr>
+                            <th><input type="text" class="form-control form-control-sm" placeholder="Cari Single Role">
+                            </th>
+                            <th><input type="text" class="form-control form-control-sm" placeholder="Cari Deskripsi">
+                            </th>
+                            <th><input type="text" class="form-control form-control-sm" placeholder="Cari Sumber"></th>
+                            <th></th>
+                        </tr>
                     </thead>
                 </table>
             </div>
 
-            <!-- Modals -->
-            {{-- <div id="modalContainer"></div> <!-- Placeholder for loading modals dynamically --> --}}
-
-            <!-- Placeholder for modals -->
             <div class="modal fade" id="singleRoleModal" tabindex="-1" aria-labelledby="singleRoleModalLabel"
                 aria-hidden="true">
                 <div class="modal-dialog modal-lg">
@@ -59,9 +62,7 @@
                                 <span aria-hidden="true">&times;</span>
                             </button>
                         </div>
-                        <div class="modal-body" id="singleRoleModalBody">
-                            <!-- Content for create, edit, or show details will be loaded dynamically -->
-                        </div>
+                        <div class="modal-body" id="singleRoleModalBody"></div>
                         <div class="modal-footer">
                             <button type="button" class="btn btn-secondary close" data-dismiss="modal">Close</button>
                         </div>
@@ -75,13 +76,11 @@
 @section('scripts')
     <script>
         $(document).ready(function() {
-
-            // Initialize DataTable
             const table = $('#single_roles_table').DataTable({
                 processing: true,
                 serverSide: true,
                 ajax: {
-                    url: '/single-roles/data',
+                    url: '/single-roles/data'
                 },
                 columns: [{
                         data: 'nama',
@@ -98,7 +97,7 @@
                         data: 'source',
                         name: 'source',
                         title: 'Sumber',
-                        render: function(data, type, row, meta) {
+                        render: function(data, type) {
                             if (type === 'display' || type === 'filter') {
                                 if (data === 'import') return 'MDB';
                                 if (data === 'manual' || data === 'edit') return 'SYS';
@@ -123,52 +122,62 @@
                 ordering: true,
                 pageLength: 10,
                 lengthMenu: [5, 10, 25, 50, 100],
+                order: [
+                    [0, 'asc']
+                ],
+                orderCellsTop: true,
+                initComplete: function() {
+                    const api = this.api();
+                    // Bind to inputs in the second header row
+                    $('#single_roles_table thead tr:eq(1) th').each(function(i) {
+                        const $input = $(this).find('input');
+                        if ($input.length) {
+                            $input.on('keyup change clear', function() {
+                                const val = this.value;
+                                if (api.column(i).search() !== val) {
+                                    api.column(i).search(val).draw();
+                                }
+                            });
+                        }
+                    });
+                }
             });
 
-            // Function to load modal content dynamically
             function loadModalContent(url, title) {
-                $('#singleRoleModalLabel').text(title); // Set modal title
-                $('#singleRoleModalBody').html(
-                    '<div class="text-center">Loading...</div>'); // Temporary loading state
-                $('#singleRoleModal').modal('show'); // Show the modal
-
+                $('#singleRoleModalLabel').text(title);
+                $('#singleRoleModalBody').html('<div class="text-center">Loading...</div>');
+                $('#singleRoleModal').modal('show');
                 $.get(url, function(data) {
-                    $('#singleRoleModalBody').html(data); // Populate modal-body with received content
+                    $('#singleRoleModalBody').html(data);
                 }).fail(function() {
                     alert('Failed to load data. Please try again.');
                 });
             }
 
-            // Handle Create Modal
             $('#triggerCreateModal').on('click', function() {
                 loadModalContent('{{ route('single-roles.create') }}', 'Create Single Role');
             });
 
-            // Handle Edit Modal
             $(document).on('click', '.edit-single-role', function() {
                 const roleId = $(this).data('id');
-                const url = `/single-roles/${roleId}/edit`;
-                loadModalContent(url, 'Edit Single Role');
+                loadModalContent(`/single-roles/${roleId}/edit`, 'Edit Single Role');
             });
 
-            // Handle Show Details Modal
             $(document).on('click', '.show-single-role', function() {
                 const roleId = $(this).data('id');
-                const url = `/single-roles/${roleId}`;
-                loadModalContent(url, 'Single Role Details');
+                loadModalContent(`/single-roles/${roleId}`, 'Single Role Details');
             });
 
-            // Close modal when the close button is clicked
             $(document).on('click', '.close', function() {
                 $('#singleRoleModal').modal('hide');
             });
 
-            // Optionally, handle AJAX form submission inside the modal dynamically (Create/Edit)
+            // Create/Edit submit with SweetAlert2 guidance (opens target in new tab)
             $(document).on('submit', 'form.ajax-modal-form', function(event) {
                 event.preventDefault();
                 const form = $(this);
                 const actionUrl = form.attr('action');
-                const method = form.attr('method');
+                const method = form.attr('method') || 'POST';
                 const formData = form.serialize();
 
                 $.ajax({
@@ -177,32 +186,58 @@
                     data: formData,
                     success: function(response) {
                         if (response.status === 'success') {
-                            $('#single_roles_table').DataTable().ajax
-                                .reload(); // Reload DataTable
-                            $('#singleRoleModal').modal('hide'); // Close modal
-                            // alert(response.message); // Show success message
+                            table.ajax.reload(null, false);
+                            $('#singleRoleModal').modal('hide');
                         } else {
-                            alert('Failed to save changes.');
+                            Swal.fire('Gagal', 'Tidak dapat menyimpan perubahan.', 'error');
                         }
                     },
                     error: function(xhr) {
-                        alert('An error occurred. Please try again.');
+                        const meta = xhr.responseJSON?.meta || {};
+                        const links = meta.links || {};
+                        let singleTcodeEditUrl = links.single_tcode_edit || null;
+                        let compositeSingleUrl = links.composite_single_index ||
+                            `{{ route('composite-single.index') }}`;
+
+                        if (!singleTcodeEditUrl) {
+                            let roleId = null;
+                            try {
+                                const match = (actionUrl || '').match(/single-roles\/(\d+)/);
+                                roleId = match ? match[1] : null;
+                            } catch (e) {}
+                            singleTcodeEditUrl = roleId ? `/single-tcode/${roleId}/edit` :
+                                `{{ route('single-tcode.index') }}`;
+                        }
+
+                        if (xhr.status === 422 && xhr.responseJSON?.errors?.nama) {
+                            Swal.fire({
+                                icon: 'warning',
+                                title: 'Nama Single Role sudah digunakan',
+                                html: 'Silahkan mengubah konfigurasi mapping Composite Single Role dan Single Role - Tcode role ini pada masing-masing menu.',
+                                showDenyButton: true,
+                                showCancelButton: true,
+                                confirmButtonText: 'Kelola Single Role - Tcode',
+                                denyButtonText: 'Kelola Composite - Single Role',
+                                cancelButtonText: 'Tutup'
+                            }).then((result) => {
+                                if (result.isConfirmed) {
+                                    window.open(singleTcodeEditUrl, '_blank');
+                                } else if (result.isDenied) {
+                                    window.open(compositeSingleUrl, '_blank');
+                                }
+                            });
+                        } else {
+                            const msg = xhr.responseJSON?.message ||
+                                'Terjadi kesalahan. Coba lagi.';
+                            Swal.fire('Error', msg, 'error');
+                        }
                     }
                 });
             });
 
-            // Optional: Rebind events function (if needed)
-            // function bindRowEvents() {
-            //     $(document).off('click', '.edit-single-role'); // Remove previous bindings to avoid duplicates
-            //     $(document).on('click', '.edit-single-role', function() {
-            //         // Your existing logic for editing goes here
-            //     });
-            // }
-
             $(document).on('click', '.delete-single-role', function(e) {
                 e.preventDefault();
-                const button = $(this);
-                const url = button.data('url');
+                const url = $(this).data('url');
 
                 Swal.fire({
                     title: 'Menghapus Data Ini?',
@@ -215,33 +250,26 @@
                     cancelButtonText: 'Batal'
                 }).then((result) => {
                     if (result.isConfirmed) {
-                        // Create and submit a hidden form dynamically
                         const form = $('<form>', {
                             method: 'POST',
                             action: url
                         });
-
                         const token = $('meta[name="csrf-token"]').attr('content');
-
                         form.append($('<input>', {
                             type: 'hidden',
                             name: '_token',
                             value: token
                         }));
-
                         form.append($('<input>', {
                             type: 'hidden',
                             name: '_method',
                             value: 'DELETE'
                         }));
-
                         $('body').append(form);
                         form.submit();
                     }
                 });
             });
-
-
         });
     </script>
 @endsection

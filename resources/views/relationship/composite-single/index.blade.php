@@ -35,7 +35,7 @@
 
         <div class="card shadow-sm">
             <div class="card-header">
-                <h2 class="mb-3">Composite Role - Single Role Mapping</h2>
+                <h2>Composite Role - Single Role Mapping</h2>
             </div>
             <div class="card-body">
 
@@ -69,31 +69,28 @@
                     <div class="alert alert-success py-2">{{ session('success') }}</div>
                 @endif
 
-                <div class="table-responsive">
-                    <table id="compositeRolesTable" class="table table-sm table-bordered w-100" style="width:100%">
-                        <thead class="table-light">
-                            <tr>
-                                <th width="15%">Company</th>
-                                <th width="20%">Composite Role</th>
-                                <th width="20%">Single Role</th>
-                                <th width="auto">Description</th>
-                                <th width="10%">Actions</th>
-                            </tr>
-                            <tr class="filters">
-                                <th><input type="text" class="form-control form-control-sm" placeholder="Cari Company"
-                                        data-col="0"></th>
-                                <th><input type="text" class="form-control form-control-sm"
-                                        placeholder="Cari Composite Role" data-col="1"></th>
-                                <th><input type="text" class="form-control form-control-sm"
-                                        placeholder="Cari Single Role" data-col="2"></th>
-                                <th><input type="text" class="form-control form-control-sm"
-                                        placeholder="Cari Description" data-col="3"></th>
-                                <th></th>
-                            </tr>
-                        </thead>
-                        <tbody></tbody>
-                    </table>
-                </div>
+                <table id="compositeSingleTable" class="table table-sm table-bordered w-100">
+                    <thead class="table-light">
+                        <tr>
+                            <th width="15%">Company</th>
+                            <th width="20%">Composite Role</th>
+                            <th width="20%">Single Role</th>
+                            <th>Description</th>
+                            <th width="10%">Actions</th>
+                        </tr>
+                        <tr>
+                            <th><input type="text" class="form-control form-control-sm" placeholder="Cari Company"></th>
+                            <th><input type="text" class="form-control form-control-sm"
+                                    placeholder="Cari Composite Role"></th>
+                            <th><input type="text" class="form-control form-control-sm column-search-single-role"
+                                    placeholder="Cari Single Role"></th>
+                            <th><input type="text" class="form-control form-control-sm" placeholder="Cari Description">
+                            </th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
             </div>
         </div>
     </div>
@@ -102,28 +99,31 @@
 @section('scripts')
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            const table = $('#compositeRolesTable').DataTable({
+            // Pre-fill single role search if passed from query param
+            const urlParams = new URLSearchParams(window.location.search);
+            const searchSingleRole = urlParams.get('search_single_role');
+
+            const table = $('#compositeSingleTable').DataTable({
                 processing: true,
                 serverSide: true,
                 lengthMenu: [10, 25, 50, 100],
-                pageLength: 25,
-                searching: true,
-                ordering: true,
                 ajax: {
                     url: '{{ route('composite-single.datatable') }}',
                     data: function(d) {
-                        d.company_id = $('#companyFilter').val();
+                        @if (request('company_id'))
+                            d.company_id = '{{ request('company_id') }}';
+                        @endif
                     }
                 },
                 columns: [{
                         data: 'company',
                         name: 'company',
-                        className: 'company-col'
+                        className: 'comp-col'
                     },
                     {
                         data: 'composite_role',
                         name: 'composite_role',
-                        className: 'composite-col'
+                        className: 'comp-col'
                     },
                     {
                         data: 'single_role',
@@ -139,40 +139,48 @@
                         orderable: false,
                         searchable: false,
                         className: 'actions-col'
-                    }
+                    },
                 ],
                 order: [
                     [0, 'asc'],
-                    [1, 'asc'],
-                    [2, 'asc']
+                    [1, 'asc']
                 ],
-                drawCallback: function(settings) {
+                orderCellsTop: true,
+                drawCallback: function() {
                     applyRowSpans(this.api());
                 },
                 initComplete: function() {
-                    // Wire column filters
-                    $('#compositeRolesTable thead tr.filters input').on('keyup change', function() {
-                        const colIdx = $(this).data('col');
-                        const val = this.value;
-                        if (table.column(colIdx).search() !== val) {
-                            table.column(colIdx).search(val).draw();
+                    const api = this.api();
+
+                    // Bind column filters
+                    $('#compositeSingleTable thead tr:eq(1) th').each(function(i) {
+                        const $input = $(this).find('input');
+                        if ($input.length) {
+                            $input.on('keyup change clear', function() {
+                                const val = this.value;
+                                if (api.column(i).search() !== val) {
+                                    api.column(i).search(val).draw();
+                                }
+                            });
                         }
                     });
+
+                    // Auto-search single role column if query param is set
+                    if (searchSingleRole) {
+                        const singleRoleInput = $('.column-search-single-role');
+                        singleRoleInput.val(searchSingleRole);
+                        api.column(2).search(searchSingleRole).draw();
+                    }
                 }
             });
 
-            $('#companyFilter').on('change', function() {
-                table.ajax.reload();
-            });
-
             function applyRowSpans(api) {
-                // Columns to group: company (0), composite (1), actions (4). Actions grouped by composite only.
-                groupColumn(api, 0, 1); // group by composite when same composite id
-                groupColumn(api, 1, 1);
-                groupColumn(api, 4, 1);
+                groupColumn(api, 0);
+                groupColumn(api, 1);
+                groupColumn(api, 4);
             }
 
-            function groupColumn(api, colIndex, keyColIndex) {
+            function groupColumn(api, colIndex) {
                 let lastKey = null;
                 let rowspanCell = null;
                 let spanCount = 0;
@@ -181,23 +189,20 @@
                     page: 'current'
                 }).every(function(rowIdx) {
                     const data = this.data();
-                    const key = data.group_key; // composite role id
+                    const key = data.group_key;
                     const cell = $(api.cell(rowIdx, colIndex).node());
 
-                    if (colIndex === 0 || colIndex === 1) {
-                        // For company & composite, group by composite id
-                    }
-                    if (lastKey === key) {
-                        // hide
-                        cell.addClass('_grp-hidden');
-                        spanCount++;
-                        if (rowspanCell) rowspanCell.attr('rowspan', spanCount);
-                    } else {
-                        // reset
-                        lastKey = key;
-                        rowspanCell = cell;
-                        spanCount = 1;
-                        cell.removeClass('_grp-hidden').attr('rowspan', 1);
+                    if (colIndex === 0 || colIndex === 1 || colIndex === 4) {
+                        if (lastKey === key) {
+                            cell.addClass('_grp-hidden');
+                            spanCount++;
+                            if (rowspanCell) rowspanCell.attr('rowspan', spanCount);
+                        } else {
+                            lastKey = key;
+                            rowspanCell = cell;
+                            spanCount = 1;
+                            cell.removeClass('_grp-hidden').attr('rowspan', 1);
+                        }
                     }
                 });
             }

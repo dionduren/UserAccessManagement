@@ -51,6 +51,15 @@
                                 <th>Description</th>
                                 <th width="10%">Actions</th>
                             </tr>
+                            <tr>
+                                <th><input type="text" class="form-control form-control-sm"
+                                        placeholder="Cari Single Role"></th>
+                                <th><input type="text" class="form-control form-control-sm" placeholder="Cari Tcode">
+                                </th>
+                                <th><input type="text" class="form-control form-control-sm"
+                                        placeholder="Cari Description"></th>
+                                <th></th>
+                            </tr>
                         </thead>
                         <tbody></tbody>
                     </table>
@@ -95,13 +104,27 @@
                 order: [
                     [0, 'asc']
                 ],
+                orderCellsTop: true,
                 drawCallback: function() {
                     applyRowSpans(this.api());
+                },
+                initComplete: function() {
+                    const api = this.api();
+                    $('#singleRoleTcodeTable thead tr:eq(1) th').each(function(i) {
+                        const $input = $(this).find('input');
+                        if ($input.length) {
+                            $input.on('keyup change clear', function() {
+                                const val = this.value;
+                                if (api.column(i).search() !== val) {
+                                    api.column(i).search(val).draw();
+                                }
+                            });
+                        }
+                    });
                 }
             });
 
             function applyRowSpans(api) {
-                // Group single_role (col 0) and actions (col 3)
                 groupColumn(api, 0);
                 groupColumn(api, 3);
             }
