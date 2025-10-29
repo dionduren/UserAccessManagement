@@ -1103,8 +1103,8 @@ class UARReportController extends Controller
 
         // Output - Use final nomor surat for filename
         $sanitizedUnitKerja = $this->sanitizeForFilename($unitKerja);
-        $sanitizedNomorSurat = $this->sanitizeForFilename($finalNomorSurat);
-        $fileName = $sanitizedNomorSurat . '_' . $sanitizedUnitKerja . '.docx';
+        // $sanitizedNomorSurat = $this->sanitizeForFilename($finalNomorSurat);
+        $fileName = $finalNomorSurat . '_' . $sanitizedUnitKerja . '.docx';
         $filePath = storage_path('app/public/' . $fileName);
 
         // Save using IOFactory

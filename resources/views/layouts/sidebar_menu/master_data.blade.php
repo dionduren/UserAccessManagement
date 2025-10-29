@@ -272,7 +272,7 @@
     <a class="mb-1 nav-link dropdown-toggle {{ $isUserIdJobRoleActive ? 'active' : 'text-white' }}"
         data-bs-toggle="dropdown" href="#" role="button"
         aria-expanded="{{ $isUserIdJobRoleActive ? 'true' : 'false' }}">
-        <i class="bi bi-folder-fill me-2"></i> <span class="me-auto">USER ID & JOB ROLE</span>
+        <i class="bi bi-folder-fill me-2"></i> <span class="me-auto">MASTER DATA JOB ROLE</span>
     </a>
 
     <div class="dropdown-content {{ $isUserIdJobRoleActive ? 'show' : '' }}">

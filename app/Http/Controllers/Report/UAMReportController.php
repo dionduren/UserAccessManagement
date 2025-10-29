@@ -1085,10 +1085,6 @@ class UAMReportController extends Controller
 
             $compName = $comp?->nama;
             $compDesc = $comp?->deskripsi;
-            $compParts = [];
-            if ($compName) $compParts[] = $compName;
-            if ($compDesc) $compParts[] = $compDesc;
-            $compText = $compParts ? implode("\n", $compParts) : '-';
 
             $ao = $comp?->ao ?? null;
             if ($ao instanceof \Illuminate\Support\Collection) {
@@ -1096,10 +1092,6 @@ class UAMReportController extends Controller
             }
             $aoName = $ao?->nama;
             $aoDesc = $ao?->deskripsi;
-            $aoParts = [];
-            if ($aoName) $aoParts[] = $aoName;
-            if ($aoDesc) $aoParts[] = $aoDesc;
-            $aoText = $aoParts ? implode("\n", $aoParts) : '-';
 
             $table->addRow();
             $table->addCell(750, ['valign' => 'top'])->addText(
@@ -1107,9 +1099,26 @@ class UAMReportController extends Controller
                 ['size' => 8],
                 ['space' => ['after' => 0], 'alignment' => Jc::CENTER]
             );
-            $table->addCell(3750, ['valign' => 'top'])->addText($this->sanitizeForDocx($jobRole->nama ?? '-'), ['size' => 8], ['spaceAfter' => 0]);
-            $table->addCell(3750, ['valign' => 'top'])->addText($this->sanitizeForDocx($compText), ['size' => 8], ['spaceAfter' => 0]);
-            $table->addCell(3750, ['valign' => 'top'])->addText($this->sanitizeForDocx($aoText), ['size' => 8], ['spaceAfter' => 0]);
+            $table->addCell(3750, ['valign' => 'top'])->addText($jobRole->nama ?? '-', ['size' => 8], ['spaceAfter' => 0]);
+
+            // Composite Role cell with line break
+            $compCell = $table->addCell(3750, ['valign' => 'top']);
+            if ($compName && $compDesc) {
+                $compCell->addText($compName . '<w:br/>' . $compDesc, ['size' => 8], ['spaceAfter' => 0]);
+            } else {
+                $compCell->addText($compName ?: $compDesc ?: '-', ['size' => 8], ['spaceAfter' => 0]);
+            }
+
+            // Authorization Object cell with line break
+            $aoCell = $table->addCell(3750, ['valign' => 'top']);
+            if ($aoName && $aoDesc) {
+                $aoCell->addText($aoName . '<w:br/>' . $aoDesc, ['size' => 8], ['spaceAfter' => 0]);
+            } else {
+                $aoCell->addText($aoName ?: $aoDesc ?: '-', ['size' => 8], ['spaceAfter' => 0]);
+            }
+            // $table->addCell(3750, ['valign' => 'top'])->addText($this->sanitizeForDocx($jobRole->nama ?? '-'), ['size' => 8], ['spaceAfter' => 0]);
+            // $table->addCell(3750, ['valign' => 'top'])->addText($this->sanitizeForDocx($compText), ['size' => 8], ['spaceAfter' => 0]);
+            // $table->addCell(3750, ['valign' => 'top'])->addText($this->sanitizeForDocx($aoText), ['size' => 8], ['spaceAfter' => 0]);
         }
 
         // If no data row was added, add an empty row
@@ -1153,12 +1162,14 @@ class UAMReportController extends Controller
                     $compositeTable->addCell(750, ['vMerge' => 'restart', 'valign' => 'top', 'rowSpan' => count($singleRoles)])
                         ->addText($idx + 1, ['size' => 8], ['alignment' => Jc::CENTER, 'spaceAfter' => 0]);
                     $compositeTable->addCell(5625, ['vMerge' => 'restart', 'valign' => 'top', 'rowSpan' => count($singleRoles)])
-                        ->addText($this->sanitizeForDocx($cr['nama']), ['size' => 8], ['alignment' => Jc::CENTER, 'spaceAfter' => 0]);
+                        ->addText($cr['nama'], ['size' => 8], ['alignment' => Jc::CENTER, 'spaceAfter' => 0]);
+                    // ->addText($this->sanitizeForDocx($cr['nama']), ['size' => 8], ['alignment' => Jc::CENTER, 'spaceAfter' => 0]);
                 } else {
                     $compositeTable->addCell(750, ['vMerge' => 'continue']);
                     $compositeTable->addCell(5625, ['vMerge' => 'continue']);
                 }
-                $compositeTable->addCell(5625, ['valign' => 'top'])->addText($this->sanitizeForDocx($sr['nama']), ['size' => 8], ['spaceAfter' => 0]);
+                $compositeTable->addCell(5625, ['valign' => 'top'])->addText($sr['nama'], ['size' => 8], ['spaceAfter' => 0]);
+                // $compositeTable->addCell(5625, ['valign' => 'top'])->addText($this->sanitizeForDocx($sr['nama']), ['size' => 8], ['spaceAfter' => 0]);
                 $compositeTable->addCell(5625, ['valign' => 'top'])->addText($this->sanitizeForDocx($sr['deskripsi']), ['size' => 8], ['spaceAfter' => 0]);
             }
         }
@@ -1201,19 +1212,23 @@ class UAMReportController extends Controller
                             $singleRoleTcodeTable->addCell(750, ['vMerge' => 'restart', 'valign' => 'top', 'rowSpan' => count($tcodes)])
                                 ->addText($no, ['size' => 8], ['alignment' => Jc::CENTER, 'spaceBefore' => 0, 'spaceAfter' => 0]);
                             $singleRoleTcodeTable->addCell(3750, ['vMerge' => 'restart', 'valign' => 'top', 'rowSpan' => count($tcodes)])
-                                ->addText($this->sanitizeForDocx($sr['nama']), ['size' => 8], ['spaceBefore' => 0, 'spaceAfter' => 0]);
+                                ->addText($sr['nama'], ['size' => 8], ['spaceBefore' => 0, 'spaceAfter' => 0]);
+                            // ->addText($this->sanitizeForDocx($sr['nama']), ['size' => 8], ['spaceBefore' => 0, 'spaceAfter' => 0]);
                         } else {
                             $singleRoleTcodeTable->addCell(750, ['vMerge' => 'continue']);
                             $singleRoleTcodeTable->addCell(3750, ['vMerge' => 'continue']);
                         }
-                        $singleRoleTcodeTable->addCell(3250, ['valign' => 'top'])->addText($this->sanitizeForDocx($tc['tcode']), ['size' => 8], ['spaceBefore' => 0, 'spaceAfter' => 0]);
+                        $singleRoleTcodeTable->addCell(3250, ['valign' => 'top'])->addText($tc['tcode'], ['size' => 8], ['spaceBefore' => 0, 'spaceAfter' => 0]);
+                        // $singleRoleTcodeTable->addCell(3250, ['valign' => 'top'])->addText($this->sanitizeForDocx($tc['tcode']), ['size' => 8], ['spaceBefore' => 0, 'spaceAfter' => 0]);
+                        // $singleRoleTcodeTable->addCell(4250, ['valign' => 'top'])->addText($tc['deskripsi'], ['size' => 8], ['spaceBefore' => 0, 'spaceAfter' => 0]);
                         $singleRoleTcodeTable->addCell(4250, ['valign' => 'top'])->addText($this->sanitizeForDocx($tc['deskripsi']), ['size' => 8], ['spaceBefore' => 0, 'spaceAfter' => 0]);
                     }
                     $no++;
                 } else {
                     $singleRoleTcodeTable->addRow(200, ['exactHeight' => true]);
                     $singleRoleTcodeTable->addCell(750, ['valign' => 'top'])->addText($no, ['size' => 8], ['alignment' => Jc::CENTER, 'spaceBefore' => 0, 'spaceAfter' => 0]);
-                    $singleRoleTcodeTable->addCell(3750, ['valign' => 'top'])->addText($this->sanitizeForDocx($sr['nama']), ['size' => 8], ['spaceBefore' => 0, 'spaceAfter' => 0]);
+                    $singleRoleTcodeTable->addCell(3750, ['valign' => 'top'])->addText($sr['nama'], ['size' => 8], ['spaceBefore' => 0, 'spaceAfter' => 0]);
+                    // $singleRoleTcodeTable->addCell(3750, ['valign' => 'top'])->addText($this->sanitizeForDocx($sr['nama']), ['size' => 8], ['spaceBefore' => 0, 'spaceAfter' => 0]);
                     $singleRoleTcodeTable->addCell(3250, ['valign' => 'top'])->addText('-', ['size' => 8], ['spaceBefore' => 0, 'spaceAfter' => 0]);
                     $singleRoleTcodeTable->addCell(4250, ['valign' => 'top'])->addText('-', ['size' => 8], ['spaceBefore' => 0, 'spaceAfter' => 0]);
                     $no++;
@@ -1223,8 +1238,8 @@ class UAMReportController extends Controller
 
         // Output - Use final nomor surat for filename
         $sanitizedUnitKerja = $this->sanitizeForDocx($unitKerja);
-        $sanitizedNomorSurat = $this->sanitizeForDocx($finalNomorSurat);
-        $fileName = $sanitizedNomorSurat . '_' . $sanitizedUnitKerja . '.docx';
+        // $sanitizedNomorSurat = $this->sanitizeForDocx($finalNomorSurat);
+        $fileName = $finalNomorSurat . '_' . $sanitizedUnitKerja . '.docx';
         $filePath = storage_path('app/public/' . $fileName);
 
         // Save using IOFactory
