@@ -33,4 +33,4 @@ Route::prefix('cascade')->group(function () {
 
 // New dynamic master data endpoint
 Route::get('/master-data', [MasterDataController::class, 'hierarchy']);
-Route::get('/master-data/job-roles-by-periode', [MasterDataController::class, 'jobRolesByPeriode']);
+// Route::get('/master-data/job-roles-by-periode', [MasterDataController::class, 'jobRolesByPeriode']);

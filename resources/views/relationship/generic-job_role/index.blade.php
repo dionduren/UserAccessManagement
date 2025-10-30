@@ -3,16 +3,18 @@
 @section('content')
     <div class="container-fluid">
         @if (session('success'))
-            <div class="alert alert-success">
+            <div class="alert alert-success alert-dismissible fade show">
                 <h4>Success:</h4>
                 {{ session('success') }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
             </div>
         @endif
 
         @if (session('error'))
-            <div class="alert alert-danger">
+            <div class="alert alert-danger alert-dismissible fade show">
                 <h4>Error:</h4>
                 {{ session('error') }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
             </div>
         @endif
 
@@ -231,7 +233,9 @@
                         orderable: false,
                         searchable: false,
                         render: function(data, type, row) {
-                            return `
+                            const periodeId = $('#periode').val();
+                            let buttons = `
+
                                 <button class="btn btn-info btn-sm show-detail" data-id="${row.id}">
                                     <i class="bi bi-eye"></i> Detail
                                 </button>
@@ -242,6 +246,19 @@
                                     <i class="bi bi-trash"></i> Delete
                                 </button>
                             `;
+
+                            // NEW: Add "Resolve Duplicates" button if job_role_count > 1
+                            if (row.job_role_count > 1) {
+                                buttons += `
+                                    <a href="/relationship/generic-job-role/${row.user_code}/resolve-duplicates?periode_id=${periodeId}" 
+                                       class="btn btn-sm btn-warning mt-1" 
+                                       title="This user has ${row.job_role_count} job roles in the same periode">
+                                        <i class="bi bi-exclamation-triangle"></i> Resolve Duplicates (${row.job_role_count})
+                                    </a>
+                                `;
+                            }
+
+                            return buttons;
                         }
                     }
                 ],

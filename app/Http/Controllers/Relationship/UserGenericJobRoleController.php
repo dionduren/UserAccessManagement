@@ -23,7 +23,7 @@ class UserGenericJobRoleController extends Controller
         $userCompany = auth()->user()->loginDetail->company_code ?? null;
         $companyShortname = Company::where('company_code', $userCompany)->value('shortname');
         if ($userCompany == 'A000') {
-            $companyShortname = null; // A000 => no filter
+            $companyShortname = null;
         }
 
         if ($request->ajax()) {
@@ -42,14 +42,21 @@ class UserGenericJobRoleController extends Controller
                     'keterangan_flagged',
                     'user_profile as definisi'
                 ])
-                // Only filter by company for non-A000
                 ->when($companyShortname, fn($q) => $q->where('group', $companyShortname))
-                ->with(['periode', 'NIKJobRole' => function ($q) use ($periodeId) {
-                    $q->where('periode_id', $periodeId)->with('jobRole');
-                }])
+                ->with([
+                    'periode',
+                    'NIKJobRole' => function ($q) use ($periodeId) {
+                        $q->where('periode_id', $periodeId)
+                            ->whereNull('deleted_at')
+                            ->with([
+                                'jobRole:id,job_role_id,nama',
+                            ]);
+                    }
+                ])
                 ->where('periode_id', $periodeId)
                 ->whereHas('NIKJobRole', function ($q) use ($periodeId) {
-                    $q->where('periode_id', $periodeId);
+                    $q->where('periode_id', $periodeId)
+                        ->whereNull('deleted_at');
                 });
 
             return DataTables::eloquent($query)
@@ -62,6 +69,7 @@ class UserGenericJobRoleController extends Controller
                     $flags = $row->NIKJobRole->pluck('flagged')->filter();
                     return $flags->count() ? 'true' : 'false';
                 })
+                ->addColumn('job_role_count', fn($row) => $row->NIKJobRole->count())
                 ->make(true);
         }
 
@@ -108,45 +116,67 @@ class UserGenericJobRoleController extends Controller
 
     public function edit($id)
     {
+        // Get companies based on user access
+        $userCompany = auth()->user()->loginDetail->company_code ?? null;
+
+        if ($userCompany && $userCompany !== 'A000') {
+            $companies = Company::where('company_code', $userCompany)->get();
+        } else {
+            $companies = Company::all();
+        }
+
         // Show the form for editing the specified resource.
-        // Get userGeneric records that do not have any related NIKJobRole
         $userGenerics = userGeneric::orderBy('user_code')->get();
         $periodes = Periode::select('id', 'definisi')->get();
 
         $userGeneric = userGeneric::with(['NIKJobRole.jobRole'])->findOrFail($id);
         $nikJobRole = $userGeneric->NIKJobRole->first();
+
         if (!$nikJobRole) {
-            return redirect()->route('user-generic-job-role.index')->with('error', 'Tidak ada Job Role yang terkait dengan User Generic ini.');
+            return redirect()->route('user-generic-job-role.index')
+                ->with('error', 'Tidak ada Job Role yang terkait dengan User Generic ini.');
         }
 
-        $isSuper = auth()->check() && optional(auth()->user()->loginDetail)->company_code === 'A000';
-
-        // assuming $jobRoles is a Collection of JobRole models
-        $jobRoles = JobRole::query()
-            ->when(!$isSuper, fn($q) => $q->whereNotNull('job_role_id'))
-            ->orderByRaw('CASE WHEN job_role_id IS NULL OR job_role_id = \'\' THEN 1 ELSE 0 END') // no-id last
-            ->orderBy('nama')
-            ->get(['id', 'job_role_id', 'nama', 'status', 'flagged']); // adjust fields as needed
-
-        return view('relationship.generic-job_role.edit', compact('userGeneric', 'jobRoles', 'nikJobRole', 'userGenerics', 'periodes'));
+        return view('relationship.generic-job_role.edit', compact(
+            'userGeneric',
+            'nikJobRole',
+            'userGenerics',
+            'periodes',
+            'companies',
+            'userCompany'
+        ));
     }
 
     public function update(Request $request, $id)
     {
         $request->validate([
             'user_generic_id' => 'required|exists:tr_user_generic,user_code',
-            'job_role_id'     => 'required|string',
+            'job_role_id'     => 'required|string|exists:tr_job_roles,job_role_id', // Ensure job_role_id exists
             'periode_id'      => 'required|exists:ms_periode,id',
         ]);
 
         // Find the existing NIKJobRole record by ID
         $record = NIKJobRole::findOrFail($id);
 
+        // Check for duplicate (nik + job_role_id + periode_id) EXCLUDING current record
+        $duplicate = NIKJobRole::where('nik', $request->user_generic_id)
+            ->where('job_role_id', $request->job_role_id)
+            ->where('periode_id', $request->periode_id)
+            ->where('id', '!=', $id) // Exclude current record
+            ->exists();
+
+        if ($duplicate) {
+            return redirect()->back()
+                ->withInput()
+                ->with('error', 'Relasi dengan User Generic, Job Role, dan Periode yang sama sudah ada.');
+        }
+
         // Update all fields
         $record->update([
-            'nik'                => $request->user_generic_id,
-            'job_role_id'        => $request->job_role_id,
-            'periode_id'         => $request->periode_id,
+            'nik'         => $request->user_generic_id,
+            'job_role_id' => $request->job_role_id,
+            'periode_id'  => $request->periode_id,
+            'user_type'   => 'generic', // Ensure user_type is set correctly
         ]);
 
         return redirect()->route('user-generic-job-role.index')
@@ -297,5 +327,100 @@ class UserGenericJobRoleController extends Controller
             new UserGenericWithoutJobRoleExport($periodeId, $companyShortname), // ensure export uses ->when($companyShortname, ...)
             $filename
         );
+    }
+
+    /**
+     * Show form to resolve duplicates for a specific user
+     */
+    public function resolveDuplicates($userCode, Request $request)
+    {
+        $periodeId = $request->query('periode_id');
+        if (!$periodeId) {
+            return redirect()->route('user-generic-job-role.index')
+                ->with('error', 'Periode harus dipilih');
+        }
+
+        $userGeneric = userGeneric::where('user_code', $userCode)->firstOrFail();
+
+        // Get all job roles for this user in this periode
+        $duplicateRecords = NIKJobRole::where('nik', $userCode)
+            ->where('periode_id', $periodeId)
+            ->whereNull('deleted_at')
+            ->with('jobRole:id,job_role_id,nama', 'periode')
+            ->get();
+
+        if ($duplicateRecords->count() <= 1) {
+            return redirect()->route('user-generic-job-role.index')
+                ->with('info', 'User ini tidak memiliki duplikat job role di periode yang dipilih');
+        }
+
+        $periodes = Periode::select('id', 'definisi')->get();
+
+        return view('relationship.generic-job_role.resolve-duplicates', compact(
+            'userGeneric',
+            'duplicateRecords',
+            'periodes',
+            'periodeId'
+        ));
+    }
+
+    /**
+     * Process the split: assign each job role to different periode
+     */
+    public function splitDuplicates($userCode, Request $request)
+    {
+        $request->validate([
+            'assignments' => 'required|array',
+            'assignments.*.record_id' => 'required|exists:tr_ussm_job_role,id',
+            'assignments.*.action' => 'required|in:keep,update,delete',
+            // Make periode_id conditional: required only for 'update' action
+            'assignments.*.periode_id' => 'required_if:assignments.*.action,update|nullable|exists:ms_periode,id',
+        ]);
+
+        $userGeneric = userGeneric::where('user_code', $userCode)->firstOrFail();
+
+        foreach ($request->assignments as $assignment) {
+            $record = NIKJobRole::findOrFail($assignment['record_id']);
+
+            switch ($assignment['action']) {
+                case 'keep':
+                    // Do nothing, keep as is
+                    break;
+
+                case 'update':
+                    // Validate periode_id is provided
+                    if (empty($assignment['periode_id'])) {
+                        return redirect()->back()
+                            ->withInput()
+                            ->with('error', 'Periode harus dipilih untuk aksi "Pindah ke Periode Lain"');
+                    }
+
+                    // Check if target periode already has this job role for this user
+                    $exists = NIKJobRole::where('nik', $userCode)
+                        ->where('job_role_id', $record->job_role_id)
+                        ->where('periode_id', $assignment['periode_id'])
+                        ->where('id', '!=', $record->id)
+                        ->whereNull('deleted_at')
+                        ->exists();
+
+                    if ($exists) {
+                        return redirect()->back()
+                            ->withInput()
+                            ->with('error', "Job Role {$record->job_role_id} sudah ada di periode yang dipilih untuk user ini");
+                    }
+
+                    $record->update([
+                        'periode_id' => $assignment['periode_id']
+                    ]);
+                    break;
+
+                case 'delete':
+                    $record->delete();
+                    break;
+            }
+        }
+
+        return redirect()->route('user-generic-job-role.index')
+            ->with('success', 'Duplikat berhasil diselesaikan untuk user ' . $userCode);
     }
 }

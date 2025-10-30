@@ -1,229 +1,515 @@
 @extends('layouts.app')
 
 @section('content')
-    @if (session('error'))
-        <div class="alert alert-danger">
-            <h4>Error:</h4>
-            {{ session('error') }}
-        </div>
-    @endif
-
     <div class="container-fluid">
-        <h2>Edit Relasi User Generic - Job Role</h2>
-        <form action="{{ route('user-generic-job-role.update', $nikJobRole->id) }}" method="POST">
-            @csrf
-            @method('PUT')
-
-            <div class="form-group mb-3">
-                <label for="user_generic_id">User Generic</label>
-                <select name="user_generic_id" id="user_generic_id" class="form-control" required>
-                    <option value="">Pilih User Generic</option>
-                    @foreach ($userGenerics as $user)
-                        <option value="{{ $user->user_code }}" {{ $nikJobRole->nik == $user->user_code ? 'selected' : '' }}>
-                            {{ $user->user_code }} - {{ $user->user_profile ?? 'KOSONG' }}
-                        </option>
-                    @endforeach
-                </select>
-            </div>
-
-            <div class="form-group mb-3">
-                <label for="periode_id">Periode</label>
-                <select name="periode_id" id="periode_id" class="form-control" required>
-                    <option value="">Pilih Periode</option>
-                    @foreach ($periodes as $periode)
-                        <option value="{{ $periode->id }}"
-                            {{ isset($nikJobRole->periode_id) && $nikJobRole->periode_id == $periode->id ? 'selected' : '' }}>
-                            {{ $periode->definisi }}
-                        </option>
-                    @endforeach
-                </select>
-            </div>
-
-            <div class="form-group mb-3">
-                <label for="job_role_id">Job Role</label>
-                <div class="input-group">
-                    <select name="job_role_id" id="job_role_id" class="form-control" required>
-                        <option value="">Pilih Job Role</option>
-                        @foreach ($jobRoles as $jobRole)
-                            <option value="{{ $jobRole->job_role_id }}" data-nama="{{ $jobRole->nama }}"
-                                {{ $nikJobRole->job_role_id == $jobRole->job_role_id ? 'selected' : '' }}>
-                                {{ $jobRole->job_role_id }} - {{ $jobRole->nama }}
-                            </option>
-                        @endforeach
-                    </select>
-                    <button type="button" id="editJobRoleBtn" class="btn btn-outline-primary"
-                        {{ $nikJobRole->job_role_id ? '' : 'disabled' }}>
-                        <i class="fas fa-edit"></i> Edit Job Role
-                    </button>
+        <div class="card shadow-sm">
+            <div class="card-header d-flex align-items-center justify-content-between">
+                <h5 class="mb-0">Edit User Generic Job Role</h5>
+                <div class="d-flex gap-2">
+                    <a href="{{ route('user-generic-job-role.index') }}" class="btn btn-outline-secondary btn-sm">
+                        <i class="fas fa-arrow-left"></i> Back to List
+                    </a>
                 </div>
             </div>
+            <div class="card-body">
+                <!-- Error Messages -->
+                @if ($errors->any())
+                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                        <h6 class="alert-heading">Error(s) occurred:</h6>
+                        <ul class="mb-0">
+                            @foreach ($errors->all() as $error)
+                                <li>{{ $error }}</li>
+                            @endforeach
+                        </ul>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                @endif
 
-            <div class="form-group mb-3">
-                <label for="job_role_name">Job Role Name</label>
-                <input type="text" name="job_role_name" id="job_role_name" class="form-control" required readonly
-                    value="{{ $nikJobRole->jobRole->nama ?? '' }}">
+                <!-- Success Messages -->
+                @if (session('success'))
+                    <div class="alert alert-success alert-dismissible fade show" role="alert">
+                        {{ session('success') }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                @endif
+
+                @if (session('error'))
+                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                        {{ session('error') }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                @endif
+
+                <form action="{{ route('user-generic-job-role.update', $nikJobRole->id) }}" method="POST">
+                    @csrf
+                    @method('PUT')
+
+                    <!-- Periode Dropdown -->
+                    <div class="mb-3">
+                        <label for="periode_id" class="form-label">Periode <span class="text-danger">*</span></label>
+                        <select name="periode_id" id="periode_id" class="form-control form-select" required>
+                            <option value="">Select Periode</option>
+                            @foreach ($periodes as $periode)
+                                <option value="{{ $periode->id }}"
+                                    {{ old('periode_id', $nikJobRole->periode_id) == $periode->id ? 'selected' : '' }}>
+                                    {{ $periode->definisi }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <!-- Company Dropdown -->
+                            <div class="form-group mb-3">
+                                <label for="companyDropdown">Pilih Perusahaan <span class="text-danger">*</span></label>
+                                @php
+                                    $selectedCompanyId = old(
+                                        'company_id',
+                                        data_get($nikJobRole, 'jobRole.company_id') ?: $userCompany,
+                                    );
+                                @endphp
+                                <select id="companyDropdown" class="form-control" name="company_id" required>
+                                    <option value="">-- Pilih Perusahaan --</option>
+                                    @foreach ($companies as $company)
+                                        <option value="{{ $company->company_code }}"
+                                            {{ $selectedCompanyId == $company->company_code ? 'selected' : '' }}>
+                                            {{ $company->nama }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                            </div>
+
+                            <!-- Kompartemen Dropdown -->
+                            <div class="form-group mb-3">
+                                <label for="kompartemenDropdown">Pilih Kompartemen</label>
+                                <select id="kompartemenDropdown" class="form-control" name="kompartemen_id">
+                                    <option value="">-- Pilih Kompartemen --</option>
+                                </select>
+                            </div>
+
+                            <!-- Departemen Dropdown -->
+                            <div class="form-group mb-3">
+                                <label for="departemenDropdown">Pilih Departemen</label>
+                                <select id="departemenDropdown" class="form-control" name="departemen_id">
+                                    <option value="">-- Pilih Departemen --</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <!-- Job Role Dropdown -->
+                            <div class="mb-3">
+                                <label for="job_role_id" class="form-label">Job Role <span
+                                        class="text-danger">*</span></label>
+                                <div class="input-group">
+                                    <select name="job_role_id" id="job_role_id" class="form-control select2" required>
+                                        <option value="">Select Job Role</option>
+                                    </select>
+                                    <button type="button" id="editJobRoleBtn" class="btn btn-outline-primary" disabled>
+                                        <i class="fas fa-edit"></i> Edit Job Role
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- User Generic Dropdown -->
+                            <div class="mb-3">
+                                <label for="user_generic_id" class="form-label">User Generic <span
+                                        class="text-danger">*</span></label>
+                                <select name="user_generic_id" id="user_generic_id" class="form-control select2" required>
+                                    <option value="">Select User Generic</option>
+                                    @foreach ($userGenerics as $user)
+                                        <option value="{{ $user->user_code }}"
+                                            {{ $nikJobRole->nik == $user->user_code ? 'selected' : '' }}>
+                                            {{ $user->user_code }} - {{ $user->user_profile ?? 'KOSONG' }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                            </div>
+
+                            <!-- Current Values Display -->
+                            <div class="alert alert-info">
+                                <h6 class="alert-heading">Current Assignment:</h6>
+                                <p class="mb-1"><strong>User Code:</strong> {{ $nikJobRole->nik }}</p>
+                                <p class="mb-1"><strong>Job Role:</strong> {{ $nikJobRole->jobRole->nama ?? 'N/A' }}</p>
+                                <p class="mb-0"><strong>Job Role ID:</strong> {{ $nikJobRole->job_role_id }}</p>
+                                @if ($nikJobRole->jobRole)
+                                    <p class="mb-0"><strong>Company:</strong>
+                                        {{ $nikJobRole->jobRole->company->nama ?? 'N/A' }}</p>
+                                    <p class="mb-0"><strong>Kompartemen:</strong>
+                                        {{ $nikJobRole->jobRole->kompartemen->nama ?? 'N/A' }}</p>
+                                    <p class="mb-0"><strong>Departemen:</strong>
+                                        {{ $nikJobRole->jobRole->departemen->nama ?? 'N/A' }}</p>
+                                @endif
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save"></i> Update User Generic Job Role
+                        </button>
+                        <a href="{{ route('user-generic-job-role.index') }}" class="btn btn-secondary">
+                            <i class="fas fa-times"></i> Cancel
+                        </a>
+                    </div>
+                </form>
             </div>
-
-            <div class="form-group mb-3">
-                <label for="flagged">Flagged</label>
-                <select name="flagged" id="flagged" class="form-control">
-                    <option value="0" {{ !$nikJobRole->flagged ? 'selected' : '' }}>Tidak</option>
-                    <option value="1" {{ $nikJobRole->flagged ? 'selected' : '' }}>Ya</option>
-                </select>
-            </div>
-
-            <div class="form-group mb-3">
-                <label for="keterangan_flagged">Keterangan Flagged</label>
-                <input type="text" name="keterangan_flagged" id="keterangan_flagged" class="form-control"
-                    value="{{ $nikJobRole->keterangan_flagged }}">
-            </div>
-
-            <button type="submit" class="btn btn-primary">Update</button>
-            <a href="{{ route('user-generic-job-role.index') }}" class="btn btn-secondary">Kembali</a>
-        </form>
+        </div>
     </div>
 @endsection
 
 @section('scripts')
     <script>
-        // Determine if the user is from company A000 to show all job roles
+        // Load master data for this page
+        window.masterData = null;
         window.isSuper =
             {{ auth()->check() && optional(auth()->user()->loginDetail)->company_code === 'A000' ? 'true' : 'false' }};
 
-        $(document).ready(function() {
-            $('#job_role_id, #user_generic_id, #periode_id').select2({});
+        // Fetch master data before initializing dropdowns
+        const defaultCompany = "{{ $selectedCompanyId }}";
+        const query = defaultCompany ? `?company=${encodeURIComponent(defaultCompany)}&active_only=true` :
+            '?active_only=true';
 
-            // Store initial job_role_id to restore if available after reload
-            let initialJobRoleId = '{{ $nikJobRole->job_role_id }}';
+        fetch(`/api/master-data${query}`)
+            .then(response => response.json())
+            .then(data => {
+                window.masterData = Array.isArray(data) ? data : [data];
+                initializeDropdowns();
+            })
+            .catch(error => {
+                console.error('Error loading master data:', error);
+                alert('Error loading organization data. Please refresh the page.');
+            });
 
-            function sortAndFilterJobRoles() {
-                const $sel = $('#job_role_id');
-                // preserve current/initial selection
-                const selectedVal = $sel.val() || initialJobRoleId;
-
-                const options = [];
-                $sel.find('option').each(function(idx) {
-                    if (idx === 0) return; // skip placeholder
-                    const val = ($(this).attr('value') ?? '').trim();
-                    const text = ($(this).text() ?? '').trim();
-                    options.push({
-                        val,
-                        text,
-                        hasId: val !== '' // empty value means no job_role_id
-                    });
+        function initializeDropdowns() {
+            $(document).ready(function() {
+                // Initialize Select2
+                $('#user_generic_id').select2({
+                    placeholder: 'Select User Generic',
+                    allowClear: true
                 });
 
-                // Separate with and without job_role_id
-                let withId = options.filter(o => o.hasId);
-                let withoutId = options.filter(o => !o.hasId);
-
-                // Sort both lists alphabetically by text
-                withId.sort((a, b) => a.text.localeCompare(b.text));
-                withoutId.sort((a, b) => a.text.localeCompare(b.text));
-
-                // for non-A000 users, drop "withoutId"
-                const finalOptions = window.isSuper ? withId.concat(withoutId) : withId;
-
-                // Rebuild dropdown (preserve first placeholder)
-                const placeholder = $sel.find('option').first().clone();
-                $sel.empty().append(placeholder);
-                finalOptions.forEach(o => {
-                    $sel.append(new Option(o.text, o.val, false, false));
+                $('#job_role_id').select2({
+                    placeholder: 'Select Job Role',
+                    allowClear: true
                 });
 
-                // Restore selection if still available
-                if (selectedVal && $sel.find(`option[value="${selectedVal}"]`).length) {
-                    $sel.val(selectedVal).trigger('change');
-                } else {
-                    $sel.val('').trigger('change');
-                }
-            }
+                // Get default values from server
+                const defaultKompartemen = "{{ $nikJobRole->jobRole->kompartemen_id ?? '' }}";
+                const defaultDepartemen = "{{ $nikJobRole->jobRole->departemen_id ?? '' }}";
+                const defaultJobRole = "{{ $nikJobRole->job_role_id }}";
 
-            function loadJobRolesByPeriode(periodeId) {
-                if (!periodeId) {
-                    $('#job_role_id').empty().append('<option value="">Pilih Periode terlebih dahulu</option>');
-                    return;
-                }
+                console.log('Default values:', {
+                    company: defaultCompany,
+                    kompartemen: defaultKompartemen,
+                    departemen: defaultDepartemen,
+                    jobRole: defaultJobRole
+                });
 
-                $.ajax({
-                    url: '/api/master-data/job-roles-by-periode',
-                    method: 'GET',
-                    data: {
-                        periode_id: periodeId
-                    },
-                    success: function(data) {
-                        const $sel = $('#job_role_id');
-                        const currentVal = $sel.val() || initialJobRoleId;
+                // Flag to prevent cascade during initial setup
+                let isInitializing = true;
 
-                        $sel.empty().append('<option value="">Pilih Job Role</option>');
+                // Company dropdown handler
+                $('#companyDropdown').on('change', function() {
+                    const companyId = $(this).val();
+                    console.log('Company changed to:', companyId);
 
-                        // Filter by isSuper
-                        let filtered = window.isSuper ? data : data.filter(jr => jr.job_role_id);
-
-                        // Sort: with job_role_id first, then by name
-                        filtered.sort((a, b) => {
-                            if (!a.job_role_id && b.job_role_id) return 1;
-                            if (a.job_role_id && !b.job_role_id) return -1;
-                            return a.nama.localeCompare(b.nama);
-                        });
-
-                        filtered.forEach(jr => {
-                            const displayText = jr.job_role_id ?
-                                `${jr.job_role_id} - ${jr.nama}` : jr.nama;
-                            $sel.append(new Option(displayText, jr.job_role_id, false, false));
-                        });
-
-                        // Restore selection if available
-                        if (currentVal && $sel.find(`option[value="${currentVal}"]`).length) {
-                            $sel.val(currentVal).trigger('change');
-                        } else {
-                            $sel.val('').trigger('change');
+                    if (!companyId) {
+                        if (!isInitializing) {
+                            resetDropdowns(['#kompartemenDropdown', '#departemenDropdown', '#job_role_id']);
                         }
-                    },
-                    error: function() {
-                        alert('Failed to load job roles for this periode');
+                        return;
+                    }
+
+                    const company = window.masterData.find(c => c.company_id === companyId);
+                    if (!company) return;
+
+                    populateKompartemenDropdown(company.kompartemen);
+
+                    if (!isInitializing) {
+                        populateJobRolesDropdown(company.job_roles_without_relations);
                     }
                 });
-            }
 
-            // Load job roles when periode changes
-            $('#periode_id').on('change', function() {
-                const periodeId = $(this).val();
-                loadJobRolesByPeriode(periodeId);
-            });
+                // Kompartemen dropdown handler
+                $('#kompartemenDropdown').on('change', function() {
+                    const companyId = $('#companyDropdown').val();
+                    const kompartemenId = $(this).val();
+                    console.log('Kompartemen changed to:', kompartemenId);
 
-            // Initial load
-            sortAndFilterJobRoles();
+                    if (!kompartemenId) {
+                        if (!isInitializing) {
+                            resetDropdowns(['#departemenDropdown', '#job_role_id']);
+                        }
+                        return;
+                    }
 
-            // job role edit button logic
-            $('#job_role_id').on('change', function() {
-                const selectedJobRoleId = $(this).val();
-                const editBtn = $('#editJobRoleBtn');
+                    const company = window.masterData.find(c => c.company_id === companyId);
+                    const kompartemen = company?.kompartemen.find(k => k.kompartemen_id === kompartemenId);
+                    if (!kompartemen) return;
 
-                if (selectedJobRoleId) {
-                    editBtn.prop('disabled', false);
-                    editBtn.data('job-role-id', selectedJobRoleId);
-                } else {
-                    editBtn.prop('disabled', true);
-                    editBtn.removeData('job-role-id');
+                    populateDepartemenDropdown(kompartemen.departemen);
+
+                    if (!isInitializing) {
+                        const combinedRoles = [
+                            ...company.job_roles_without_relations,
+                            ...kompartemen.job_roles
+                        ];
+                        populateJobRolesDropdown(combinedRoles);
+                    }
+                });
+
+                // Departemen dropdown handler
+                $('#departemenDropdown').on('change', function() {
+                    const companyId = $('#companyDropdown').val();
+                    const kompartemenId = $('#kompartemenDropdown').val();
+                    const departemenId = $(this).val();
+                    console.log('Departemen changed to:', departemenId);
+
+                    if (!departemenId && !isInitializing) {
+                        const company = window.masterData.find(c => c.company_id === companyId);
+                        const kompartemen = company?.kompartemen.find(k => k.kompartemen_id ===
+                            kompartemenId);
+                        if (kompartemen) {
+                            const combinedRoles = [
+                                ...company.job_roles_without_relations,
+                                ...kompartemen.job_roles
+                            ];
+                            populateJobRolesDropdown(combinedRoles);
+                        }
+                        return;
+                    }
+
+                    if (!departemenId) return;
+
+                    const company = window.masterData.find(c => c.company_id === companyId);
+                    let departemen;
+
+                    if (kompartemenId) {
+                        const kompartemen = company?.kompartemen.find(k => k.kompartemen_id ===
+                            kompartemenId);
+                        departemen = kompartemen?.departemen.find(d => d.departemen_id === departemenId);
+                    } else {
+                        departemen = company?.departemen_without_kompartemen.find(d => d.departemen_id ===
+                            departemenId);
+                    }
+
+                    if (!departemen) return;
+
+                    if (!isInitializing) {
+                        const combinedRoles = [
+                            ...company.job_roles_without_relations,
+                            ...(kompartemenId ? company.kompartemen.find(k => k.kompartemen_id ===
+                                kompartemenId)?.job_roles || [] : []),
+                            ...departemen.job_roles
+                        ];
+                        populateJobRolesDropdown(combinedRoles);
+                    }
+                });
+
+                // Helper functions
+                function populateKompartemenDropdown(kompartemenList) {
+                    const dropdown = $('#kompartemenDropdown');
+                    dropdown.empty().append('<option value="">-- Select Kompartemen --</option>');
+
+                    if (kompartemenList?.length) {
+                        dropdown.prop('disabled', false);
+                        const sortedList = [...kompartemenList].sort((a, b) => a.nama.localeCompare(b.nama));
+                        sortedList.forEach(item => {
+                            dropdown.append(`<option value="${item.kompartemen_id}">${item.nama}</option>`);
+                        });
+                    } else {
+                        dropdown.prop('disabled', true);
+                    }
                 }
 
-                // Update job_role_name field (existing functionality)
-                var nama = $(this).find('option:selected').data('nama') || $(this).find('option:selected')
-                    .text().split(' - ').slice(1).join(' - ');
-                $('#job_role_name').val(nama || '');
-            });
+                function populateDepartemenDropdown(departemenList) {
+                    const dropdown = $('#departemenDropdown');
+                    dropdown.empty().append('<option value="">-- Select Departemen --</option>');
 
-            $('#editJobRoleBtn').on('click', function() {
-                const jobRoleId = $(this).data('job-role-id');
-                if (jobRoleId) {
-                    // open in new tab to preserve current form data
-                    window.open(`{{ route('job-roles.index') }}/${jobRoleId}/edit`, '_blank');
+                    if (departemenList?.length) {
+                        dropdown.prop('disabled', false);
+                        const sortedList = [...departemenList].sort((a, b) => a.nama.localeCompare(b.nama));
+                        sortedList.forEach(item => {
+                            dropdown.append(`<option value="${item.departemen_id}">${item.nama}</option>`);
+                        });
+                    } else {
+                        dropdown.prop('disabled', true);
+                    }
                 }
-            });
 
-            // set initial state on page load
-            $('#job_role_id').trigger('change');
-        });
+                function populateJobRolesDropdown(jobRoles) {
+                    const dropdown = $('#job_role_id');
+                    dropdown.empty().append('<option value="">-- Select Job Role --</option>');
+
+                    if (!jobRoles?.length) {
+                        dropdown.prop('disabled', true);
+                        return;
+                    }
+
+                    const groups = {
+                        company: {
+                            label: 'Company Level Job Roles',
+                            roles: []
+                        },
+                        kompartemen: {
+                            label: 'Kompartemen Level Job Roles',
+                            roles: []
+                        },
+                        departemen: {
+                            label: 'Departemen Level Job Roles',
+                            roles: []
+                        }
+                    };
+
+                    const currentKompartemenId = $('#kompartemenDropdown').val();
+                    const currentDepartemenId = $('#departemenDropdown').val();
+                    const companyId = $('#companyDropdown').val();
+
+                    const company = window.masterData.find(c => c.company_id === companyId);
+                    if (!company) return;
+
+                    jobRoles.forEach(role => {
+                        if (role.status !== 'Active') return;
+
+                        if (company.job_roles_without_relations.some(r => r.id === role.id)) {
+                            groups.company.roles.push(role);
+                        } else if (currentKompartemenId) {
+                            const kompartemen = company.kompartemen.find(k => k.kompartemen_id ===
+                                currentKompartemenId);
+                            if (kompartemen?.job_roles.some(r => r.id === role.id)) {
+                                groups.kompartemen.roles.push(role);
+                            } else if (currentDepartemenId) {
+                                const departemen = kompartemen?.departemen.find(d => d.departemen_id ===
+                                    currentDepartemenId);
+                                if (departemen?.job_roles.some(r => r.id === role.id)) {
+                                    groups.departemen.roles.push(role);
+                                }
+                            }
+                        }
+                    });
+
+                    Object.values(groups).forEach(group => {
+                        if (group.roles.length > 0) {
+                            const optgroup = $('<optgroup>', {
+                                label: group.label
+                            });
+
+                            group.roles.forEach(role => {
+                                optgroup.append($('<option>', {
+                                    value: role.job_role_id,
+                                    text: (role.job_role_id ? role.job_role_id + ' - ' :
+                                        'NULL - ') + role.nama
+                                }));
+                            });
+
+                            dropdown.append(optgroup);
+                        }
+                    });
+
+                    dropdown.prop('disabled', false);
+                }
+
+                function resetDropdowns(selectors) {
+                    selectors.forEach(selector => {
+                        $(selector)
+                            .empty()
+                            .append('<option value="">-- Select --</option>')
+                            .prop('disabled', true);
+                    });
+                }
+
+                // Initialize with default values
+                function setInitialValues() {
+                    if (defaultCompany) {
+                        $('#companyDropdown').val(defaultCompany).trigger('change');
+                    }
+
+                    setTimeout(() => {
+                        if (defaultKompartemen) {
+                            $('#kompartemenDropdown').val(defaultKompartemen).trigger('change');
+                        }
+
+                        setTimeout(() => {
+                            if (defaultDepartemen) {
+                                $('#departemenDropdown').val(defaultDepartemen).trigger('change');
+                            }
+
+                            setTimeout(() => {
+                                const companyId = $('#companyDropdown').val();
+                                const kompartemenId = $('#kompartemenDropdown').val();
+                                const departemenId = $('#departemenDropdown').val();
+
+                                const company = window.masterData.find(c => c.company_id ===
+                                    companyId);
+                                if (company) {
+                                    let combinedRoles = [...company
+                                        .job_roles_without_relations
+                                    ];
+
+                                    if (kompartemenId) {
+                                        const kompartemen = company.kompartemen.find(k => k
+                                            .kompartemen_id === kompartemenId);
+                                        if (kompartemen) {
+                                            combinedRoles = [...combinedRoles, ...
+                                                kompartemen
+                                                .job_roles
+                                            ];
+
+                                            if (departemenId) {
+                                                const departemen = kompartemen.departemen
+                                                    .find(
+                                                        d => d.departemen_id ===
+                                                        departemenId);
+                                                if (departemen) {
+                                                    combinedRoles = [...combinedRoles, ...
+                                                        departemen.job_roles
+                                                    ];
+                                                }
+                                            }
+                                        }
+                                    }
+
+                                    populateJobRolesDropdown(combinedRoles);
+
+                                    setTimeout(() => {
+                                        if (defaultJobRole) {
+                                            $('#job_role_id').val(defaultJobRole)
+                                                .trigger(
+                                                    'change');
+                                        }
+                                        isInitializing = false;
+                                    }, 100);
+                                }
+                            }, 300);
+                        }, 300);
+                    }, 300);
+                }
+
+                setInitialValues();
+
+                // Job Role edit button handler
+                $('#job_role_id').on('change', function() {
+                    const selectedJobRoleId = $(this).val();
+                    const editBtn = $('#editJobRoleBtn');
+
+                    if (selectedJobRoleId) {
+                        editBtn.prop('disabled', false);
+                        editBtn.data('job-role-id', selectedJobRoleId);
+                    } else {
+                        editBtn.prop('disabled', true);
+                        editBtn.removeData('job-role-id');
+                    }
+                });
+
+                $('#editJobRoleBtn').on('click', function() {
+                    const jobRoleId = $(this).data('job-role-id');
+                    if (jobRoleId) {
+                        window.open(`{{ route('job-roles.index') }}/${jobRoleId}/edit`, '_blank');
+                    }
+                });
+            });
+        }
     </script>
 @endsection

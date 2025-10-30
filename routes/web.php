@@ -343,6 +343,10 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/{id}/flagged', [UserGenericJobRoleController::class, 'updateFlagged']);
         Route::put('/{id}', [UserGenericJobRoleController::class, 'update'])->name('update');
         Route::delete('/{id}', [UserGenericJobRoleController::class, 'destroy'])->name('destroy');
+
+        // NEW: Duplicate resolution routes
+        Route::get('/{userCode}/resolve-duplicates', [UserGenericJobRoleController::class, 'resolveDuplicates'])->name('duplicates.resolve');
+        Route::post('/{userCode}/split-duplicates', [UserGenericJobRoleController::class, 'splitDuplicates'])->name('duplicates.split');
     });
 
     Route::prefix('/relationship/uam')->name('relationship.uam.')->group(function () {
