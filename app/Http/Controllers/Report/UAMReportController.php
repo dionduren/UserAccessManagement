@@ -614,6 +614,9 @@ class UAMReportController extends Controller
 
     public function exportWord(Request $request)
     {
+        // Enable PhpWord's built-in XML escaping for special chars like &
+        \PhpOffice\PhpWord\Settings::setOutputEscapingEnabled(true);
+
         $companyId    = $request->company_id;
         $kompartemenId = $request->kompartemen_id;
         $departemenId  = $request->departemen_id;
@@ -679,6 +682,9 @@ class UAMReportController extends Controller
                 $unitKerja = 'Departemen ' . $displayName;
             } elseif (preg_match('/^Dep\.\s*/', $displayName)) {
                 $displayName = preg_replace('/^Dep\.\s*/', '', $displayName);
+                $unitKerja = 'Departemen ' . $displayName;
+            } elseif (preg_match('/^Dep\s+/', $displayName)) {
+                $displayName = preg_replace('/^Dep\s+/', '', $displayName);
                 $unitKerja = 'Departemen ' . $displayName;
             } else {
                 $unitKerja = $displayName;
@@ -841,14 +847,12 @@ class UAMReportController extends Controller
         // Add empty rows for spacing
         // for ($i = 0; $i < 6; $i++) $coverTable->addRow(300);
 
-        $coverTable->addRow(7500, [
-            'valign' => 'center',
-        ]);
-        $coverTable->addCell(9000, ['gridSpan' => 3, 'valign' => 'center'])->addText(
-            'USER ACCESS MATRIX <w:br/> ' . mb_strtoupper(($unitKerja ? "$unitKerja" : '-'), 'UTF-8') . '<w:br/><w:br/>',
-            ['bold' => true, 'size' => 20],
-            ['alignment' => Jc::CENTER, 'spaceAfter' => 0]
-        );
+        // Cover page title
+        $coverTable->addRow(7500, ['valign' => 'center']);
+        $cell = $coverTable->addCell(9000, ['gridSpan' => 3, 'valign' => 'center']);
+        $cell->addText('USER ACCESS MATRIX', ['bold' => true, 'size' => 20], ['alignment' => Jc::CENTER, 'spaceAfter' => 0]);
+        $cell->addText(mb_strtoupper(($unitKerja ? "$unitKerja" : '-'), 'UTF-8'), ['bold' => true, 'size' => 20], ['alignment' => Jc::CENTER, 'spaceAfter' => 0]);
+
         // Name row
         $coverTable->addRow();
         $coverTable->addCell(10200, ['gridSpan' => 3])->addText('DISUSUN OLEH', ['bold' => true, 'size' => 10], ['alignment' => Jc::CENTER, 'spaceAfter' => 0]);
@@ -1034,11 +1038,9 @@ class UAMReportController extends Controller
         // Row 3: Rowspan + Judul  + Rev. Ke + 0
         $headerTable->addRow(250, ['exactHeight' => true]);
         $headerTable->addCell(null, ['vMerge' => 'continue']);
-        $headerTable->addCell(6000, ['valign' => 'center', 'vMerge' => 'restart'])->addText(
-            'USER ACCESS MATRIX <w:br/> ' . mb_strtoupper(($unitKerja ? "$unitKerja" : '-'), 'UTF-8'),
-            ['bold' => true, 'size' => 9],
-            ['alignment' => Jc::CENTER, 'spaceBefore' => 0, 'spaceAfter' => 0]
-        );
+        $headerCell = $headerTable->addCell(6000, ['valign' => 'center', 'vMerge' => 'restart']);
+        $headerCell->addText('USER ACCESS MATRIX', ['bold' => true, 'size' => 9], ['alignment' => Jc::CENTER, 'spaceBefore' => 0, 'spaceAfter' => 0]);
+        $headerCell->addText(mb_strtoupper(($unitKerja ? "$unitKerja" : '-'), 'UTF-8'), ['bold' => true, 'size' => 9], ['alignment' => Jc::CENTER, 'spaceBefore' => 0, 'spaceAfter' => 0]);
         $headerTable->addCell(1200, ['valign' => 'center'])->addText('Rev. Ke', ['size' => 9], ['spaceBefore' => 0, 'spaceAfter' => 0]);
         $headerTable->addCell(3000, ['valign' => 'center'])->addText('0', ['size' => 9], ['spaceBefore' => 0, 'spaceAfter' => 0]);
 
@@ -1104,17 +1106,19 @@ class UAMReportController extends Controller
             // Composite Role cell with line break
             $compCell = $table->addCell(3750, ['valign' => 'top']);
             if ($compName && $compDesc) {
-                $compCell->addText($compName . '<w:br/>' . $compDesc, ['size' => 8], ['spaceAfter' => 0]);
+                $compCell->addText($compName, ['size' => 8, 'bold' => true], ['spaceAfter' => 0]);
+                $compCell->addText($compDesc, ['size' => 8], ['spaceAfter' => 0]);
             } else {
-                $compCell->addText($compName ?: $compDesc ?: '-', ['size' => 8], ['spaceAfter' => 0]);
+                $compCell->addText($compName ?: $compDesc ?: '-', ['size' => 8, 'bold' => true], ['spaceAfter' => 0]);
             }
 
             // Authorization Object cell with line break
             $aoCell = $table->addCell(3750, ['valign' => 'top']);
             if ($aoName && $aoDesc) {
-                $aoCell->addText($aoName . '<w:br/>' . $aoDesc, ['size' => 8], ['spaceAfter' => 0]);
+                $aoCell->addText($aoName, ['size' => 8, 'bold' => true], ['spaceAfter' => 0]);
+                $aoCell->addText($aoDesc, ['size' => 8], ['spaceAfter' => 0]);
             } else {
-                $aoCell->addText($aoName ?: $aoDesc ?: '-', ['size' => 8], ['spaceAfter' => 0]);
+                $aoCell->addText($aoName ?: $aoDesc ?: '-', ['size' => 8, 'bold' => true], ['spaceAfter' => 0]);
             }
             // $table->addCell(3750, ['valign' => 'top'])->addText($this->sanitizeForDocx($jobRole->nama ?? '-'), ['size' => 8], ['spaceAfter' => 0]);
             // $table->addCell(3750, ['valign' => 'top'])->addText($this->sanitizeForDocx($compText), ['size' => 8], ['spaceAfter' => 0]);

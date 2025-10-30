@@ -469,6 +469,9 @@ class UARReportController extends Controller
 
     public function exportWord(Request $request)
     {
+        // Enable PhpWord's built-in XML escaping for special chars like &
+        \PhpOffice\PhpWord\Settings::setOutputEscapingEnabled(true);
+
         $periodeId     = $request->get('periode_id');
         $companyId     = $request->company_id;
         $kompartemenId = $request->kompartemen_id;
@@ -744,6 +747,9 @@ class UARReportController extends Controller
             } elseif (preg_match('/^Dep\.\s*/', $displayName)) {
                 $displayName = preg_replace('/^Dep\.\s*/', '', $displayName);
                 $unitKerja = 'Departemen ' . $displayName;
+            } elseif (preg_match('/^Dep\s+/', $displayName)) {
+                $displayName = preg_replace('/^Dep\s+/', '', $displayName);
+                $unitKerja = 'Departemen ' . $displayName;
             } else {
                 $unitKerja = $displayName;
             }
@@ -791,14 +797,13 @@ class UARReportController extends Controller
             public_path('logo_pupuk_indonesia.png'),
             ['width' => 80, 'height' => 40, 'alignment' => Jc::CENTER]
         );
-        $headerTable->addCell(4500, ['gridSpan' => 2, 'valign' => 'center'])->addText(
-            'REVIEW USER ID DAN OTORISASI',
-            ['bold' => true, 'size' => 10],
-            ['alignment' => Jc::CENTER, 'space' => ['after' => 0]]
-        );
+
+        // FIX: Use multiple addText calls WITHOUT addTextBreak
+        $titleCell = $headerTable->addCell(4500, ['gridSpan' => 2, 'valign' => 'center']);
+        $titleCell->addText('REVIEW USER ID DAN OTORISASI', ['bold' => true, 'size' => 10], ['alignment' => Jc::CENTER, 'spaceBefore' => 0, 'spaceAfter' => 0]);
 
         // Add a single row with a cell that spans 2 columns, containing a nested table for the 3 rows
-        $nestedTable = $headerTable->addCell(2000, ['gridSpan' => 2, 'valign' => 'center',])->addTable([
+        $nestedTable = $headerTable->addCell(2000, ['gridSpan' => 2, 'valign' => 'center'])->addTable([
             'borderSize' => 0,
             'borderColor' => 'FFFFFF',
         ]);
@@ -895,7 +900,7 @@ class UARReportController extends Controller
         $reviewTable->addCell(8000)->addText('User ID SAP', ['size' => 8], ['space' => ['after' => 0]]);
         $reviewTable->addRow();
         $reviewTable->addCell(4000)->addText('Unit Kerja', ['size' => 8], ['space' => ['after' => 0]]);
-        $reviewTable->addCell(8000)->addText($unitKerja ? $this->sanitizeForFilename($unitKerja) : '-', ['size' => 8], ['space' => ['after' => 0]]);
+        $reviewTable->addCell(8000)->addText($unitKerja ? $unitKerja : '-', ['size' => 8], ['space' => ['after' => 0]]);
         $reviewTable->addRow();
         $reviewTable->addCell(4000)->addText('Cost Center', ['size' => 8], ['space' => ['after' => 0]]);
         $reviewTable->addCell(8000)->addText($cost_center ? $cost_center : '-', ['size' => 8], ['space' => ['after' => 0]]);
@@ -948,12 +953,12 @@ class UARReportController extends Controller
             );
             $table->addCell(3000, ['valign' => 'center'])->addText($data['user_id'], ['size' => 8], ['space' => ['after' => 0]]);
             $table->addCell(3000, ['valign' => 'center'])->addText(
-                $this->sanitizeForFilename($data['user_name']), // SANITIZED NAMA COLUMN
+                $data['user_name'],
                 ['size' => 8],
                 ['space' => ['after' => 0]]
             );
             $table->addCell(3000, ['valign' => 'center'])->addText(
-                $this->sanitizeForFilename($data['job_role_name']), // SANITIZED JOB ROLE
+                $data['job_role_name'],
                 ['size' => 8],
                 ['space' => ['after' => 0]]
             );
@@ -994,7 +999,7 @@ class UARReportController extends Controller
             ['space' => ['after' => 0]]
         );
 
-        // Summary User System (keep existing logic)
+        // Summary User System
         if ($dataUserSystem && count($dataUserSystem) > 0) {
             $section->addTextBreak(1);
 
@@ -1028,7 +1033,7 @@ class UARReportController extends Controller
                 );
                 $table->addCell(3000, ['valign' => 'center'])->addText($userSystem->user_code, ['size' => 8], ['space' => ['after' => 0]]);
                 $table->addCell(4500, ['valign' => 'center'])->addText(
-                    $this->sanitizeForFilename($userSystem->user_profile), // SANITIZED USER PROFILE
+                    $this->sanitizeForFilename($userSystem->user_profile),
                     ['size' => 8],
                     ['space' => ['after' => 0]]
                 );
@@ -1043,18 +1048,11 @@ class UARReportController extends Controller
                 );
                 $table->addCell(1500, ['valign' => 'center'])->addText('', ['size' => 8], ['space' => ['after' => 0]]);
                 $table->addCell(1500, ['valign' => 'center'])->addText('', ['size' => 8], ['space' => ['after' => 0]]);
-                $table->addCell(2500, ['valign' => 'center'])->addText(
-                    '',
-                    ['size' => 8, 'color' => 'A6A6A6'],
-                    [
-                        'space' => ['after' => 0],
-                        'wrap' => true,
-                    ]
-                );
+                $table->addCell(2500, ['valign' => 'center'])->addText('', ['size' => 8, 'color' => 'A6A6A6'], ['space' => ['after' => 0]]);
             }
         }
 
-        // Approval Table (Persetujuan) - keep existing logic
+        // Approval Table - FIX: Remove addTextBreak, use multiple addText
         $section->addTextBreak(1);
 
         $approvalTable = $section->addTable(['borderSize' => 6, 'borderColor' => '000000', 'cellMargin' => 80]);
