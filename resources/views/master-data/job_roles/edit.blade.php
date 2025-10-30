@@ -109,7 +109,8 @@
                         '{{ $jobRole->company_id }}');
 
                     // Load kompartemen and departemen based on the selected company
-                    handleCompanyChange('{{ $jobRole->company_id }}', '{{ $jobRole->kompartemen_id }}',
+                    handleCompanyChange('{{ $jobRole->company_id }}',
+                        '{{ $jobRole->kompartemen_id }}',
                         '{{ $jobRole->departemen_id }}');
 
                     // Load departemen based on the selected company and kompartemen if kompartemen is not null

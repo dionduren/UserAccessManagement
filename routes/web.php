@@ -744,6 +744,7 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/single-roles', [UAMReportController::class, 'getSingleRoles'])->name('single-roles');
 
         Route::get('/export-word', [UAMReportController::class, 'exportWord'])->name('export-word');
+        Route::get('/export-user-job-composite-excel', [UAMReportController::class, 'exportUserJobCompositeExcel'])->name('export-user-job-composite-excel');
         Route::get('/export-single-excel', [UAMReportController::class, 'exportSingleExcel'])->name('export-single-excel');
         Route::get('/export-composite-excel', [UAMReportController::class, 'exportCompositeExcel'])->name('export-composite-excel');
         Route::get('/export-composite-no-ao', [UAMReportController::class, 'exportCompositeWithoutAO'])->name('export-composite-no-ao');

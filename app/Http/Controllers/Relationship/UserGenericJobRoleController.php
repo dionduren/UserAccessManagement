@@ -170,7 +170,9 @@ class UserGenericJobRoleController extends Controller
         $nikJobRole = $userGeneric->NIKJobRole->first();
 
         return response()->json([
+            'periode' => $userGeneric->periode->definisi,
             'user_code' => $userGeneric->user_code,
+            'periode_job_role' => $nikJobRole?->periode->definisi,
             'job_role_id' => $nikJobRole?->job_role_id,
             'job_role_name' => $nikJobRole?->jobRole?->nama,
             'kompartemen_id' => $userGeneric->userGenericUnitKerja?->kompartemen_id,

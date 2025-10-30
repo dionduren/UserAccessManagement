@@ -81,13 +81,19 @@
                     to Word</button>
             </div>
             <div class="col-auto">
-                <button id="export-composite-excel" class="btn btn-success mb-3" style="display: none">
-                    <i class="bi bi-file-earmark-excel"></i> Export Composite-Single to Excel
-                </button>
-            </div>
-            <div class="col-auto">
-                <button id="export-single-excel" class="btn btn-success mb-3" style="display: none"><i
-                        class="bi bi-file-earmark-x"></i> Export Single-Tcode to Excel</button>
+                <div class="dropdown" id="export-excel-dropdown" style="display: none">
+                    <button class="btn btn-success dropdown-toggle mb-3" type="button" data-bs-toggle="dropdown"
+                        aria-expanded="false" id="export-dropdown">
+                        <i class="bi bi-file-earmark-excel"></i> Export Excel - Role Mapping
+                    </button>
+                    <ul class="dropdown-menu">
+                        <li><a class="dropdown-item" href="#" id="export-user-job-composite-excel">User - Job Role -
+                                Composite Role</a></li>
+                        <li><a class="dropdown-item" href="#" id="export-composite-excel">Composite Role - Single Role
+                            </a></li>
+                        <li><a class="dropdown-item" href="#" id="export-single-excel">Single Role -Tcode</a></li>
+                    </ul>
+                </div>
             </div>
             <div class="col-auto">
                 <button id="export-composite-no-ao" class="btn btn-warning mb-3 text-dark" style="display: none">
@@ -326,8 +332,9 @@
                 $('#review-table-container').show();
                 $('#job-role-table-container').show();
                 $('#export-word').show();
-                $('#export-composite-excel').show();
-                $('#export-single-excel').show();
+                $('#export-excel-dropdown').show();
+                // $('#export-composite-excel').show();
+                // $('#export-single-excel').show();
                 $('#export-composite-no-ao').show();
 
 
@@ -519,6 +526,19 @@
                     departemen_id: $('#departemen').val()
                 });
                 window.open("{{ route('report.uam.export-word') }}?" + params, '_blank');
+            });
+
+
+            $('#export-user-job-composite-excel').on('click', function(e) {
+                e.preventDefault();
+                let params = $.param({
+                    periode_id: $('#periode').val(),
+                    company_id: $('#company').val(),
+                    kompartemen_id: $('#kompartemen').val(),
+                    departemen_id: $('#departemen').val()
+                });
+                window.open("{{ route('report.uam.export-user-job-composite-excel') }}?" + params,
+                    '_blank');
             });
 
             $('#export-composite-excel').on('click', function(e) {

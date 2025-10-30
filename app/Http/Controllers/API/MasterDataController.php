@@ -5,6 +5,7 @@ namespace App\Http\Controllers\API;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Company;
+use App\Models\JobRole;
 
 class MasterDataController extends Controller
 {
@@ -103,5 +104,45 @@ class MasterDataController extends Controller
         })->values();
 
         return response()->json($data);
+    }
+
+    public function jobRolesByPeriode(Request $request)
+    {
+        $periodeId = $request->query('periode_id');
+        $activeOnly = filter_var($request->query('active_only', 'false'), FILTER_VALIDATE_BOOLEAN);
+
+        if (!$periodeId) {
+            return response()->json([]);
+        }
+
+        $isSuper = auth()->check() && optional(auth()->user()->loginDetail)->company_code === 'A000';
+
+        // Get job roles that have NIKJobRole assignments in the specified periode
+        $query = JobRole::query()
+            ->select('tr_job_roles.id', 'tr_job_roles.job_role_id', 'tr_job_roles.nama', 'tr_job_roles.status', 'tr_job_roles.flagged')
+            ->join('tr_ussm_job_role', 'tr_job_roles.job_role_id', '=', 'tr_ussm_job_role.job_role_id')
+            ->where('tr_ussm_job_role.periode_id', $periodeId)
+            ->whereNull('tr_ussm_job_role.deleted_at')
+            ->whereNull('tr_job_roles.deleted_at')
+            ->when($activeOnly, fn($q) => $q->where('tr_job_roles.status', 'Active'))
+            ->when(!$isSuper, fn($q) => $q->whereNotNull('tr_job_roles.job_role_id'))
+            ->distinct();
+
+        $jobRoles = $query->get();
+
+        // Sort: roles with job_role_id first, then by name
+        $sorted = $jobRoles->sortBy(function ($jr) {
+            return [empty($jr->job_role_id) ? 1 : 0, $jr->nama];
+        })->values();
+
+        return response()->json($sorted->map(function ($jr) {
+            return [
+                'id'          => $jr->id,
+                'job_role_id' => $jr->job_role_id,
+                'nama'        => $jr->nama,
+                'status'      => $jr->status ?? 'Deactive',
+                'flagged'     => $jr->flagged ?? false,
+            ];
+        })->values());
     }
 }

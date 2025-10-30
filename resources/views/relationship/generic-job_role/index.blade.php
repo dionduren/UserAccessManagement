@@ -85,10 +85,24 @@
                     <div class="modal-body">
                         <input type="hidden" id="modal-id" name="id">
                         <table class="table table-bordered">
+
+                            @if (auth()->user()->username == 'superadmin')
+                                <tr>
+                                    <th>Periode</th>
+                                    <td id="modal-periode"></td>
+                                </tr>
+                            @endif
                             <tr>
                                 <th>User Generic</th>
                                 <td id="modal-user-generic"></td>
                             </tr>
+
+                            @if (auth()->user()->username == 'superadmin')
+                                <tr>
+                                    <th>Periode Mapping User ID - Job Role</th>
+                                    <td id="modal-periode-job-role"></td>
+                                </tr>
+                            @endif
                             <tr>
                                 <th>Job Role ID</th>
                                 <td id="modal-job-role-id"></td>
@@ -357,7 +371,9 @@
                 method: 'GET',
                 success: function(response) {
                     $('#modal-id').val(id);
+                    $('#modal-periode').text(response.periode || '-');
                     $('#modal-user-generic').text(response.user_code || '-');
+                    $('#modal-periode-job-role').text(response.periode_job_role || '-');
                     $('#modal-job-role-id').text(response.job_role_id || '-');
                     $('#modal-job-role-name').text(response.job_role_name || '-');
                     $('#modal-kompartemen').text(response.kompartemen_nama || response.kompartemen_id ||

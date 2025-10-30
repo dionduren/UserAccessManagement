@@ -86,22 +86,24 @@
 
 @section('scripts')
     <script>
-        // Whether current user is A000 (can see roles without job_role_id)
+        // Determine if the user is from company A000 to show all job roles
         window.isSuper =
             {{ auth()->check() && optional(auth()->user()->loginDetail)->company_code === 'A000' ? 'true' : 'false' }};
 
         $(document).ready(function() {
             $('#job_role_id, #user_generic_id, #periode_id').select2({});
 
+            // Store initial job_role_id to restore if available after reload
+            let initialJobRoleId = '{{ $nikJobRole->job_role_id }}';
+
             function sortAndFilterJobRoles() {
                 const $sel = $('#job_role_id');
                 // preserve current/initial selection
-                const selectedVal = $sel.val() || '{{ $nikJobRole->job_role_id }}';
+                const selectedVal = $sel.val() || initialJobRoleId;
 
                 const options = [];
                 $sel.find('option').each(function(idx) {
-                    // keep placeholder at index 0
-                    if (idx === 0) return;
+                    if (idx === 0) return; // skip placeholder
                     const val = ($(this).attr('value') ?? '').trim();
                     const text = ($(this).text() ?? '').trim();
                     options.push({
@@ -111,38 +113,89 @@
                     });
                 });
 
-                // split by presence of job_role_id
+                // Separate with and without job_role_id
                 let withId = options.filter(o => o.hasId);
                 let withoutId = options.filter(o => !o.hasId);
 
-                // sort by name within each group
+                // Sort both lists alphabetically by text
                 withId.sort((a, b) => a.text.localeCompare(b.text));
                 withoutId.sort((a, b) => a.text.localeCompare(b.text));
 
                 // for non-A000 users, drop "withoutId"
                 const finalOptions = window.isSuper ? withId.concat(withoutId) : withId;
 
-                // rebuild dropdown (preserve first placeholder)
+                // Rebuild dropdown (preserve first placeholder)
                 const placeholder = $sel.find('option').first().clone();
                 $sel.empty().append(placeholder);
                 finalOptions.forEach(o => {
                     $sel.append(new Option(o.text, o.val, false, false));
                 });
 
-                // restore selection if still available
+                // Restore selection if still available
                 if (selectedVal && $sel.find(`option[value="${selectedVal}"]`).length) {
                     $sel.val(selectedVal).trigger('change');
-                } else if (!window.isSuper && (!selectedVal || selectedVal === '')) {
-                    // selected was a no-id role but user is not A000; leave unselected
+                } else {
                     $sel.val('').trigger('change');
                 }
             }
 
-            // run once on load and whenever the dropdown opens (defense in depth)
-            sortAndFilterJobRoles();
-            $('#job_role_id').on('select2:open', sortAndFilterJobRoles);
+            function loadJobRolesByPeriode(periodeId) {
+                if (!periodeId) {
+                    $('#job_role_id').empty().append('<option value="">Pilih Periode terlebih dahulu</option>');
+                    return;
+                }
 
-            // Job Role edit button handler
+                $.ajax({
+                    url: '/api/master-data/job-roles-by-periode',
+                    method: 'GET',
+                    data: {
+                        periode_id: periodeId
+                    },
+                    success: function(data) {
+                        const $sel = $('#job_role_id');
+                        const currentVal = $sel.val() || initialJobRoleId;
+
+                        $sel.empty().append('<option value="">Pilih Job Role</option>');
+
+                        // Filter by isSuper
+                        let filtered = window.isSuper ? data : data.filter(jr => jr.job_role_id);
+
+                        // Sort: with job_role_id first, then by name
+                        filtered.sort((a, b) => {
+                            if (!a.job_role_id && b.job_role_id) return 1;
+                            if (a.job_role_id && !b.job_role_id) return -1;
+                            return a.nama.localeCompare(b.nama);
+                        });
+
+                        filtered.forEach(jr => {
+                            const displayText = jr.job_role_id ?
+                                `${jr.job_role_id} - ${jr.nama}` : jr.nama;
+                            $sel.append(new Option(displayText, jr.job_role_id, false, false));
+                        });
+
+                        // Restore selection if available
+                        if (currentVal && $sel.find(`option[value="${currentVal}"]`).length) {
+                            $sel.val(currentVal).trigger('change');
+                        } else {
+                            $sel.val('').trigger('change');
+                        }
+                    },
+                    error: function() {
+                        alert('Failed to load job roles for this periode');
+                    }
+                });
+            }
+
+            // Load job roles when periode changes
+            $('#periode_id').on('change', function() {
+                const periodeId = $(this).val();
+                loadJobRolesByPeriode(periodeId);
+            });
+
+            // Initial load
+            sortAndFilterJobRoles();
+
+            // job role edit button logic
             $('#job_role_id').on('change', function() {
                 const selectedJobRoleId = $(this).val();
                 const editBtn = $('#editJobRoleBtn');
@@ -155,7 +208,7 @@
                     editBtn.removeData('job-role-id');
                 }
 
-                // Update job role name field (existing functionality)
+                // Update job_role_name field (existing functionality)
                 var nama = $(this).find('option:selected').data('nama') || $(this).find('option:selected')
                     .text().split(' - ').slice(1).join(' - ');
                 $('#job_role_name').val(nama || '');
@@ -164,12 +217,12 @@
             $('#editJobRoleBtn').on('click', function() {
                 const jobRoleId = $(this).data('job-role-id');
                 if (jobRoleId) {
-                    // Open in new tab to preserve current form data
+                    // open in new tab to preserve current form data
                     window.open(`{{ route('job-roles.index') }}/${jobRoleId}/edit`, '_blank');
                 }
             });
 
-            // Set initial state on page load
+            // set initial state on page load
             $('#job_role_id').trigger('change');
         });
     </script>

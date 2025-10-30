@@ -363,7 +363,6 @@ class CompositeSingleController extends Controller
 
         // Base query: join to composite role (by name) to derive company, then to company table
         $base = CompositeAO::query()
-            ->whereNull('tr_composite_ao.deleted_at') // ✅ Non-deleted composite AOs
             ->leftJoin('tr_composite_roles', function ($join) {
                 $join->on('tr_composite_roles.nama', '=', 'tr_composite_ao.composite_role')
                     ->whereNull('tr_composite_roles.deleted_at'); // ✅ Non-deleted composite roles

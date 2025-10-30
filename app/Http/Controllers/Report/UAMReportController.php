@@ -11,6 +11,7 @@ use App\Models\Company;
 use App\Models\Departemen;
 use App\Models\JobRole;
 use App\Models\Kompartemen;
+use App\Models\NIKJobRole;
 use App\Models\middle_db\CompositeRole as MiddleCompositeRole;
 use App\Models\middle_db\SingleRole as MiddleSingleRole;
 
@@ -1409,5 +1410,91 @@ class UAMReportController extends Controller
         $text = substr(trim($text), 0, 100);
 
         return $text;
+    }
+
+    public function exportUserJobCompositeExcel(Request $request)
+    {
+        $companyId     = $request->query('company_id');
+        $kompartemenId = $request->query('kompartemen_id');
+        $departemenId  = $request->query('departemen_id');
+        $periodeId     = $request->query('periode_id');
+
+        // Get all NIKJobRole records filtered by company/kompartemen/departemen and periode
+        $query = NIKJobRole::query()
+            ->with([
+                'userNIK:id,user_code',
+                'userGeneric:id,user_code,user_profile',
+                'jobRole:id,job_role_id,nama,company_id,kompartemen_id,departemen_id',
+                'jobRole.company:company_code,nama',
+                'jobRole.kompartemen:kompartemen_id,nama',
+                'jobRole.departemen:departemen_id,nama',
+                'jobRole.compositeRole:id,jabatan_id,nama,deskripsi'
+            ]);
+
+        if ($periodeId) $query->where('periode_id', $periodeId);
+
+        // Apply company/kompartemen/departemen filters via jobRole relationship
+        $query->whereHas('jobRole', function ($q) use ($companyId, $kompartemenId, $departemenId) {
+            $q->whereNull('deleted_at');
+            if ($companyId)     $q->where('company_id', $companyId);
+            if ($kompartemenId) $q->where('kompartemen_id', $kompartemenId);
+            if ($departemenId)  $q->where('departemen_id', $departemenId);
+        });
+
+        // Add joins for sorting by job role, kompartemen, departemen names
+        $query->join('tr_job_roles', 'tr_ussm_job_role.job_role_id', '=', 'tr_job_roles.job_role_id')
+            ->leftJoin('ms_kompartemen', 'tr_job_roles.kompartemen_id', '=', 'ms_kompartemen.kompartemen_id')
+            ->leftJoin('ms_departemen', 'tr_job_roles.departemen_id', '=', 'ms_departemen.departemen_id')
+            ->select('tr_ussm_job_role.*') // Ensure only NIKJobRole columns are selected
+            ->orderBy('tr_job_roles.company_id')
+            ->orderBy('tr_job_roles.nama')
+            ->orderBy('ms_kompartemen.nama')
+            ->orderBy('ms_departemen.nama');
+
+        $records = $query->get();
+
+        // Build export data
+        $exportData = [];
+        $exportData[] = [
+            'No',
+            'Company',
+            'Kompartemen (Mapping Job Role)',
+            'Departemen (Mapping Job Role)',
+            'NIK/User Code',
+            'Nama User',
+            'User Type',
+            'Job Role ID',
+            'Job Role Name',
+            'Composite Role',
+            'Deskripsi Composite Role',
+        ];
+
+        $rowNumber = 1;
+        foreach ($records as $record) {
+            $user = $record->user_type === 'nik' ? $record->userNIK : $record->userGeneric;
+            $userName = $record->user_type === 'nik'
+                ? ($record->UserNIKUnitKerja->nama ?? '-')
+                : ($user->user_profile ?? '-');
+
+            $jobRole = $record->jobRole;
+            $composite = $jobRole?->compositeRole;
+            $comp = $this->unwrapComposite($composite);
+
+            $exportData[] = [
+                $rowNumber++,
+                $jobRole?->company?->nama ?? '-',
+                $jobRole?->kompartemen?->nama ?? '-',
+                $jobRole?->departemen?->nama ?? '-',
+                $record->nik ?? '-',
+                $userName,
+                strtoupper($record->user_type ?? '-'),
+                $jobRole?->job_role_id ?? '-',
+                $jobRole?->nama ?? '-',
+                $comp?->nama ?? '-',
+                $comp?->deskripsi ?? '',
+            ];
+        }
+
+        return Excel::download(new ArrayExport($exportData), 'Export_user_job_composite.xlsx');
     }
 }
