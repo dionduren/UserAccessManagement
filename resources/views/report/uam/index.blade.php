@@ -80,10 +80,11 @@
                         class="bi bi-file-earmark-word"></i>Export
                     to Word</button>
             </div>
-            {{-- <div class="col-auto">
-                <button id="export-composite-excel" class="btn btn-success mb-3" style="display: none"><i
-                        class="bi bi-file-earmark-x"></i> Export Composite-Single to Excel</button>
-            </div> --}}
+            <div class="col-auto">
+                <button id="export-composite-excel" class="btn btn-success mb-3" style="display: none">
+                    <i class="bi bi-file-earmark-excel"></i> Export Composite-Single to Excel
+                </button>
+            </div>
             <div class="col-auto">
                 <button id="export-single-excel" class="btn btn-success mb-3" style="display: none"><i
                         class="bi bi-file-earmark-x"></i> Export Single-Tcode to Excel</button>
@@ -325,7 +326,7 @@
                 $('#review-table-container').show();
                 $('#job-role-table-container').show();
                 $('#export-word').show();
-                // $('#export-composite-excel').show();
+                $('#export-composite-excel').show();
                 $('#export-single-excel').show();
                 $('#export-composite-no-ao').show();
 
@@ -518,6 +519,16 @@
                     departemen_id: $('#departemen').val()
                 });
                 window.open("{{ route('report.uam.export-word') }}?" + params, '_blank');
+            });
+
+            $('#export-composite-excel').on('click', function(e) {
+                e.preventDefault();
+                let params = $.param({
+                    company_id: $('#company').val(),
+                    kompartemen_id: $('#kompartemen').val(),
+                    departemen_id: $('#departemen').val()
+                });
+                window.open("{{ route('report.uam.export-composite-excel') }}?" + params, '_blank');
             });
 
             $('#export-single-excel').on('click', function(e) {

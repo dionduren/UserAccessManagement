@@ -428,31 +428,111 @@ class UAMReportController extends Controller
         ]);
     }
 
-    // public function exportCompositeExcel(Request $request)
-    // {
-    //     // Fetch data as in jobRolesData
-    //     // Build $exportData as array: [No, Composite Role, Single Role, Deskripsi]
-    //     $companyId = $request->company_id;
-    //     $kompartemenId = $request->kompartemen_id;
-    //     $departemenId = $request->departemen_id;
+    public function exportCompositeExcel(Request $request)
+    {
+        $companyId     = $request->query('company_id');
+        $kompartemenId = $request->query('kompartemen_id');
+        $departemenId  = $request->query('departemen_id');
 
-    //     // ...repeat compositeRolesWithSingles logic...
-    //     $exportData = [];
-    //     foreach ($compositeRolesWithSingles as $idx => $cr) {
-    //         foreach ($cr['single_roles'] as $sr) {
-    //             $exportData[] = [
-    //                 'No' => $idx + 1,
-    //                 'Composite Role' => $cr['nama'],
-    //                 'Single Role' => $sr['nama'],
-    //                 'Deskripsi' => $sr['deskripsi'],
-    //             ];
-    //         }
-    //     }
+        // Build job roles query with filters
+        $query = JobRole::query()
+            ->with([
+                'company:company_code,nama', // eager load company
+                'compositeRole' => function ($q) {
+                    $q->whereNull('deleted_at')
+                        ->with(['singleRoles' => function ($qq) {
+                            $qq->whereNull('tr_single_roles.deleted_at');
+                        }]);
+                }
+            ])
+            ->whereNull('deleted_at');
 
-    //     // For brevity, you can copy logic from jobRolesData and build $exportData
+        if ($companyId)     $query->where('company_id', $companyId);
+        if ($kompartemenId) $query->where('kompartemen_id', $kompartemenId);
+        if ($departemenId)  $query->where('departemen_id', $departemenId);
 
-    //     return Excel::download(new ArrayExport($exportData), 'composite_single_roles.xlsx');
-    // }
+        $jobRoles = $query->get();
+
+        // Collect unique composites WITH their associated company from JobRole
+        $compositeRoles = [];
+        foreach ($jobRoles as $jobRole) {
+            $comp = $this->unwrapComposite($jobRole->compositeRole);
+            if ($comp) {
+                // Store composite with company info from JobRole
+                if (!isset($compositeRoles[$comp->id])) {
+                    $compositeRoles[$comp->id] = [
+                        'model'       => $comp,
+                        'company_id'  => $jobRole->company_id,
+                        'company_name' => $jobRole->company?->nama ?? '',
+                    ];
+                }
+            }
+        }
+
+        // Build composite → single mappings
+        $compositeRolesWithSingles = [];
+        foreach ($compositeRoles as $data) {
+            $comp = $data['model'];
+            $singleRoles = $comp->singleRoles()
+                ->whereNull('tr_single_roles.deleted_at')
+                ->get(['tr_single_roles.id', 'tr_single_roles.nama', 'tr_single_roles.deskripsi']);
+
+            $compositeRolesWithSingles[] = [
+                'id'           => $comp->id,
+                'company_id'   => $data['company_id'],
+                'nama'         => $comp->nama,
+                'deskripsi'    => $comp->deskripsi,
+                'single_roles' => $singleRoles->map(function ($role) {
+                    return [
+                        'id'        => $role->id,
+                        'nama'      => $role->nama,
+                        'deskripsi' => $role->deskripsi,
+                    ];
+                })->toArray(),
+            ];
+        }
+
+        // Build export data with header
+        $exportData = [];
+        $exportData[] = [
+            'No',
+            'Company',
+            'Composite Role',
+            'Deskripsi Composite Role',
+            'Single Role',
+            'Deskripsi Single Role'
+        ];
+
+        $rowNumber = 1;
+        foreach ($compositeRolesWithSingles as $cr) {
+            if (count($cr['single_roles']) > 0) {
+                foreach ($cr['single_roles'] as $sr) {
+                    $exportData[] = [
+                        $rowNumber,
+                        $cr['company_id'] ?? '',
+                        $cr['nama'],
+                        $cr['deskripsi'] ?? '',
+                        $sr['nama'],
+                        $sr['deskripsi'] ?? '',
+                    ];
+                    $rowNumber++;
+                }
+            } else {
+                // Composite with no single roles
+                $exportData[] = [
+                    $rowNumber,
+                    $cr['company_id'] ?? '',
+                    $cr['nama'],
+                    $cr['deskripsi'] ?? '',
+                    '',
+                    '',
+                ];
+                $rowNumber++;
+            }
+        }
+
+        return Excel::download(new ArrayExport($exportData), 'Export_composite_role_single_roles.xlsx');
+    }
 
     public function exportSingleExcel(Request $request)
     {

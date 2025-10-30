@@ -745,6 +745,7 @@ Route::middleware(['auth'])->group(function () {
 
         Route::get('/export-word', [UAMReportController::class, 'exportWord'])->name('export-word');
         Route::get('/export-single-excel', [UAMReportController::class, 'exportSingleExcel'])->name('export-single-excel');
+        Route::get('/export-composite-excel', [UAMReportController::class, 'exportCompositeExcel'])->name('export-composite-excel');
         Route::get('/export-composite-no-ao', [UAMReportController::class, 'exportCompositeWithoutAO'])->name('export-composite-no-ao');
         // Route::get('/download', [UARReportController::class, 'download'])->name('download');
     });
