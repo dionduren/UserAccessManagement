@@ -83,6 +83,7 @@ use App\Http\Controllers\Report\UARReportController;
 use App\Http\Controllers\Report\WorkUnitReportController;
 use App\Http\Controllers\Report\BAPenarikanDataController;
 use App\Http\Controllers\Report\AnomaliDataReportController;
+use App\Http\Controllers\Report\MasterDataExportController;
 
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -765,6 +766,13 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/job-role-multi-composite', [AnomaliDataReportController::class, 'jobRoleMultipleComposite'])->name('job-role-multi-composite');
         Route::get('/composite-multi-job-role', [AnomaliDataReportController::class, 'compositeMultipleJobRole'])->name('composite-multi-jobrole');
         Route::get('/job-role-same-name', [AnomaliDataReportController::class, 'jobRoleSameName'])->name('job-role-same-name');
+    });
+
+    // Master Data Export
+    Route::prefix('master-data-export')->name('master-data-export.')->group(function () {
+        Route::get('/', [MasterDataExportController::class, 'index'])->name('index');
+        Route::post('/preview', [MasterDataExportController::class, 'preview'])->name('preview');
+        Route::get('/export', [MasterDataExportController::class, 'export'])->name('export');
     });
 
     // ------------------ PENOMORAN UAR & UAM ------------------

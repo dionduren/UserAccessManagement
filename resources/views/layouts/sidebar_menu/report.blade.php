@@ -4,6 +4,10 @@
          class="mb-1 nav-link {{ request()->routeIs('middle_db.raw.uam_relationship.*') ? 'active' : 'text-white' }}">
          <i class="bi bi-database-fill-gear me-2"></i>User - UAM Relationship
      </a>
+     <a href="{{ route('master-data-export.index') }}"
+         class="mb-1 nav-link {{ request()->routeIs('master-data-export.*') ? 'active' : 'text-white' }}">
+         <i class="bi bi-database-fill-gear me-2"></i>Master Data Export
+     </a>
  </li>
 
  <hr width="80%" class="my-1" style="margin-left: auto">
