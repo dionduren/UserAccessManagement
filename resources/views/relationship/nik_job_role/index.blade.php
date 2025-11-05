@@ -39,6 +39,7 @@
                     <thead>
                         <tr>
                             <th style="background-color: greenyellow">Perusahaan</th>
+                            <th>User Group</th>
                             <th width="10%">NIK</th>
                             <th>Nama</th>
                             <th style="background-color: greenyellow">Unit Kerja</th>
@@ -48,13 +49,15 @@
                         <tr class="filters">
                             <th><input data-col="0" type="text" class="form-control form-control-sm"
                                     placeholder="Perusahaan"></th>
-                            <th><input data-col="1" type="text" class="form-control form-control-sm" placeholder="NIK">
+                            <th><input data-col="1" type="text" class="form-control form-control-sm"
+                                    placeholder="User Group"></th>
+                            <th><input data-col="2" type="text" class="form-control form-control-sm" placeholder="NIK">
                             </th>
-                            <th><input data-col="2" type="text" class="form-control form-control-sm"
-                                    placeholder="Nama"></th>
                             <th><input data-col="3" type="text" class="form-control form-control-sm"
-                                    placeholder="Unit Kerja"></th>
+                                    placeholder="Nama"></th>
                             <th><input data-col="4" type="text" class="form-control form-control-sm"
+                                    placeholder="Unit Kerja"></th>
+                            <th><input data-col="5" type="text" class="form-control form-control-sm"
                                     placeholder="Job Role"></th>
                             <th></th>
                         </tr>
@@ -81,6 +84,10 @@
                     columns: [{
                             data: 'company',
                             name: 'company'
+                        },
+                        {
+                            data: 'user_group',
+                            name: 'user_group'
                         },
                         {
                             data: 'nik',

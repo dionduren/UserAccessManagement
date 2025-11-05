@@ -5,8 +5,10 @@ namespace App\Models;
 use App\Models\Company;
 use App\Models\Departemen;
 use App\Models\Kompartemen;
+use App\Models\MasterDataKaryawanLocal;
 use App\Models\NIKJobRole;
 use App\Models\Periode;
+use App\Models\userNIK;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -73,7 +75,16 @@ class UserNIKUnitKerja extends Model
 
     public function nikJobRoles()
     {
-        // Adjust foreign/local keys if your NIKJobRole table uses different columns
         return $this->hasMany(NIKJobRole::class, 'nik', 'nik');
+    }
+
+    /**
+     * FIXED: Basic relationship without whereColumn
+     * Filter by periode_id in the query/controller instead
+     */
+    public function userNIK()
+    {
+        return $this->belongsTo(userNIK::class, 'nik', 'user_code')
+            ->whereNull('tr_user_ussm_nik.deleted_at');
     }
 }

@@ -273,10 +273,19 @@ class UARReportController extends Controller
 
         // Process UserNIK data
         foreach ($userNIKs as $userNIK) {
+            // *** NEW: Get user's group from userNIK table first ***
+            $userNIKRecord = \App\Models\userNIK::where('user_code', $userNIK->nik)
+                ->where('periode_id', $periode->id)
+                ->whereNull('deleted_at')
+                ->first();
+
+            $userGroup = $userNIKRecord?->group;
+
             // Find corresponding NIKJobRole with job role relationships
             $nikJobRoleQuery = NIKJobRole::with([
                 'jobRole.kompartemen',
                 'jobRole.departemen',
+                'jobRole.company', // Make sure company is eager loaded
                 'mdb_usmm'
             ])
                 ->whereNull('deleted_at')
@@ -301,9 +310,16 @@ class UARReportController extends Controller
                 });
             }
 
+            // *** NEW: Filter by matching group (userNIK.group) with JobRole company shortname ***
+            if ($userGroup) {
+                $nikJobRoleQuery->whereHas('jobRole.company', function ($q) use ($userGroup) {
+                    $q->where('shortname', $userGroup);
+                });
+            }
+
             $nikJobRole = $nikJobRoleQuery->first();
 
-            // Skip if no NIKJobRole found (this shouldn't happen due to whereExists, but safety check)
+            // Skip if no NIKJobRole found
             if (!$nikJobRole) {
                 continue;
             }
@@ -628,10 +644,19 @@ class UARReportController extends Controller
 
         // Process UserNIK data (same logic as jobRolesData)
         foreach ($userNIKs as $userNIK) {
+            // *** NEW: Get user's group from userNIK table first ***
+            $userNIKRecord = \App\Models\userNIK::where('user_code', $userNIK->nik)
+                ->where('periode_id', $periode->id)
+                ->whereNull('deleted_at')
+                ->first();
+
+            $userGroup = $userNIKRecord?->group;
+
             // Find corresponding NIKJobRole with job role relationships
             $nikJobRoleQuery = NIKJobRole::with([
                 'jobRole.kompartemen',
                 'jobRole.departemen',
+                'jobRole.company', // Make sure company is eager loaded
                 'mdb_usmm'
             ])
                 ->whereNull('deleted_at')
@@ -653,6 +678,13 @@ class UARReportController extends Controller
             if ($departemenId) {
                 $nikJobRoleQuery->whereHas('jobRole', function ($q) use ($departemenId) {
                     $q->where('departemen_id', $departemenId);
+                });
+            }
+
+            // *** NEW: Filter by matching group (userNIK.group) with JobRole company shortname ***
+            if ($userGroup) {
+                $nikJobRoleQuery->whereHas('jobRole.company', function ($q) use ($userGroup) {
+                    $q->where('shortname', $userGroup);
                 });
             }
 

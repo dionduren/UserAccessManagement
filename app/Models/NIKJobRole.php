@@ -12,7 +12,6 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-
 class NIKJobRole extends Model
 {
     use HasFactory, SoftDeletes;
@@ -25,7 +24,6 @@ class NIKJobRole extends Model
         'nik',
         'user_type',
         'job_role_id',
-        // 'definisi',
         'is_active',
         'last_update',
         'flagged',
@@ -49,7 +47,7 @@ class NIKJobRole extends Model
 
     public function unitKerjaGeneric()
     {
-        return $this->hasOne(UserGenericUnitKerja::class, 'nik', 'nik');
+        return $this->hasOne(UserGenericUnitKerja::class, 'user_cc', 'nik');
     }
 
     public function UserGenericUnitKerja()
@@ -59,7 +57,6 @@ class NIKJobRole extends Model
 
     public function jobRole()
     {
-        // Change from job_role_id to job_role_id
         return $this->belongsTo(JobRole::class, 'job_role_id', 'job_role_id');
     }
 
@@ -73,9 +70,23 @@ class NIKJobRole extends Model
         return $this->belongsTo(userGeneric::class, 'nik', 'user_code');
     }
 
+    /**
+     * Basic userNIK relationship (no periode filter)
+     */
     public function userNIK()
     {
         return $this->belongsTo(userNIK::class, 'nik', 'user_code');
+    }
+
+    /**
+     * ✅ NEW: Periode-aware userNIK relationship
+     * Use this when you need to match the same periode
+     */
+    public function userNIKForPeriode()
+    {
+        return $this->belongsTo(userNIK::class, 'nik', 'user_code')
+            ->where('tr_user_ussm_nik.periode_id', $this->periode_id)
+            ->whereNull('tr_user_ussm_nik.deleted_at');
     }
 
     public function mdb_usmm()

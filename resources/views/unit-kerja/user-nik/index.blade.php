@@ -38,6 +38,7 @@
                         <thead>
                             <tr>
                                 <th width="5%">Company</th>
+                                <th width="5%">User Group</th>
                                 <th width="10%">NIK</th>
                                 <th>Nama</th>
                                 <th width="25%">Kompartemen</th>
@@ -49,14 +50,16 @@
                                 <th><input data-col="0" type="text" class="form-control form-control-sm"
                                         placeholder="Company"></th>
                                 <th><input data-col="1" type="text" class="form-control form-control-sm"
-                                        placeholder="NIK"></th>
+                                        placeholder="User Group"></th>
                                 <th><input data-col="2" type="text" class="form-control form-control-sm"
-                                        placeholder="Nama"></th>
+                                        placeholder="NIK"></th>
                                 <th><input data-col="3" type="text" class="form-control form-control-sm"
-                                        placeholder="Kompartemen"></th>
+                                        placeholder="Nama"></th>
                                 <th><input data-col="4" type="text" class="form-control form-control-sm"
-                                        placeholder="Departemen"></th>
+                                        placeholder="Kompartemen"></th>
                                 <th><input data-col="5" type="text" class="form-control form-control-sm"
+                                        placeholder="Departemen"></th>
+                                <th><input data-col="6" type="text" class="form-control form-control-sm"
                                         placeholder="Flagged"></th>
                                 <th></th>
                             </tr>
@@ -97,6 +100,9 @@
             },
             columns: [{
                     data: 'company_id'
+                },
+                {
+                    data: 'user_group'
                 },
                 {
                     data: 'nik'

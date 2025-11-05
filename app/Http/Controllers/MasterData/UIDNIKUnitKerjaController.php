@@ -25,7 +25,16 @@ class UIDNIKUnitKerjaController extends Controller
                 return response()->json(['data' => []]);
             }
 
-            $query = UserNIKUnitKerja::with(['kompartemen', 'departemen', 'company'])
+            $query = UserNIKUnitKerja::with([
+                'kompartemen',
+                'departemen',
+                'company',
+                // FIXED: Apply periode filter in the eager loading closure
+                'userNIK' => function ($q) use ($periodeId) {
+                    $q->where('tr_user_ussm_nik.periode_id', $periodeId)
+                        ->whereNull('tr_user_ussm_nik.deleted_at');
+                }
+            ])
                 ->where('periode_id', $periodeId);
 
             // Filter by company unless A000
@@ -36,6 +45,7 @@ class UIDNIKUnitKerjaController extends Controller
             $rows = $query->latest('periode_id')->get()->map(function ($item) {
                 return array_merge($item->toArray(), [
                     'company_nama' => data_get($item, 'company.nama'),
+                    'user_group' => data_get($item, 'userNIK.group', '-'),
                     'kompartemen_nama' => data_get($item, 'kompartemen.nama'),
                     'departemen_nama' => data_get($item, 'departemen.nama'),
                 ]);

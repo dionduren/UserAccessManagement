@@ -239,7 +239,7 @@ class NIKJobController extends Controller
                     $query->select('id', 'job_role_id', 'nama', 'company_id', 'kompartemen_id');
                 },
                 'jobRole.company' => function ($query) {
-                    $query->select('company_code', 'nama');
+                    $query->select('company_code', 'shortname');
                 },
                 'jobRole.kompartemen' => function ($query) {
                     $query->select('kompartemen_id', 'nama');
@@ -249,6 +249,12 @@ class NIKJobController extends Controller
                 },
                 'unitKerja' => function ($query) {
                     $query->select('nik', 'nama');
+                },
+                // ✅ FIXED: Include required columns and periode filter
+                'userNIK' => function ($query) use ($periodeId) {
+                    $query->select('id', 'user_code', 'group', 'periode_id')
+                        ->where('periode_id', $periodeId)
+                        ->whereNull('deleted_at');
                 }
             ])
             ->where('periode_id', $periodeId)
@@ -256,29 +262,32 @@ class NIKJobController extends Controller
             ->get();
 
         return DataTables::of($nikJobRoles)
+            ->addColumn('user_group', function ($row) {
+                return $row->userNIK?->group ?? '-';
+            })
             ->addColumn('nama', function ($row) {
-                return $row->unitKerja ? $row->unitKerja->nama : '-';
+                return $row->unitKerja?->nama ?? '-';
             })
             ->addColumn('job_role', function ($row) {
-                return $row->jobRole ? $row->jobRole->nama : '-';
+                return $row->jobRole?->nama ?? '-';
             })
             ->addColumn('company', function ($row) {
-                return ($row->jobRole && $row->jobRole->company) ? $row->jobRole->company->nama : '-';
+                return $row->jobRole?->company?->shortname ?? '-';
             })
             ->addColumn('kompartemen', function ($row) {
-                return ($row->jobRole && $row->jobRole->kompartemen) ? $row->jobRole->kompartemen->nama : '-';
+                return $row->jobRole?->kompartemen?->nama ?? '-';
             })
             ->addColumn('periode', function ($row) {
-                return $row->periode ? $row->periode->definisi : '-';
+                return $row->periode?->definisi ?? '-';
             })
             ->addColumn('action', function ($row) {
                 return '
-            <a href="' . route('nik-job.show', $row->id) . '" target="_blank" class="btn btn-sm btn-primary me-1">
-            <i class="bi bi-info-circle-fill"></i> Detail
-            </a>
-            <a href="' . route('nik-job.edit', $row->id) . '" target="_blank" class="btn btn-sm btn-warning me-1">
-            <i class="bi bi-pencil-fill"></i> Edit
-            </a>';
+                <a href="' . route('nik-job.show', $row->id) . '" target="_blank" class="btn btn-sm btn-primary me-1">
+                    <i class="bi bi-info-circle-fill"></i> Detail
+                </a>
+                <a href="' . route('nik-job.edit', $row->id) . '" target="_blank" class="btn btn-sm btn-warning me-1">
+                    <i class="bi bi-pencil-fill"></i> Edit
+                </a>';
             })
             ->rawColumns(['action'])
             ->make(true);
