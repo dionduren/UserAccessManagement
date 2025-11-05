@@ -367,6 +367,7 @@ class UARReportController extends Controller
             $nikJobRoleQuery = NIKJobRole::with([
                 'jobRole.kompartemen',
                 'jobRole.departemen',
+                'jobRole.company', // Make sure company is eager loaded
                 'mdb_usmm'
             ])
                 ->whereNull('deleted_at')
@@ -388,6 +389,14 @@ class UARReportController extends Controller
             if ($departemenId) {
                 $nikJobRoleQuery->whereHas('jobRole', function ($q) use ($departemenId) {
                     $q->where('departemen_id', $departemenId);
+                });
+            }
+
+            // *** NEW: Filter by matching group (userGeneric.group) with JobRole company shortname ***
+            $userGroup = $userGeneric->userGeneric?->group;
+            if ($userGroup) {
+                $nikJobRoleQuery->whereHas('jobRole.company', function ($q) use ($userGroup) {
+                    $q->where('shortname', $userGroup);
                 });
             }
 
@@ -677,6 +686,7 @@ class UARReportController extends Controller
             $nikJobRoleQuery = NIKJobRole::with([
                 'jobRole.kompartemen',
                 'jobRole.departemen',
+                'jobRole.company', // Make sure company is eager loaded
                 'mdb_usmm'
             ])
                 ->whereNull('deleted_at')
@@ -701,9 +711,17 @@ class UARReportController extends Controller
                 });
             }
 
+            // *** NEW: Filter by matching group (userGeneric.group) with JobRole company shortname ***
+            $userGroup = $userGeneric->userGeneric?->group;
+            if ($userGroup) {
+                $nikJobRoleQuery->whereHas('jobRole.company', function ($q) use ($userGroup) {
+                    $q->where('shortname', $userGroup);
+                });
+            }
+
             $nikJobRole = $nikJobRoleQuery->first();
 
-            // Skip if no NIKJobRole found
+            // Skip if no NIKJobRole found (this shouldn't happen due to whereExists, but safety check)
             if (!$nikJobRole) {
                 continue;
             }
