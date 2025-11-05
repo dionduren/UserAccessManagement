@@ -45,6 +45,7 @@
                                     <th width="7.5%">Perusahaan</th>
                                     <th width="7.5%">User ID</th>
                                     <th>Nama</th>
+                                    <th width="7.5%">User Group</th>
                                     <th width="20%">Kompartemen</th>
                                     <th width="20%">Departemen</th>
                                     <th width="5%">Flagged</th>
@@ -59,10 +60,12 @@
                                     <th><input data-col="3" type="text" class="form-control form-control-sm"
                                             placeholder="Nama"></th>
                                     <th><input data-col="4" type="text" class="form-control form-control-sm"
-                                            placeholder="Kompartemen"></th>
+                                            placeholder="User Group"></th>
                                     <th><input data-col="5" type="text" class="form-control form-control-sm"
-                                            placeholder="Departemen"></th>
+                                            placeholder="Kompartemen"></th>
                                     <th><input data-col="6" type="text" class="form-control form-control-sm"
+                                            placeholder="Departemen"></th>
+                                    <th><input data-col="7" type="text" class="form-control form-control-sm"
                                             placeholder="Flagged"></th>
                                     <th></th>
                                 </tr>
@@ -123,6 +126,9 @@
                 },
                 {
                     data: 'nama'
+                },
+                {
+                    data: 'user_group'
                 },
                 {
                     data: 'kompartemen_nama'

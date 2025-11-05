@@ -751,7 +751,7 @@ class UAMReportController extends Controller
 
         $nomorSurat   = 'XXX';
         // $maxSingleRoles = 150; // Maximum single roles viewed per document
-        $maxTcodes = 600; // Maximum tcodes viewed per document
+        $maxTcodes = 800; // Maximum tcodes viewed per document
 
         // Rename unit kerja untuk display info di judul & tabel word
         if ($departemenId) {
@@ -971,8 +971,8 @@ class UAMReportController extends Controller
 
         // Position row
         $coverTable->addRow(250, ['exactHeight' => true]);
-        $coverTable->addCell(3400)->addText('VP Operasional Sistem TI', ['bold' => true, 'size' => 9], ['alignment' => Jc::CENTER, 'spaceBefore' => 0, 'spaceAfter' => 0]);
-        $coverTable->addCell(3400)->addText('VP Strategi dan Tata Kelola TI', ['bold' => true, 'size' => 9], ['alignment' => Jc::CENTER, 'spaceBefore' => 0, 'spaceAfter' => 0]);
+        $coverTable->addCell(3400)->addText('VP ...', ['bold' => true, 'size' => 9], ['alignment' => Jc::CENTER, 'spaceBefore' => 0, 'spaceAfter' => 0]);
+        $coverTable->addCell(3400)->addText('VP ...', ['bold' => true, 'size' => 9], ['alignment' => Jc::CENTER, 'spaceBefore' => 0, 'spaceAfter' => 0]);
         $coverTable->addCell(3400)->addText($jabatanUnitKerja . ' ' . $unitKerjaName, ['bold' => true, 'size' => 9], ['alignment' => Jc::CENTER, 'spaceBefore' => 0, 'spaceAfter' => 0]);
         $coverTable->addRow(250, ['exactHeight' => true]);
         $coverTable->addCell(3400);
@@ -1281,7 +1281,8 @@ class UAMReportController extends Controller
             $section->addText('Data terlalu banyak untuk ditampilkan. Silakan unduh file Excel untuk detail lengkap.', ['italic' => true, 'color' => 'FF0000']);
         } else {
             $singleRoleTcodeTable = $section->addTable(['borderSize' => 6, 'borderColor' => '000000', 'cellMargin' => 80]);
-            $singleRoleTcodeTable->addRow(200, ['exactHeight' => true]);
+            $singleRoleTcodeTable->addRow(250, ['exactHeight' => true]);
+            // $singleRoleTcodeTable->addRow();
             $singleRoleTcodeTable->addCell(750, ['valign' => 'center'])->addText('No', ['bold' => true, 'size' => 8], ['alignment' => Jc::CENTER, 'spaceBefore' => 0, 'spaceAfter' => 0]);
             $singleRoleTcodeTable->addCell(3750, ['valign' => 'center'])->addText('Single Role', ['bold' => true, 'size' => 8], ['spaceBefore' => 0, 'spaceAfter' => 0]);
             $singleRoleTcodeTable->addCell(3250, ['valign' => 'center'])->addText('Tcode', ['bold' => true, 'size' => 8], ['spaceBefore' => 0, 'spaceAfter' => 0]);
@@ -1292,7 +1293,8 @@ class UAMReportController extends Controller
                 $tcodes = $sr['tcodes'];
                 if (count($tcodes) > 0) {
                     foreach ($tcodes as $tcIdx => $tc) {
-                        $singleRoleTcodeTable->addRow(200, ['exactHeight' => true]);
+                        $singleRoleTcodeTable->addRow(250, ['exactHeight' => true]);
+                        // $singleRoleTcodeTable->addRow();
                         if ($tcIdx === 0) {
                             $singleRoleTcodeTable->addCell(750, ['vMerge' => 'restart', 'valign' => 'top', 'rowSpan' => count($tcodes)])
                                 ->addText($no, ['size' => 8], ['alignment' => Jc::CENTER, 'spaceBefore' => 0, 'spaceAfter' => 0]);
@@ -1310,7 +1312,8 @@ class UAMReportController extends Controller
                     }
                     $no++;
                 } else {
-                    $singleRoleTcodeTable->addRow(200, ['exactHeight' => true]);
+                    $singleRoleTcodeTable->addRow(250, ['exactHeight' => true]);
+                    // $singleRoleTcodeTable->addRow();
                     $singleRoleTcodeTable->addCell(750, ['valign' => 'top'])->addText($no, ['size' => 8], ['alignment' => Jc::CENTER, 'spaceBefore' => 0, 'spaceAfter' => 0]);
                     $singleRoleTcodeTable->addCell(3750, ['valign' => 'top'])->addText($sr['nama'], ['size' => 8], ['spaceBefore' => 0, 'spaceAfter' => 0]);
                     // $singleRoleTcodeTable->addCell(3750, ['valign' => 'top'])->addText($this->sanitizeForDocx($sr['nama']), ['size' => 8], ['spaceBefore' => 0, 'spaceAfter' => 0]);

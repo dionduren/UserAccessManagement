@@ -44,9 +44,10 @@
                     <thead>
                         <tr>
                             <th>ID</th>
-                            <th width="10%">Perusahaan</th>
+                            <th width="10%">User Group</th>
                             <th width="15%">User Generic</th>
                             <th width="15%">PIC</th>
+                            <th width="15%">Company Job Role</th>
                             <th width="15%">Job Role ID</th>
                             <th>Job Role</th>
                             <th width="10%">Status</th>
@@ -61,10 +62,12 @@
                             <th><input data-col="3" type="text" class="form-control form-control-sm" placeholder="PIC">
                             </th>
                             <th><input data-col="4" type="text" class="form-control form-control-sm"
-                                    placeholder="Job Role ID"></th>
+                                    placeholder="Company Job Role"></th>
                             <th><input data-col="5" type="text" class="form-control form-control-sm"
-                                    placeholder="Job Role"></th>
+                                    placeholder="Job Role ID"></th>
                             <th><input data-col="6" type="text" class="form-control form-control-sm"
+                                    placeholder="Job Role"></th>
+                            <th><input data-col="7" type="text" class="form-control form-control-sm"
                                     placeholder="Status"></th>
                             <th></th>
                         </tr>
@@ -192,6 +195,10 @@
                     {
                         data: 'definisi',
                         name: 'definisi'
+                    },
+                    {
+                        data: 'company_job_role',
+                        name: 'company_job_role'
                     },
                     {
                         data: 'job_role_id',

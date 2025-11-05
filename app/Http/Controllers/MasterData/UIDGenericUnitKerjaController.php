@@ -42,6 +42,7 @@ class UIDGenericUnitKerjaController extends Controller
             $rows = $query->latest('periode_id')->get()->map(function ($item) {
                 return array_merge($item->toArray(), [
                     'company' => data_get($item, 'userGeneric.Company.company_code'),
+                    'user_group' => data_get($item, 'userGeneric.group'),
                     'nama' => data_get($item, 'userGeneric.user_profile'),
                     'kompartemen_nama' => data_get($item, 'kompartemen.nama'),
                     'departemen_nama' => data_get($item, 'departemen.nama'),

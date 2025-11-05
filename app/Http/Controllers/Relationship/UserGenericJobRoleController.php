@@ -49,7 +49,8 @@ class UserGenericJobRoleController extends Controller
                         $q->where('periode_id', $periodeId)
                             ->whereNull('deleted_at')
                             ->with([
-                                'jobRole:id,job_role_id,nama',
+                                'jobRole:id,job_role_id,nama,company_id',
+                                'jobRole.company:company_code,shortname', // Add company eager loading
                             ]);
                     }
                 ])
@@ -64,6 +65,9 @@ class UserGenericJobRoleController extends Controller
                 ->addColumn('job_role_id', fn($row) => $row->NIKJobRole->pluck('job_role_id')->unique()->implode(', '))
                 ->addColumn('job_role_name', fn($row) => $row->NIKJobRole->map(
                     fn($r) => $r->jobRole?->nama ?? '-'
+                )->unique()->implode(', '))
+                ->addColumn('company_job_role', fn($row) => $row->NIKJobRole->map(
+                    fn($r) => $r->jobRole?->company?->shortname ?? '-'
                 )->unique()->implode(', '))
                 ->addColumn('flagged', function ($row) {
                     $flags = $row->NIKJobRole->pluck('flagged')->filter();
