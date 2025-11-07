@@ -421,7 +421,7 @@ class CompositeSingleController extends Controller
             'composite_role' => $compositeRole->nama,
             'nama' => $validatedData['ao_name'],
             'deskripsi' => $validatedData['ao_description'] ?? null,
-            'created_by' => $user->id,
+            'created_by' => $user->username,
         ]);
 
         // ✅ NEW: Auto-create/update composite-single relationship
@@ -431,7 +431,7 @@ class CompositeSingleController extends Controller
             [
                 'deskripsi' => $validatedData['ao_description'] ?? null,
                 'source' => 'upload',
-                'created_by' => $user->id,
+                'created_by' => $user->username,
             ]
         );
 
@@ -439,7 +439,7 @@ class CompositeSingleController extends Controller
         if (!$singleRole->wasRecentlyCreated && $validatedData['ao_description']) {
             $singleRole->update([
                 'deskripsi' => $validatedData['ao_description'],
-                'updated_by' => $user->id,
+                'updated_by' => $user->username,
             ]);
         }
 
@@ -447,7 +447,7 @@ class CompositeSingleController extends Controller
         if (!$compositeRole->singleRoles()->where('single_role_id', $singleRole->id)->exists()) {
             $compositeRole->singleRoles()->attach($singleRole->id, [
                 'source' => 'upload',
-                'created_by' => $user->id,
+                'created_by' => $user->username,
                 'created_at' => now(),
                 'updated_at' => now(),
             ]);
@@ -456,7 +456,7 @@ class CompositeSingleController extends Controller
             // Update pivot data if already exists
             $compositeRole->singleRoles()->updateExistingPivot($singleRole->id, [
                 'source' => 'upload',
-                'updated_by' => $user->id,
+                'updated_by' => $user->username,
                 'updated_at' => now(),
             ]);
             $relationshipAction = 'updated';
@@ -525,7 +525,7 @@ class CompositeSingleController extends Controller
             'composite_role' => $newCompositeRole->nama,
             'nama' => $validatedData['ao_name'],
             'deskripsi' => $validatedData['ao_description'],
-            'updated_by' => $user->id,
+            'updated_by' => $user->username,
         ]);
 
         // ✅ NEW: Handle composite-single relationship updates
@@ -552,7 +552,7 @@ class CompositeSingleController extends Controller
                     $oldSingleRole->update([
                         'nama' => $validatedData['ao_name'],
                         'deskripsi' => $validatedData['ao_description'],
-                        'updated_by' => $user->id,
+                        'updated_by' => $user->username,
                     ]);
                     $singleRole = $oldSingleRole;
                     $relationshipAction = 'renamed and updated';
@@ -567,7 +567,7 @@ class CompositeSingleController extends Controller
                         [
                             'deskripsi' => $validatedData['ao_description'],
                             'source' => 'upload',
-                            'created_by' => $user->id,
+                            'created_by' => $user->username,
                         ]
                     );
                     $relationshipAction = 'created new';
@@ -579,7 +579,7 @@ class CompositeSingleController extends Controller
                     [
                         'deskripsi' => $validatedData['ao_description'],
                         'source' => 'upload',
-                        'created_by' => $user->id,
+                        'created_by' => $user->username,
                     ]
                 );
                 $relationshipAction = 'created';
@@ -594,14 +594,14 @@ class CompositeSingleController extends Controller
                     'nama' => $validatedData['ao_name'],
                     'deskripsi' => $validatedData['ao_description'],
                     'source' => 'upload',
-                    'created_by' => $user->id,
+                    'created_by' => $user->username,
                 ]);
                 $relationshipAction = 'created';
             } else {
                 // Update description
                 $singleRole->update([
                     'deskripsi' => $validatedData['ao_description'],
-                    'updated_by' => $user->id,
+                    'updated_by' => $user->username,
                 ]);
                 $relationshipAction = 'updated';
             }
@@ -611,14 +611,14 @@ class CompositeSingleController extends Controller
         if (!$newCompositeRole->singleRoles()->where('single_role_id', $singleRole->id)->exists()) {
             $newCompositeRole->singleRoles()->attach($singleRole->id, [
                 'source' => 'upload',
-                'created_by' => $user->id,
+                'created_by' => $user->username,
                 'created_at' => now(),
                 'updated_at' => now(),
             ]);
         } else {
             $newCompositeRole->singleRoles()->updateExistingPivot($singleRole->id, [
                 'source' => 'upload',
-                'updated_by' => $user->id,
+                'updated_by' => $user->username,
                 'updated_at' => now(),
             ]);
         }
@@ -639,16 +639,69 @@ class CompositeSingleController extends Controller
         $user = auth()->user();
         $userCompanyCode = $user->loginDetail->company_code ?? null;
 
-        $compositeAO = CompositeAO::with('compositeRole')->findOrFail($id);
+        try {
+            // Find the AO with its composite role relationship
+            $compositeAO = CompositeAO::with('compositeRole')->findOrFail($id);
 
-        // Security check
-        $aoCompanyCode = $compositeAO->compositeRole?->company_id;
-        if ($userCompanyCode !== 'A000' && $aoCompanyCode !== $userCompanyCode) {
-            return response()->json(['status' => 'error', 'message' => 'Unauthorized'], 403);
+            // Security check
+            $aoCompanyCode = $compositeAO->compositeRole?->company_id;
+            if ($userCompanyCode !== 'A000' && $aoCompanyCode !== $userCompanyCode) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Unauthorized to delete this Authorization Object'
+                ], 403);
+            }
+
+            // Store info before deletion
+            $aoName = $compositeAO->nama;
+            $compositeRole = $compositeAO->compositeRole;
+
+            // Delete the AO
+            $compositeAO->delete();
+
+            // Optional: Clean up related single role relationship
+            if ($compositeRole) {
+                $singleRole = SingleRole::where('nama', $aoName)->first();
+
+                if ($singleRole) {
+                    $usageCount = $singleRole->compositeRoles()->count();
+
+                    if ($usageCount === 1) {
+                        // Only linked to this composite, safe to detach
+                        $compositeRole->singleRoles()->detach($singleRole->id);
+
+                        // Optionally delete the single role if auto-created
+                        if ($singleRole->source === 'upload') {
+                            $singleRole->delete();
+                        }
+                    } elseif ($usageCount > 1) {
+                        // Linked to multiple composites, only detach from this one
+                        $compositeRole->singleRoles()->detach($singleRole->id);
+                    }
+                }
+            }
+
+            return response()->json([
+                'status' => 'ok',
+                'message' => 'Authorization Object deleted successfully'
+            ]);
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Authorization Object not found'
+            ], 404);
+        } catch (\Exception $e) {
+            \Log::error('Error deleting CompositeAO', [
+                'id' => $id,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Failed to delete: ' . $e->getMessage()
+            ], 500);
         }
-
-        $compositeAO->delete();
-        return response()->json(['status' => 'ok']);
     }
 
     public function datatable_ao(Request $request)
@@ -661,7 +714,7 @@ class CompositeSingleController extends Controller
         $start  = (int)$request->input('start', 0);
         $search = $request->input('search.value');
 
-        // Base query: join to composite role (by name) to derive company, then to company table
+        // ✅ REMOVED: whereNull('tr_composite_ao.deleted_at') since no soft deletes
         $base = CompositeAO::query()
             ->leftJoin('tr_composite_roles', function ($join) {
                 $join->on('tr_composite_roles.nama', '=', 'tr_composite_ao.composite_role')
@@ -672,10 +725,11 @@ class CompositeSingleController extends Controller
                     ->whereNull('ms_company.deleted_at');
             })
             ->select([
-                'tr_composite_ao.id',
+                'tr_composite_ao.id as ao_id',
                 'tr_composite_ao.composite_role',
                 'tr_composite_ao.nama as ao_name',
                 'tr_composite_ao.deskripsi',
+                'tr_composite_roles.id as composite_role_id',
                 'tr_composite_roles.company_id',
                 'ms_company.nama as company_name',
             ]);
@@ -710,20 +764,28 @@ class CompositeSingleController extends Controller
                 $dir = $ord['dir'] === 'desc' ? 'desc' : 'asc';
                 switch ($idx) {
                     case 0: // company
-                        $base->orderBy('ms_company.company_code', $dir)->orderBy('tr_composite_ao.composite_role');
+                        $base->orderBy('ms_company.company_code', $dir)
+                            ->orderBy('tr_composite_ao.composite_role', $dir)
+                            ->orderBy('tr_composite_ao.nama', $dir);
                         break;
                     case 1: // composite_role
-                        $base->orderBy('tr_composite_ao.composite_role', $dir);
+                        $base->orderBy('tr_composite_ao.composite_role', $dir)
+                            ->orderBy('tr_composite_ao.nama', $dir);
                         break;
                     case 2: // ao name
                         $base->orderBy('tr_composite_ao.nama', $dir);
+                        break;
+                    case 3: // description
+                        $base->orderBy('tr_composite_ao.deskripsi', $dir);
                         break;
                     default:
                         $base->orderBy('tr_composite_ao.id', $dir);
                 }
             }
         } else {
-            $base->orderBy('ms_company.nama')->orderBy('tr_composite_ao.composite_role')->orderBy('tr_composite_ao.nama');
+            $base->orderBy('ms_company.company_code')
+                ->orderBy('tr_composite_ao.composite_role')
+                ->orderBy('tr_composite_ao.nama');
         }
 
         $rows = $base->skip($start)->take($length)->get();
@@ -731,15 +793,21 @@ class CompositeSingleController extends Controller
         $data = [];
         foreach ($rows as $r) {
             $canModify = $userCompanyCode === 'A000' || $r->company_id === $userCompanyCode;
+
+            // ✅ FIX: Use ao_id (not id) for route parameters
             $actions = $canModify
-                ? '<a href="' . route('composite_ao.edit', $r->id) . '" class="btn btn-sm btn-warning mb-1">Edit</a> '
-                . '<button class="btn btn-sm btn-danger btn-delete" data-id="' . $r->id . '">Delete</button>'
+                ? '<a href="' . route('composite_ao.edit', $r->ao_id) . '" class="btn btn-sm btn-warning mb-1">
+                   <i class="bi bi-pencil"></i> Edit
+               </a> 
+               <button class="btn btn-sm btn-danger btn-delete" data-id="' . $r->ao_id . '">
+                   <i class="bi bi-trash"></i> Delete
+               </button>'
                 : '<span class="text-muted small">Read only</span>';
 
             $data[] = [
                 'company'        => $r->company_name ?? $r->company_id ?? '-BELUM TERDAFTAR-',
-                'composite_role' => $r->composite_role,
-                'ao_name'        => $r->ao_name,
+                'composite_role' => $r->composite_role ?? '-',
+                'ao_name'        => $r->ao_name ?? '-',
                 'description'    => $r->deskripsi ?: '-',
                 'actions'        => $actions,
             ];

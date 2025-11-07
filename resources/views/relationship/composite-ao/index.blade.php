@@ -75,6 +75,14 @@
                     url: '{{ route('composite_ao.datatable') }}',
                     data: function(d) {
                         d.company_id = $('#companyFilter').val();
+                    },
+                    error: function(xhr, error, code) {
+                        console.error('DataTable AJAX Error:', {
+                            xhr,
+                            error,
+                            code
+                        });
+                        alert('Error loading data: ' + xhr.statusText);
                     }
                 },
                 lengthMenu: [10, 25, 50, 100],
@@ -100,38 +108,75 @@
                         orderable: false,
                         searchable: false
                     }
+                ],
+                order: [
+                    [0, 'asc'],
+                    [1, 'asc'],
+                    [2, 'asc']
                 ]
             });
 
             $('#companyFilter').on('change', () => table.ajax.reload());
 
             $('#aoTable').on('click', '.btn-delete', function() {
-                const id = this.getAttribute('data-id');
+                const id = $(this).data('id');
+
+                console.log('Delete clicked, ID:', id);
+
+                if (!id) {
+                    Swal.fire('Error', 'Invalid ID', 'error');
+                    return;
+                }
+
                 Swal.fire({
-                    title: 'Delete?',
-                    text: 'Remove this Composite AO entry?',
+                    title: 'Permanently Delete?',
+                    text: 'This Authorization Object will be removed permanently!',
                     icon: 'warning',
                     showCancelButton: true,
-                    confirmButtonText: 'Yes, delete'
+                    confirmButtonText: 'Yes, delete',
+                    confirmButtonColor: '#d33',
+                    cancelButtonText: 'Cancel'
                 }).then(res => {
                     if (!res.isConfirmed) return;
-                    fetch("{{ url('composite-ao') }}/" + id, {
+
+                    // ✅ Use route helper to build correct URL
+                    const deleteUrl = '{{ url('relationship/composite-ao') }}/' + id;
+                    console.log('DELETE URL:', deleteUrl);
+
+                    fetch(deleteUrl, {
                             method: 'DELETE',
                             headers: {
-                                'X-CSRF-TOKEN': "{{ csrf_token() }}",
-                                'Accept': 'application/json'
+                                'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                                'Accept': 'application/json',
+                                'Content-Type': 'application/json'
                             }
                         })
-                        .then(r => r.json())
-                        .then(j => {
-                            if (j.status === 'ok') {
-                                Swal.fire('Deleted', 'Entry removed', 'success');
+                        .then(response => {
+                            console.log('Response status:', response.status);
+
+                            if (!response.ok) {
+                                return response.text().then(text => {
+                                    console.error('Error response:', text);
+                                    throw new Error(`HTTP ${response.status}: ${text}`);
+                                });
+                            }
+                            return response.json();
+                        })
+                        .then(data => {
+                            console.log('Success:', data);
+
+                            if (data.status === 'ok') {
+                                Swal.fire('Deleted!', data.message || 'Entry removed',
+                                    'success');
                                 table.ajax.reload(null, false);
                             } else {
-                                Swal.fire('Error', 'Failed to delete', 'error');
+                                Swal.fire('Error', data.message || 'Failed to delete', 'error');
                             }
                         })
-                        .catch(() => Swal.fire('Error', 'Failed to delete', 'error'));
+                        .catch(error => {
+                            console.error('Fetch error:', error);
+                            Swal.fire('Error', error.message || 'Failed to delete', 'error');
+                        });
                 });
             });
         });
