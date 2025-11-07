@@ -323,9 +323,16 @@ Route::middleware(['auth'])->group(function () {
     Route::resource('/relationship/composite-single', CompositeSingleController::class);
 
     Route::prefix('/relationship/composite-ao')->name('composite_ao.')->group(function () {
+        // Route::get('/', [CompositeSingleController::class, 'index_ao'])->name('index');
+        // Route::get('/datatable', [CompositeSingleController::class, 'datatable_ao'])->name('datatable');
+        // Route::delete('/{id}', [CompositeSingleController::class, 'destroy_ao'])->name('destroy');
         Route::get('/', [CompositeSingleController::class, 'index_ao'])->name('index');
-        Route::get('/datatable', [CompositeSingleController::class, 'datatable_ao'])->name('datatable');
+        Route::get('/create', [CompositeSingleController::class, 'create_ao'])->name('create');
+        Route::post('/', [CompositeSingleController::class, 'store_ao'])->name('store');
+        Route::get('/{id}/edit', [CompositeSingleController::class, 'edit_ao'])->name('edit');
+        Route::put('/{id}', [CompositeSingleController::class, 'update_ao'])->name('update');
         Route::delete('/{id}', [CompositeSingleController::class, 'destroy_ao'])->name('destroy');
+        Route::get('/datatable', [CompositeSingleController::class, 'datatable_ao'])->name('datatable');
     });
 
     // Route::get('/relationship/single-tcode/data-set', [SingleTcodeController::class, 'jsonIndex'])->name('single-tcode.jsonIndex');

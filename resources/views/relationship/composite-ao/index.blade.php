@@ -15,6 +15,19 @@
         <div class="card shadow-sm">
             <div class="card-header d-flex flex-wrap align-items-center gap-3">
                 <h4 class="mb-0">Composite AO Mapping</h4>
+            </div>
+            <div class="card-body">
+                @if (session('success'))
+                    <div class="alert alert-success py-2">{{ session('success') }}</div>
+                @endif
+                @if (session('error'))
+                    <div class="alert alert-danger py-2">{{ session('error') }}</div>
+                @endif
+                <div class="ms-auto">
+                    <a href="{{ route('composite_ao.create') }}" class="btn btn-primary btn-sm">
+                        <i class="bi bi-plus-circle"></i> Create Authorization Object
+                    </a>
+                </div>
                 @if ($userCompanyCode === 'A000')
                     <div>
                         <label class="form-label mb-1 small">Company</label>
@@ -32,14 +45,6 @@
                         Company: {{ $companies->first()->nama }} ({{ $companies->first()->company_code }})
                     </span>
                 @endif
-                <div class="ms-auto">
-                    {{-- Placeholder for future "Create" if needed --}}
-                </div>
-            </div>
-            <div class="card-body">
-                @if (session('success'))
-                    <div class="alert alert-success py-2">{{ session('success') }}</div>
-                @endif
                 <div class="table-responsive">
                     <table id="aoTable" class="table table-sm table-bordered w-100">
                         <thead class="table-light">
@@ -48,7 +53,7 @@
                                 <th width="25%">Composite Role</th>
                                 <th width="25%">Authorization Object</th>
                                 <th>Deskripsi</th>
-                                <th width="10%">Actions</th>
+                                <th width="12%">Actions</th>
                             </tr>
                         </thead>
                         <tbody></tbody>
