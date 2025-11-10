@@ -1,9 +1,11 @@
 <?php
-// filepath: app/Http/Controllers/CheckpointController.php
+// filepath: c:\Kerja\Project\2024\05. User Access Management\UserAccessManagement\app\Http\Controllers\CheckpointController.php
 namespace App\Http\Controllers;
 
 use App\Models\Company;
 use App\Models\Periode;
+use App\Models\CompositeRole;
+use App\Models\JobRole;
 use App\Services\CheckpointService;
 use Illuminate\Http\Request;
 
@@ -66,5 +68,45 @@ class CheckpointController extends Controller
         return redirect()
             ->route('checkpoints.index', ['periode_id' => $validated['periode_id']])
             ->with('success', 'Checkpoint progress updated.');
+    }
+
+    /**
+     * Get job roles that have multiple composite roles assigned
+     */
+    public function jobRolesWithMultipleComposites(Request $request)
+    {
+        $companyCode = $request->input('company_code');
+
+        if (!$companyCode) {
+            return response()->json([]);
+        }
+
+        // Job roles with multiple composite roles
+        $jobRoles = JobRole::where('tr_job_roles.company_id', $companyCode) // <-- prefix
+            ->select('tr_job_roles.id', 'tr_job_roles.nama', 'tr_job_roles.company_id')
+            ->with(['company:company_code,nama'])
+            ->join('tr_composite_roles', 'tr_composite_roles.jabatan_id', '=', 'tr_job_roles.id')
+            ->whereNull('tr_composite_roles.deleted_at')
+            ->groupBy('tr_job_roles.id', 'tr_job_roles.nama', 'tr_job_roles.company_id')
+            ->havingRaw('COUNT(DISTINCT tr_composite_roles.id) > 1')
+            ->get()
+            ->map(function ($jobRole) use ($companyCode) {
+                // Get all composite roles for this job role (scoped to same company)
+                $composites = CompositeRole::where('jabatan_id', $jobRole->id)
+                    ->where('tr_composite_roles.company_id', $companyCode)     // <-- prefix
+                    ->whereNull('tr_composite_roles.deleted_at')
+                    ->pluck('nama')
+                    ->toArray();
+
+                return [
+                    'id' => $jobRole->id,
+                    'nama' => $jobRole->nama,
+                    'company' => $jobRole->company,
+                    'composite_count' => count($composites),
+                    'composite_roles' => implode(', ', $composites),
+                ];
+            });
+
+        return response()->json($jobRoles);
     }
 }

@@ -186,7 +186,7 @@ Route::middleware(['auth'])->group(function () {
     // ======== PROGRESS CHECKPOINT ===========
     Route::get('/checkpoints', [CheckpointController::class, 'index'])->name('checkpoints.index');
     Route::post('/checkpoints/refresh', [CheckpointController::class, 'refresh'])->name('checkpoints.refresh');
-
+    Route::get('/checkpoints/duplicates/job-roles-multiple-composites', [CheckpointController::class, 'jobRolesWithMultipleComposites'])->name('checkpoints.duplicates.jobRolesMultipleComposites');
 
     // ======== USER PROFILE ===========
     Route::get('/profile', [ProfileController::class, 'show'])->name('profile.show');

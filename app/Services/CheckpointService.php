@@ -1,5 +1,5 @@
 <?php
-// filepath: app/Services/CheckpointService.php
+
 namespace App\Services;
 
 use App\Models\Company;
@@ -23,12 +23,14 @@ use Log;
 class CheckpointService
 {
     public const STEPS = [
-        'organization'    => "1. Organization Data<br>(Kompartemen, Departemen, Cost Center, MasterDataKaryawan)<br><br>[Middle DB Data]",
-        'roles'           => "2. Role Data<br>(Composite, Single, Tcode)<br><br>[Middle DB Data]",
-        'job_role_master' => "3. Job Role Data<br><br>[Upload]",
-        'users'           => "4. User ID<br>(User NIK & User Generic)<br><br>[Middle DB Data]",
-        'work_units'      => "5. User ID - Unit Kerja<br><br>[Upload]",
-        'job_roles'       => "6. User ID - Job Role<br><br>[Upload]",
+        'organization'              => "1. Organization Data<br>(Kompartemen, Departemen, Cost Center, MasterDataKaryawan)<br><br>[Middle DB Data]",
+        'roles'                     => "2. Role Data<br>(Composite, Single, Tcode)<br><br>[Middle DB Data]",
+        'job_role_master'           => "3. Job Role Data<br><br>[Upload]",
+        'users'                     => "4. User ID<br>(User NIK & User Generic)<br><br>[Middle DB Data]",
+        'work_units'                => "5. User ID - Unit Kerja<br><br>[Upload]",
+        'job_roles'                 => "6. User ID - Job Role<br><br>[Upload]<br><br><small>(Kelengkapan Data Report UAR)</small>",
+        'job_role_composite'        => "7. Job Role - Composite Role<br><br>[Upload]<br><br><small>(Kelengkapan Data Report UAM)</small>",
+        'composite_single_mapping'  => "8. Composite - Single Role Mapping<br><br>[Pivot]<br><br><small>(Kelengkapan Hirarki Role)</small>", // ✅ NEW
     ];
 
     public function steps(): array
@@ -157,15 +159,51 @@ class CheckpointService
 
             // New step: Job Role master (Upload)
             'job_role_master' => function (Company $company, int $periodeId): array {
-                $code     = $company->company_code;
+                $code  = $company->company_code;
+                $group = $company->shortname ?? $code;
+
+                // Count master job roles (distinct definitions uploaded)
                 $jobRoles = JobRole::where('company_id', $code)->count();
 
-                $completed = $jobRoles > 0;
+                // Count users (NIK + Generic) per company/group
+                $totalNik     = userNIK::where('group', $group)->where('periode_id', $periodeId)->count();
+                $totalGeneric = userGeneric::where('group', $group)->where('periode_id', $periodeId)->count();
+
+                $mappedUsers = $totalNik + $totalGeneric;
+
+                // Determine status per requirement:
+                // If JobRole < (NIK+Generic mapped) => in_progress
+                // If JobRole > (NIK+Generic mapped) => failed (error)
+                // If equal => completed
+                // If either side zero => pending
+                if ($jobRoles === 0 || $mappedUsers === 0) {
+                    $status = 'pending';
+                } elseif ($jobRoles > $mappedUsers) {
+                    $status = 'failed';
+                } elseif ($jobRoles === $mappedUsers) {
+                    $status = 'completed';
+                } else { // $jobRoles < $mappedUsers
+                    $status = 'in_progress';
+                }
+
+                $summary = "JobRole Master: {$jobRoles} <br> Users Mapped (NIK+Generic): {$mappedUsers}";
+                $diff = $mappedUsers - $jobRoles;
+                // $diff = $jobRoles - $mappedUsers;
+                if ($status === 'failed') {
+                    $summary .= " <br><br><span class='text-danger'>Jumlah Job Role ({$jobRoles}) lebih banyak dari User ID ({$mappedUsers}) terdaftar.<br> Selisih: <b>{$diff} data</b></span>";
+                } elseif ($status === 'in_progress') {
+                    $summary .= " <br><br><span style='color: #FF4D00;'>Jumlah Job Role ({$jobRoles}) lebih sedikit dari User ID ({$mappedUsers}) terdaftar.<br> Selisih: <b>{$diff} data</b></span>";
+                }
 
                 return [
-                    'completed' => $completed,
-                    'payload'   => [
-                        'summary' => "JobRole: {$jobRoles}"
+                    'status'  => $status,
+                    'payload' => [
+                        'summary' => $summary,
+                        'detail'  => [
+                            'job_role_count'    => $jobRoles,
+                            'mapped_user_count' => $mappedUsers,
+                            'difference'        => $diff,
+                        ],
                     ],
                 ];
             },
@@ -286,6 +324,146 @@ class CheckpointService
                 return [
                     'status'  => $status,
                     'payload' => ['summary' => $summary],
+                ];
+            },
+
+            // ✅ FIXED: Job Role - Composite Role checker
+            'job_role_composite' => function (Company $company, int $periodeId): array {
+                $code  = $company->company_code;
+                $group = $company->shortname ?? $code;
+
+                $jobRoleCount = JobRole::where('company_id', $code)->count();
+                $totalCompositeRoles = CompositeRole::where('company_id', $code)->count();
+
+                // Count users (NIK + Generic) per company/group
+                $totalNik     = userNIK::where('group', $group)->where('periode_id', $periodeId)->count();
+                $totalGeneric = userGeneric::where('group', $group)->where('periode_id', $periodeId)->count();
+
+                $mappedUsers = $totalNik + $totalGeneric;
+
+                if ($jobRoleCount === 0 || $mappedUsers === 0) {
+                    $baseStatus = 'pending';
+                } elseif ($jobRoleCount > $mappedUsers) {
+                    $baseStatus = 'failed';
+                } elseif ($jobRoleCount === $mappedUsers) {
+                    $baseStatus = 'completed';
+                } else {
+                    $baseStatus = 'in_progress';
+                }
+
+                // Perbandingan (coverage) Job Role & Composite Role terhadap User ID terdaftar (NIK+Generic)
+                $jobRolePct = $mappedUsers > 0 ? round(($jobRoleCount / $mappedUsers) * 100, 2) : 0;
+                $compositePct = $mappedUsers > 0 ? round(($totalCompositeRoles / $mappedUsers) * 100, 2) : 0;
+
+                // Detail mapping (tidak mengubah status)
+                $jobRolesWithComposite = JobRole::where('company_id', $code)
+                    ->whereHas('compositeRole')
+                    ->count();
+
+                $compositesWithJobRole = CompositeRole::where('company_id', $code)
+                    ->whereHas('jobRole')
+                    ->count();
+
+                $duplicateJobRoleTargets = CompositeRole::where('tr_composite_roles.company_id', $code)
+                    ->whereNotNull('tr_composite_roles.jabatan_id')
+                    ->whereNull('tr_composite_roles.deleted_at')
+                    ->select('tr_composite_roles.jabatan_id')
+                    ->groupBy('tr_composite_roles.jabatan_id')
+                    ->havingRaw('COUNT(DISTINCT tr_composite_roles.id) > 1')
+                    ->get()
+                    ->count();
+
+                $jobRolesWithMultipleCompositeRoles = JobRole::where('tr_job_roles.company_id', $code)
+                    ->join('tr_composite_roles', 'tr_composite_roles.jabatan_id', '=', 'tr_job_roles.id')
+                    ->whereNull('tr_composite_roles.deleted_at')
+                    ->select('tr_job_roles.id')
+                    ->groupBy('tr_job_roles.id')
+                    ->havingRaw('COUNT(DISTINCT tr_composite_roles.id) > 1')
+                    ->get()
+                    ->count();
+
+                $hasDuplicates = $duplicateJobRoleTargets > 0;
+
+                $status = $baseStatus;
+                if ($hasDuplicates && in_array($baseStatus, ['completed', 'in_progress'], true)) {
+                    $status = 'warning';
+                }
+
+                $diff = $mappedUsers - $jobRoleCount;
+                // $diff = $jobRoles - $mappedUsers;
+
+                // Summary diawali info mapping baru
+                $summary  = "Job Role: {$jobRoleCount} / {$mappedUsers} ({$jobRolePct}%)<br>";
+                $summary .= "Composite Role: {$totalCompositeRoles} / {$mappedUsers} ({$compositePct}%)";
+
+
+                // Info tambahan
+                $summary .= "<br><br>Info Mapping:<br>";
+                $summary .= "JobRole → Composite: {$jobRolesWithComposite} / {$compositesWithJobRole} <br>";
+
+                // Status selisih
+                if ($baseStatus === 'failed') {
+                    $summary .= "<br><span class='text-danger'>Jumlah Job Role ({$jobRoleCount}) lebih banyak dari User ID ({$mappedUsers}).<br>Selisih: <b>{$diff} Data</b></span>";
+                } elseif ($baseStatus === 'in_progress') {
+                    $summary .= "<br><span style='color:#FF4D00;'>Jumlah Job Role ({$jobRoleCount}) lebih sedikit dari User ID ({$mappedUsers}).<br>Selisih: <b>{$diff} Data</b></span>";
+                }
+
+
+                if ($hasDuplicates) {
+                    $summary .= "<br><br>⚠️ <strong>DUPLIKAT:</strong><br>";
+                    $summary .= "Job Roles direferensikan oleh >1 Composite Role: {$duplicateJobRoleTargets}";
+                }
+
+                return [
+                    'status'  => $status,
+                    'payload' => [
+                        'summary' => $summary,
+                        'detail'  => [
+                            'job_role_count'          => $jobRoleCount,
+                            'composite_role_count'    => $totalCompositeRoles,
+                            'mapped_user_count'       => $mappedUsers,
+                            'job_role_pct'            => $jobRolePct,
+                            'composite_role_pct'      => $compositePct,
+                            'difference'              => $diff,
+                        ],
+                        'duplicates' => [
+                            'job_roles_multiple_composites' => $jobRolesWithMultipleCompositeRoles,
+                            'composites_multiple_job_roles' => $duplicateJobRoleTargets,
+                        ],
+                    ],
+                ];
+            },
+
+            // ✅ NEW: Composite - Single Role Mapping
+            'composite_single_mapping' => function (Company $company, int $periodeId): array {
+                $code = $company->company_code;
+
+                $totalComposite = CompositeRole::where('company_id', $code)->count();
+
+                $compositeWithSingles = CompositeRole::where('company_id', $code)
+                    ->whereHas('singleRoles')
+                    ->count();
+
+                $compositeWithoutSingles = $totalComposite - $compositeWithSingles;
+
+                // Status fokus ke sisa yang belum terhubung
+                if ($compositeWithoutSingles === 0 && $totalComposite > 0) {
+                    $status = 'completed';
+                } else {
+                    $status = 'in_progress'; // masih ada yang belum terhubung
+                }
+
+                // Summary diawali jumlah yang belum terhubung
+                $summary  = "Composite tanpa Single Role: {$compositeWithoutSingles} <br>";
+
+                return [
+                    'status'  => $status,
+                    'payload' => [
+                        'summary' => $summary,
+                        'detail'  => [
+                            'composite_without_single'   => $compositeWithoutSingles,
+                        ]
+                    ],
                 ];
             },
         ];
