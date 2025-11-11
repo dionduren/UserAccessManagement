@@ -111,10 +111,10 @@
                     <i class="bi bi-people-fill me-2"></i>Composite Roles
                 </a>
             </li>
-            <li class="nav-item">
-                <a href="{{ route('middle_db.view.uam.composite_ao.index') }}"
-                    class="mb-1 nav-link {{ request()->routeIs('middle_db.view.uam.composite_ao.*') ? 'active' : 'text-white' }}">
-                    <i class="bi bi-database-fill-gear me-2"></i>Composite Role - AO
+            <li>
+                <a href="{{ route('composite_ao.index') }}"
+                    class="nav-link {{ request()->routeIs('composite_ao*') ? 'active' : 'text-white' }}">
+                    <i class="bi bi-link-45deg me-2"></i>Composite Role - AO
                 </a>
             </li>
         </div>
