@@ -12,13 +12,12 @@ use App\Models\Departemen;
 use App\Models\JobRole;
 use App\Models\Kompartemen;
 use App\Models\NIKJobRole;
+use App\Models\PenomoranUAM;
+use App\Models\Periode;
+use App\Models\SingleRole;
 use App\Models\middle_db\CompositeRole as MiddleCompositeRole;
 use App\Models\middle_db\SingleRole as MiddleSingleRole;
 
-use App\Models\PenomoranUAM;
-use App\Models\Periode;
-
-use App\Models\SingleRole;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
@@ -363,11 +362,16 @@ class UAMReportController extends Controller
         $uniqueSingleRoles = [];
         foreach ($compositeRolesWithSingles as $cr) {
             foreach ($cr['single_roles'] as $sr) {
-                $key = $sr['id'] ?? $sr['nama'];
+                $srNameRaw = $sr['nama'] ?? '';
+                // ✅ Skip AO singles for SingleRole–Tcode relationship (support "-AO" and "-AO-")
+                if ($this->isAoSingleName($srNameRaw)) {
+                    continue;
+                }
+
+                $key = $sr['id'] ?? $srNameRaw;
                 if (isset($uniqueSingleRoles[$key])) continue;
 
                 $srId      = $sr['id'];
-                $srNameRaw = $sr['nama'];
                 $tcodes    = [];
                 $usedMDBT  = false;
 
@@ -387,7 +391,7 @@ class UAMReportController extends Controller
                     }
                 }
 
-                // Fallback middle if no local tcodes (or no local ID)
+                // Fallback to middle if no local tcodes (or no local ID)
                 if (empty($tcodes)) {
                     $mdbSingle = MiddleSingleRole::where('single_role', $srNameRaw)->first();
                     if ($mdbSingle && method_exists($mdbSingle, 'tcodes')) {
@@ -405,7 +409,6 @@ class UAMReportController extends Controller
                 }
 
                 $nameDisplay = $sr['nama_display'] ?? $srNameRaw;
-                // If no local id and came from middle fallback ensure display tag
                 if (!$srId && str_contains($nameDisplay, '{MDB}') === false && ($sr['source'] ?? null) === 'MDB') {
                     $nameDisplay .= ' <span style="color:red;"><strong><i>{MDB}</i></strong></span>';
                 }
@@ -425,7 +428,7 @@ class UAMReportController extends Controller
             'data'             => $data,
             'nomorSurat'       => $nomorSurat,
             'composite_roles'  => $compositeRolesWithSingles,
-            'single_roles'     => array_values($uniqueSingleRoles),
+            'single_roles'     => array_values($uniqueSingleRoles), // ✅ AO filtered out above
         ]);
     }
 
@@ -872,10 +875,15 @@ class UAMReportController extends Controller
             ];
         }
 
-        // Compile unique single roles
+        // Compile unique single roles (for Lampiran: Single Role – Tcode)
         $uniqueSingleRoles = [];
         foreach ($compositeRolesWithSingles as $cr) {
             foreach ($cr['single_roles'] as $sr) {
+                // ✅ Skip AO singles from SingleRole–Tcode mapping in Word (support "-AO" and "-AO-")
+                if ($this->isAoSingleName($sr['nama'] ?? '')) {
+                    continue;
+                }
+
                 if (!isset($uniqueSingleRoles[$sr['id']])) {
                     $singleRoleModel = SingleRole::find($sr['id']);
                     $tcodes = [];
@@ -1499,5 +1507,15 @@ class UAMReportController extends Controller
         }
 
         return Excel::download(new ArrayExport($exportData), 'Export_user_job_composite.xlsx');
+    }
+
+    // ✅ Helper: detect AO-like single role names
+    private function isAoSingleName(?string $name): bool
+    {
+        if (!$name) return false;
+        // Match:
+        // - ends with "-AO" (e.g. "Z_MM-AO")
+        // - contains "-AO-" token inside (e.g. "Z-AO-UTIL")
+        return Str::endsWith($name, '-AO') || Str::contains($name, '-AO-');
     }
 }
