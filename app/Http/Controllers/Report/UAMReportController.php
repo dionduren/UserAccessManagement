@@ -303,7 +303,7 @@ class UAMReportController extends Controller
                 'job_role'             => $jobRole->nama ?? '-',
                 'composite_role'       => $compositeLabel,
                 'authorization_object' => $aoText,
-                'source'               => $compModel->source ? $compModel->source : 'ERR',
+                'source'               => $compModel->source ? $compModel->source : 'NULL',
             ];
 
             $compositeRoles[$compModel->id] = $compModel;
@@ -319,26 +319,30 @@ class UAMReportController extends Controller
             $mappedSingles = collect();
 
             if ($localSingles && $localSingles->count() > 0) {
-                // LOCAL singles
-                $mappedSingles = $localSingles->map(fn($r) => [
-                    'id'          => $r->id,
-                    'nama'        => $r->nama,
-                    'nama_display' => $r->nama, // local no tag
-                    'deskripsi'   => $r->deskripsi,
-                    'source'      => $r->source ? $r->source : 'CLOUD',
-                ]);
+                // LOCAL singles - ✅ FILTER AO HERE
+                $mappedSingles = $localSingles
+                    ->filter(fn($r) => !$this->isAoSingleName($r->nama)) // ✅ Skip AO
+                    ->map(fn($r) => [
+                        'id'          => $r->id,
+                        'nama'        => $r->nama,
+                        'nama_display' => $r->nama,
+                        'deskripsi'   => $r->deskripsi,
+                        'source'      => $r->source ? $r->source : 'CLOUD',
+                    ]);
             } else {
-                // Fallback to middle-db only if local empty
+                // Fallback to middle-db - ✅ FILTER AO HERE TOO
                 $mdbComposite = MiddleCompositeRole::where('composite_role', $compNameRaw)->first();
                 if ($mdbComposite && method_exists($mdbComposite, 'singleRoles')) {
                     $mdbSingles = $mdbComposite->singleRoles()->get(['mdb_single_role.single_role', 'mdb_single_role.definisi']);
-                    $mappedSingles = $mdbSingles->map(fn($r) => [
-                        'id'          => null,
-                        'nama'        => $r->single_role,
-                        'nama_display' => $r->single_role . ' <span style="color:red;"><strong><i>{MDB}</i></strong></span>',
-                        'deskripsi'   => $r->definisi,
-                        'source'      => 'MDB',
-                    ]);
+                    $mappedSingles = $mdbSingles
+                        ->filter(fn($r) => !$this->isAoSingleName($r->single_role)) // ✅ Skip AO
+                        ->map(fn($r) => [
+                            'id'          => null,
+                            'nama'        => $r->single_role,
+                            'nama_display' => $r->single_role . ' <span style="color:red;"><strong><i>{MDB}</i></strong></span>',
+                            'deskripsi'   => $r->definisi,
+                            'source'      => 'MDB',
+                        ]);
                     $usedMDBSingles = true;
                 }
             }
@@ -353,17 +357,17 @@ class UAMReportController extends Controller
                 'id'           => $comp->id,
                 'nama'         => $compNameRaw,
                 'nama_display' => $compDisplay,
-                'single_roles' => $mappedSingles->toArray(),
+                'single_roles' => $mappedSingles->values()->toArray(), // ✅ AO filtered
                 'source'       => $comp->source ? $comp->source : 'CLOUD',
             ];
         }
 
-        // Unique single roles (LOCAL tcodes first, fallback to middle)
+        // Unique single roles (LOCAL tcodes first, fallback to middle) — AO filtered
         $uniqueSingleRoles = [];
         foreach ($compositeRolesWithSingles as $cr) {
             foreach ($cr['single_roles'] as $sr) {
                 $srNameRaw = $sr['nama'] ?? '';
-                // ✅ Skip AO singles for SingleRole–Tcode relationship (support "-AO" and "-AO-")
+                // ✅ Exclude AO names ("-AO" suffix or "-AO-" token)
                 if ($this->isAoSingleName($srNameRaw)) {
                     continue;
                 }
@@ -428,7 +432,7 @@ class UAMReportController extends Controller
             'data'             => $data,
             'nomorSurat'       => $nomorSurat,
             'composite_roles'  => $compositeRolesWithSingles,
-            'single_roles'     => array_values($uniqueSingleRoles), // ✅ AO filtered out above
+            'single_roles'     => array_values($uniqueSingleRoles), // ✅ AO filtered
         ]);
     }
 
@@ -859,9 +863,12 @@ class UAMReportController extends Controller
         foreach ($compositeRoles as $compositeRole) {
             $compositeRole = $this->unwrapComposite($compositeRole);
             if (!$compositeRole) continue;
+
             $singleRoles = $compositeRole->singleRoles()
                 ->whereNull('tr_single_roles.deleted_at')
-                ->get(['tr_single_roles.id', 'tr_single_roles.nama', 'tr_single_roles.deskripsi']);
+                ->get(['tr_single_roles.id', 'tr_single_roles.nama', 'tr_single_roles.deskripsi'])
+                ->filter(fn($r) => !$this->isAoSingleName($r->nama)); // ✅ Filter AO
+
             $compositeRolesWithSingles[] = [
                 'id' => $compositeRole->id,
                 'nama' => $compositeRole->nama,
@@ -875,11 +882,11 @@ class UAMReportController extends Controller
             ];
         }
 
-        // Compile unique single roles (for Lampiran: Single Role – Tcode)
+        // Compile unique single roles (for Lampiran: Single Role – Tcode) — AO filtered
         $uniqueSingleRoles = [];
         foreach ($compositeRolesWithSingles as $cr) {
             foreach ($cr['single_roles'] as $sr) {
-                // ✅ Skip AO singles from SingleRole–Tcode mapping in Word (support "-AO" and "-AO-")
+                // ✅ Exclude AO names ("-AO" suffix or "-AO-" token)
                 if ($this->isAoSingleName($sr['nama'] ?? '')) {
                     continue;
                 }
@@ -907,11 +914,11 @@ class UAMReportController extends Controller
                 }
             }
         }
-        // Calculate total unique tcodes for display limit
+
+        // ✅ Unique Tcode count derived from AO-filtered unique singles
         $uniqueTcodeCount = array_reduce(array_values($uniqueSingleRoles), function ($carry, $sr) {
             return $carry + (isset($sr['tcodes']) && is_array($sr['tcodes']) ? count($sr['tcodes']) : 0);
         }, 0);
-
 
         // Initialize PhpWord and create main section
         $phpWord = new PhpWord();
