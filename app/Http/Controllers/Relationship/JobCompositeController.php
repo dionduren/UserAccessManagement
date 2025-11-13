@@ -209,6 +209,7 @@ class JobCompositeController extends Controller
                     'id' => $jobRole->id,
                     'nama' => $jobRole->nama,
                     'company_shortname' => $jobRole->company->shortname ?? $jobRole->company_id,
+                    'job_role_id' => $jobRole->job_role_id
                 ];
             }
             return $result;

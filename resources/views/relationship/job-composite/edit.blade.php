@@ -96,7 +96,9 @@
                             let optgroup = $('<optgroup>').attr('label', optgroupLabel);
 
                             roles.forEach(role => {
-                                let option = $('<option>').val(role.id).text(role.nama);
+                                let option = $('<option>').val(role.id).text(role.nama +
+                                    ' - ' + role.job_role_id);
+
                                 if (String(role.id) === String(selectedJobRole)) {
                                     option.attr('selected', 'selected');
                                 }
