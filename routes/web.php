@@ -338,6 +338,9 @@ Route::middleware(['auth'])->group(function () {
     // Route::get('/relationship/single-tcode/data-set', [SingleTcodeController::class, 'jsonIndex'])->name('single-tcode.jsonIndex');
     Route::get('single-tcode/datatable', [SingleTcodeController::class, 'datatable'])->name('single-tcode.datatable');
     Route::get('/relationship/single-tcode/data-filter-company', [SingleTcodeController::class, 'searchByCompany'])->name('single-tcode.filter-company');
+    // ✅ NEW: Bulk search routes
+    Route::get('single-tcode/bulk/search', [SingleTcodeController::class, 'bulkSearchIndex'])->name('single-tcode.bulk.search');
+    Route::post('single-tcode/bulk/search', [SingleTcodeController::class, 'bulkSearchResults'])->name('single-tcode.bulk.results');
     Route::resource('/relationship/single-tcode', SingleTcodeController::class);
 
     Route::prefix('/relationship/generic-job-role')->name('user-generic-job-role.')->group(function () {

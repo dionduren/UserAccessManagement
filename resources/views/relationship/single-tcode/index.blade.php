@@ -37,8 +37,11 @@
             </div>
             <div class="card-body">
                 <div class="d-flex flex-wrap align-items-end gap-2 mb-3">
-                    <a href="{{ route('single-tcode.create') }}" class="btn btn-success btn-sm">
-                        <i class="bi bi-plus-lg"></i> Create
+                    <a href="{{ route('single-tcode.create') }}" class="btn btn-success">
+                        <i class="bi bi-plus-lg"></i> Buat Relationship Baru
+                    </a>
+                    <a href="{{ route('single-tcode.bulk.search') }}" class="btn btn-info">
+                        <i class="bi bi-search"></i> Bulk Tcode Search
                     </a>
                 </div>
 

@@ -275,4 +275,210 @@ class SingleTcodeController extends Controller
             'data'            => $data,
         ]);
     }
+
+    /**
+     * Show bulk Tcode search form
+     */
+    public function bulkSearchIndex()
+    {
+        return view('relationship.single-tcode.bulk-search');
+    }
+
+    /**
+     * Process bulk Tcode search and return single roles with highlighting
+     */
+    public function bulkSearchResults(Request $request)
+    {
+        $request->validate([
+            'tcodes' => 'required|string',
+            'include_company' => 'nullable|boolean',
+            'modules' => 'nullable|string',
+            'process_areas' => 'nullable|string', // ✅ NEW
+            'objects' => 'nullable|string', // ✅ NEW
+        ]);
+
+        // Parse input (split by newline/enter)
+        $inputTcodes = array_filter(
+            array_map('trim', preg_split('/\r\n|\r|\n/', $request->tcodes)),
+            fn($t) => !empty($t)
+        );
+
+        if (empty($inputTcodes)) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'No valid Tcodes provided'
+            ]);
+        }
+
+        // Normalize input (uppercase, trim)
+        $inputTcodes = array_map('strtoupper', $inputTcodes);
+        $inputTcodes = array_unique($inputTcodes);
+
+        $includeCompany = $request->boolean('include_company', false);
+
+        // ✅ Parse module filter (comma or space separated)
+        $moduleFilter = [];
+        if ($request->filled('modules')) {
+            $moduleFilter = array_filter(
+                array_map('trim', preg_split('/[\s,]+/', strtoupper($request->modules))),
+                fn($m) => !empty($m)
+            );
+            $moduleFilter = array_unique($moduleFilter);
+        }
+
+        // ✅ Parse process area filter
+        $processAreaFilter = [];
+        if ($request->filled('process_areas')) {
+            $processAreaFilter = array_filter(
+                array_map('trim', preg_split('/[\s,]+/', strtoupper($request->process_areas))),
+                fn($p) => !empty($p)
+            );
+            $processAreaFilter = array_unique($processAreaFilter);
+        }
+
+        // ✅ Parse object filter
+        $objectFilter = [];
+        if ($request->filled('objects')) {
+            $objectFilter = array_filter(
+                array_map('trim', preg_split('/[\s,]+/', strtoupper($request->objects))),
+                fn($o) => !empty($o)
+            );
+            $objectFilter = array_unique($objectFilter);
+        }
+
+        // Find single roles that have ANY of the input Tcodes
+        $singleRoles = SingleRole::whereHas('tcodes', function ($q) use ($inputTcodes) {
+            $q->whereIn('tr_tcodes.code', $inputTcodes)
+                ->whereNull('tr_tcodes.deleted_at');
+        })
+            ->with(['tcodes' => function ($q) {
+                $q->whereNull('tr_tcodes.deleted_at')
+                    ->orderBy('tr_tcodes.code');
+            }])
+            ->whereNull('tr_single_roles.deleted_at')
+            // ✅ Exclude "ZS-ALL-PIHC-TI"
+            ->where('tr_single_roles.nama', '!=', 'ZS-ALL-PIHC-TI')
+            // ✅ Conditionally exclude company single roles
+            ->when(!$includeCompany, function ($q) {
+                if (DB::getDriverName() === 'pgsql') {
+                    $q->whereRaw("tr_single_roles.nama !~ '^ZS-[A-Z0-9]{4}-'");
+                } else {
+                    $q->where(function ($subQ) {
+                        $subQ->where('tr_single_roles.nama', 'NOT LIKE', 'ZS-A000-%')
+                            ->where('tr_single_roles.nama', 'NOT LIKE', 'ZS-B000-%')
+                            ->where('tr_single_roles.nama', 'NOT LIKE', 'ZS-C000-%')
+                            ->where('tr_single_roles.nama', 'NOT LIKE', 'ZS-D000-%')
+                            ->where('tr_single_roles.nama', 'NOT LIKE', 'ZS-E000-%')
+                            ->where('tr_single_roles.nama', 'NOT LIKE', 'ZS-F000-%')
+                            ->where('tr_single_roles.nama', 'NOT LIKE', 'ZS-G000-%')
+                            ->where('tr_single_roles.nama', 'NOT LIKE', 'ZS-H000-%')
+                            ->where('tr_single_roles.nama', 'NOT LIKE', 'ZS-I000-%')
+                            ->where('tr_single_roles.nama', 'NOT LIKE', 'ZS-J000-%')
+                            ->where('tr_single_roles.nama', 'NOT LIKE', 'ZS-K000-%');
+                    });
+                }
+            })
+            // ✅ Filter by modules (e.g., QM, PP, MD, MM)
+            ->when(!empty($moduleFilter), function ($q) use ($moduleFilter, $includeCompany) {
+                $q->where(function ($subQ) use ($moduleFilter, $includeCompany) {
+                    foreach ($moduleFilter as $module) {
+                        if ($includeCompany) {
+                            // Pattern: ZS-XXXX-MODULE- or ZS-MODULE-
+                            $subQ->orWhere(function ($orQ) use ($module) {
+                                $orQ->where('tr_single_roles.nama', 'LIKE', "ZS-____-{$module}-%")
+                                    ->orWhere('tr_single_roles.nama', 'LIKE', "ZS-{$module}-%");
+                            });
+                        } else {
+                            // Pattern: ZS-MODULE- only
+                            $subQ->orWhere('tr_single_roles.nama', 'LIKE', "ZS-{$module}-%");
+                        }
+                    }
+                });
+            })
+            // ✅ NEW: Filter by process areas (position 3: ZS-MM-MD-MAT-CRT)
+            ->when(!empty($processAreaFilter), function ($q) use ($processAreaFilter, $includeCompany) {
+                $q->where(function ($subQ) use ($processAreaFilter, $includeCompany) {
+                    foreach ($processAreaFilter as $processArea) {
+                        if ($includeCompany) {
+                            // Pattern: ZS-XXXX-XX-PROCESSAREA- or ZS-XX-PROCESSAREA-
+                            // Examples: ZS-A000-MM-MD-, ZS-MM-MD-
+                            $subQ->orWhere(function ($orQ) use ($processArea) {
+                                $orQ->where('tr_single_roles.nama', 'LIKE', "ZS-____-__-{$processArea}-%")
+                                    ->orWhere('tr_single_roles.nama', 'LIKE', "ZS-__-{$processArea}-%");
+                            });
+                        } else {
+                            // Pattern: ZS-XX-PROCESSAREA- only
+                            // Example: ZS-MM-MD-
+                            $subQ->orWhere('tr_single_roles.nama', 'LIKE', "ZS-__-{$processArea}-%");
+                        }
+                    }
+                });
+            })
+            // ✅ NEW: Filter by objects (position 4: ZS-MM-MD-MAT-CRT)
+            ->when(!empty($objectFilter), function ($q) use ($objectFilter, $includeCompany) {
+                $q->where(function ($subQ) use ($objectFilter, $includeCompany) {
+                    foreach ($objectFilter as $object) {
+                        if ($includeCompany) {
+                            // Pattern: ZS-XXXX-XX-XX-OBJECT- or ZS-XX-XX-OBJECT-
+                            // Examples: ZS-A000-MM-MD-MAT-, ZS-MM-MD-MAT-
+                            $subQ->orWhere(function ($orQ) use ($object) {
+                                $orQ->where('tr_single_roles.nama', 'LIKE', "ZS-____-__-__-{$object}-%")
+                                    ->orWhere('tr_single_roles.nama', 'LIKE', "ZS-__-__-{$object}-%");
+                            });
+                        } else {
+                            // Pattern: ZS-XX-XX-OBJECT- only
+                            // Example: ZS-MM-MD-MAT-
+                            $subQ->orWhere('tr_single_roles.nama', 'LIKE', "ZS-__-__-{$object}-%");
+                        }
+                    }
+                });
+            })
+            ->get();
+
+        // Build result with highlighting
+        $results = $singleRoles->map(function ($singleRole) use ($inputTcodes) {
+            $allTcodes = $singleRole->tcodes->map(function ($tcode) use ($inputTcodes) {
+                return [
+                    'id' => $tcode->id,
+                    'code' => $tcode->code,
+                    'deskripsi' => $tcode->deskripsi,
+                    'matched' => in_array(strtoupper($tcode->code), $inputTcodes),
+                ];
+            });
+
+            $matchedCount = $allTcodes->where('matched', true)->count();
+            $unmatchedCount = $allTcodes->where('matched', false)->count();
+
+            return [
+                'id' => $singleRole->id,
+                'nama' => $singleRole->nama,
+                'deskripsi' => $singleRole->deskripsi,
+                'tcodes' => $allTcodes->values()->toArray(),
+                'matched_count' => $matchedCount,
+                'unmatched_count' => $unmatchedCount,
+                'total_tcodes' => $allTcodes->count(),
+            ];
+        });
+
+        // Sort by matched count (most matches first)
+        $results = $results->sortByDesc('matched_count')->values();
+
+        // Find input Tcodes that weren't found in any Single Role
+        $foundTcodes = $results->pluck('tcodes')->flatten(1)->where('matched', true)->pluck('code')->map('strtoupper')->unique()->values();
+        $notFoundTcodes = array_diff($inputTcodes, $foundTcodes->toArray());
+
+        return response()->json([
+            'status' => 'ok',
+            'input_tcodes' => array_values($inputTcodes),
+            'total_input' => count($inputTcodes),
+            'found_tcodes' => $foundTcodes->count(),
+            'not_found_tcodes' => array_values($notFoundTcodes),
+            'single_roles_found' => $results->count(),
+            'include_company' => $includeCompany,
+            'module_filter' => $moduleFilter,
+            'process_area_filter' => $processAreaFilter, // ✅ NEW
+            'object_filter' => $objectFilter, // ✅ NEW
+            'results' => $results,
+        ]);
+    }
 }
