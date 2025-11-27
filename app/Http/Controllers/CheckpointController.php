@@ -6,7 +6,8 @@ use App\Models\Company;
 use App\Models\Periode;
 use App\Models\CompositeRole;
 use App\Models\JobRole;
-use App\Services\CheckpointService;
+use App\Services\CheckpointServiceOld as CheckpointService;
+// use App\Services\CheckpointService;
 use Illuminate\Http\Request;
 
 class CheckpointController extends Controller
@@ -21,7 +22,8 @@ class CheckpointController extends Controller
         $userCompanyCode = optional(auth()->user()->loginDetail)->company_code;
 
         $companiesQuery = Company::query()
-            ->where('company_code', '!=', 'Z000');
+            // ->where('company_code', '!=', 'Z000');
+            ->whereNotIn('company_code', ['Z000', 'DA00']); // ✅ Exclude both Z000 and DA00
 
         if ($userCompanyCode && $userCompanyCode !== 'A000') {
             // Get all companies with the same first character as userCompany
@@ -53,7 +55,8 @@ class CheckpointController extends Controller
         $userCompanyCode = optional(auth()->user()->loginDetail)->company_code;
 
         $companiesQuery = Company::query()
-            ->where('company_code', '!=', 'Z000');
+            // ->where('company_code', '!=', 'Z000');
+            ->whereNotIn('company_code', ['Z000', 'DA00']); // ✅ Exclude both Z000 and DA00
 
         if ($userCompanyCode && $userCompanyCode !== 'A000') {
             $companiesQuery->where('company_code', $userCompanyCode);
