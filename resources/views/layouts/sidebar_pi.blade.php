@@ -5,6 +5,12 @@
             <i class="bi bi-flag-fill me-2"></i> Checkpoints
         </a>
     </li>
+    <li class="nav-item">
+        <a href="{{ route('checkpoints.index_old') }}"
+            class="mb-1 nav-link {{ request()->routeIs('checkpoints.index_old') ? 'active' : 'text-white' }}">
+            <i class="bi bi-flag me-2"></i> Checkpoint Simple
+        </a>
+    </li>
     <hr>
 
     <div>

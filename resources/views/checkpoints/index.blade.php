@@ -16,11 +16,13 @@
                             </option>
                         @endforeach
                     </select>
-                    <form method="POST" action="{{ route('checkpoints.refresh') }}" class="d-inline">
+                    <form method="POST"
+                        action="{{ Route::currentRouteName() === 'checkpoints.index_old' ? route('checkpoints.refresh_old') : route('checkpoints.refresh') }}"
+                        class="d-inline">
                         @csrf
                         <input type="hidden" name="periode_id" value="{{ $selectedPeriode }}">
-                        <button type="submit" class="btn btn-sm btn-primary">
-                            Check Progress
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-arrow-clockwise"></i> Refresh Progress
                         </button>
                     </form>
                 </div>

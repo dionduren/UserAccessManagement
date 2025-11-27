@@ -8,7 +8,7 @@ use App\Models\CostCenter;
 use App\Models\Departemen;
 use App\Models\JobRole;
 use App\Models\MasterDataKaryawanLocal;
-use App\Models\ProcessCheckpoint;
+use App\Models\ProcessCheckpointOld as ProcessCheckpoint;
 use App\Models\userGeneric;
 use App\Models\UserGenericUnitKerja;
 use App\Models\UserNIKUnitKerja;
