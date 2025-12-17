@@ -87,6 +87,7 @@ class CompositeRoleController extends Controller
                 'string',
                 Rule::unique('tr_composite_roles', 'nama')
                     ->where('company_id', $request->company_id)
+                    ->whereNull('deleted_at')
             ],
             'deskripsi' => 'nullable|string',
         ]);
@@ -147,6 +148,7 @@ class CompositeRoleController extends Controller
                 'string',
                 Rule::unique('tr_composite_roles', 'nama')
                     ->where('company_id', $request->company_id)
+                    ->whereNull('deleted_at')
                     ->ignore($compositeRole->id),
             ],
             'deskripsi' => 'nullable|string',
