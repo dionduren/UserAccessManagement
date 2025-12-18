@@ -183,11 +183,11 @@
                 compositeRolesTable.draw();
             });
 
-            // Load master_data.json and normalize by company_code
+            // Load master data from API and normalize by company_code
             const userCompanyCode = @json($userCompanyCode);
             $.ajax({
-                url: '/storage/master_data.json',
-                dataType: 'json',
+                url: '/api/master-data',
+                method: 'GET',
                 success: function(data) {
                     let working = data || [];
 
@@ -207,7 +207,7 @@
                     }
                 },
                 error: function() {
-                    console.warn('Cannot load master_data.json');
+                    console.warn('Cannot load master data from API');
                 }
             });
 

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Traits\AuditsActivity;
 use App\Models\User;
 use App\Models\UserLoginDetail;
 use App\Models\Company;
@@ -12,6 +13,7 @@ use Illuminate\Validation\Rule;
 
 class UserController extends Controller
 {
+    use AuditsActivity;
     /**
      * Display a listing of the users.
      */
@@ -60,6 +62,9 @@ class UserController extends Controller
             $user->assignRole($request->roles);
         }
 
+        // Audit trail
+        $this->auditCreate($user, ['roles' => $request->roles]);
+
         return redirect()->route('users.index')->with('success', 'User created successfully.');
     }
 
@@ -88,6 +93,9 @@ class UserController extends Controller
             'company_code' => 'required|string'
         ]);
 
+        // Store original data for audit
+        $originalData = $user->toArray();
+
         $user->update([
             'name'     => $request->name,
             'username' => $request->username,
@@ -102,6 +110,9 @@ class UserController extends Controller
             $user->syncRoles($request->roles);
         }
 
+        // Audit trail
+        $this->auditUpdate($user, $originalData, ['roles' => $request->roles]);
+
         return redirect()->route('users.index')->with('success', 'User updated successfully.');
     }
 
@@ -111,6 +122,10 @@ class UserController extends Controller
     public function destroy($id)
     {
         $user = User::findOrFail($id);
+
+        // Audit trail
+        $this->auditDelete($user);
+
         $user->delete();
 
         return redirect()->route('users.index')->with('success', 'User deleted successfully.');

@@ -45,7 +45,7 @@
                         <tbody>
                             @foreach ($steps as $stepKey => $stepLabel)
                                 <tr>
-                                    <td class="fw-semibold align-top sticky-col">{!! $stepLabel !!}</td>
+                                    <td class="fw-semibold align-top sticky-col">{!! clean($stepLabel) !!}</td>
                                     @foreach ($companies as $company)
                                         @php
                                             $cell = $matrix[$stepKey][$company->company_code] ?? [
@@ -78,7 +78,7 @@
 
                                             @if ($summary)
                                                 <div class="small text-start">
-                                                    {!! $summary !!}
+                                                    {!! clean($summary) !!}
                                                 </div>
                                             @endif
 

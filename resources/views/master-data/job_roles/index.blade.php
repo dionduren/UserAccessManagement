@@ -327,8 +327,8 @@
 
             // Fetch master data
             $.ajax({
-                url: '/storage/master_data.json',
-                dataType: 'json',
+                url: '/api/master-data',
+                method: 'GET',
                 success: function(data) {
                     masterData = data;
                 },

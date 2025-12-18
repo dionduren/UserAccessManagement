@@ -83,7 +83,7 @@
                                         <td>{{ $label }}</td>
                                         <td class="{{ $row['local'] === '-' ? 'text-muted' : '' }}">{{ $row['local'] }}</td>
                                         <td class="{{ $rawVal === '-' ? 'text-muted' : '' }}">
-                                            {!! $rawFormatted !!}
+                                            {!! clean($rawFormatted) !!}
                                         </td>
                                     </tr>
                                 @endforeach

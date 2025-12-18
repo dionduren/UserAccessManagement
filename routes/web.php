@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AccessMatrixController;
 use App\Http\Controllers\AdminController;
+use App\Http\Controllers\AuditTrailController;
 use App\Http\Controllers\DynamicUploadController;
 use App\Http\Controllers\EmployeeController;
 use App\Http\Controllers\HomeController;
@@ -116,6 +117,12 @@ Route::middleware('guest')->group(function () {
 Route::middleware(['auth'])->group(function () {
     Route::redirect('/', '/home'); // tanpa name()
     Route::get('/home', [HomeController::class, 'index'])->name('home');
+
+    // Audit Trail Routes
+    Route::get('/audit-trails', [AuditTrailController::class, 'index'])->name('audit-trails.index');
+    Route::get('/audit-trails/data', [AuditTrailController::class, 'getData'])->name('audit-trails.data');
+    Route::get('/audit-trails/{auditTrail}', [AuditTrailController::class, 'show'])->name('audit-trails.show');
+
     Route::get('/home/empty/jobRolesComposite', [HomeController::class, 'getJobRolesCompositeEmpty'])->name('home.empty.jobRolesComposite');
     Route::get('/home/empty/compositeRolesJob', [HomeController::class, 'getCompositeRolesJobEmpty'])->name('home.empty.compositeRolesJob');
     Route::get('/home/empty/compositeRolesSingle', [HomeController::class, 'getCompositeRolesSingleEmpty'])->name('home.empty.compositeRolesSingle');
@@ -294,6 +301,27 @@ Route::middleware(['auth'])->group(function () {
     //     }
     //     abort(404);
     // })->middleware('auth'); // You can also apply any middleware if needed
+
+    // ======= INTERNAL API ROUTES (Session-based authentication) ======= 
+    // These endpoints are called from JavaScript in Blade templates (same-origin)
+    // They need session middleware which is available in web routes
+    Route::prefix('api')->group(function () {
+        Route::get('/master-data', [\App\Http\Controllers\API\MasterDataController::class, 'hierarchy'])->middleware('throttle:60,1');
+
+        Route::prefix('cascade')->group(function () {
+            Route::get('/kompartemen', function (\Illuminate\Http\Request $req) {
+                $req->validate(['company_id' => 'required|string|max:10']);
+                return \App\Models\Kompartemen::where('company_id', $req->company_id)
+                    ->get(['kompartemen_id as id', 'nama']);
+            })->middleware('throttle:60,1');
+
+            Route::get('/departemen', function (\Illuminate\Http\Request $req) {
+                $req->validate(['kompartemen_id' => 'required|string|max:10']);
+                return \App\Models\Departemen::where('kompartemen_id', $req->kompartemen_id)
+                    ->get(['departemen_id as id', 'nama']);
+            })->middleware('throttle:60,1');
+        });
+    });
 
     // ======= MASTER DATA ROLES ======= 
 

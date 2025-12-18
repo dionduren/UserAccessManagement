@@ -3,7 +3,7 @@
 namespace App\Http\Controllers\MasterData;
 
 use App\Http\Controllers\Controller;
-
+use App\Traits\AuditsActivity;
 use App\Models\Company;
 use App\Models\JobRole;
 use App\Models\Departemen;
@@ -17,6 +17,7 @@ use Yajra\DataTables\Facades\DataTables;
 
 class CompositeRoleController extends Controller
 {
+    use AuditsActivity;
     public function index()
     {
         $user = auth()->user();
@@ -93,7 +94,7 @@ class CompositeRoleController extends Controller
         ]);
 
         // Create the Composite Role
-        CompositeRole::create([
+        $compositeRole = CompositeRole::create([
             'company_id' => $request->company_id,
             'jabatan_id' => $request->jabatan_id,
             'nama' => $request->nama,
@@ -101,6 +102,9 @@ class CompositeRoleController extends Controller
             'Status' => "Active",
             'source' => 'upload',
         ]);
+
+        // Audit trail
+        $this->auditCreate($compositeRole);
 
         return redirect()->route('composite-roles.index')->with('success', 'Composite Role created successfully.');
     }
@@ -154,6 +158,9 @@ class CompositeRoleController extends Controller
             'deskripsi' => 'nullable|string',
         ]);
 
+        // Store original data for audit
+        $originalData = $compositeRole->toArray();
+
         // Update Composite Role details
         $compositeRole->update([
             'company_id' => $request->company_id,
@@ -163,6 +170,9 @@ class CompositeRoleController extends Controller
             'source' => $request->source,
         ]);
 
+        // Audit trail
+        $this->auditUpdate($compositeRole, $originalData);
+
         // dd($request->all(), $result, $compositeRole);
 
         return redirect()->route('composite-roles.index')->with('status', 'Composite role updated successfully.');
@@ -171,6 +181,9 @@ class CompositeRoleController extends Controller
 
     public function destroy(CompositeRole $compositeRole)
     {
+        // Audit trail
+        $this->auditDelete($compositeRole);
+
         $compositeRole->delete();
 
         return redirect()->route('composite-roles.index')->with('status', 'Composite role deleted successfully.');

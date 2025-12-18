@@ -174,3 +174,66 @@ if (!function_exists('getBreadcrumbs')) {
     return isset($breadcrumbs[$routeName]) ? '<li class="breadcrumb-item">' . $breadcrumbs[$routeName] . '</li>' : '<li class="breadcrumb-item"></li>';
   }
 }
+
+if (!function_exists('clean')) {
+  /**
+   * Clean HTML using HTMLPurifier
+   * Allows safe HTML tags like <b>, <i>, <ul>, <li>, <br>, <span>
+   * Removes dangerous tags like <script>, <iframe>, onclick attributes
+   */
+  function clean($dirty_html)
+  {
+    if (empty($dirty_html)) {
+      return '';
+    }
+
+    return \Mews\Purifier\Facades\Purifier::clean($dirty_html, [
+      'HTML.Allowed' => 'b,strong,i,em,u,ul,ol,li,br,p,span[style|class],small,div[class],a[href|title|class]',
+      'CSS.AllowedProperties' => 'color,font-weight,text-decoration',
+      'AutoFormat.RemoveEmpty' => true,
+    ]);
+  }
+}
+
+if (!function_exists('log_audit_trail')) {
+  /**
+   * Log an audit trail entry.
+   *
+   * @param string $activityType Type of activity (e.g., create, update, delete, login).
+   * @param string|null $modelType The model class name.
+   * @param int|null $modelId The model ID.
+   * @param array|null $beforeData Data before the action (for update/delete).
+   * @param array|null $afterData Data after the action (for create/update).
+   * @param int|null $userId User ID performing the activity.
+   * @return void
+   */
+  function log_audit_trail(
+    string $activityType,
+    ?string $modelType = null,
+    ?int $modelId = null,
+    ?array $beforeData = null,
+    ?array $afterData = null,
+    ?int $userId = null
+  ) {
+    $user = auth()->user();
+    $request = request();
+
+    \App\Models\AuditTrail::create([
+      'user_id' => $userId ?? $user->id ?? null,
+      'username' => $user->username ?? $user->name ?? null,
+      'activity_type' => $activityType,
+      'model_type' => $modelType,
+      'model_id' => $modelId,
+      'route' => $request->path(),
+      'method' => $request->method(),
+      'status_code' => null, // Will be set by middleware if needed
+      'session_id' => session()->getId(),
+      'request_id' => $request->hasHeader('X-Request-ID') ? $request->header('X-Request-ID') : \Illuminate\Support\Str::uuid(),
+      'ip_address' => $request->ip(),
+      'user_agent' => $request->header('User-Agent'),
+      'before_data' => $beforeData,
+      'after_data' => $afterData,
+      'logged_at' => now(),
+    ]);
+  }
+}

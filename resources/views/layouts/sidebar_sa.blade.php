@@ -12,6 +12,13 @@
     </a>
 </li>
 
+<li class="nav-item">
+    <a href="{{ route('audit-trails.index') }}"
+        class="mb-1 nav-link {{ request()->routeIs('audit-trails.index') ? 'active' : 'text-white' }}">
+        <i class="bi bi-clock-history me-2"></i> Audit Trails
+    </a>
+</li>
+
 
 @can('data.view')
     @include('layouts.sidebar_menu.master_data')

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\MasterData;
 
 use App\Http\Controllers\Controller;
+use App\Traits\AuditsActivity;
 use App\Models\Tcode;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -10,6 +11,7 @@ use Yajra\DataTables\Facades\DataTables;
 
 class TcodeController extends Controller
 {
+    use AuditsActivity;
     public function index()
     {
         $tcodes = Tcode::all();
@@ -37,7 +39,10 @@ class TcodeController extends Controller
 
         $request->merge(['source' => 'upload']);
 
-        Tcode::create($request->all());
+        $tcode = Tcode::create($request->all());
+
+        // Audit trail
+        $this->auditCreate($tcode);
 
         return response()->json(['status' => 'success', 'message' => 'Tcode created successfully.']);
     }
@@ -59,13 +64,22 @@ class TcodeController extends Controller
             'deskripsi' => 'nullable|string'
         ]);
 
+        // Store original data for audit
+        $originalData = $tcode->toArray();
+
         $tcode->update($request->all());
+
+        // Audit trail
+        $this->auditUpdate($tcode, $originalData);
 
         return response()->json(['status' => 'success', 'message' => 'Tcode updated successfully.']);
     }
 
     public function destroy(Tcode $tcode)
     {
+        // Audit trail
+        $this->auditDelete($tcode);
+
         $tcode->delete();
 
         return redirect()->route('tcodes.index')->with('status', 'Tcode deleted successfully.');

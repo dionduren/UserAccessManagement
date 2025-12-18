@@ -3,7 +3,7 @@
 namespace App\Http\Controllers\MasterData;
 
 use App\Http\Controllers\Controller;
-
+use App\Traits\AuditsActivity;
 use App\Services\JSONService;
 use App\Exports\MasterData\JobUserIdExport;
 
@@ -27,6 +27,7 @@ use Illuminate\Validation\ValidationException;
 
 class JobRoleController extends Controller
 {
+    use AuditsActivity;
     public function index()
     {
         $user = auth()->user();
@@ -67,7 +68,8 @@ class JobRoleController extends Controller
                 // 'job_role_id' => ['nullable','string', Rule::unique('tr_job_roles','job_role_id')->where('company_id', $request->company_id)],
             ]);
 
-            DB::transaction(function () use ($request) {
+            $jobRole = null;
+            DB::transaction(function () use ($request, &$jobRole) {
                 $jobRole = JobRole::create($request->all() + [
                     'created_by' => auth()->user()->name
                 ]);
@@ -81,6 +83,11 @@ class JobRoleController extends Controller
                     $counter->increment('last_number');
                 }
             });
+
+            // Audit trail
+            if ($jobRole) {
+                $this->auditCreate($jobRole);
+            }
 
             return redirect()
                 ->route('job-roles.index')
@@ -127,6 +134,9 @@ class JobRoleController extends Controller
                 'departemen_id'  => 'nullable|exists:ms_departemen,departemen_id',
             ]);
 
+            // Store original data for audit
+            $originalData = $job_role->toArray();
+
             DB::transaction(function () use ($request, $job_role) {
                 $oldJobRoleId = $job_role->job_role_id;
 
@@ -149,6 +159,9 @@ class JobRoleController extends Controller
                 }
             });
 
+            // Audit trail
+            $this->auditUpdate($job_role, $originalData);
+
             return redirect()->route('job-roles.index')->with('status', 'Job role updated successfully.');
         } catch (ValidationException $e) {
             return back()->withErrors($e->errors())->withInput();
@@ -160,6 +173,9 @@ class JobRoleController extends Controller
 
     public function destroy(JobRole $job_role)
     {
+        // Audit trail
+        $this->auditDelete($job_role);
+
         $job_role->delete();
         return redirect()->route('job-roles.index')->with('status', 'Job role deleted successfully.');
     }

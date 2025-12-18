@@ -100,8 +100,8 @@
 
             // Fetch master data and initialize the page
             $.ajax({
-                url: '/storage/master_data.json', // Replace with your actual JSON file path
-                dataType: 'json',
+                url: '/api/master-data',
+                method: 'GET',
                 success: function(data) {
                     masterData = data;
 

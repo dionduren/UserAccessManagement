@@ -43,4 +43,53 @@ class LoginController extends Controller
     {
         return 'username';
     }
+
+    /**
+     * The user has been authenticated.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @param  mixed  $user
+     * @return mixed
+     */
+    protected function authenticated($request, $user)
+    {
+        log_audit_trail(
+            'login',
+            'App\Models\User',
+            $user->id,
+            null,
+            ['username' => $user->username, 'name' => $user->name],
+            $user->id
+        );
+    }
+
+    /**
+     * Log the user out of the application.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @return \Illuminate\Http\Response
+     */
+    public function logout(\Illuminate\Http\Request $request)
+    {
+        $user = auth()->user();
+
+        if ($user) {
+            log_audit_trail(
+                'logout',
+                'App\Models\User',
+                $user->id,
+                ['username' => $user->username, 'name' => $user->name],
+                null,
+                $user->id
+            );
+        }
+
+        $this->guard()->logout();
+
+        $request->session()->invalidate();
+
+        $request->session()->regenerateToken();
+
+        return $this->loggedOut($request) ?: redirect('/');
+    }
 }

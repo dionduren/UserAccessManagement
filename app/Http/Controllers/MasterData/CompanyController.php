@@ -3,7 +3,7 @@
 namespace App\Http\Controllers\MasterData;
 
 use App\Http\Controllers\Controller;
-
+use App\Traits\AuditsActivity;
 use App\Models\Company;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
@@ -11,6 +11,7 @@ use Illuminate\Validation\Rule;
 
 class CompanyController extends Controller
 {
+    use AuditsActivity;
     public function index()
     {
         // Check if the user has permission
@@ -37,9 +38,12 @@ class CompanyController extends Controller
                 'deskripsi' => 'nullable|string'
             ]);
 
-            Company::create($request->all() + [
+            $company = Company::create($request->all() + [
                 'created_by' => auth()->user()->name
             ]);
+
+            // Audit trail
+            $this->auditCreate($company);
 
             return redirect()->route('companies.index')->with('success', 'Company created successfully.');
         } catch (\Exception $e) {
@@ -73,9 +77,16 @@ class CompanyController extends Controller
                 'shortname' => 'required|string|max:255',
                 'deskripsi' => 'nullable|string'
             ]);
+
+            // Store original data for audit
+            $originalData = $company->toArray();
+
             $company->update($request->all() + [
                 'updated_by' => auth()->user()->name
             ]);
+
+            // Audit trail
+            $this->auditUpdate($company, $originalData);
 
             return redirect()->route('companies.index')->with('success', 'Company updated successfully.');
         } catch (\Exception $e) {
@@ -89,6 +100,9 @@ class CompanyController extends Controller
     {
         $user = auth()->user();
         $userCompanyCode = $user->loginDetail->company_code ?? null;
+        // Audit trail
+        $this->auditDelete($company);
+
 
         if ($userCompanyCode !== 'A000') {
             return redirect()

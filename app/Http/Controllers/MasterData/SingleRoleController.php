@@ -3,7 +3,7 @@
 namespace App\Http\Controllers\MasterData;
 
 use App\Http\Controllers\Controller;
-
+use App\Traits\AuditsActivity;
 use App\Models\SingleRole;
 
 use Illuminate\Http\Request;
@@ -12,6 +12,7 @@ use Illuminate\Support\Facades\Validator;
 
 class SingleRoleController extends Controller
 {
+    use AuditsActivity;
     public function index()
     {
         $user = auth()->user();
@@ -80,6 +81,9 @@ class SingleRoleController extends Controller
         $request->merge(['source' => 'upload']);
         $singleRole = SingleRole::create($request->all());
 
+        // Audit trail
+        $this->auditCreate($singleRole);
+
         if ($request->ajax()) {
             $view = view('master-data.single_roles.partials.actions', ['role' => $singleRole])->render();
             return response()->json(['status' => 'success', 'html' => $view]);
@@ -134,7 +138,13 @@ class SingleRoleController extends Controller
             return back()->withErrors($validator)->withInput();
         }
 
+        // Store original data for audit
+        $originalData = $singleRole->toArray();
+
         $singleRole->update($request->all());
+
+        // Audit trail
+        $this->auditUpdate($singleRole, $originalData);
 
         if ($request->ajax()) {
             $view = view('master-data.single_roles.partials.actions', ['role' => $singleRole])->render();
@@ -149,6 +159,9 @@ class SingleRoleController extends Controller
         $userCompanyCode = auth()->user()->loginDetail->company_code ?? null;
 
         if ($userCompanyCode === 'A000') {
+            // Audit trail
+            $this->auditDelete($singleRole);
+
             $singleRole->delete();
             return redirect()->route('single-roles.index')->with('status', 'Single role deleted successfully.');
         } else {

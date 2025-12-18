@@ -3,7 +3,7 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
-
+use App\Traits\AuditsActivity;
 use App\Models\User;
 use App\Models\EmailChangeRequest;
 use Illuminate\Http\Request;
@@ -13,6 +13,7 @@ use Illuminate\Validation\Rule;
 
 class ProfileController extends Controller
 {
+    use AuditsActivity;
     public function show()
     {
         $user = Auth::user();
@@ -37,6 +38,9 @@ class ProfileController extends Controller
 
         $validated = $request->validate($rules);
 
+        // Store original data for audit
+        $originalData = $user->toArray();
+
         // Only change username if allowed
         if ($canEditUsername && isset($validated['username'])) {
             $user->username = $validated['username'];
@@ -45,6 +49,9 @@ class ProfileController extends Controller
         $user->name  = $validated['name'];
         $user->email = $validated['email'] ?? $user->email;
         $user->save();
+
+        // Audit trail
+        $this->auditUpdate($user, $originalData);
 
         return back()->with('success', 'Profile updated.');
     }
@@ -63,6 +70,9 @@ class ProfileController extends Controller
 
         $user->password = Hash::make($request->input('password'));
         $user->save();
+
+        // Audit trail
+        $this->auditActivity('password_change', 'App\\Models\\User', $user->id, null, ['message' => 'Password updated']);
 
         return back()->with('success', 'Password updated.');
     }

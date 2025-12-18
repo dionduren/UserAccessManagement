@@ -3,7 +3,7 @@
 namespace App\Http\Controllers\MasterData;
 
 use App\Http\Controllers\Controller;
-
+use App\Traits\AuditsActivity;
 use App\Models\Company;
 use App\Models\Departemen;
 use App\Models\Kompartemen;
@@ -15,6 +15,7 @@ use Illuminate\Validation\ValidationException;
 
 class DepartemenController extends Controller
 {
+    use AuditsActivity;
     public function index()
     {
         $user = auth()->user();
@@ -65,9 +66,12 @@ class DepartemenController extends Controller
                 'cost_center' => 'nullable|string|unique:ms_departemen,cost_center',
             ]);
 
-            Departemen::create($request->all() + [
+            $departemen = Departemen::create($request->all() + [
                 'created_by' => auth()->user()->name
             ]);
+
+            // Audit trail
+            $this->auditCreate($departemen);
 
             return redirect()->route('departemens.index')->with('success', 'Departemen created successfully.');
         } catch (ValidationException $e) {
@@ -129,6 +133,9 @@ class DepartemenController extends Controller
             ],
         ]);
 
+        // Store original data for audit
+        $originalData = $departemen->toArray();
+
         // Update the departemen with the validated data
         $departemen->update([
             'company_id' => $request->input('company_id'),
@@ -140,12 +147,18 @@ class DepartemenController extends Controller
             'updated_by' => auth()->user()->name // Assuming you're tracking the user who updated the record
         ]);
 
+        // Audit trail
+        $this->auditUpdate($departemen, $originalData);
+
         // Redirect back with a success message
         return redirect()->route('departemens.index')->with('status', 'Departemen updated successfully!');
     }
 
     public function destroy(Departemen $departemen)
     {
+        // Audit trail
+        $this->auditDelete($departemen);
+
         $departemen->delete();
         return redirect()->route('departemens.index')->with('success', 'Departemen deleted successfully.');
     }

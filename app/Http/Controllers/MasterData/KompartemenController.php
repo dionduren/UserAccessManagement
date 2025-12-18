@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\MasterData;
 
 use App\Http\Controllers\Controller;
+use App\Traits\AuditsActivity;
 use App\Models\Company;
 use App\Models\Kompartemen;
 use Illuminate\Database\QueryException;
@@ -13,6 +14,7 @@ use Illuminate\Validation\ValidationException;
 
 class KompartemenController extends Controller
 {
+    use AuditsActivity;
     public function index()
     {
         $user = auth()->user();
@@ -57,9 +59,12 @@ class KompartemenController extends Controller
                 'deskripsi' => 'nullable|string',
             ]);
 
-            Kompartemen::create($request->all() + [
+            $kompartemen = Kompartemen::create($request->all() + [
                 'created_by' => auth()->user()->name
             ]);
+
+            // Audit trail
+            $this->auditCreate($kompartemen);
 
             return redirect()->route('kompartemens.index')->with('success', 'Kompartemen created successfully.');
         } catch (ValidationException $e) {
@@ -98,6 +103,9 @@ class KompartemenController extends Controller
             'deskripsi' => 'nullable|string',
         ]);
 
+        // Store original data for audit
+        $originalData = $kompartemen->toArray();
+
         // Update the kompartemen with the validated data
         $kompartemen->update([
             'company_id' => $request->input('company_id'),
@@ -106,6 +114,9 @@ class KompartemenController extends Controller
             'deskripsi' => $request->input('deskripsi'),
             'updated_by' => auth()->user()->name // Assuming you're tracking the user who updated the record
         ]);
+
+        // Audit trail
+        $this->auditUpdate($kompartemen, $originalData);
 
         // Redirect back with a success message
         return redirect()->route('kompartemens.index')->with('status', 'Kompartemen updated successfully!');
@@ -121,6 +132,9 @@ class KompartemenController extends Controller
                 ->route('kompartemens.index')
                 ->withErrors(['error' => 'You are not authorized to delete this kompartemen.']);
         }
+
+        // Audit trail
+        $this->auditDelete($kompartemen);
 
         $kompartemen->delete();
         return redirect()->route('kompartemens.index')->with('success', 'Kompartemen deleted successfully.');
