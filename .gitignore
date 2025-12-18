@@ -18,3 +18,5 @@ yarn-error.log
 /.idea
 /.vscode
 AUDIT_TRAIL_GUIDE.md
+*.md
+.env.production.example

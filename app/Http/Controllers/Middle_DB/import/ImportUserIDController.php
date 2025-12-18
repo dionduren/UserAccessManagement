@@ -93,6 +93,7 @@ class ImportUserIDController extends Controller
                 $q->where(function ($w) {
                     $w->whereNull('valid_to')
                         ->orWhere('valid_to', '00000000')
+                        // SECURITY: Safe - no user input, uses hardcoded date format and PostgreSQL function
                         ->orWhereRaw("to_date(valid_to,'YYYYMMDD') >= current_date");
                 });
             }

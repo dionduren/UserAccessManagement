@@ -36,6 +36,8 @@ class LoginController extends Controller
     {
         $this->middleware('guest')->except('logout');
         $this->middleware('auth')->only('logout');
+        // Rate limit login attempts: 5 attempts per minute
+        $this->middleware('throttle:5,1')->only('login');
     }
 
     // Use 'username' for authentication instead of 'email'

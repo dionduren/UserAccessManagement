@@ -278,6 +278,17 @@ class JobCompositeController extends Controller
 
     public function getCompositeRoles(Request $request)
     {
+        // Validate search inputs to prevent SQL injection
+        $request->validate([
+            'search_company' => 'nullable|string|max:255',
+            'search_job_role' => 'nullable|string|max:255',
+            'search_composite_role' => 'nullable|string|max:255',
+            'filter_company' => 'nullable|string|max:50',
+            'filter_kompartemen' => 'nullable|integer',
+            'filter_departemen' => 'nullable|integer',
+            'filter_job_role' => 'nullable|integer',
+        ]);
+
         $user = auth()->user();
         $userCompanyCode = $user->loginDetail->company_code ?? null;
 

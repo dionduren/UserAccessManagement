@@ -34,10 +34,17 @@ class USMMCompareController extends Controller
     // (Keep your existing data endpoints below)
     public function genericCompareData(Request $request)
     {
+        // Validate inputs
+        $request->validate([
+            'company' => 'nullable|string|max:50',
+            'search' => 'nullable|string|max:255',
+        ]);
+
         $company = trim((string)$request->get('company', ''));
         $search  = trim((string)$request->get('search', ''));
 
         // Middle DB (A-K, active filter on string-style valid_to)
+        // Note: This regex pattern is hardcoded and safe (no user input)
         $mdbQuery = MasterUSMM::query()
             ->whereRaw("sap_user_id ~* '^[A-K]'");
 
@@ -107,10 +114,17 @@ class USMMCompareController extends Controller
 
     public function nikCompareData(Request $request)
     {
+        // Validate inputs
+        $request->validate([
+            'company' => 'nullable|string|max:50',
+            'search' => 'nullable|string|max:255',
+        ]);
+
         $company = trim((string)$request->get('company', ''));
         $search  = trim((string)$request->get('search', ''));
 
         // Middle DB (digit first, string-style valid_to)
+        // Note: This regex pattern is hardcoded and safe (no user input)
         $mdbQuery = MasterUSMM::query()
             ->whereRaw("sap_user_id ~* '^[0-9]'");
 
@@ -175,6 +189,10 @@ class USMMCompareController extends Controller
      * Apply "active" filter:
      * If $isDate = true: (valid_to IS NULL OR valid_to >= current_date)
      * Else (string): (valid_to IS NULL OR valid_to='00000000' OR (valid_to ~ '^[0-9]{8}$' AND to_date(valid_to,'YYYYMMDD') >= current_date))
+     * 
+     * SECURITY NOTE: The $column parameter is controlled internally (not from user input)
+     * and is only called with 'valid_to' or similar column names. The whereRaw query
+     * uses hardcoded regex patterns and PostgreSQL functions - no user input is interpolated.
      */
     private function applyActiveFilter($query, string $column, bool $isDate): void
     {
@@ -187,6 +205,7 @@ class USMMCompareController extends Controller
             $query->where(function ($q) use ($column) {
                 $q->whereNull($column)
                     ->orWhere($column, '00000000')
+                    // Safe: $column is internal, regex and date format are hardcoded
                     ->orWhereRaw("(" . $column . " ~ '^[0-9]{8}$' AND to_date(" . $column . ",'YYYYMMDD') >= current_date)");
             });
         }

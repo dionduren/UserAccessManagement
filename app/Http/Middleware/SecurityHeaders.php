@@ -36,6 +36,8 @@ class SecurityHeaders
         $response->headers->set('Permissions-Policy', 'geolocation=(), microphone=(), camera=()');
 
         // Content Security Policy - adjust based on your app's needs
+        // TODO: Remove 'unsafe-inline' and 'unsafe-eval' for production
+        // Use nonces or hashes for inline scripts instead
         $csp = [
             "default-src 'self'",
             "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://cdn.datatables.net https://unpkg.com",
@@ -46,8 +48,17 @@ class SecurityHeaders
             "frame-ancestors 'self'",
             "base-uri 'self'",
             "form-action 'self'",
+            "object-src 'none'",
+            "upgrade-insecure-requests",
         ];
-        $response->headers->set('Content-Security-Policy', implode('; ', $csp));
+
+        // Only apply strict CSP in production
+        if (!config('app.debug')) {
+            $response->headers->set('Content-Security-Policy', implode('; ', $csp));
+        } else {
+            // Use report-only mode in development
+            $response->headers->set('Content-Security-Policy-Report-Only', implode('; ', $csp));
+        }
 
         return $response;
     }
