@@ -728,10 +728,10 @@ Route::middleware(['auth'])->group(function () {
     // Route::get('/compare/unit-kerja', [UnitKerjaCompareController::class, 'index'])->name('compare.unit_kerja');
 
     Route::prefix('compare')->name('compare.')->group(function () {
-        Route::get('/company', [UnitKerjaCompareController::class, 'company'])->name('unit_kerja');
-        Route::get('/kompartemen', [UnitKerjaCompareController::class, 'kompartemen'])->name('unit_kerja');
-        Route::get('/departemen', [UnitKerjaCompareController::class, 'departemen'])->name('unit_kerja');
-        Route::get('/cost-center', [UnitKerjaCompareController::class, 'costCenter'])->name('unit_kerja');
+        Route::get('/company', [UnitKerjaCompareController::class, 'company'])->name('company');
+        Route::get('/kompartemen', [UnitKerjaCompareController::class, 'kompartemen'])->name('kompartemen');
+        Route::get('/departemen', [UnitKerjaCompareController::class, 'departemen'])->name('departemen');
+        Route::get('/cost-center', [UnitKerjaCompareController::class, 'costCenter'])->name('cost_center');
 
         Route::prefix('/uam')->name('uam.')->group(function () {
             Route::get('/composite-role', [UAMCompareController::class, 'compositeRole'])->name('composite');
