@@ -66,6 +66,45 @@ class LoginController extends Controller
     }
 
     /**
+     * Get the failed login response instance.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @return \Symfony\Component\HttpFoundation\Response
+     *
+     * @throws \Illuminate\Validation\ValidationException
+     */
+    protected function sendFailedLoginResponse(\Illuminate\Http\Request $request)
+    {
+        log_audit_trail(
+            'login_failed',
+            'App\Models\User',
+            null,
+            [
+                'attempted_username' => $request->input($this->username()),
+                'failed_at' => now()->toDateTimeString(),
+            ],
+            [
+                'ip_address' => $request->ip(),
+                'user_agent' => $request->header('User-Agent'),
+                'attempt_count' => $this->getRecentFailedAttempts($request->ip()),
+            ],
+            null
+        );
+
+        throw \Illuminate\Validation\ValidationException::withMessages([
+            $this->username() => [trans('auth.failed')],
+        ]);
+    }
+
+    protected function getRecentFailedAttempts($ip)
+    {
+        return \App\Models\AuditTrail::where('activity_type', 'login_failed')
+            ->where('ip_address', $ip)
+            ->where('logged_at', '>=', now()->subHours(1))
+            ->count();
+    }
+
+    /**
      * Log the user out of the application.
      *
      * @param  \Illuminate\Http\Request  $request

@@ -17,7 +17,7 @@ class AuditTrailController extends Controller
     {
         $query = AuditTrail::with('user')->orderBy('logged_at', 'desc');
 
-        // Apply filters
+        // Apply filters from filter form
         if ($request->filled('activity_type')) {
             $query->where('activity_type', $request->activity_type);
         }
@@ -39,6 +39,49 @@ class AuditTrailController extends Controller
         }
 
         return DataTables::of($query)
+            ->filter(function ($query) use ($request) {
+                // Column search functionality
+                if ($request->has('columns')) {
+                    // Column 0: ID
+                    if (!empty($request->columns[0]['search']['value'])) {
+                        $query->where('id', 'like', '%' . $request->columns[0]['search']['value'] . '%');
+                    }
+                    // Column 1: Date
+                    if (!empty($request->columns[1]['search']['value'])) {
+                        $query->where('logged_at', 'like', '%' . $request->columns[1]['search']['value'] . '%');
+                    }
+                    // Column 2: User
+                    if (!empty($request->columns[2]['search']['value'])) {
+                        $searchValue = $request->columns[2]['search']['value'];
+                        $query->where(function ($q) use ($searchValue) {
+                            $q->where('username', 'like', '%' . $searchValue . '%')
+                                ->orWhereHas('user', function ($qu) use ($searchValue) {
+                                    $qu->where('name', 'like', '%' . $searchValue . '%');
+                                });
+                        });
+                    }
+                    // Column 3: Activity
+                    if (!empty($request->columns[3]['search']['value'])) {
+                        $query->where('activity_type', 'like', '%' . $request->columns[3]['search']['value'] . '%');
+                    }
+                    // Column 4: Model
+                    if (!empty($request->columns[4]['search']['value'])) {
+                        $query->where('model_type', 'like', '%' . $request->columns[4]['search']['value'] . '%');
+                    }
+                    // Column 5: Model ID
+                    if (!empty($request->columns[5]['search']['value'])) {
+                        $query->where('model_id', 'like', '%' . $request->columns[5]['search']['value'] . '%');
+                    }
+                    // Column 6: IP Address
+                    if (!empty($request->columns[6]['search']['value'])) {
+                        $query->where('ip_address', 'like', '%' . $request->columns[6]['search']['value'] . '%');
+                    }
+                    // Column 7: Route
+                    if (!empty($request->columns[7]['search']['value'])) {
+                        $query->where('route', 'like', '%' . $request->columns[7]['search']['value'] . '%');
+                    }
+                }
+            })
             ->addColumn('user_name', function ($log) {
                 return $log->user ? $log->user->name : ($log->username ?? 'System');
             })

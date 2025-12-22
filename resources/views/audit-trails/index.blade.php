@@ -15,10 +15,13 @@
                         <select class="form-select" id="activity_type" name="activity_type">
                             <option value="">All Activities</option>
                             <option value="login">Login</option>
+                            <option value="login_failed">Login Failed</option>
                             <option value="logout">Logout</option>
+                            <option value="menu_access">Menu Access</option>
                             <option value="create">Create</option>
                             <option value="update">Update</option>
                             <option value="delete">Delete</option>
+                            <option value="password_change">Password Change</option>
                         </select>
                     </div>
                     <div class="col-md-3">
@@ -61,6 +64,18 @@
                             <th>IP Address</th>
                             <th>Route</th>
                             <th>Changes</th>
+                        </tr>
+                        <tr>
+                            <th><input type="text" class="form-control form-control-sm" placeholder="Search ID"></th>
+                            <th><input type="text" class="form-control form-control-sm" placeholder="Search Date"></th>
+                            <th><input type="text" class="form-control form-control-sm" placeholder="Search User"></th>
+                            <th><input type="text" class="form-control form-control-sm" placeholder="Search Activity">
+                            </th>
+                            <th><input type="text" class="form-control form-control-sm" placeholder="Search Model"></th>
+                            <th><input type="text" class="form-control form-control-sm" placeholder="Search ID"></th>
+                            <th><input type="text" class="form-control form-control-sm" placeholder="Search IP"></th>
+                            <th><input type="text" class="form-control form-control-sm" placeholder="Search Route"></th>
+                            <th></th>
                         </tr>
                     </thead>
                 </table>
@@ -108,6 +123,17 @@
                         d.date_to = $('#date_to').val();
                     }
                 },
+                initComplete: function() {
+                    // Apply the search on each column
+                    this.api().columns().every(function() {
+                        var that = this;
+                        $('input', this.header()).on('keyup change clear', function() {
+                            if (that.search() !== this.value) {
+                                that.search(this.value).draw();
+                            }
+                        });
+                    });
+                },
                 columns: [{
                         data: 'id',
                         width: '50px'
@@ -126,7 +152,10 @@
                                 'logout': 'secondary',
                                 'create': 'primary',
                                 'update': 'warning',
-                                'delete': 'danger'
+                                'delete': 'danger',
+                                'login_failed': 'danger',
+                                'menu_access': 'info',
+                                'password_change': 'warning'
                             };
                             return `<span class="badge bg-${badges[data] || 'info'}">${data}</span>`;
                         }
