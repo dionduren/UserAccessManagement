@@ -45,6 +45,15 @@
                             <i class="bi bi-arrow-counterclockwise"></i> Reset
                         </button>
                     </div>
+                    <div class="col-md-12 mt-2">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="excludeMenuAccess"
+                                name="exclude_menu_access">
+                            <label class="form-check-label" for="excludeMenuAccess">
+                                <i class="bi bi-eye-slash"></i> Exclude Menu Access Activities
+                            </label>
+                        </div>
+                    </div>
                 </form>
             </div>
         </div>
@@ -121,6 +130,7 @@
                         d.model_type = $('#model_type').val();
                         d.date_from = $('#date_from').val();
                         d.date_to = $('#date_to').val();
+                        d.exclude_menu_access = $('#excludeMenuAccess').is(':checked') ? 1 : 0;
                     }
                 },
                 initComplete: function() {
@@ -192,6 +202,12 @@
             // Reset filter
             $('#resetFilter').on('click', function() {
                 $('#filterForm')[0].reset();
+                $('#excludeMenuAccess').prop('checked', false);
+                table.ajax.reload();
+            });
+
+            // Exclude menu access checkbox
+            $('#excludeMenuAccess').on('change', function() {
                 table.ajax.reload();
             });
 

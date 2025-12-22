@@ -38,6 +38,11 @@ class AuditTrailController extends Controller
             $query->whereDate('logged_at', '<=', $request->date_to);
         }
 
+        // Exclude menu_access if checkbox is checked
+        if ($request->filled('exclude_menu_access') && $request->exclude_menu_access == 1) {
+            $query->where('activity_type', '!=', 'menu_access');
+        }
+
         return DataTables::of($query)
             ->filter(function ($query) use ($request) {
                 // Column search functionality
