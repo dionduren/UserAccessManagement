@@ -145,8 +145,9 @@ class JobRoleController extends Controller
                 // If job_role_id changed (including from null -> value), update related and increment numbering
                 if (filled($request->job_role_id) && $request->job_role_id !== $oldJobRoleId) {
 
-                    if ($oldJobRoleId && DB::table('tr_nik_job_roles')->where('job_role_id', $oldJobRoleId)->exists()) {
-                        DB::table('tr_nik_job_roles')
+                    // ✅ FIX: Use correct table name 'tr_ussm_job_role' instead of 'tr_nik_job_roles'
+                    if ($oldJobRoleId && DB::table('tr_ussm_job_role')->where('job_role_id', $oldJobRoleId)->exists()) {
+                        DB::table('tr_ussm_job_role')
                             ->where('job_role_id', $oldJobRoleId)
                             ->update(['job_role_id' => $request->job_role_id]);
                     }
