@@ -34,6 +34,8 @@ class UAMReportController extends Controller
         if ($userCompany !== 'A000') {
             // Get all companies with the same first character as userCompany
             $firstChar = substr($userCompany, 0, 1);
+            // Sanitize to prevent SQL injection in LIKE pattern
+            $firstChar = str_replace(['%', '_', '\\'], ['\\%', '\\_', '\\\\'], $firstChar);
             $companies = Company::select('company_code', 'nama')
                 ->where('company_code', 'LIKE', $firstChar . '%')
                 ->orderBy('company_code')
@@ -104,7 +106,25 @@ class UAMReportController extends Controller
 
     public function getKompartemen(Request $request)
     {
+        $request->validate([
+            'company_id' => 'required|string|max:10',
+        ]);
+
         $companyId = $request->company_id;
+
+        // Authorization: validate user has access to this company
+        $userCompany = auth()->user()->loginDetail->company_code;
+        if ($userCompany !== 'A000') {
+            $firstChar = substr($userCompany, 0, 1);
+            $firstChar = str_replace(['%', '_', '\\'], ['\\%', '\\_', '\\\\'], $firstChar);
+            $allowedCompanies = Company::where('company_code', 'LIKE', $firstChar . '%')
+                ->pluck('company_code')
+                ->toArray();
+            if (!in_array($companyId, $allowedCompanies)) {
+                abort(403);
+            }
+        }
+
         $kompartemen = Kompartemen::where('company_id', $companyId)
             ->select('kompartemen_id', 'nama')
             ->orderBy('nama')
@@ -114,8 +134,26 @@ class UAMReportController extends Controller
 
     public function getDepartemen(Request $request)
     {
+        $request->validate([
+            'company_id' => 'required|string|max:10',
+            'kompartemen_id' => 'nullable|string|max:20',
+        ]);
+
         $companyId = $request->company_id;
         $kompartemenId = $request->kompartemen_id;
+
+        // Authorization: validate user has access to this company
+        $userCompany = auth()->user()->loginDetail->company_code;
+        if ($userCompany !== 'A000') {
+            $firstChar = substr($userCompany, 0, 1);
+            $firstChar = str_replace(['%', '_', '\\'], ['\\%', '\\_', '\\\\'], $firstChar);
+            $allowedCompanies = Company::where('company_code', 'LIKE', $firstChar . '%')
+                ->pluck('company_code')
+                ->toArray();
+            if (!in_array($companyId, $allowedCompanies)) {
+                abort(403);
+            }
+        }
 
         if ($kompartemenId) {
             $departemen = Departemen::where('company_id', $companyId)
@@ -438,9 +476,28 @@ class UAMReportController extends Controller
 
     public function exportCompositeExcel(Request $request)
     {
+        $request->validate([
+            'company_id' => 'nullable|string|max:10',
+            'kompartemen_id' => 'nullable|string|max:20',
+            'departemen_id' => 'nullable|string|max:20',
+        ]);
+
         $companyId     = $request->query('company_id');
         $kompartemenId = $request->query('kompartemen_id');
         $departemenId  = $request->query('departemen_id');
+
+        // Authorization check
+        $userCompany = auth()->user()->loginDetail->company_code;
+        if ($userCompany !== 'A000' && $companyId) {
+            $firstChar = substr($userCompany, 0, 1);
+            $firstChar = str_replace(['%', '_', '\\'], ['\\%', '\\_', '\\\\'], $firstChar);
+            $allowedCompanies = Company::where('company_code', 'LIKE', $firstChar . '%')
+                ->pluck('company_code')
+                ->toArray();
+            if (!in_array($companyId, $allowedCompanies)) {
+                abort(403);
+            }
+        }
 
         // Build job roles query with filters
         $query = JobRole::query()
@@ -544,6 +601,29 @@ class UAMReportController extends Controller
 
     public function exportSingleExcel(Request $request)
     {
+        $request->validate([
+            'company_id' => 'nullable|string|max:10',
+            'kompartemen_id' => 'nullable|string|max:20',
+            'departemen_id' => 'nullable|string|max:20',
+        ]);
+
+        $companyId     = $request->query('company_id');
+        $kompartemenId = $request->query('kompartemen_id');
+        $departemenId  = $request->query('departemen_id');
+
+        // Authorization check
+        $userCompany = auth()->user()->loginDetail->company_code;
+        if ($userCompany !== 'A000' && $companyId) {
+            $firstChar = substr($userCompany, 0, 1);
+            $firstChar = str_replace(['%', '_', '\\'], ['\\%', '\\_', '\\\\'], $firstChar);
+            $allowedCompanies = Company::where('company_code', 'LIKE', $firstChar . '%')
+                ->pluck('company_code')
+                ->toArray();
+            if (!in_array($companyId, $allowedCompanies)) {
+                abort(403);
+            }
+        }
+
         $uniqueSingleRoles = [];
         $uniqueTcodeCount = [];
 
@@ -552,7 +632,12 @@ class UAMReportController extends Controller
                 'compositeRole' => function ($q) {
                     $q->whereNull('deleted_at');
                 }
-            ]);
+            ])
+            ->whereNull('deleted_at');
+
+        if ($companyId)     $query->where('company_id', $companyId);
+        if ($kompartemenId) $query->where('kompartemen_id', $kompartemenId);
+        if ($departemenId)  $query->where('departemen_id', $departemenId);
 
         $jobRoles = $query->get();
 
@@ -652,9 +737,28 @@ class UAMReportController extends Controller
 
     public function exportCompositeWithoutAO(Request $request)
     {
+        $request->validate([
+            'company_id' => 'nullable|string|max:10',
+            'kompartemen_id' => 'nullable|string|max:20',
+            'departemen_id' => 'nullable|string|max:20',
+        ]);
+
         $companyId     = $request->query('company_id');
         $kompartemenId = $request->query('kompartemen_id');
         $departemenId  = $request->query('departemen_id');
+
+        // Authorization check
+        $userCompany = auth()->user()->loginDetail->company_code;
+        if ($userCompany !== 'A000' && $companyId) {
+            $firstChar = substr($userCompany, 0, 1);
+            $firstChar = str_replace(['%', '_', '\\'], ['\\%', '\\_', '\\\\'], $firstChar);
+            $allowedCompanies = Company::where('company_code', 'LIKE', $firstChar . '%')
+                ->pluck('company_code')
+                ->toArray();
+            if (!in_array($companyId, $allowedCompanies)) {
+                abort(403);
+            }
+        }
 
         $jobRoles = JobRole::query()
             ->with([
@@ -716,12 +820,13 @@ class UAMReportController extends Controller
         // Validate company access for non-A000 users
         if ($userCompany !== 'A000' && $companyId) {
             $firstChar = substr($userCompany, 0, 1);
+            $firstChar = str_replace(['%', '_', '\\'], ['\\%', '\\_', '\\\\'], $firstChar);
             $allowedCompanies = Company::where('company_code', 'LIKE', $firstChar . '%')
                 ->pluck('company_code')
                 ->toArray();
 
             if (!in_array($companyId, $allowedCompanies)) {
-                abort(403, 'Access denied to selected company');
+                abort(403);
             }
         }
 

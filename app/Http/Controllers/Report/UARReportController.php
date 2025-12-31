@@ -30,6 +30,8 @@ class UARReportController extends Controller
         if ($userCompany !== 'A000') {
             // Get all companies with the same first character as userCompany
             $firstChar = substr($userCompany, 0, 1);
+            // Sanitize to prevent SQL injection in LIKE pattern
+            $firstChar = str_replace(['%', '_', '\\'], ['\\%', '\\_', '\\\\'], $firstChar);
             $companies = Company::select('company_code', 'nama')
                 ->where('company_code', 'LIKE', $firstChar . '%')
                 ->orderBy('company_code')
@@ -68,7 +70,25 @@ class UARReportController extends Controller
 
     public function getKompartemen(Request $request)
     {
+        $request->validate([
+            'company_id' => 'required|string|max:10',
+        ]);
+
         $companyId = $request->company_id;
+
+        // Authorization: validate user has access to this company
+        $userCompany = auth()->user()->loginDetail->company_code;
+        if ($userCompany !== 'A000') {
+            $firstChar = substr($userCompany, 0, 1);
+            $firstChar = str_replace(['%', '_', '\\'], ['\\%', '\\_', '\\\\'], $firstChar);
+            $allowedCompanies = Company::where('company_code', 'LIKE', $firstChar . '%')
+                ->pluck('company_code')
+                ->toArray();
+            if (!in_array($companyId, $allowedCompanies)) {
+                abort(403);
+            }
+        }
+
         $kompartemen = Kompartemen::where('company_id', $companyId)
             ->select('kompartemen_id', 'nama')
             ->orderBy('nama')
@@ -78,8 +98,26 @@ class UARReportController extends Controller
 
     public function getDepartemen(Request $request)
     {
+        $request->validate([
+            'company_id' => 'required|string|max:10',
+            'kompartemen_id' => 'nullable|string|max:20',
+        ]);
+
         $companyId = $request->company_id;
         $kompartemenId = $request->kompartemen_id;
+
+        // Authorization: validate user has access to this company
+        $userCompany = auth()->user()->loginDetail->company_code;
+        if ($userCompany !== 'A000') {
+            $firstChar = substr($userCompany, 0, 1);
+            $firstChar = str_replace(['%', '_', '\\'], ['\\%', '\\_', '\\\\'], $firstChar);
+            $allowedCompanies = Company::where('company_code', 'LIKE', $firstChar . '%')
+                ->pluck('company_code')
+                ->toArray();
+            if (!in_array($companyId, $allowedCompanies)) {
+                abort(403);
+            }
+        }
 
         if ($kompartemenId) {
             $departemen = Departemen::where('company_id', $companyId)
@@ -125,6 +163,7 @@ class UARReportController extends Controller
         // Validate company access for non-A000 users
         if ($userCompany !== 'A000' && $companyId) {
             $firstChar = substr($userCompany, 0, 1);
+            $firstChar = str_replace(['%', '_', '\\'], ['\\%', '\\_', '\\\\'], $firstChar);
             $allowedCompanies = Company::where('company_code', 'LIKE', $firstChar . '%')
                 ->pluck('company_code')
                 ->toArray();
@@ -133,9 +172,8 @@ class UARReportController extends Controller
                 return response()->json([
                     'data'             => [],
                     'nomorSurat'       => '-',
-                    'composite_roles'  => [],
-                    'single_roles'     => [],
-                    'message'          => 'Access denied to selected company'
+                    'cost_center'      => '-',
+                    'user_system'      => [],
                 ], 403);
             }
         }
@@ -497,13 +535,33 @@ class UARReportController extends Controller
         // Enable PhpWord's built-in XML escaping for special chars like &
         \PhpOffice\PhpWord\Settings::setOutputEscapingEnabled(true);
 
+        $request->validate([
+            'periode_id' => 'required|integer|exists:ms_periode,id',
+            'company_id' => 'nullable|string|max:10',
+            'kompartemen_id' => 'nullable|string|max:20',
+            'departemen_id' => 'nullable|string|max:20',
+        ]);
+
         $periodeId     = $request->get('periode_id');
         $companyId     = $request->company_id;
         $kompartemenId = $request->kompartemen_id;
         $departemenId  = $request->departemen_id;
 
         if (!$periodeId || !($periode = Periode::find($periodeId))) {
-            abort(422, 'Periode tidak valid');
+            abort(422);
+        }
+
+        // Authorization: validate user has access to this company
+        $userCompany = auth()->user()->loginDetail->company_code;
+        if ($userCompany !== 'A000' && $companyId) {
+            $firstChar = substr($userCompany, 0, 1);
+            $firstChar = str_replace(['%', '_', '\\'], ['\\%', '\\_', '\\\\'], $firstChar);
+            $allowedCompanies = Company::where('company_code', 'LIKE', $firstChar . '%')
+                ->pluck('company_code')
+                ->toArray();
+            if (!in_array($companyId, $allowedCompanies)) {
+                abort(403);
+            }
         }
 
         $periodeYear  = $periode->created_at ? $periode->created_at->format('Y') : date('Y');
